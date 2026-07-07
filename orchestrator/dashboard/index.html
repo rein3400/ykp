@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YKP AI Orchestrator Dashboard</title>
+  <style>
+    :root { --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --accent:#38bdf8; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; }
+    body { font-family: ui-sans-serif,system-ui,sans-serif; background:var(--bg); color:var(--text); margin:0; padding:24px; }
+    h1 { margin:0 0 24px; font-size:24px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+    .card { background:var(--card); border-radius:12px; padding:16px; }
+    .card h2 { margin:0 0 12px; font-size:16px; color:var(--accent); }
+    .status { display:flex; align-items:center; gap:8px; font-weight:600; }
+    .dot { width:10px; height:10px; border-radius:50%; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th,td { text-align:left; padding:8px 6px; border-bottom:1px solid #334155; }
+    th { color:#94a3b8; }
+    .right { text-align:right; }
+    .mono { font-family:ui-monospace,monospace; }
+    .muted { color:#94a3b8; }
+  </style>
+</head>
+<body>
+  <h1>YKP AI Orchestrator</h1>
+  <div class="grid">
+    <div class="card">
+      <h2>Health</h2>
+      <div id="health">Loading...</div>
+    </div>
+    <div class="card">
+      <h2>Trading Metrics</h2>
+      <div id="metrics" class="muted">Loading...</div>
+    </div>
+    <div class="card">
+      <h2>Audit Trail</h2>
+      <table id="audit"><thead><tr><th>Action</th><th>Entity</th><th>Actor</th><th>Time</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Latest Trading Alerts</h2>
+      <table id="alerts"><thead><tr><th>Pair</th><th>Signal</th><th>Time</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Signal Terakhir</h2>
+      <table id="signals"><thead><tr><th>Pair</th><th>Status</th><th>Score</th><th>Time</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Pending Approvals</h2>
+      <div id="pending-count" class="muted">Loading...</div>
+      <table id="approvals" style="margin-top:8px"><thead><tr><th>Setup</th><th>Pair</th><th>Created</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Journal</h2>
+      <div id="journal" class="muted">Loading...</div>
+    </div>
+    <div class="card">
+      <h2>AI Usage 7d</h2>
+      <table id="ai-usage"><thead><tr><th>Task</th><th>Count</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Backups</h2>
+      <table id="backups"><thead><tr><th>Date</th><th>Status</th><th>Size</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+  <script>
+    async function api(path) {
+      const r = await fetch(path);
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    }
+    async function refresh() {
+      try {
+        const h = await api('/health/detail');
+        const html = Object.entries(h.checks).map(([k,v]) => {
+          const ok = v === 'ok' || v === 'configured';
+          return `<div class="status"><span class="dot" style="background:${ok?'var(--ok)':(v.includes('not')?'var(--warn)':'var(--danger)')}"></span>${k}: ${v}</div>`;
+        }).join('');
+        document.getElementById('health').innerHTML = html;
+      } catch(e) { document.getElementById('health').innerText = 'Error: '+e.message; }
+
+      try {
+        const m = await api('/trading/metrics');
+        document.getElementById('metrics').innerHTML = `
+          <div>Win Rate (30d): <b>${m.winRate30d}%</b></div>
+          <div>Avg RR: <b>${m.avgRR}</b></div>
+          <div>PnL Week: <b>$${m.weeklyPnl}</b></div>
+          <div>Open Trades: <b>${m.openTrades}</b></div>
+          <div>Pending: <b>${m.pendingApprovals}</b></div>
+          <div>Breaker: <b>${m.breaker}</b></div>
+        `;
+        const aiRows = m.aiUsage7d.map(x => `<tr><td>${x.taskType}</td><td>${x.count}</td></tr>`).join('');
+        document.getElementById('ai-usage').querySelector('tbody').innerHTML = aiRows || '<tr><td colspan="2" class="muted">No AI calls 7d.</td></tr>';
+      } catch(e) { document.getElementById('metrics').innerText = '-'; }
+
+      try {
+        const a = await api('/trading/journal');
+        document.getElementById('journal').innerText = a.entries.length + ' entries';
+      } catch(e) { document.getElementById('journal').innerText = '-'; }
+
+      try {
+        const s = await api('/trading/signals?status=VALID_SETUP');
+        const rows = s.signals.slice(0,10).map(x =>
+          `<tr><td>${x.pair} ${x.timeframe}</td><td>${x.status}</td><td>${x.score ?? '-'}</td><td>${new Date(x.createdAt).toLocaleString('id-ID')}</td></tr>`
+        ).join('');
+        document.getElementById('signals').querySelector('tbody').innerHTML = rows || '<tr><td colspan="4" class="muted">Belum ada valid setup.</td></tr>';
+      } catch(e) { document.getElementById('signals').querySelector('tbody').innerHTML = `<tr><td colspan="4" class="muted">${e.message}</td></tr>`; }
+
+      try {
+        const p = await api('/trading/signals?status=pending');
+        document.getElementById('pending-count').innerText = p.signals.length + ' pending';
+        const rows = p.signals.slice(0,10).map(x =>
+          `<tr><td>${x.id}</td><td>${x.pair} ${x.timeframe}</td><td>${new Date(x.createdAt).toLocaleString('id-ID')}</td></tr>`
+        ).join('');
+        document.getElementById('approvals').querySelector('tbody').innerHTML = rows || '<tr><td colspan="3" class="muted">Tidak ada pending.</td></tr>';
+      } catch(e) { document.getElementById('pending-count').innerText = '-'; }
+
+      try {
+        const au = await api('/trading/audit');
+        const rows = au.audit.slice(0,5).map(x =>
+          `<tr><td>${x.action}</td><td>${x.entityId.slice(0,10)}</td><td>${x.actor}</td><td>${new Date(x.createdAt).toLocaleString('id-ID')}</td></tr>`
+        ).join('');
+        document.getElementById('audit').querySelector('tbody').innerHTML = rows || '<tr><td colspan="4" class="muted">Belum ada audit.</td></tr>';
+      } catch(e) { document.getElementById('audit').querySelector('tbody').innerHTML = '<tr><td colspan="4" class="muted">-</td></tr>'; }
+
+      try {
+        const d = new Date().toISOString().slice(0,10);
+        const r = await api('/reports/daily');
+        document.getElementById('alerts').querySelector('tbody').innerHTML = `<tr><td colspan="3" class="muted">${r.omzet.split('\n')[0]}</td></tr>`;
+      } catch(e) { document.getElementById('alerts').querySelector('tbody').innerHTML = `<tr><td colspan="3" class="muted">${e.message}</td></tr>`; }
+
+      document.getElementById('backups').querySelector('tbody').innerHTML = '<tr><td colspan="3" class="muted">worker scheduled</td></tr>';
+    }
+    refresh();
+    setInterval(refresh, 30000);
+  </script>
+</body>
+</html>

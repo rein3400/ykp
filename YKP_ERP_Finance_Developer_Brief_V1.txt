@@ -1,0 +1,830 @@
+DEVELOPER BRIEF — YKP ERP FINANCE MODULE V1
+
+1. PROJECT CONTEXT
+
+YKP sedang membangun ERP internal untuk beberapa brand F&B:
+- Funkydak
+- Sekarpizza
+- Suburbuns
+- Laju Kopi
+- Uncle Masala
+
+Untuk tahap awal, fokus pertama adalah Finance Module, karena dashboard finance sudah ada secara visual, tetapi belum running dengan data YKP.
+
+Targetnya bukan membangun ulang dari nol, tetapi:
+
+Clone / lanjutkan Finance Web App existing
+→ ganti database/spreadsheet ke database YKP
+→ isi master data YKP
+→ migrasi data finance
+→ test angka
+→ running untuk 1 brand pilot
+
+
+2. TUJUAN FINANCE MODULE
+
+Finance Module harus menjadi pusat kontrol uang YKP.
+
+Fokus utama:
+1. Mencatat pendapatan POS.
+2. Mencatat pembelian supplier.
+3. Mencatat petty cash.
+4. Mencatat expense.
+5. Melihat unpaid bills.
+6. Melihat saldo dan cashflow.
+7. Melihat profit kasar per brand/outlet.
+8. Menyiapkan summary finance agar nanti bisa dibaca oleh Orchestration Layer dan Hermez AI.
+
+
+3. STATUS SAAT INI
+
+Finance App:
+- Visual/dashboard sudah ada.
+- Belum running dengan data asli YKP.
+- Database masih perlu diganti ke spreadsheet/database YKP.
+- Data dummy harus dibersihkan.
+- Perlu mapping ulang brand, outlet, supplier, POS, expense, dan petty cash.
+
+Database Awal:
+Untuk V1, database boleh menggunakan:
+Google Sheet / Spreadsheet Database
+
+Nanti jika sudah stabil, bisa migrasi ke:
+PostgreSQL / Supabase / Firebase
+
+
+4. SCOPE FINANCE MODULE V1
+
+Finance Module V1 terdiri dari 6 bagian utama:
+1. Ringkasan Finance
+2. Pendapatan POS
+3. Costing Supplier
+4. Petty Cash
+5. Expense Log
+6. Finance Summary untuk Hermez
+
+
+5. VISUAL DIRECTION
+
+Mengikuti style dashboard YKP OneFinance:
+- Dark theme.
+- Premium financial command center.
+- Filter brand/outlet/periode.
+- KPI card besar.
+- Tabel seperti spreadsheet.
+- Chart revenue.
+- Supplier cost tracker.
+- Petty cash ledger.
+- Export PDF.
+- Role-based access.
+
+Menu utama:
+- Ringkasan
+- Pendapatan POS
+- Costing Supplier
+- Petty Cash
+- Manajemen Pengguna
+- Sistem Settings
+
+
+6. MODULE DETAIL
+
+6.1 RINGKASAN FINANCE
+
+Halaman ini adalah halaman utama owner.
+
+KPI Cards wajib:
+- Consolidated Revenue
+- Consolidated Expenses
+- Consolidated Net Profit
+- Group Cash Position
+- Accounts Payable
+- Accounts Receivable
+- MoM Growth Rate
+- Cash Inflow
+- Cash Outflow
+- Supplier Top Spend
+- Unit Margin Matrix
+
+Filter wajib:
+- All Portfolio Brands
+- Funkydak
+- Sekarpizza
+- Suburbuns
+- Laju Kopi
+- Uncle Masala
+- Periode bulan
+- Tanggal range
+- Outlet
+
+Output yang ditampilkan:
+- Total revenue bulan ini
+- Total expense bulan ini
+- Net profit estimasi
+- Brand paling profitable
+- Brand paling boros
+- Supplier paling besar
+- Kategori biaya terbesar
+- Cash position
+- Unpaid supplier
+
+
+6.2 PENDAPATAN POS
+
+Tujuan:
+Mencatat dan membaca semua pendapatan outlet dari Moka/POS.
+
+Input Source V1:
+- Manual input
+- Upload/export Moka CSV/Excel
+- Input harian dari admin
+
+Nanti V2:
+- Moka API integration
+
+Sheet/Table:
+fin_pos_revenue
+
+Kolom:
+- transaction_id
+- date
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- gross_sales
+- net_sales
+- discount
+- refund
+- void
+- tax
+- service_charge
+- payment_method
+- transaction_count
+- aov
+- cashier
+- shift
+- source
+- notes
+- created_by
+- created_at
+
+Fitur halaman:
+- Total akumulasi pendapatan
+- Jumlah invoice lunas
+- Average Order Value
+- Trend penjualan harian
+- Kontribusi per cabang/outlet
+- Search transaksi
+- Filter outlet
+- Filter payment method
+- Export PDF/CSV
+- Catat transaksi baru
+
+Formula dasar:
+Net Sales = Gross Sales - Discount - Refund - Void
+AOV = Net Sales / Transaction Count
+
+
+6.3 COSTING SUPPLIER
+
+Tujuan:
+Mencatat semua pembelian supplier dan biaya bahan/jasa.
+
+Ini penting untuk kontrol JOGS, HPP, dan kebocoran bahan baku.
+
+Sheet/Table:
+fin_supplier_costing
+
+Kolom:
+- costing_id
+- date_order
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- supplier_id
+- supplier_name
+- description
+- category
+- qty
+- unit
+- unit_price
+- total_amount
+- paid_amount
+- unpaid_amount
+- payment_status
+- due_date
+- bank_account
+- invoice_url
+- receipt_url
+- notes
+- created_by
+- created_at
+- updated_at
+
+Kategori minimal:
+- Bahan Baku
+- Packaging
+- Transport
+- Maintenance
+- Operational
+- Marketing
+- Equipment
+- Emergency
+- Other
+
+Status pembayaran:
+- UNPAID
+- PARTIAL
+- PAID
+- OVERDUE
+- CANCELLED
+
+Fitur halaman:
+- Total biaya bulan ini
+- Total sudah dibayar
+- Total belum dibayar
+- Jumlah pengajuan aktif
+- Search supplier/barang/cabang/no rekening
+- Filter kategori
+- Filter paid/unpaid
+- Upload nota
+- Delete row
+- Edit row
+- Export
+
+Alert basic:
+- Unpaid supplier overdue
+- Total supplier cost naik > 15% dari minggu sebelumnya
+- Supplier tertentu mendominasi biaya
+- Ada pembelian tanpa nota
+- Ada kategori bahan baku naik tidak wajar
+
+
+6.4 PETTY CASH
+
+Tujuan:
+Mencatat saldo kas kecil outlet, top up, pengeluaran, dan saldo berjalan.
+
+Sheet/Table:
+fin_petty_cash
+
+Kolom:
+- petty_id
+- date
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- description
+- qty
+- unit
+- debit_topup
+- credit_out
+- running_balance
+- cash_on_hand_status
+- receipt_url
+- urgent_flag
+- approval_status
+- approved_by
+- notes
+- created_by
+- created_at
+
+Fitur halaman:
+- Saldo sheet bulan ini
+- Saldo awal bulan
+- Total top up
+- Total pengeluaran
+- Saldo berjalan
+- Filter semua/debit/kredit/urgent
+- Search item
+- Upload nota
+- COH status
+- Approval status
+
+Formula:
+Running Balance = Saldo Awal + Total Debit - Total Kredit
+
+Alert basic:
+- Saldo petty cash minus
+- Pengeluaran tanpa nota
+- Petty cash keluar melebihi limit harian
+- Urgent expense terlalu sering
+- Cash on hand tidak cocok
+
+
+6.5 EXPENSE LOG
+
+Tujuan:
+Mencatat semua pengeluaran non-supplier dan biaya operasional umum.
+
+Sheet/Table:
+fin_expense
+
+Kolom:
+- expense_id
+- date
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- expense_category
+- description
+- amount
+- payment_method
+- receipt_url
+- status
+- notes
+- created_by
+- created_at
+
+Kategori Expense minimal:
+- Sewa
+- Gaji
+- Listrik
+- Air
+- Internet
+- Gas
+- Maintenance
+- Marketing
+- Transport
+- Packaging
+- Refund
+- Diskon
+- Peralatan
+- Operational Mendadak
+- Other
+
+Fitur:
+- Input expense
+- Edit expense
+- Upload bukti
+- Filter kategori
+- Filter outlet
+- Filter brand
+- Export bulanan
+- Expense trend
+- Cost division ratio
+
+
+7. FINANCE SUMMARY UNTUK HERMEZ
+
+Finance app wajib membuat summary harian.
+
+Hermez tidak membaca semua raw data dulu.
+Hermez membaca summary.
+
+Sheet/Table:
+fin_daily_summary
+
+Kolom:
+- summary_id
+- date
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- gross_sales
+- net_sales
+- total_discount
+- total_refund
+- total_void
+- transaction_count
+- aov
+- supplier_cost
+- petty_cash_out
+- total_expense
+- unpaid_supplier
+- cash_difference
+- estimated_profit
+- top_supplier
+- top_expense_category
+- major_finance_issue
+- recommended_action
+- created_at
+
+Contoh output summary:
+
+Funkydak — 2 Juli 2026
+
+Net Sales: Rp5.200.000
+Supplier Cost: Rp1.750.000
+Petty Cash Out: Rp250.000
+Expense: Rp600.000
+Estimated Profit: Rp2.600.000
+Issue: Supplier ayam naik 18%
+Action: cek harga alternatif supplier ayam
+
+
+8. MASTER DATA YANG DIBUTUHKAN
+
+Finance Module harus membaca master data dari database utama.
+
+master_brand:
+- brand_id
+- brand_name
+- brand_code
+- status
+
+master_outlet:
+- outlet_id
+- brand_id
+- outlet_name
+- outlet_code
+- address
+- status
+
+master_supplier:
+- supplier_id
+- supplier_name
+- category
+- phone
+- bank_name
+- bank_account
+- account_holder
+- status
+
+master_expense_category:
+- category_id
+- category_name
+- type
+- status
+
+master_payment_method:
+- payment_method_id
+- payment_method_name
+- type
+- status
+
+
+9. ROLE & PERMISSION
+
+Minimal role:
+- Owner
+- Super Admin
+- Finance Admin
+- Brand Manager
+- Outlet Manager
+- Staff Input
+- Viewer
+
+Akses Owner:
+- Lihat semua brand
+- Lihat semua outlet
+- Export PDF
+- Approve payment
+- Lihat unpaid supplier
+- Lihat profit
+- Lihat alert
+
+Finance Admin:
+- Input POS revenue
+- Input supplier costing
+- Input petty cash
+- Input expense
+- Upload nota
+- Edit data finance
+- Generate report
+
+Brand Manager:
+- Lihat brand sendiri
+- Lihat outlet sendiri
+- Input expense brand sendiri
+- Tidak bisa lihat payroll detail
+- Tidak bisa lihat brand lain
+
+Staff Input:
+- Input petty cash
+- Upload nota
+- Input expense sederhana
+- Tidak bisa delete data
+- Tidak bisa approve
+
+
+10. APPROVAL RULES
+
+Wajib approval:
+- Supplier payment
+- Petty cash urgent
+- Expense di atas limit
+- Delete row
+- Edit data paid
+- Cash difference
+- Unpaid supplier marked as paid
+
+Approval status:
+- DRAFT
+- PENDING
+- APPROVED
+- REJECTED
+- PAID
+- CANCELLED
+
+
+11. ALERT RULES FINANCE V1
+
+Rules awal:
+- cash_difference > Rp50.000 = HIGH
+- unpaid_supplier overdue = MEDIUM/HIGH
+- petty_cash_out > limit harian = MEDIUM
+- expense naik > 20% dari rata-rata 7 hari = MEDIUM
+- supplier_cost naik > 15% = MEDIUM/HIGH
+- missing receipt = LOW/MEDIUM
+- net profit minus = HIGH
+- refund/void tinggi = MEDIUM/HIGH
+
+Alert disimpan ke:
+hermes_alert_log
+
+Kolom:
+- alert_id
+- date
+- brand
+- outlet
+- source_app
+- alert_type
+- severity
+- message
+- status
+- assigned_to
+- action_taken
+- created_at
+- resolved_at
+
+
+12. WORKFLOW FINANCE HARIAN
+
+Pagi:
+- Admin cek saldo awal petty cash
+- Admin cek unpaid supplier
+- Finance cek transaksi kemarin
+
+Siang:
+- Admin input supplier costing
+- Admin input petty cash keluar
+- Admin upload nota
+
+Malam / Closing:
+- Admin import/input POS sales
+- Admin cek cash in
+- Admin cek expense harian
+- Finance app generate daily summary
+- Rules engine cek alert
+- Summary siap dibaca Hermez
+
+
+13. MIGRATION TASK DEVELOPER
+
+13.1 Audit Finance App Existing
+
+Developer cek:
+- Spreadsheet ID lama
+- Nama tab/sheet yang dipakai
+- Struktur kolom
+- Formula hardcoded
+- Data dummy
+- Role user
+- Filter brand/outlet
+- Format tanggal
+- Format rupiah
+- Bug existing
+
+Output:
+- Audit note
+- Daftar bagian yang reusable
+- Daftar bagian yang perlu diganti
+- Daftar risiko migrasi
+
+13.2 Clone Finance App
+
+Buat:
+- YKP Finance App Testing
+- YKP Finance App Production
+
+Jangan langsung edit app lama tanpa backup.
+
+13.3 Replace Database Source
+
+Ganti semua source ke:
+- YKP_FINANCE_DATABASE
+- YKP_MASTER_DATABASE
+
+Pastikan:
+- Semua form write ke database baru
+- Semua dashboard read dari database baru
+- Filter brand/outlet pakai master data YKP
+- Data dummy tidak terbaca
+- Summary sheet otomatis update
+
+13.4 Import Data Awal
+
+Data yang harus dimasukkan:
+- Master brand
+- Master outlet
+- Master supplier
+- Master kategori biaya
+- Master payment method
+- POS sales 7–30 hari
+- Supplier costing awal
+- Petty cash awal
+- Expense awal
+- Unpaid supplier awal
+
+13.5 Testing
+
+Test minimal:
+- Input POS revenue manual
+- Import Moka export
+- Input supplier costing
+- Upload nota supplier
+- Mark supplier paid/unpaid
+- Input petty cash debit
+- Input petty cash credit
+- Running balance petty cash
+- Input expense
+- Filter brand
+- Filter outlet
+- Filter periode
+- Generate summary
+- Export PDF
+
+
+14. DATA PACK YANG HARUS DIKIRIM OWNER
+
+Owner perlu siapkan folder:
+YKP ERP Finance — Data Pack
+
+Isi:
+
+1. Master Brand & Outlet
+Kolom:
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- alamat
+- PIC outlet
+- status
+
+2. Master Supplier
+Kolom:
+- supplier_id
+- nama_supplier
+- kategori
+- barang/jasa
+- nomor_hp
+- bank
+- nomor_rekening
+- nama_rekening
+- status
+
+3. Master Kategori Biaya
+Kolom:
+- category_id
+- nama_kategori
+- jenis: COGS/OPEX/CAPEX/Petty Cash
+- status
+
+4. Export Moka / POS
+Minimal 7–30 hari terakhir:
+- tanggal
+- outlet
+- gross_sales
+- net_sales
+- discount
+- refund
+- void
+- payment_method
+- transaction_count
+- item_sales
+- cashier
+- shift
+
+5. Supplier Costing
+Kolom:
+- tanggal
+- brand
+- outlet
+- supplier
+- nama_barang
+- kategori
+- qty
+- satuan
+- harga_satuan
+- total
+- status_paid
+- bukti_nota
+- PIC
+
+6. Petty Cash
+Kolom:
+- tanggal
+- brand
+- outlet
+- deskripsi
+- debit/top up
+- kredit/pengeluaran
+- saldo
+- bukti_nota
+- PIC
+
+7. Expense
+Kolom:
+- tanggal
+- brand
+- outlet
+- kategori
+- deskripsi
+- amount
+- payment_method
+- bukti
+- PIC
+
+8. Finance App Existing
+- link finance app
+- link spreadsheet database lama
+- akun testing
+- screenshot halaman
+- catatan bug
+- catatan fitur yang sudah jalan
+
+
+15. TIMELINE FINANCE MODULE V1
+
+Week 1 — Audit & Setup
+- Audit app existing
+- Buat database YKP finance
+- Setup master data
+- Clone app testing
+- Mapping sheet lama ke sheet baru
+
+Week 2 — Migration & Feature Test
+- Import master supplier
+- Import POS data
+- Import petty cash
+- Import costing supplier
+- Test input/edit/delete
+- Test filter
+- Test summary
+
+Week 3 — Pilot Brand
+- Pilot 1 brand/outlet
+- Validasi revenue vs Moka
+- Validasi petty cash vs fisik
+- Validasi supplier unpaid
+- Fix bug
+- Training admin
+
+Week 4 — Go Live Terbatas
+- Go-live Finance App untuk 1 brand
+- Support bug ringan
+- Dokumentasi basic
+- Siapkan Phase berikutnya
+
+
+16. DEFINITION OF DONE FINANCE V1
+
+Finance Module V1 dianggap selesai jika:
+- Finance App sudah pakai database YKP
+- Data dummy sudah hilang
+- Master brand/outlet/supplier sudah masuk
+- Pendapatan POS bisa diinput/import
+- Supplier costing bisa diinput
+- Petty cash bisa berjalan
+- Expense bisa dicatat
+- Unpaid supplier terlihat
+- Ringkasan finance tampil
+- Filter brand/outlet/periode jalan
+- Finance daily summary tersedia
+- Export PDF/CSV basic tersedia
+- Pilot 1 brand berjalan minimal 7 hari
+- Angka revenue cocok dengan Moka
+- Admin bisa input sendiri
+
+
+17. OUT OF SCOPE FINANCE V1
+
+Belum termasuk:
+- Moka API real-time
+- WhatsApp payment notification
+- Bank API
+- Auto transfer supplier
+- Auto payroll
+- PostgreSQL migration
+- Full multi-brand rollout
+- AI analysis full
+- Hermez full integration
+- Approval kompleks multi-level
+- Mobile app native
+
+
+18. ONE-LINER DEVELOPER
+
+Finance Module V1 adalah proses mengaktifkan Finance Web App existing agar berjalan dengan data YKP, memakai spreadsheet/database YKP baru, mencatat POS revenue, supplier costing, petty cash, expense, unpaid bills, dan menghasilkan finance daily summary yang siap dibaca Orchestration Layer dan Hermez AI.
+
+
+PESAN SINGKAT KE DEVELOPER
+
+Mas, kita mulai dari Finance ERP dulu. App finance yang sudah ada jangan dibangun ulang dari nol, tapi diclone, diganti database/spreadsheet-nya ke data YKP, dummy data dibersihkan, lalu dimapping ke master brand/outlet/supplier/kategori biaya. Fokus V1: POS revenue, supplier costing, petty cash, expense, unpaid supplier, finance summary, filter brand/outlet/periode, export basic, dan pilot 1 brand dulu. Belum masuk Moka API real-time, Hermez full, Operational, Marketing, atau database migration.

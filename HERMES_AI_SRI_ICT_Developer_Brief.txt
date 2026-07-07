@@ -1,0 +1,99 @@
+HERMES AI + SRI ICT
+
+Developer Brief (V1)
+
+Tujuan
+
+Membangun AI trading berbasis ICT yang: - Membaca market secara
+otomatis. - Menggunakan knowledge base pribadi. - Mengirim sinyal ke
+Telegram. - Memiliki Risk Manager. - Siap berkembang menuju auto
+execution.
+
+Arsitektur
+
+YouTube/PDF/Notes → Knowledge Base → Vector Database (RAG) → Hermes Core
+→ ICT Logic Engine → Risk Manager → Telegram Signal → MT5 EA → Journal &
+Audit
+
+Knowledge Pipeline
+
+1.  Ambil video YouTube.
+2.  Ambil transcript.
+3.  Rapikan dengan AI.
+4.  Simpan Markdown/TXT.
+5.  Kategorikan ke folder.
+6.  Index ke Vector DB.
+
+Struktur Folder
+
+Hermes_Knowledge/ - ICT Foundation - Market Structure - Liquidity - PD
+Array - FVG - IFVG - MSS - BOS - Order Block - Breaker - Mitigation -
+Turtle Soup - Silver Bullet - Judas Swing - SMT - DOL - MDO - TDO - Kill
+Zone - News - Risk Management - Psychology - Funding Rules - Journal -
+SOP Sri ICT - Strategy Improvement
+
+Workflow Harian
+
+Senin: - Tambah minimal 3 knowledge baru.
+
+Selasa: - SOP & Logic ICT.
+
+Rabu: - Backtest + dokumentasi.
+
+Kamis: - Improvement Hermes.
+
+Jumat: - News & Risk Manager.
+
+Sabtu: - Telegram & integrasi.
+
+Minggu: - Weekly review.
+
+Agent
+
+-   ICT Mentor
+-   News Analyst
+-   Risk Manager
+-   Trade Auditor
+-   Psychology Coach
+
+Logic ICT
+
+Urutan analisa: HTF Bias → Premium/Discount → PD Array → Liquidity →
+Sweep → MSS → IFVG → Entry → Risk → TP/SL
+
+Syarat Entry
+
+-   No Sweep = No Trade
+-   No MSS = No Trade
+-   No IFVG = No Entry
+-   News Filter
+-   Session Filter
+-   Score minimal (mis. 80/100)
+
+Telegram Signal
+
+Berisi: - Bias - Setup - Alasan entry - Entry - SL - TP - RR - Score -
+Status
+
+Roadmap
+
+Phase 1 - Knowledge Base - RAG - Telegram Signal
+
+Phase 2 - Semi Auto - EA Risk Manager - Manual Approval
+
+Phase 3 - Full Auto Execution - Journal - Audit - Dashboard
+
+Teknologi
+
+-   Python
+-   FastAPI
+-   Vector DB (ChromaDB/FAISS/Qdrant)
+-   Gemini/OpenAI/Qwen (opsional)
+-   MT5 API
+-   Telegram Bot API
+
+Target Akhir
+
+Hermes mampu: - Membaca HTF. - Menentukan bias. - Membaca liquidity. -
+Menilai setup. - Menghasilkan sinyal berkualitas. - Mengelola risiko. -
+Mencatat jurnal. - Mendukung otomatisasi trading sesuai SOP Sri ICT.

@@ -1,0 +1,36 @@
+{
+  "name": "ykp-erp",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n hr,finance,hermez -c \"#36a3ff,#ff9d00,#a3ff36\" \"npm:dev:hr\" \"npm:dev:finance\" \"npm:dev:hermez\"",
+    "dev:hr": "npm run dev --workspace apps/hr",
+    "dev:finance": "npm run dev --workspace apps/finance",
+    "dev:hermez": "npm run dev --workspace apps/hermez",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:generate": "drizzle-kit generate --config=packages/schema/drizzle.config.ts",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed": "node scripts/seed.mjs",
+    "test": "vitest run",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "concurrently": "^9.1.0",
+    "drizzle-kit": "^0.28.0",
+    "ioredis": "^5.4.1",
+    "pg": "^8.13.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20.18.0"
+  }
+}

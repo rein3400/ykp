@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig.json",
+  "display": "YKP ERP Base",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "auto",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
+    "isolatedModules": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ykp/config": ["./packages/config/src/index.ts"],
+      "@ykp/config/*": ["./packages/config/src/*"],
+      "@ykp/ui": ["./packages/ui/src/index.ts"],
+      "@ykp/ui/*": ["./packages/ui/src/*"],
+      "@ykp/auth": ["./packages/auth/src/index.ts"],
+      "@ykp/auth/*": ["./packages/auth/src/*"],
+      "@ykp/engine": ["./packages/engine/src/index.ts"],
+      "@ykp/engine/*": ["./packages/engine/src/*"],
+      "@ykp/schema": ["./packages/schema/src/index.ts"],
+      "@ykp/schema/*": ["./packages/schema/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", ".next"]
+}

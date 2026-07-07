@@ -1,0 +1,528 @@
+//@version=5
+// ============================================================
+// YKP SRI ICT Silver Bullet (v2) — YKP AI Orchestrator / Hermes
+// Spec: YKP_Orchestrator_Detail_Workflow_for_Developer_v1.txt §9-10
+// ============================================================
+// v2 fixes (per professional ICT Pine Script research):
+//   1. Timezone-robust Silver Bullet windows via input.session() + GMT offset
+//   2. No-repaint HTF/DOL/SMT via request.security(..., exp[1], lookahead_on)
+//   3. Alerts fire on bar close (alert.freq_once_per_bar_close)
+//   4. MSS uses body-close break (not wick) + sweep counter reset after MSS
+//   5. FVG array-based FIFO with body-close mitigation
+//   6. HTF Bias = BOS/CHoCH state machine (not HH/HL pattern)
+//
+// IMPORTANT: Set chart timezone to Asia/Jakarta (UTC+7) for visual consistency,
+// but killzone detection is now independent of chart timezone.
+// ============================================================
+
+indicator("YKP SRI ICT Silver Bullet v2", shorttitle="YKP ICT SB v2", overlay=true, max_bars_back=5000, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+
+// ============================================================
+// INPUTS
+// ============================================================
+i_pair          = input.string("XAUUSD",                "Pair symbol untuk webhook",                group="Webhook")
+i_timeframe     = input.string("M15",                   "Current chart timeframe label",             group="Webhook")
+i_htf           = input.timeframe("240",                "HTF untuk Bias & DOL",                      group="Structure")
+i_corrSymbol    = input.symbol("OANDA:EURUSD",         "Correlation symbol untuk SMT",              group="SMT")
+i_smtEnabled    = input.bool(true,                      "Enable SMT confluence",                     group="SMT")
+i_smtMinCorr    = input.float(0.6,                      "SMT minimum |correlation| (30-bar)",        group="SMT", step=0.1, minval=0, maxval=1)
+i_lookback      = input.int(5,                          "Swing lookback bars",                       group="Structure", minval=2, maxval=50)
+i_setupTtl      = input.int(10,                         "Max bars antar confluence step",            group="Structure", minval=3, maxval=50)
+i_mssBodyOnly   = input.bool(true,                     "MSS pakai body-close (bukan wick)",          group="Structure")
+// ponytail: FVG mitigation hardcode body-close per PRD minimalism. Add wick/50pct mode only if PRD §9 expands mitigation semantics.
+i_showFvg       = input.bool(false,                    "Draw FVG boxes",                            group="FVG")
+i_maxFvgBoxes   = input.int(8,                         "Max FVG boxes per side (chart rapi)",       group="FVG", minval=0, maxval=50)
+i_showOb        = input.bool(false,                    "Draw order blocks (visual only)",          group="Order Blocks")
+i_obAtrMult     = input.float(1.5,                     "OB displacement ATR multiple",              group="Order Blocks", minval=1.0, maxval=4.0, step=0.1)
+i_maxObBoxes    = input.int(10,                        "Max OB boxes per side (chart rapi)",        group="Order Blocks", minval=0, maxval=50)
+i_sbTz          = input.string("Asia/Jakarta",         "Silver Bullet timezone (IANA)",             group="SB Windows", options=["Asia/Jakarta", "Asia/Tokyo", "Europe/London", "America/New_York", "Etc/GMT+0", "Etc/GMT-5", "Etc/GMT-4"])
+i_asiaSession   = input.session("1000-1100",            "Asia SB window",                            group="SB Windows")
+i_londonSession = input.session("1400-1500",            "London SB window",                          group="SB Windows")
+i_nySession     = input.session("1930-2030",            "NY SB window",                              group="SB Windows")
+i_showDol       = input.bool(false,                    "Draw DOL lines (HTF liquidity)",            group="DOL")
+i_showPdhPdl    = input.bool(false,                    "Draw PDH/PDL/PWH/PWL",                      group="DOL")
+
+// ============================================================
+// HELPERS
+// ============================================================
+// No-repaint security wrapper: returns confirmed (prior) HTF bar data.
+// Tradeoff: 1 HTF bar lag, but guarantees no repaint on realtime bar.
+nrSecurity(src, tf, exp) => request.security(src, tf, exp[1], lookahead = barmerge.lookahead_on)
+
+rising(cond) => cond and not cond[1]
+fmt2(v) => v < 10 ? "0" + str.tostring(v) : str.tostring(v)
+
+wibTimestamp() =>
+    str.tostring(year) + "-" + fmt2(month) + "-" + fmt2(dayofmonth) + "T" + fmt2(hour) + ":" + fmt2(minute) + ":" + fmt2(second) + "+07:00"
+
+// ============================================================
+// SILVER BULLET TIME WINDOWS (timezone-robust)
+// ============================================================
+// time() with explicit GMT offset timezone — independent of chart TZ.
+sbAsia   = not na(time(timeframe.period, i_asiaSession,   i_sbTz))
+sbLondon = not na(time(timeframe.period, i_londonSession, i_sbTz))
+sbNy     = not na(time(timeframe.period, i_nySession,     i_sbTz))
+sbActive = sbAsia or sbLondon or sbNy
+sbSessionName = sbAsia ? "ASIA_SB" : sbLondon ? "LONDON_SB" : sbNy ? "NY_SB" : "NONE"
+
+// Rising edge once per session entry (avoid spamming on every bar in window)
+var bool prevSbActive = false
+bool sbEntryNow = sbActive and not prevSbActive
+prevSbActive := sbActive
+
+// ============================================================
+// WEBHOOK JSON BUILDER
+// ============================================================
+buildJson(signal) =>
+    '{"source":"tradingview","pair":"' + i_pair + '","timeframe":"' + i_timeframe + '","signal":"' + signal + '","price":' + str.tostring(close, "#.########") + ',"session":"' + sbSessionName + '","timestamp":"' + wibTimestamp() + '","bar_index":' + str.tostring(bar_index) + '}'
+
+// ============================================================
+// HTF BIAS — BOS/CHoCH STATE MACHINE
+// ============================================================
+// Non-repaint HTF pivots
+phHtf = nrSecurity(syminfo.tickerid, i_htf, ta.pivothigh(high, i_lookback, i_lookback))
+plHtf = nrSecurity(syminfo.tickerid, i_htf, ta.pivotlow(low, i_lookback, i_lookback))
+
+var float lastHtfHigh = na
+var float prevHtfHigh = na
+var float lastHtfLow  = na
+var float prevHtfLow  = na
+
+if not na(phHtf)
+    prevHtfHigh := lastHtfHigh
+    lastHtfHigh := phHtf
+if not na(plHtf)
+    prevHtfLow := lastHtfLow
+    lastHtfLow := plHtf
+
+// HTF BOS/CHoCH state machine (non-repaint: use HTF close, lag 1 bar)
+var int htfTrend = 0          // 1 = bull, -1 = bear, 0 = neutral
+var bool htfTrendInit = false
+
+htfClose = nrSecurity(syminfo.tickerid, i_htf, close)
+
+bool bullBreak = not na(lastHtfHigh) and htfClose > lastHtfHigh and htfClose[1] <= lastHtfHigh
+bool bearBreak = not na(lastHtfLow)  and htfClose < lastHtfLow  and htfClose[1] >= lastHtfLow
+
+if bullBreak and not htfTrendInit
+    htfTrend := 1
+    htfTrendInit := true
+else if bearBreak and not htfTrendInit
+    htfTrend := -1
+    htfTrendInit := true
+else if bullBreak and htfTrendInit
+    htfTrend := 1       // BOS (same-dir) or CHoCH (flip from bear) → both = bull
+else if bearBreak and htfTrendInit
+    htfTrend := -1      // BOS or CHoCH → bear
+
+string htfBias = htfTrend == 1 ? "BULL" : htfTrend == -1 ? "BEAR" : "NEUTRAL"
+
+// ============================================================
+// DOL — HTF LIQUIDITY LEVELS (BSL above price, SSL below price)
+// ============================================================
+// ICT: BSL = buy-side liquidity rests ABOVE price (where short stops sit).
+//      SSL = sell-side liquidity rests BELOW price (where long stops sit).
+// Track recent N HTF pivots in float arrays, then pick nearest-valid per bar
+// to ensure DOL is reachable from current price (sweep condition can fire).
+var int   maxHtfPivots = 20
+var float[] htfPivotHighs = array.new_float(maxHtfPivots)
+var float[] htfPivotLows  = array.new_float(maxHtfPivots)
+
+if not na(phHtf)
+    array.push(htfPivotHighs, phHtf)
+    if array.size(htfPivotHighs) > maxHtfPivots
+        array.shift(htfPivotHighs)
+if not na(plHtf)
+    array.push(htfPivotLows, plHtf)
+    if array.size(htfPivotLows) > maxHtfPivots
+        array.shift(htfPivotLows)
+
+// Nearest valid DOL: BSL = lowest HTF high ABOVE close, SSL = highest HTF low BELOW close.
+float dolBuySide  = na
+float dolSellSide = na
+if array.size(htfPivotHighs) > 0
+    float bestBsl = na
+    for i = 0 to array.size(htfPivotHighs) - 1
+        float v = array.get(htfPivotHighs, i)
+        if v > close and (na(bestBsl) or v < bestBsl)
+            bestBsl := v
+    dolBuySide := bestBsl
+if array.size(htfPivotLows) > 0
+    float bestSsl = na
+    for i = 0 to array.size(htfPivotLows) - 1
+        float v = array.get(htfPivotLows, i)
+        if v < close and (na(bestSsl) or v > bestSsl)
+            bestSsl := v
+    dolSellSide := bestSsl
+
+// Optional: PDH/PDL/PWH/PWL as additional DOL targets
+pdh = i_showPdhPdl ? nrSecurity(syminfo.tickerid, "D", high) : na
+pdl = i_showPdhPdl ? nrSecurity(syminfo.tickerid, "D", low)  : na
+pwh = i_showPdhPdl ? nrSecurity(syminfo.tickerid, "W", high) : na
+pwl = i_showPdhPdl ? nrSecurity(syminfo.tickerid, "W", low)  : na
+
+// ============================================================
+// SIGNAL TF SWINGS (current chart, for MSS confirmation)
+// ============================================================
+phSig = ta.pivothigh(high, i_lookback, i_lookback)
+plSig = ta.pivotlow(low, i_lookback, i_lookback)
+
+var float lastSwingHigh = na
+var float lastSwingLow  = na
+
+if not na(phSig)
+    lastSwingHigh := phSig
+if not na(plSig)
+    lastSwingLow := plSig
+
+// ============================================================
+// SWEEP (SSL / BSL)
+// ============================================================
+// Bullish setup: sweep SSL (low poke below DOL sell-side) lalu close balik di atas.
+// Bearish setup: sweep BSL (high poke di atas DOL buy-side) lalu close balik di bawah.
+bool sweepSslNow = (htfBias == "BULL" or htfBias == "NEUTRAL") and low < dolSellSide and close > dolSellSide and not na(dolSellSide)
+bool sweepBslNow = (htfBias == "BEAR" or htfBias == "NEUTRAL") and high > dolBuySide  and close < dolBuySide  and not na(dolBuySide)
+
+// Sweep counter — manual tracking so we can RESET after MSS fires (pro pattern)
+var int barsSinceSweepSsl = na
+var int barsSinceSweepBsl = na
+
+if sweepSslNow
+    barsSinceSweepSsl := 0
+else if not na(barsSinceSweepSsl)
+    barsSinceSweepSsl += 1
+
+if sweepBslNow
+    barsSinceSweepBsl := 0
+else if not na(barsSinceSweepBsl)
+    barsSinceSweepBsl += 1
+
+// ============================================================
+// MSS (Market Structure Shift)
+// ============================================================
+// Body-close break (not wick) — pro pattern. Hard rule: must have sweep first.
+bool mssBullBreak = i_mssBodyOnly ? (close > lastSwingHigh and close[1] <= lastSwingHigh) : ta.crossover(close, lastSwingHigh)
+bool mssBearBreak = i_mssBodyOnly ? (close < lastSwingLow  and close[1] >= lastSwingLow)  : ta.crossunder(close, lastSwingLow)
+
+bool mssBullNow = (htfBias == "BULL" or htfBias == "NEUTRAL")
+                  and not na(lastSwingHigh)
+                  and mssBullBreak
+                  and not na(barsSinceSweepSsl) and barsSinceSweepSsl < i_setupTtl
+
+bool mssBearNow = (htfBias == "BEAR" or htfBias == "NEUTRAL")
+                  and not na(lastSwingLow)
+                  and mssBearBreak
+                  and not na(barsSinceSweepBsl) and barsSinceSweepBsl < i_setupTtl
+
+// Reset sweep counter after MSS fires (one sweep → one MSS, not multiple)
+if mssBullNow
+    barsSinceSweepSsl := na
+if mssBearNow
+    barsSinceSweepBsl := na
+
+// MSS counter for IFVG TTL
+var int barsSinceMssBull = na
+var int barsSinceMssBear = na
+
+if mssBullNow
+    barsSinceMssBull := 0
+else if not na(barsSinceMssBull)
+    barsSinceMssBull += 1
+
+if mssBearNow
+    barsSinceMssBear := 0
+else if not na(barsSinceMssBear)
+    barsSinceMssBear += 1
+
+// ============================================================
+// FVG (Fair Value Gap) — ARRAY-BASED FIFO with body-close mitigation
+// ============================================================
+// Bull FVG: low[0] > high[2]  (gap between bar 0 low and bar 2 high)
+// Bear FVG: high[0] < low[2]
+var box[] bullFvgBoxes = array.new_box()
+var box[] bearFvgBoxes = array.new_box()
+var box[] tempBullFvg   = array.new_box()
+var box[] tempBearFvg   = array.new_box()
+var int   bullFvgAnchorTime = na   // anchor time of most recent bull FVG (for OB matching)
+var int   bearFvgAnchorTime = na
+
+// Limit FVG array size — drop oldest if exceeds cap
+if array.size(bullFvgBoxes) > i_maxFvgBoxes
+    box.delete(array.shift(bullFvgBoxes))
+if array.size(bearFvgBoxes) > i_maxFvgBoxes
+    box.delete(array.shift(bearFvgBoxes))
+
+// Mitigation mode flags (Pine v5 doesn't allow dynamic string in if-chain inside loop cleanly)
+// Body-close mitigation is the default pro pattern; mode toggle reserved for future expansion.
+
+// Create new FVG on confirmed bar — use xloc.bar_time to avoid "left too far" runtime error
+if barstate.isconfirmed
+    if low > high[2]
+        newBox = box.new(left=time[2], top=low, right=time, bottom=high[2], xloc=xloc.bar_time, border_color=color.new(color.green, 50), bgcolor=color.new(color.green, 85))
+        array.push(bullFvgBoxes, newBox)
+        bullFvgAnchorTime := time[2]
+    if high < low[2]
+        newBox = box.new(left=time[2], top=low[2], right=time, bottom=high, xloc=xloc.bar_time, border_color=color.new(color.red, 50), bgcolor=color.new(color.red, 85))
+        array.push(bearFvgBoxes, newBox)
+        bearFvgAnchorTime := time[2]
+
+// FVG boxes stay anchored to formation (3-bar gap, xloc.bar_time) — no per-bar extension.
+// Keeps chart neat: each box nempel ke candle pembentuknya, gak ngerembet sampai bar sekarang.
+
+// Body-close mitigation: rebuild array each bar, drop mitigated boxes
+if array.size(bullFvgBoxes) > 0
+    array.clear(tempBullFvg)
+    for i = 0 to array.size(bullFvgBoxes) - 1
+        b = array.get(bullFvgBoxes, i)
+        if close >= box.get_bottom(b)
+            array.push(tempBullFvg, b)
+        else
+            box.delete(b)
+    bullFvgBoxes := tempBullFvg
+
+if array.size(bearFvgBoxes) > 0
+    array.clear(tempBearFvg)
+    for i = 0 to array.size(bearFvgBoxes) - 1
+        b = array.get(bearFvgBoxes, i)
+        if close <= box.get_top(b)
+            array.push(tempBearFvg, b)
+        else
+            box.delete(b)
+    bearFvgBoxes := tempBearFvg
+
+// Active FVG presence (for IFVG signal)
+bool activeBullFvg = array.size(bullFvgBoxes) > 0
+bool activeBearFvg = array.size(bearFvgBoxes) > 0
+
+// IFVG signal: FVG exists + within MSS TTL
+bool ifvgBullNow = activeBullFvg and (htfBias == "BULL" or htfBias == "NEUTRAL")
+                   and not na(barsSinceMssBull) and barsSinceMssBull < i_setupTtl
+                   and not na(bullFvgAnchorTime)
+
+bool ifvgBearNow = activeBearFvg and (htfBias == "BEAR" or htfBias == "NEUTRAL")
+                   and not na(barsSinceMssBear) and barsSinceMssBear < i_setupTtl
+                   and not na(bearFvgAnchorTime)
+
+// ============================================================
+// SMT (Smart Money Technique) — correlation divergence
+// ============================================================
+// Use confirmed correlation pair data (no repaint), filter by correlation strength.
+corrClose = nrSecurity(i_corrSymbol, timeframe.period, close)
+corrLow   = nrSecurity(i_corrSymbol, timeframe.period, low)
+corrHigh  = nrSecurity(i_corrSymbol, timeframe.period, high)
+
+float corrStrength = ta.correlation(close, corrClose, 30)
+
+// SMT bullish: kita sweep SSL, pair korelasi TIDAK sweep SSL-nya (corrLow[1] >= corrLow[2])
+// SMT bearish: kita sweep BSL, pair korelasi TIDAK sweep BSL-nya (corrHigh[1] <= corrHigh[2])
+bool smtBullNow = i_smtEnabled
+                  and not na(corrStrength) and math.abs(corrStrength) >= i_smtMinCorr
+                  and sweepSslNow
+                  and corrLow[1] >= corrLow[2]
+
+bool smtBearNow = i_smtEnabled
+                  and not na(corrStrength) and math.abs(corrStrength) >= i_smtMinCorr
+                  and sweepBslNow
+                  and corrHigh[1] <= corrHigh[2]
+
+// ============================================================
+// ALERTS — fire on bar close only (no repaint)
+// ============================================================
+if rising(htfBias == "BULL")
+    alert(buildJson("HTF_BIAS_BULL"), alert.freq_once_per_bar_close)
+
+if rising(htfBias == "BEAR")
+    alert(buildJson("HTF_BIAS_BEAR"), alert.freq_once_per_bar_close)
+
+if rising(not na(phHtf))
+    alert(buildJson("DOL_BUY"), alert.freq_once_per_bar_close)
+
+if rising(not na(plHtf))
+    alert(buildJson("DOL_SELL"), alert.freq_once_per_bar_close)
+
+if rising(sweepSslNow)
+    alert(buildJson("SWEEP_SSL"), alert.freq_once_per_bar_close)
+
+if rising(sweepBslNow)
+    alert(buildJson("SWEEP_BSL"), alert.freq_once_per_bar_close)
+
+if rising(mssBullNow)
+    alert(buildJson("MSS_BULL"), alert.freq_once_per_bar_close)
+
+if rising(mssBearNow)
+    alert(buildJson("MSS_BEAR"), alert.freq_once_per_bar_close)
+
+if rising(ifvgBullNow)
+    alert(buildJson("IFVG_BULL"), alert.freq_once_per_bar_close)
+
+if rising(ifvgBearNow)
+    alert(buildJson("IFVG_BEAR"), alert.freq_once_per_bar_close)
+
+if rising(smtBullNow)
+    alert(buildJson("SMT_BULL"), alert.freq_once_per_bar_close)
+
+if rising(smtBearNow)
+    alert(buildJson("SMT_BEAR"), alert.freq_once_per_bar_close)
+
+if rising(sbEntryNow)
+    alert(buildJson("SILVER_BULLET_TIME"), alert.freq_once_per_bar_close)
+
+// ============================================================
+// VISUALS — final BUY/SELL only (intermediate logic hidden per request)
+// Internal confluence (sweep/MSS/IFVG/SB) tetap jalan untuk webhook + Orchestrator state machine.
+// ============================================================
+// Final entry signal: IFVG confirmed = confluence sequence complete (HTF Bias → DOL → Sweep → MSS → IFVG).
+bool buySignal  = ifvgBullNow
+bool sellSignal = ifvgBearNow
+
+plotshape(buySignal,  title="BUY",  style=shape.labelup,   location=location.belowbar, color=color.green,  text="BUY",  textcolor=color.white, size=size.small)
+plotshape(sellSignal, title="SELL", style=shape.labeldown, location=location.abovebar, color=color.red,    text="SELL", textcolor=color.white, size=size.small)
+
+// ============================================================
+// DIAGNOSTIC PANEL — internal debug (delete after indicator stabil)
+// ============================================================
+var table diagPanel = table.new(position.bottom_right, 2, 8, bgcolor=color.new(color.black, 80), border_width=1)
+if barstate.islast
+    table.cell(diagPanel, 0, 0, "YKP STATE", text_color=color.yellow, text_size=size.small)
+    table.cell(diagPanel, 0, 1, "HTF Bias", text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 1, 1, htfBias, text_color=htfTrend == 1 ? color.green : htfTrend == -1 ? color.red : color.gray, text_size=size.tiny)
+    table.cell(diagPanel, 0, 2, "DOL SSL/BSL", text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 1, 2, str.tostring(dolSellSide, "#.##") + " / " + str.tostring(dolBuySide, "#.##"), text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 0, 3, "Bars Since Sweep", text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 1, 3, "S:" + str.tostring(barsSinceSweepSsl) + " B:" + str.tostring(barsSinceSweepBsl), text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 0, 4, "Bars Since MSS", text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 1, 4, "S:" + str.tostring(barsSinceMssBull) + " B:" + str.tostring(barsSinceMssBear), text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 0, 5, "Active FVG", text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 1, 5, "B:" + str.tostring(array.size(bullFvgBoxes)) + " S:" + str.tostring(array.size(bearFvgBoxes)), text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 0, 6, "SB Session", text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 1, 6, sbSessionName, text_color=sbActive ? color.lime : color.gray, text_size=size.tiny)
+    table.cell(diagPanel, 0, 7, "Sweep/MSS/IFVG", text_color=color.white, text_size=size.tiny)
+    table.cell(diagPanel, 1, 7, str.tostring(sweepSslNow ? "SwS" : "") + str.tostring(mssBullNow ? " MsB" : "") + str.tostring(ifvgBullNow ? " IFVGB" : "") + " | " + str.tostring(sweepBslNow ? "SwB" : "") + str.tostring(mssBearNow ? " MsS" : "") + str.tostring(ifvgBearNow ? " IFVGS" : ""), text_color=color.aqua, text_size=size.tiny)
+
+// Dynamic FVG Visibility Controller — toggle hides/shows cleanly
+if array.size(bullFvgBoxes) > 0
+    for i = 0 to array.size(bullFvgBoxes) - 1
+        box.set_bgcolor(array.get(bullFvgBoxes, i), i_showFvg ? color.new(color.green, 85) : na)
+        box.set_border_color(array.get(bullFvgBoxes, i), i_showFvg ? color.new(color.green, 50) : na)
+
+if array.size(bearFvgBoxes) > 0
+    for i = 0 to array.size(bearFvgBoxes) - 1
+        box.set_bgcolor(array.get(bearFvgBoxes, i), i_showFvg ? color.new(color.red, 85) : na)
+        box.set_border_color(array.get(bearFvgBoxes, i), i_showFvg ? color.new(color.red, 50) : na)
+
+// ============================================================
+// DOL LINES — fixed horizontal tracking (update both xy1 and xy2 each bar)
+// ============================================================
+var line dolBslLine = na
+var line dolSslLine = na
+var line pdhLine    = na
+var line pdlLine    = na
+var line pwhLine    = na
+var line pwlLine    = na
+
+if i_showDol and not na(dolBuySide)
+    if na(dolBslLine)
+        dolBslLine := line.new(bar_index, dolBuySide, bar_index, dolBuySide, extend=extend.right, color=color.new(color.red, 60), width=1, style=line.style_dashed)
+    else
+        line.set_xy1(dolBslLine, bar_index, dolBuySide)
+        line.set_xy2(dolBslLine, bar_index, dolBuySide)
+else
+    line.delete(dolBslLine)
+    dolBslLine := na
+
+if i_showDol and not na(dolSellSide)
+    if na(dolSslLine)
+        dolSslLine := line.new(bar_index, dolSellSide, bar_index, dolSellSide, extend=extend.right, color=color.new(color.green, 60), width=1, style=line.style_dashed)
+    else
+        line.set_xy1(dolSslLine, bar_index, dolSellSide)
+        line.set_xy2(dolSslLine, bar_index, dolSellSide)
+else
+    line.delete(dolSslLine)
+    dolSslLine := na
+
+if i_showPdhPdl and not na(pdh)
+    if na(pdhLine)
+        pdhLine := line.new(bar_index, pdh, bar_index, pdh, extend=extend.right, color=color.new(color.gray, 40), width=1, style=line.style_dashed)
+    else
+        line.set_xy1(pdhLine, bar_index, pdh)
+        line.set_xy2(pdhLine, bar_index, pdh)
+else
+    line.delete(pdhLine)
+    pdhLine := na
+
+if i_showPdhPdl and not na(pdl)
+    if na(pdlLine)
+        pdlLine := line.new(bar_index, pdl, bar_index, pdl, extend=extend.right, color=color.new(color.gray, 40), width=1, style=line.style_dashed)
+    else
+        line.set_xy1(pdlLine, bar_index, pdl)
+        line.set_xy2(pdlLine, bar_index, pdl)
+else
+    line.delete(pdlLine)
+    pdlLine := na
+
+if i_showPdhPdl and not na(pwh)
+    if na(pwhLine)
+        pwhLine := line.new(bar_index, pwh, bar_index, pwh, extend=extend.right, color=color.new(color.blue, 60), width=1, style=line.style_dashed)
+    else
+        line.set_xy1(pwhLine, bar_index, pwh)
+        line.set_xy2(pwhLine, bar_index, pwh)
+else
+    line.delete(pwhLine)
+    pwhLine := na
+
+if i_showPdhPdl and not na(pwl)
+    if na(pwlLine)
+        pwlLine := line.new(bar_index, pwl, bar_index, pwl, extend=extend.right, color=color.new(color.blue, 60), width=1, style=line.style_dashed)
+    else
+        line.set_xy1(pwlLine, bar_index, pwl)
+        line.set_xy2(pwlLine, bar_index, pwl)
+else
+    line.delete(pwlLine)
+    pwlLine := na
+
+// ============================================================
+// ORDER BLOCKS (FVG-validated, optional visual)
+// ============================================================
+// On confirmed pivotlow/pivothigh, take origin-most active bull/bear FVG anchor >= swing bar.
+atrVal = ta.atr(14)
+
+// OB storage arrays (FVG-validated order blocks)
+var box[] bullObBoxes = array.new_box()
+var box[] bearObBoxes = array.new_box()
+
+if i_showOb and barstate.isconfirmed
+    if not na(plSig) and array.size(bullFvgBoxes) > 0
+        for i = 0 to array.size(bullFvgBoxes) - 1
+            anchorTime = box.get_left(array.get(bullFvgBoxes, i))
+            if math.abs(close - open) >= atrVal * i_obAtrMult
+                obBox = box.new(left=anchorTime, top=box.get_top(array.get(bullFvgBoxes, i)), right=time, bottom=box.get_bottom(array.get(bullFvgBoxes, i)), xloc=xloc.bar_time, border_color=color.new(color.teal, 30), bgcolor=color.new(color.teal, 80), text="Bull OB")
+                array.push(bullObBoxes, obBox)
+                break
+    if not na(phSig) and array.size(bearFvgBoxes) > 0
+        for i = 0 to array.size(bearFvgBoxes) - 1
+            anchorTime = box.get_left(array.get(bearFvgBoxes, i))
+            if math.abs(close - open) >= atrVal * i_obAtrMult
+                obBox = box.new(left=anchorTime, top=box.get_top(array.get(bearFvgBoxes, i)), right=time, bottom=box.get_bottom(array.get(bearFvgBoxes, i)), xloc=xloc.bar_time, border_color=color.new(color.purple, 30), bgcolor=color.new(color.purple, 80), text="Bear OB")
+                array.push(bearObBoxes, obBox)
+                break
+
+// Cap OB array size
+if array.size(bullObBoxes) > i_maxObBoxes
+    box.delete(array.shift(bullObBoxes))
+if array.size(bearObBoxes) > i_maxObBoxes
+    box.delete(array.shift(bearObBoxes))
+
+// OB boxes anchored to formation (xloc.bar_time) — no per-bar extension.
+
+// Dynamic OB Visibility Controller — toggle hides/shows cleanly
+if array.size(bullObBoxes) > 0
+    for i = 0 to array.size(bullObBoxes) - 1
+        box.set_bgcolor(array.get(bullObBoxes, i), i_showOb ? color.new(color.teal, 80) : na)
+        box.set_border_color(array.get(bullObBoxes, i), i_showOb ? color.new(color.teal, 30) : na)
+        box.set_text_color(array.get(bullObBoxes, i), i_showOb ? color.white : na)
+
+if array.size(bearObBoxes) > 0
+    for i = 0 to array.size(bearObBoxes) - 1
+        box.set_bgcolor(array.get(bearObBoxes, i), i_showOb ? color.new(color.purple, 80) : na)
+        box.set_border_color(array.get(bearObBoxes, i), i_showOb ? color.new(color.purple, 30) : na)
+        box.set_text_color(array.get(bearObBoxes, i), i_showOb ? color.white : na)

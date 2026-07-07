@@ -1,0 +1,87 @@
+/**
+ * GET /api/fin/analytics/profit?period=...&brand_id=...&outlet_id=...
+ *
+ * Returns revenue, expense, supplier_cost, petty_cash_out, and net
+ * (revenue - expense - supplier_cost - petty_cash_out) for the window.
+ */
+import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
+import { type NextRequest } from "next/server";
+import { Role } from "@ykp/config";
+import { requireRole } from "@ykp/auth";
+import { finPosDaily, finExpense, finSupplierCost, finPettyCash } from "@ykp/schema";
+import { getFinanceDb } from "@/lib/server/db.js";
+import { handler, ok, fail } from "@/lib/server/http.js";
+import { todayWib } from "@ykp/engine";
+import { FinAnalyticsPeriodSchema } from "@/lib/schemas.js";
+
+function windowFor(period: string): { from: string; to: string } {
+  const today = new Date(todayWib());
+  const to = today;
+  let from = new Date(today);
+  switch (period) {
+    case "day":
+      break;
+    case "week":
+      from.setDate(today.getDate() - 6);
+      break;
+    case "month":
+      from = new Date(today.getFullYear(), today.getMonth(), 1);
+      break;
+    case "quarter":
+      from.setDate(today.getDate() - 89);
+      break;
+    case "year":
+      from.setFullYear(today.getFullYear() - 1);
+      break;
+  }
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return { from: `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`, to: `${to.getFullYear()}-${pad(to.getMonth() + 1)}-${pad(to.getDate())}` };
+}
+
+async function sumWhere(table: typeof finPosDaily | typeof finExpense | typeof finSupplierCost | typeof finPettyCash, column: typeof finPosDaily.netSales | typeof finExpense.amount | typeof finSupplierCost.amount | typeof finPettyCash.amount, conds: ReturnType<typeof eq>[]) {
+  const db = getFinanceDb();
+  const rows = await db.select({ v: sum(column) }).from(table).where(conds.length ? and(...conds) : undefined);
+  return Number(rows[0]?.v ?? 0);
+}
+
+export const GET = handler(async (req: NextRequest) => {
+  const user = await requireRole([
+    Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.VIEWER,
+  ]);
+  void user;
+  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const parsed = FinAnalyticsPeriodSchema.safeParse(search);
+  if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
+
+  const { period, brand_id, outlet_id, date_from, date_to } = parsed.data;
+  const win = windowFor(period);
+  const from = date_from ?? win.from;
+  const to = date_to ?? win.to;
+
+  const posConds = [gte(finPosDaily.date, from), lte(finPosDaily.date, to)];
+  const expConds = [gte(finExpense.date, from), lte(finExpense.date, to)];
+  const supConds = [gte(finSupplierCost.date, from), lte(finSupplierCost.date, to)];
+  // Only money leaving the till (type='out') counts toward net profit.
+  const pettyConds = [gte(finPettyCash.date, from), lte(finPettyCash.date, to), eq(finPettyCash.type, "out")];
+  if (brand_id) {
+    posConds.push(eq(finPosDaily.brandId, brand_id));
+    expConds.push(eq(finExpense.brandId, brand_id));
+    supConds.push(eq(finSupplierCost.brandId, brand_id));
+    pettyConds.push(eq(finPettyCash.brandId, brand_id));
+  }
+  if (outlet_id) {
+    posConds.push(eq(finPosDaily.outletId, outlet_id));
+    expConds.push(eq(finExpense.outletId, outlet_id));
+    supConds.push(eq(finSupplierCost.outletId, outlet_id));
+    pettyConds.push(eq(finPettyCash.outletId, outlet_id));
+  }
+
+  const revenue = await sumWhere(finPosDaily, finPosDaily.netSales, posConds);
+  const expense = await sumWhere(finExpense, finExpense.amount, expConds);
+  const supplierCost = await sumWhere(finSupplierCost, finSupplierCost.amount, supConds);
+  const pettyCashOut = await sumWhere(finPettyCash, finPettyCash.amount, pettyConds);
+  const net = revenue - expense - supplierCost - pettyCashOut;
+  void sql;
+
+  return ok({ period, from, to, revenue, expense, supplier_cost: supplierCost, petty_cash_out: pettyCashOut, net });
+});

@@ -1,0 +1,207 @@
+﻿DEVELOPER BRIEFYKP HERMEZ AI COMMAND CENTER
+Update: HR App sudah running, Finance App sudah ada tapi belum running. Fokus awal adalah migrasi data YKP ke web app adik, lalu Hermez membaca summary untuk owner brief dan alert.
+1. Context dan Status Terbaru
+Komponen
+Status Sekarang
+Action Berikutnya
+HR Web App
+Sudah ada dan sudah running
+Clone/konfigurasi untuk YKP, migrasi master karyawan, aturan shift, payroll, dan testing.
+Finance Web App
+Sudah ada tapi belum running
+Ganti spreadsheet/database source, isi data YKP, mapping master brand/outlet/supplier, validasi angka, lalu pilot.
+Operational Web App
+Belum dibuat / belum final
+Dibangun setelah HR dan Finance stabil. V1 fokus checklist, closing, waste, incident, QC.
+Marketing Web App
+Belum dibuat
+Fase setelah core finance dan operations jalan. V1 cukup campaign, content calendar, review log.
+Hermez AI Layer
+Belum jalan
+Masuk setelah ada summary sheet dari HR dan Finance minimal. Bukan tempat input utama.
+2. Goal Project
+Memakai web app HR dan Finance yang sudah ada agar YKP tidak perlu mulai dari nol.
+Mengganti database/spreadsheet lama menjadi database/spreadsheet khusus YKP.
+Mengisi master data YKP: brand, outlet, employee, supplier, menu, kategori biaya, petty cash, dan aturan payroll.
+Menjalankan pilot 1 brand/outlet dulu sebelum rollout ke seluruh YKP.
+Menyiapkan summary layer agar Hermez dapat membaca data dan membuat daily brief, alert, insight, dan weekly report.
+3. Prinsip Utama untuk Developer
+Jangan edit langsung versi app lama yang sudah running. Buat clone/testing environment dulu.
+Jangan hanya mengganti spreadsheet ID tanpa cek schema. Pastikan nama tab, nama kolom, formula, dan permission sesuai.
+Jangan jadikan Hermez sebagai tempat input operasional. Input tetap di web app HR/Finance/Operational/Marketing.
+Hermez membaca summary, bukan semua raw data dari awal.
+Semua angka finance harus bisa diaudit: sumber data, timestamp, user/PIC, dan bukti nota bila ada.
+Mulai dari 1 brand pilot, baru rollout semua brand.
+4. Arsitektur Sistem yang Diinginkan
+HR Web App (sudah running)         Finance Web App (sudah ada, belum running)        |                                      |        v                                      vYKP HR Spreadsheet/DB                  YKP Finance Spreadsheet/DB        |                                      |        v                                      vhr_daily_summary                       fin_daily_summary        \                                      /         \                                    /          v                                  v              HERMEZ AI COMMAND CENTER                         |                         v          Telegram Owner Brief / Alert / Weekly Insight
+Catatan: Operational App dan Marketing App nanti mengikuti pola yang sama: app input -> spreadsheet/database -> daily summary -> Hermez.
+5. Proses Migrasi HR dan Finance App
+5.1 Audit App Existing
+Cek source code: di mana spreadsheet ID disimpan.
+Cek semua nama tab yang dipanggil app.
+Cek kolom wajib di setiap tab.
+Cek apakah ada formula hardcoded, brand/outlet dummy, role dummy, atau setting lama.
+Cek format tanggal, format rupiah, timezone, dan cara app membaca data.
+Cek sistem login, role, dan permission.
+5.2 Buat Database/Spreadsheet YKP Baru
+Buat YKP_MASTER_DATABASE untuk data master umum.
+Buat YKP_HR_DATABASE untuk HR app jika dipisah.
+Buat YKP_FINANCE_DATABASE untuk finance app jika dipisah.
+Atau gunakan 1 workbook besar YKP_CENTRAL_DATABASE bila developer lebih nyaman.
+Jangan memakai database dummy lama sebagai production.
+5.3 Mapping Data YKP ke Schema App
+Area
+Data yang Harus Dimapping
+Master Brand
+brand_id, brand_name, status
+Master Outlet
+outlet_id, brand_id, outlet_name, location, status
+Master Employee
+employee_id, full_name, role, outlet_id, phone, telegram_id, status
+HR Rules
+shift, toleransi telat, lembur, bonus, potongan, payroll period
+Master Supplier
+supplier_id, supplier_name, category, contact, bank_account, status
+Finance Categories
+expense_category, payment_method, petty_cash_account, account_type
+Finance Opening Balance
+saldo awal kas, petty cash, hutang supplier awal, piutang jika ada
+POS Revenue
+tanggal, brand, outlet, gross sales, net sales, transaction count, discount, refund, payment method
+6. HR App Migration Task List
+1. Clone HR app ke environment YKP testing.
+2. Hubungkan app ke YKP_HR_DATABASE atau tab HR dalam YKP_CENTRAL_DATABASE.
+3. Isi master_employee dari data karyawan YKP.
+4. Isi master_outlet dan mapping employee ke outlet/brand.
+5. Masukkan aturan shift, toleransi telat, lembur, bonus, potongan, dan payroll period.
+6. Test absensi masuk, pulang, telat, izin, dan tidak check-out.
+7. Test payroll calculation pada 3-5 karyawan contoh.
+8. Bandingkan hasil payroll app dengan hitungan manual.
+9. Jika sudah cocok, pilot 1 outlet selama 7 hari.
+10. Setelah stabil, rollout ke seluruh outlet YKP.
+7. Finance App Migration Task List
+1. Clone Finance app ke environment YKP testing.
+2. Hubungkan app ke YKP_FINANCE_DATABASE atau tab Finance dalam YKP_CENTRAL_DATABASE.
+3. Hapus/detach data dummy agar tidak bercampur dengan data YKP.
+4. Isi master brand, outlet, supplier, kategori biaya, payment method, petty cash account.
+5. Masukkan opening balance: saldo kas, petty cash, hutang supplier, dan catatan awal lain.
+6. Input/import sample data POS dari Moka untuk 3-7 hari.
+7. Input sample supplier costing, petty cash, expense, dan nota.
+8. Cek dashboard: revenue, expense, supplier cost, petty cash, unpaid supplier, net profit estimate.
+9. Validasi angka dengan laporan manual/Moka.
+10. Pilot finance 1 brand/outlet selama 7 hari sebelum rollout.
+8. Struktur Sheet Minimal
+Sheet
+Fungsi
+Wajib untuk Hermez?
+master_brand
+Daftar brand YKP
+Ya
+master_outlet
+Daftar outlet dan mapping brand
+Ya
+master_employee
+Daftar karyawan dan outlet
+Ya untuk HR
+hr_attendance
+Log absensi
+Tidak langsung; summary dulu
+hr_payroll
+Perhitungan payroll
+Tidak langsung; summary dulu
+hr_daily_summary
+Ringkasan HR harian
+Ya
+fin_pos_daily
+Omzet harian dari Moka/manual
+Tidak langsung; summary dulu
+fin_supplier_cost
+Pembelian dan tagihan supplier
+Tidak langsung; summary dulu
+fin_petty_cash
+Kas kecil outlet
+Tidak langsung; summary dulu
+fin_expense
+Expense umum
+Tidak langsung; summary dulu
+fin_daily_summary
+Ringkasan finance harian
+Ya
+hermez_daily_brief
+Output daily brief
+Ya
+hermez_alert_log
+Log alert Hermez
+Ya
+9. Summary Sheet Contract untuk Hermez
+9.1 hr_daily_summary
+date | brand | outlet | total_staff | staff_present | staff_late | staff_absent | payroll_issue | major_hr_issue | recommended_action
+9.2 fin_daily_summary
+date | brand | outlet | revenue | expense | supplier_cost | petty_cash_out | unpaid_supplier | cash_difference | net_profit_estimate | major_finance_issue | recommended_action
+9.3 hermes_daily_brief
+date | generated_at | brief_text | alert_level | sent_to_owner | sent_at
+9.4 hermes_alert_log
+alert_id | date | brand | outlet | alert_type | severity | message | source_app | status | action_taken
+10. Roadmap Implementasi
+Phase
+Durasi
+Output
+Phase 0 - Audit
+1-2 hari
+Developer memahami struktur HR/Finance app, spreadsheet ID, nama tab, kolom, formula, dan role.
+Phase 1 - Database YKP
+1-3 hari
+YKP master database dibuat, struktur sheet siap, data dummy dipisahkan.
+Phase 2 - HR Migration
+3-7 hari
+HR app terhubung ke data YKP, absensi/payroll diuji di 1 outlet.
+Phase 3 - Finance Migration
+5-10 hari
+Finance app terhubung ke data YKP, dashboard dan summary valid.
+Phase 4 - Pilot
+7 hari
+1 brand/outlet dipakai harian, bug dan mismatch angka diperbaiki.
+Phase 5 - Hermez V1
+7-14 hari
+Hermez baca hr_daily_summary dan fin_daily_summary lalu kirim daily brief dan alert.
+Phase 6 - Rollout
+bertahap
+Semua brand/outlet masuk setelah pilot stabil.
+11. Pilot yang Disarankan
+Jangan langsung semua brand. Mulai dari 1 brand atau 1 outlet yang datanya paling rapi.
+Pilot minimal 7 hari agar terlihat error absensi, payroll, petty cash, POS revenue, dan supplier costing.
+Setiap malam bandingkan angka app dengan sumber asli: Moka, nota, petty cash fisik, dan hitungan manual.
+Jika error lebih dari toleransi, jangan rollout dulu.
+12. Posisi Hermez Setelah HR dan Finance Stabil
+Hermez membaca hr_daily_summary dan fin_daily_summary.
+Hermez membuat YKP Daily Brief untuk owner.
+Hermez membuat alert jika ada staff telat tinggi, selisih kas, expense naik, supplier overdue, atau petty cash keluar tidak wajar.
+Hermez menyimpan hasil output ke hermes_daily_brief dan hermes_alert_log.
+Hermez belum melakukan edit data atau transfer uang otomatis. Semua action tetap butuh approval owner/manager.
+Contoh output Hermez:YKP Daily Brief - [Tanggal]- Total revenue: Rp...- Finance issue: petty cash outlet X tinggi- HR issue: 3 staff telat di outlet Y- Alert: selisih kas Rp...- Action besok: audit closing, cek nota petty cash, briefing SPV.
+13. Definition of Done
+HR app bisa digunakan dengan data YKP tanpa bercampur data dummy.
+Finance app bisa digunakan dengan data YKP tanpa bercampur data dummy.
+Dashboard finance menunjukkan angka yang sama dengan sumber asli/Moka/manual.
+Payroll sample cocok dengan perhitungan manual.
+Semua master brand/outlet/employee/supplier konsisten.
+Ada hr_daily_summary dan fin_daily_summary yang bisa dibaca Hermez.
+Ada environment testing sebelum production.
+Ada backup database/spreadsheet sebelum migrasi dan sebelum rollout.
+14. Risiko dan Pencegahan
+Risiko
+Pencegahan
+Data dummy bercampur data YKP
+Clone app dan buat spreadsheet/database YKP baru.
+Angka finance tidak cocok
+Validasi harian dengan Moka, nota, dan petty cash fisik.
+Nama brand/outlet tidak konsisten
+Gunakan master_brand dan master_outlet sebagai referensi tunggal.
+Payroll salah hitung
+Pilot 3-5 karyawan dulu, bandingkan manual.
+Hermez memberi insight salah
+Mulai dari summary terverifikasi, jangan baca raw data kacau.
+Permission bocor
+Batasi akses spreadsheet dan app berdasarkan role.
+15. Pesan Singkat untuk Developer
+HR dan Finance app yang sudah ada mau kita pakai untuk YKP.Mohon clone app ke environment YKP/testing, lalu ganti spreadsheet/database source ke database YKP baru. Jangan pakai data dummy lama.Prioritas: audit struktur app, buat database YKP, mapping master data, migrasi HR, migrasi Finance, testing 1 brand/outlet, lalu buat hr_daily_summary dan fin_daily_summary untuk dibaca Hermez.Hermez tidak jadi tempat input utama. Hermez hanya membaca summary, membuat daily brief, alert, insight, dan weekly report.

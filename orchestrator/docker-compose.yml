@@ -1,0 +1,123 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: ykp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ykp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required in prod}
+      POSTGRES_DB: ${POSTGRES_DB:-ykp_orchestrator}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ykp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ykp -d ykp_orchestrator"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ykp_redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: ykp_qdrant
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6333:6333"
+    volumes:
+      - ykp_qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: ykp_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    env_file:
+      - ${ENV_FILE:-.env}
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-ykp}:${POSTGRES_PASSWORD:-ykp}@postgres:5432/ykp_orchestrator}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+    volumes:
+      - ../Hermes_Knowledge:/app/Hermes_Knowledge:rw
+      - ykp_backups_data:/var/lib/ykp/backups
+    ports:
+      - "127.0.0.1:3001:3001"
+    command: ["dumb-init", "node", "--import", "tsx", "src/index.ts"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: ykp_worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    env_file:
+      - ${ENV_FILE:-.env}
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-ykp}:${POSTGRES_PASSWORD:-ykp}@postgres:5432/ykp_orchestrator}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+    volumes:
+      - ../Hermes_Knowledge:/app/Hermes_Knowledge:rw
+      - ykp_backups_data:/var/lib/ykp/backups
+    command: ["dumb-init", "node", "--import", "tsx", "src/worker-entry.ts"]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ykp_ollama
+    restart: unless-stopped
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ykp_ollama_data:/root/.ollama
+
+  # NOTE: MT5 bridge runs as a native Windows service (NSSM-managed), not in a container.
+  # The MetaTrader5 Python SDK is Windows-only; Linux container would crash on mt5.initialize().
+  # Orchestrator reaches the bridge via MT5_BRIDGE_URL=http://host.docker.internal:8765
+  # See mt5-bridge-service/ for the FastAPI implementation and NSSM install scripts.
+
+volumes:
+  ykp_postgres_data:
+  ykp_qdrant_data:
+  ykp_ollama_data:
+  ykp_backups_data:

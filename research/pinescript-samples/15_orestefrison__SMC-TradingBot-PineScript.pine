@@ -1,0 +1,67 @@
+//@version=5
+strategy("Mega Bot SMC - SPX Definitive Edition", overlay=true, margin_long=100, margin_short=100, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+
+// ---- INDEX-CALIBRATED CONFIGURATION ----
+lookback = input.int(10, title="Swing Period (Lookback)")
+rr_ratio = input.float(2.0, title="Risk/Reward Ratio (R:R)")
+max_candele_durata = input.int(30, title="Max Trade Duration (In Candles)")
+
+// ---- SMC STRUCTURE IDENTIFICATION ----
+max_recente = ta.highest(high[1], lookback)
+min_recente = ta.lowest(low[1], lookback)
+
+// Liquidity Hunt (Sweep)
+sweep_bull = low < min_recente and close > min_recente
+sweep_bear = high > max_recente and close < max_recente
+
+// Simplified entry conditions for SPX
+condizione_long  = sweep_bull and close > open
+condizione_short = sweep_bear and close < open
+
+// ---- INTRADAY TIME COUNTER ----
+var float sl_prezzo = na
+var float tp_prezzo = na
+var int barre_da_ingresso = 0
+
+if strategy.position_size != 0
+    barre_da_ingresso := barre_da_ingresso + 1
+else
+    barre_da_ingresso := 0
+
+// ---- ENTRY LOGICAL ARCHITECTURE ----
+if condizione_long and strategy.position_size == 0
+    sl_prezzo := ta.lowest(low, 3) 
+    float risk = close - sl_prezzo
+    if risk > 0
+        tp_prezzo := close + (risk * rr_ratio)
+        strategy.entry("BUY", strategy.long)
+
+if condizione_short and strategy.position_size == 0
+    sl_prezzo := ta.highest(high, 3) 
+    float risk = sl_prezzo - close
+    if risk > 0
+        tp_prezzo := close - (risk * rr_ratio)
+        strategy.entry("SELL", strategy.short)
+
+// ---- MECHANICAL EXITS ----
+if strategy.position_size > 0
+    strategy.exit("Long Exit", "BUY", stop=sl_prezzo, limit=tp_prezzo)
+
+if strategy.position_size < 0
+    strategy.exit("Short Exit", "SELL", stop=sl_prezzo, limit=tp_prezzo)
+
+// Time decay protection to unlock sideways trades
+if barre_da_ingresso >= max_candele_durata
+    strategy.close_all(comment="Time-Exit")
+
+// Reset when flat
+if strategy.position_size == 0
+    sl_prezzo := na
+    tp_prezzo := na
+
+// ---- VISUAL INDICATORS ----
+plotshape(condizione_long and strategy.position_size[1] == 0, title="BUY", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.normal)
+plotshape(condizione_short and strategy.position_size[1] == 0, title="SELL", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.normal)
+
+plot(strategy.position_size != 0 ? sl_prezzo : na, title="Stop Loss", color=color.red, style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size != 0 ? tp_prezzo : na, title="Take Profit", color=color.green, style=plot.style_linebr, linewidth=2)

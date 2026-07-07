@@ -1,0 +1,1500 @@
+DEVELOPER BRIEF — YKP ERP OPERATIONAL MODULE V1
+
+1. PROJECT CONTEXT
+
+YKP sedang membangun ERP internal untuk beberapa brand F&B:
+- Funkydak
+- Sekarpizza
+- Suburbuns
+- Laju Kopi
+- Uncle Masala
+
+Operational Module akan menjadi pusat kontrol aktivitas harian outlet.
+
+Visual/mockup Operational Dashboard sudah tersedia dengan struktur utama:
+1. Briefing & Shift Board
+2. Opening Checklist
+3. Live Operations / KDS
+4. Visual QC Scoring
+5. Incident & Complaint
+6. Closing Reconciliation
+7. Analytics & Configurations
+
+Target V1 bukan langsung membuat sistem operasional real-time yang sangat kompleks.
+
+Target V1:
+Build Operational Web App
+→ hubungkan ke master data YKP
+→ gunakan spreadsheet/database ringan untuk modul non-real-time
+→ gunakan database real-time khusus jika KDS diaktifkan
+→ pilot 1 brand / 1 outlet
+→ hasilkan ops_daily_summary
+→ siapkan data untuk Orchestration Layer dan Hermez AI
+
+Operational Module harus mencatat kesiapan outlet, pelaksanaan SOP, waktu layanan, QC, insiden, closing, waste, dan action perbaikan.
+
+
+2. TUJUAN OPERATIONAL MODULE
+
+Operational Module harus membantu owner, manager, supervisor, dan staff outlet untuk:
+
+1. Mengetahui kesiapan outlet sebelum buka.
+2. Membuat briefing harian dan roster shift terlihat jelas.
+3. Mengontrol pelaksanaan opening dan closing checklist.
+4. Memantau order yang terlambat atau melewati SLA.
+5. Mengukur kualitas produk melalui QC.
+6. Mencatat insiden dan komplain secara terstruktur.
+7. Mencatat selisih kas saat closing.
+8. Mencatat waste dan masalah stok operasional.
+9. Membuat alert operasional.
+10. Menghasilkan ringkasan harian untuk Orchestration Layer dan Hermez.
+11. Membuat semua masalah memiliki PIC, deadline, dan status penyelesaian.
+
+
+3. STATUS SAAT INI
+
+Operational App:
+- Visual/mockup sudah ada.
+- Belum menjadi production app.
+- Belum memakai data asli YKP.
+- Belum memiliki database production.
+- Belum memiliki role dan permission final.
+- Belum memiliki workflow approval final.
+- Belum terhubung penuh ke HR, Finance, Moka, Orchestration, atau Hermez.
+
+Database V1:
+- Spreadsheet/Google Sheet boleh dipakai untuk:
+  - briefing
+  - roster view
+  - opening checklist
+  - closing checklist
+  - QC log
+  - incident log
+  - waste log
+  - daily summary
+  - threshold settings sederhana
+
+- Spreadsheet tidak disarankan untuk:
+  - KDS real-time volume tinggi
+  - timer order per detik
+  - live queue multi-device
+  - webhook order berfrekuensi tinggi
+  - notifikasi real-time kritis
+
+Rekomendasi:
+- Modul non-real-time: Google Sheet / spreadsheet database.
+- Modul KDS real-time: Supabase / PostgreSQL / Firebase / Firestore.
+
+
+4. SCOPE OPERATIONAL MODULE V1
+
+Operational Module V1 terdiri dari 10 bagian utama:
+
+1. Operational Overview
+2. Briefing & Shift Board
+3. Opening Checklist
+4. Live Operations / KDS Basic
+5. Visual QC Scoring
+6. Incident & Complaint
+7. Closing Reconciliation
+8. Waste & Stock Issue Log
+9. Analytics & Configurations
+10. Operational Daily Summary untuk Hermez
+
+
+5. VISUAL DIRECTION
+
+Gunakan gaya yang konsisten dengan visual Operational YKP Central:
+
+- Light theme.
+- Clean operational cockpit.
+- Sidebar section 01–07.
+- Active outlet management.
+- Brand/outlet selector.
+- Cloud/database status.
+- Mobile friendly untuk staff.
+- Tablet friendly untuk outlet.
+- Desktop friendly untuk manager.
+- Autosave pada form.
+- Status warna yang jelas.
+- Foto bukti.
+- Alert popup.
+- AI assistant panel.
+- Role-based access.
+- Audit log.
+
+Status warna:
+- Hijau = OK / Ready / Completed
+- Kuning = Warning / Needs Review
+- Merah = Issue / Failed / Critical
+- Biru = In Progress / Informational
+- Abu = Not Started / Inactive
+
+Menu utama:
+- Ringkasan Operational
+- Briefing & Shift Board
+- Opening Checklist
+- Live Operations / KDS
+- Visual QC
+- Incident & Complaint
+- Closing Reconciliation
+- Waste & Stock Issue
+- Analytics & Configurations
+- Manajemen Pengguna
+- Sistem Settings
+
+
+6. MODULE DETAIL
+
+6.1 OPERATIONAL OVERVIEW
+
+Tujuan:
+Menampilkan kondisi operasional outlet secara cepat.
+
+KPI cards wajib:
+- Outlet Ready Status
+- Checklist Completion
+- Opening Issue Count
+- Closing Issue Count
+- Average Serving Time
+- Orders Over SLA
+- Average QC Score
+- Incident Count
+- High Severity Incident
+- Waste Value
+- Cash Difference
+- Open Action Items
+
+Filter:
+- Brand
+- Outlet
+- Periode
+- Shift
+- Department
+- Incident Severity
+- Status
+
+Output:
+- Outlet paling siap
+- Outlet dengan issue terbanyak
+- Shift paling bermasalah
+- Tren serving time
+- Tren QC
+- Waste trend
+- Incident trend
+- Closing difference
+- Action yang belum selesai
+
+
+6.2 BRIEFING & SHIFT BOARD
+
+Tujuan:
+Menampilkan siapa yang bertugas hari ini dan memberikan briefing yang relevan.
+
+Sheet/Table:
+ops_daily_briefing
+
+Kolom:
+- briefing_id
+- date
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- shift_id
+- shift_name
+- briefing_type
+- briefing_text
+- target_sales
+- priority_menu
+- stock_warning
+- staffing_warning
+- service_focus
+- generated_by_ai
+- manually_edited
+- approved_by
+- published_status
+- published_at
+- created_at
+- updated_at
+
+Briefing type:
+- AUTO_AI
+- MANUAL
+- HYBRID
+
+Fitur:
+- Lihat roster staff hari ini.
+- Morning / Afternoon / Night shift.
+- Tampilkan role: Supervisor, Kitchen, FOH, Cashier.
+- Generate daily briefing.
+- Edit briefing manual.
+- Publish briefing.
+- Catat siapa sudah membaca.
+- Shift swap request.
+- Shift swap approval.
+- Staffing shortage warning.
+- Extra prep recommendation.
+- Target omzet hari ini.
+- Menu yang harus dipush.
+- Reminder bahan baku kritis.
+
+Sumber data:
+- Roster dari HR Module.
+- Sales history dari Finance/Moka.
+- Issue kemarin dari Operational.
+- Stock warning jika tersedia.
+- Weather/event eksternal bisa ditambahkan nanti.
+
+
+6.3 OPENING CHECKLIST
+
+Tujuan:
+Memastikan outlet siap beroperasi sebelum dibuka.
+
+Sheet/Table:
+ops_opening_checklist
+
+Kolom:
+- checklist_record_id
+- checklist_template_id
+- date
+- brand_id
+- outlet_id
+- shift_id
+- department
+- checklist_item
+- checklist_category
+- required_photo
+- required_value
+- target_value
+- tolerance_value
+- actual_value
+- unit
+- status
+- photo_url
+- notes
+- submitted_by
+- submitted_at
+- reviewed_by
+- reviewed_at
+- issue_id
+- created_at
+
+Department:
+- KITCHEN
+- FOH
+- CASHIER
+- BAR
+- STORAGE
+- GENERAL
+
+Status:
+- NOT_STARTED
+- OK
+- ISSUE
+- FAILED
+- WAIVED
+- REVIEWED
+
+Contoh checklist Kitchen:
+- Cek temperatur fryer.
+- Cek temperatur chiller/freezer.
+- Cek kejernihan minyak.
+- Cek stok ayam/bahan utama.
+- Cek sauce dan prep.
+- Cek kebersihan area.
+- Cek fungsi fryer/oven/kompor.
+- Cek masa simpan bahan.
+- Cek label dan FIFO.
+
+Contoh checklist FOH:
+- Kebersihan meja/kursi.
+- AC/kipas/lampu.
+- Menu board.
+- Area customer.
+- Toilet.
+- Packaging.
+- Service station.
+
+Contoh checklist Cashier:
+- POS aktif.
+- Printer struk aktif.
+- Saldo awal kas.
+- QRIS/payment terminal.
+- Kertas struk.
+- Internet.
+
+Fitur:
+- Checklist per department.
+- Foto wajib untuk item tertentu.
+- Input angka aktual.
+- Validasi terhadap target/toleransi.
+- Autosave.
+- Progress completion.
+- Status outlet Ready / Conditional / Failed.
+- Checklist yang gagal otomatis membuat issue.
+- Supervisor approval.
+- Prevent opening jika critical item failed, jika rule diaktifkan.
+
+Rule contoh:
+- Checklist completion < 90% = WARNING
+- Critical checklist failed > 0 = HIGH
+- Foto wajib tidak tersedia = INCOMPLETE
+- Outlet tidak boleh ditandai READY sebelum critical checklist selesai
+
+
+6.4 LIVE OPERATIONS / KDS BASIC
+
+Tujuan:
+Memantau order dari paid sampai selesai dan mendeteksi keterlambatan.
+
+Rekomendasi teknis:
+- Untuk V1 dapat dibuat semi-live.
+- Untuk production real-time gunakan database real-time.
+- Jangan gunakan spreadsheet sebagai sumber utama timer per detik.
+
+Table:
+ops_kds_order
+
+Kolom:
+- order_id
+- external_order_id
+- date
+- brand_id
+- outlet_id
+- order_channel
+- customer_reference
+- order_items
+- total_items
+- order_status
+- paid_at
+- queued_at
+- prep_started_at
+- ready_at
+- completed_at
+- serving_time_seconds
+- target_seconds
+- sla_status
+- kitchen_station
+- assigned_staff
+- priority_flag
+- alert_status
+- manual_order
+- source
+- created_at
+- updated_at
+
+Order status:
+- PAID
+- QUEUED
+- PREPARING
+- READY
+- DELIVERED
+- COMPLETED
+- CANCELLED
+
+SLA status:
+- ON_TIME
+- NEAR_LIMIT
+- OVER_SLA
+- CRITICAL_DELAY
+
+Fitur:
+- Kolom antrean POS.
+- Kolom sedang memasak.
+- Kolom siap antar / selesai.
+- Timer serving.
+- Target waktu per brand atau menu.
+- Push manual order.
+- Webhook POS jika tersedia.
+- Alert order over SLA.
+- Mark selesai.
+- Filter station.
+- Filter order channel.
+- Tampilkan bottleneck.
+- Quick incident logger.
+- Telegram alert untuk delay kritis jika diaktifkan.
+
+Rule contoh:
+- Serving time > target_seconds = OVER_SLA
+- Serving time > target_seconds x 2 = CRITICAL
+- Order queue > threshold = STAFFING WARNING
+- Banyak order over SLA di shift yang sama = MANAGER ALERT
+
+Catatan:
+KDS V1 boleh dimulai untuk satu outlet pilot dan menu utama saja.
+
+
+6.5 VISUAL QC SCORING
+
+Tujuan:
+Mencatat kualitas tampilan dan hasil produk.
+
+Sheet/Table:
+ops_qc_score
+
+Kolom:
+- qc_id
+- date
+- brand_id
+- outlet_id
+- shift_id
+- product_id
+- product_name
+- batch_reference
+- qc_category
+- reference_standard_id
+- photo_url
+- score
+- max_score
+- status
+- defect_type
+- notes
+- reviewed_by
+- ai_result
+- ai_confidence
+- second_opinion_status
+- created_at
+
+QC Category:
+- APPEARANCE
+- COLOR
+- PORTION
+- TEMPERATURE
+- TEXTURE
+- PACKAGING
+- CLEANLINESS
+- OTHER
+
+Status:
+- PASS
+- NEEDS_REVIEW
+- FAIL
+- REJECTED
+
+Fitur:
+- Tampilkan gold standard.
+- Upload foto produk.
+- Pilih produk.
+- Input score manual.
+- AI vision sebagai second opinion.
+- Catat defect.
+- Pass/fail.
+- Link ke incident jika fail.
+- Filter brand/outlet/menu.
+- Weekly QC trend.
+- Reviewer history.
+
+Catatan penting:
+- AI vision tidak boleh menjadi satu-satunya pengambil keputusan.
+- Final QC tetap ditentukan reviewer/supervisor.
+- Foto harus tersimpan dengan reference ID.
+
+
+6.6 INCIDENT & COMPLAINT
+
+Tujuan:
+Mencatat insiden operasional dan komplain customer.
+
+Sheet/Table:
+ops_incident
+
+Kolom:
+- incident_id
+- date
+- incident_time
+- brand_id
+- outlet_id
+- shift_id
+- reported_by
+- reporter_role
+- incident_type
+- severity
+- chronology
+- customer_impact
+- financial_impact
+- related_order_id
+- photo_url
+- attachment_url
+- ai_sentiment
+- ai_triage
+- ai_response_draft
+- telegram_alert_sent
+- status
+- assigned_to
+- due_date
+- action_taken
+- root_cause
+- preventive_action
+- resolved_by
+- resolved_at
+- created_at
+- updated_at
+
+Incident type:
+- CUSTOMER_COMPLAINT
+- FOOD_QUALITY
+- SERVICE_DELAY
+- CASH_DIFFERENCE
+- EQUIPMENT_FAILURE
+- SAFETY
+- HYGIENE
+- STAFFING
+- STOCK_SHORTAGE
+- SYSTEM_ERROR
+- OTHER
+
+Severity:
+- LOW
+- MEDIUM
+- HIGH
+- CRITICAL
+
+Status:
+- OPEN
+- INVESTIGATING
+- ACTION_REQUIRED
+- WAITING_APPROVAL
+- RESOLVED
+- CLOSED
+
+Fitur:
+- Input kronologi.
+- Staff pelapor.
+- AI triage.
+- AI sentiment.
+- Draft balasan customer.
+- Copy response.
+- Telegram alert.
+- Assign PIC.
+- Deadline.
+- Root cause.
+- Corrective action.
+- Preventive action.
+- Set open/investigating/resolved.
+- Filter severity/status/outlet.
+- Incident timeline.
+
+Rule contoh:
+- HIGH/CRITICAL otomatis alert manager.
+- Complaint terkait keamanan makanan = CRITICAL.
+- Incident belum selesai melewati deadline = escalation.
+- Incident berulang dengan tipe sama = root cause review.
+
+
+6.7 CLOSING RECONCILIATION
+
+Tujuan:
+Memastikan outlet selesai beroperasi dengan kas, checklist, dan data yang benar.
+
+Sheet/Table:
+ops_closing_checklist
+
+Kolom:
+- closing_checklist_id
+- date
+- brand_id
+- outlet_id
+- shift_id
+- checklist_item
+- status
+- photo_url
+- notes
+- submitted_by
+- submitted_at
+- reviewed_by
+- reviewed_at
+
+Contoh checklist:
+- Matikan fryer/peralatan.
+- Simpan bahan ke chiller.
+- Catat waste.
+- Bersihkan kitchen.
+- Bersihkan FOH.
+- Tutup POS.
+- Rekonsiliasi kas.
+- Cek pintu/listrik/gas.
+- Foto kondisi akhir.
+
+Sheet/Table:
+ops_cash_reconciliation
+
+Kolom:
+- reconciliation_id
+- date
+- brand_id
+- outlet_id
+- shift_id
+- cashier_id
+- opening_cash
+- pos_cash_sales
+- qris_sales
+- card_sales
+- transfer_sales
+- other_payment
+- petty_cash_used
+- cash_deposit
+- physical_cash
+- expected_cash
+- cash_difference
+- tolerance_limit
+- discrepancy_status
+- discrepancy_reason
+- chronology
+- approval_status
+- approved_by
+- closed_at
+- created_at
+
+Formula:
+Expected Cash =
+Opening Cash
++ POS Cash Sales
+- Petty Cash Used
+- Cash Deposit
+
+Cash Difference =
+Physical Cash - Expected Cash
+
+Discrepancy status:
+- MATCHED
+- WITHIN_TOLERANCE
+- OVER_TOLERANCE
+- CRITICAL
+
+Fitur:
+- Mesin hitung denominasi uang.
+- Input jumlah lembar uang.
+- Ambil realisasi Moka/POS.
+- Hitung expected cash.
+- Hitung selisih.
+- Wajib kronologi jika di atas toleransi.
+- Approval manager.
+- Alert ke finance.
+- Lock closing setelah approved.
+- Reopen hanya oleh super admin.
+
+Rule contoh:
+- |cash_difference| > Rp50.000 = HIGH
+- Closing belum selesai setelah jam batas = MEDIUM
+- Selisih berulang cashier yang sama = HIGH
+- Closing tanpa approval = INCOMPLETE
+
+
+6.8 WASTE & STOCK ISSUE LOG
+
+Tujuan:
+Mencatat bahan yang rusak, terbuang, hilang, salah produksi, atau tidak sesuai.
+
+Sheet/Table:
+ops_waste_log
+
+Kolom:
+- waste_id
+- date
+- brand_id
+- outlet_id
+- shift_id
+- ingredient_id
+- ingredient_name
+- menu_id
+- menu_name
+- qty
+- unit
+- estimated_unit_cost
+- estimated_total_value
+- waste_type
+- reason
+- photo_url
+- reported_by
+- approval_status
+- approved_by
+- related_incident_id
+- created_at
+
+Waste type:
+- EXPIRED
+- SPOILED
+- OVERPRODUCTION
+- WRONG_ORDER
+- QC_REJECT
+- SPILL
+- PORTION_ERROR
+- STORAGE_ERROR
+- MISSING
+- OTHER
+
+Sheet/Table:
+ops_stock_issue
+
+Kolom:
+- stock_issue_id
+- date
+- brand_id
+- outlet_id
+- ingredient_id
+- issue_type
+- expected_qty
+- actual_qty
+- difference_qty
+- estimated_value
+- reason
+- status
+- assigned_to
+- created_at
+- resolved_at
+
+Issue type:
+- SHORTAGE
+- OVERAGE
+- DAMAGED
+- MISSING
+- WRONG_UNIT
+- WRONG_ENTRY
+- OTHER
+
+Fitur:
+- Input waste.
+- Upload foto.
+- Estimasi nilai waste.
+- Approval supervisor.
+- Waste trend.
+- Top wasted ingredients.
+- Waste per shift.
+- Waste vs sales.
+- Alert waste tinggi.
+- Link ke Finance/JOGS summary.
+
+Rule contoh:
+- Waste value > daily threshold = HIGH
+- Bahan yang sama waste 3 kali/7 hari = REVIEW
+- Missing stock tanpa alasan = HIGH
+- Waste tanpa foto untuk kategori tertentu = INCOMPLETE
+
+
+6.9 ANALYTICS & CONFIGURATIONS
+
+Tujuan:
+Menampilkan KPI operasional dan mengatur threshold.
+
+KPI:
+- Checklist completion
+- Average serving time
+- Orders over SLA
+- Average QC score
+- Incident frequency
+- Closing issue count
+- Waste value
+- Cash difference count
+- Shift performance
+- Peak hour
+- Staffing adequacy
+
+Table:
+ops_threshold_config
+
+Kolom:
+- threshold_id
+- brand_id
+- outlet_id
+- metric_name
+- warning_value
+- high_value
+- critical_value
+- unit
+- active_status
+- updated_by
+- updated_at
+
+Contoh threshold:
+- Serving time target: 180 detik.
+- Checklist completion minimum: 95%.
+- QC minimum: 4.0/5.0.
+- Cash difference tolerance: Rp50.000.
+- Waste daily limit: configurable.
+- Complaint high severity: >0 langsung alert.
+
+Fitur:
+- KPI dashboard.
+- Weekly trend.
+- Peak hour.
+- Staffing recommendation.
+- Threshold configuration.
+- AI insight panel.
+- Export report.
+- Drill-down per outlet/shift.
+
+
+7. OPERATIONAL SUMMARY UNTUK HERMEZ
+
+Operational App wajib membuat summary harian.
+
+Sheet/Table:
+ops_daily_summary
+
+Kolom:
+- summary_id
+- date
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- opening_status
+- opening_completion_percentage
+- critical_opening_issue
+- scheduled_staff
+- actual_staff
+- shift_shortage
+- total_orders
+- avg_serving_time
+- orders_over_sla
+- critical_delay_count
+- avg_qc_score
+- qc_fail_count
+- incident_count
+- high_severity_incident
+- complaint_count
+- waste_qty
+- waste_value
+- stock_issue_count
+- closing_status
+- cash_difference
+- open_action_count
+- major_ops_issue
+- recommended_action
+- created_at
+
+Contoh output:
+
+Funkydak — 2 Juli 2026
+
+Opening Completion: 96%
+Staffing: 1 kitchen shortage
+Average Serving Time: 212 detik
+Orders Over SLA: 6
+QC Score: 4.2/5
+Incident: 1 HIGH
+Waste Value: Rp275.000
+Cash Difference: Rp80.000
+Issue: Lunch shift overload dan closing cash over tolerance
+Action: Tambah helper kitchen dan audit cashier shift malam
+
+Data yang dikirim ke Hermez:
+- Summary agregat.
+- Issue utama.
+- Alert.
+- Action status.
+
+Data yang tidak perlu dikirim:
+- Foto mentah dalam jumlah besar.
+- Detail pribadi staff yang tidak relevan.
+- Seluruh log mentah jika tidak dibutuhkan.
+
+
+8. MASTER DATA YANG DIBUTUHKAN
+
+master_brand:
+- brand_id
+- brand_name
+- brand_code
+- status
+
+master_outlet:
+- outlet_id
+- brand_id
+- outlet_name
+- outlet_code
+- address
+- opening_time
+- closing_time
+- status
+
+master_employee:
+- employee_id
+- full_name
+- role
+- department
+- brand_id
+- outlet_id
+- status
+
+master_shift:
+- shift_id
+- shift_name
+- start_time
+- end_time
+- status
+
+master_checklist_template:
+- checklist_template_id
+- brand_id
+- outlet_id
+- checklist_type
+- department
+- checklist_item
+- required_photo
+- target_value
+- tolerance_value
+- critical_flag
+- active_status
+
+master_product:
+- product_id
+- brand_id
+- product_name
+- category
+- qc_standard_id
+- target_serving_time
+- status
+
+master_ingredient:
+- ingredient_id
+- ingredient_name
+- unit
+- estimated_cost
+- status
+
+master_incident_type:
+- incident_type_id
+- incident_type_name
+- default_severity
+- escalation_rule
+- status
+
+
+9. ROLE & PERMISSION
+
+Minimal role:
+- Owner
+- Super Admin
+- Operational Admin
+- Brand Manager
+- Outlet Manager
+- Supervisor
+- Kitchen Lead
+- Cashier
+- FOH
+- Staff
+- Viewer
+
+Owner:
+- Lihat semua brand/outlet.
+- Lihat seluruh summary.
+- Lihat high/critical incident.
+- Lihat closing difference.
+- Lihat action tracker.
+
+Super Admin:
+- Manage system.
+- Manage threshold.
+- Manage templates.
+- Reopen closing.
+- Manage user.
+- Audit log.
+
+Operational Admin:
+- Manage checklist.
+- Manage QC standard.
+- Manage incident.
+- Manage operational report.
+- Edit non-final data.
+
+Brand Manager:
+- Lihat brand sendiri.
+- Approve issue.
+- Approve closing.
+- Assign action.
+- Lihat trend.
+
+Outlet Manager / Supervisor:
+- Isi/review checklist.
+- Approve waste.
+- Approve shift issue.
+- Handle incident.
+- Approve closing sesuai limit.
+
+Kitchen:
+- Isi kitchen checklist.
+- Update KDS.
+- Input waste.
+- Upload QC photo.
+
+Cashier:
+- Isi cashier checklist.
+- Input cash denomination.
+- Closing reconciliation.
+- Input discrepancy chronology.
+
+FOH:
+- Isi FOH checklist.
+- Input complaint/incident.
+- Update service issue.
+
+Staff:
+- Input data sesuai task dan outlet.
+- Tidak bisa edit data approved.
+- Tidak bisa menghapus log.
+
+
+10. APPROVAL RULES
+
+Wajib approval:
+- Opening critical issue.
+- Waste di atas threshold.
+- QC fail.
+- Incident HIGH/CRITICAL.
+- Cash difference di atas toleransi.
+- Closing completion.
+- Reopen closing.
+- Delete record.
+- Edit record approved.
+- Threshold change.
+- Checklist template change.
+
+Approval status:
+- DRAFT
+- PENDING
+- APPROVED
+- REJECTED
+- ESCALATED
+- CLOSED
+
+Semua approval wajib menyimpan:
+- approver
+- timestamp
+- reason
+- before value
+- after value
+
+
+11. ALERT RULES OPERATIONAL V1
+
+Rules awal:
+- opening completion < 95% = MEDIUM
+- critical opening failed > 0 = HIGH
+- shift shortage = HIGH
+- avg serving time > target = MEDIUM
+- order over SLA > threshold = HIGH
+- critical delay > 0 = HIGH
+- avg QC score < 4.0 = HIGH
+- QC fail > 0 = MEDIUM/HIGH
+- incident HIGH > 0 = HIGH
+- incident CRITICAL > 0 = CRITICAL
+- waste value > limit = HIGH
+- missing stock = HIGH
+- cash difference > Rp50.000 = HIGH
+- closing not completed by deadline = MEDIUM
+- action overdue = HIGH
+
+Alert disimpan ke:
+hermes_alert_log
+
+Kolom:
+- alert_id
+- date
+- brand
+- outlet
+- source_app
+- alert_type
+- severity
+- message
+- status
+- assigned_to
+- action_taken
+- created_at
+- resolved_at
+
+
+12. WORKFLOW OPERATIONAL HARIAN
+
+PAGI / PRE-OPENING:
+- Sistem membaca roster dari HR.
+- AI/manual briefing dibuat.
+- Supervisor publish briefing.
+- Staff membaca briefing.
+- Opening checklist dijalankan.
+- Foto dan nilai aktual diinput.
+- Critical issue memicu alert.
+- Outlet ditandai Ready / Conditional / Failed.
+
+SAAT OPERASIONAL:
+- Order masuk dari POS/manual.
+- KDS menampilkan queue.
+- Timer serving berjalan.
+- Order over SLA memicu alert.
+- Staff input incident jika ada masalah.
+- QC dilakukan pada produk sampling.
+- Waste dan stock issue dicatat.
+
+MALAM / CLOSING:
+- Closing checklist dijalankan.
+- Waste final dicatat.
+- Cash reconciliation dilakukan.
+- Selisih kas dihitung.
+- Kronologi diwajibkan jika melewati toleransi.
+- Supervisor approve closing.
+- ops_daily_summary dibuat.
+- Rules engine memeriksa alert.
+- Summary siap dibaca Orchestration dan Hermez.
+
+FOLLOW-UP:
+- Alert penting menjadi action item.
+- Action di-assign ke PIC.
+- Manager update status.
+- Owner melihat issue yang belum selesai.
+
+
+13. BUILD TASK DEVELOPER
+
+13.1 Audit Visual & Requirement
+
+Developer cek:
+- Semua screenshot/mockup section 01–07.
+- Flow setiap button.
+- Form field.
+- Role user.
+- Data source.
+- Modul yang bisa pakai spreadsheet.
+- Modul yang butuh real-time database.
+- Integrasi HR roster.
+- Integrasi Moka/POS.
+- Integrasi Finance closing.
+- Integrasi Telegram.
+- Integrasi AI panel.
+
+Output:
+- Functional specification.
+- Page map.
+- Data map.
+- Technical decision.
+- Risk list.
+
+13.2 Create Testing & Production
+
+Buat:
+- YKP Operational App Testing
+- YKP Operational App Production
+
+Pisahkan:
+- Testing database
+- Production database
+- Testing storage
+- Production storage
+
+13.3 Database Setup
+
+Buat:
+- YKP_OPERATIONAL_DATABASE
+- YKP_MASTER_DATABASE
+- Object storage untuk foto
+- Realtime database khusus KDS jika KDS production
+
+Pastikan:
+- Semua form write ke database benar.
+- Semua dashboard read dari database benar.
+- Brand/outlet filter dari master data.
+- Foto tersimpan dengan reference ID.
+- Summary otomatis terbuat.
+- Data dummy tidak masuk production.
+
+13.4 Integration Setup
+
+Integrasi minimum:
+- HR roster → Briefing & Shift Board.
+- Finance/Moka sales → Closing Reconciliation.
+- Operational waste → Finance/JOGS summary.
+- Incident alert → Telegram.
+- ops_daily_summary → Orchestration Layer.
+- User role → access control.
+
+13.5 Testing Minimal
+
+Test:
+- Generate briefing.
+- Edit briefing.
+- Publish briefing.
+- Opening checklist OK.
+- Opening checklist failed.
+- Upload foto.
+- Input nilai temperatur.
+- Outlet ready status.
+- Push manual order.
+- Update KDS status.
+- Trigger SLA alert.
+- Upload QC photo.
+- QC pass/fail.
+- Input incident.
+- AI draft response.
+- Assign incident.
+- Resolve incident.
+- Input waste.
+- Approve waste.
+- Closing checklist.
+- Cash denomination.
+- Cash difference.
+- Approval closing.
+- Generate ops_daily_summary.
+- Filter brand/outlet/periode.
+- Export report.
+- Role access.
+- Audit log.
+
+
+14. DATA PACK YANG HARUS DIKIRIM OWNER
+
+Folder:
+YKP ERP Operational — Data Pack
+
+Isi:
+
+1. Master Brand & Outlet
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- alamat
+- jam buka
+- jam tutup
+- PIC
+- status
+
+2. Master Karyawan / Role
+- employee_id
+- nama
+- role
+- department
+- brand
+- outlet
+- status
+
+3. Opening Checklist
+Pisahkan per:
+- Brand
+- Outlet
+- Kitchen
+- FOH
+- Cashier
+- Bar
+- General
+
+Kolom:
+- checklist item
+- foto wajib/tidak
+- target
+- toleransi
+- critical/tidak
+- PIC
+
+4. Closing Checklist
+- Item closing
+- Foto wajib/tidak
+- Critical/tidak
+- PIC
+- Approval
+
+5. Target Serving Time
+- Brand
+- Menu
+- Category
+- Target seconds
+- Warning seconds
+- Critical seconds
+
+6. QC Standard
+- Brand
+- Menu
+- Standard visual
+- Score rule
+- Defect type
+- Contoh foto bagus
+- Contoh foto gagal
+
+7. Incident Categories
+- Incident type
+- Default severity
+- PIC
+- Escalation target
+- Response guideline
+
+8. Cash Closing Rule
+- Saldo awal
+- Toleransi selisih
+- Approval flow
+- Deadline closing
+- PIC
+
+9. Waste Rule
+- Ingredient
+- Unit
+- Estimated cost
+- Waste category
+- Daily threshold
+- Photo required
+
+10. Visual Reference
+- Screenshot Operational Dashboard
+- Screenshot per section
+- Brief ERP
+- Workflow infografis
+
+11. Integration Access
+- Link HR roster source
+- Sample Moka export
+- Finance closing source
+- Telegram bot testing
+- API/webhook documentation jika ada
+
+
+15. TIMELINE OPERATIONAL MODULE V1
+
+WEEK 1 — REQUIREMENT & DATA SETUP
+- Audit visual/mockup.
+- Finalisasi section 01–07.
+- Finalisasi master data.
+- Buat checklist template.
+- Buat database.
+- Setup role.
+- Buat app testing.
+
+WEEK 2 — CORE NON-REAL-TIME MODULES
+- Briefing & Shift Board.
+- Opening Checklist.
+- Incident & Complaint.
+- Waste Log.
+- Upload foto.
+- Approval basic.
+
+WEEK 3 — CLOSING & QC
+- Visual QC.
+- Closing Checklist.
+- Cash Reconciliation.
+- Alert threshold.
+- Summary basic.
+- Integration HR/Finance basic.
+
+WEEK 4 — KDS BASIC & ANALYTICS
+- KDS semi-live/manual.
+- SLA timer.
+- Operational KPI.
+- Threshold config.
+- ops_daily_summary.
+- Telegram alert basic.
+
+WEEK 5 — PILOT
+- Pilot 1 outlet.
+- Test dengan staff.
+- Validasi checklist.
+- Validasi closing.
+- Validasi alert.
+- Fix bug.
+- Training supervisor.
+
+WEEK 6 — GO LIVE TERBATAS
+- Go-live 1 outlet.
+- Monitor 7–14 hari.
+- Improve UX.
+- Dokumentasi.
+- Siapkan integrasi Orchestration.
+
+
+16. PILOT RECOMMENDATION
+
+Pilot:
+- 1 brand.
+- 1 outlet.
+- 1 shift prioritas.
+- 5–10 staff.
+- Minimal 7 hari.
+
+Rekomendasi:
+- Pilih outlet yang PIC-nya paling siap.
+- Jika ingin menguji kompleksitas, gunakan Funkydak.
+- Jika ingin implementasi lebih stabil, gunakan outlet dengan flow paling rapi.
+
+Pilot V1 wajib menguji:
+- Briefing.
+- Opening checklist.
+- Incident.
+- Waste.
+- QC.
+- Closing.
+- Cash difference.
+- Summary.
+- Alert.
+
+
+17. DEFINITION OF DONE OPERATIONAL V1
+
+Operational Module V1 dianggap selesai jika:
+- App testing dan production tersedia.
+- Data dummy sudah dibersihkan.
+- Master brand/outlet/employee terhubung.
+- Briefing & shift board berjalan.
+- Opening checklist berjalan.
+- Foto bukti tersimpan.
+- Status Ready/Issue/Failed berjalan.
+- KDS basic/semi-live berjalan atau scope-nya dinyatakan belum aktif.
+- SLA alert berjalan.
+- QC scoring berjalan.
+- Incident & complaint berjalan.
+- AI response draft basic berjalan jika disepakati.
+- Waste log berjalan.
+- Closing checklist berjalan.
+- Cash reconciliation berjalan.
+- Cash difference alert berjalan.
+- Operational KPI tampil.
+- ops_daily_summary tersedia.
+- Filter brand/outlet/periode berjalan.
+- Pilot 1 outlet berjalan minimal 7 hari.
+- Supervisor dapat mengoperasikan sistem.
+- Audit log tersedia.
+- Role permission berjalan.
+
+
+18. OUT OF SCOPE OPERATIONAL V1
+
+Belum termasuk:
+- KDS enterprise multi-outlet real-time skala besar.
+- Full Moka API integration.
+- IoT temperature sensor.
+- CCTV integration.
+- Face recognition.
+- Full computer vision autonomous QC.
+- Automatic stock deduction real-time.
+- Purchasing automation.
+- Supplier ordering automation.
+- Native mobile app.
+- Full PostgreSQL migration untuk seluruh ERP.
+- Hermez full integration.
+- Predictive staffing advanced.
+- Customer app.
+- Delivery aggregator integration.
+- Full offline mode.
+
+
+19. SECURITY & AUDIT
+
+Wajib:
+- API key di environment variable.
+- Foto disimpan di private storage.
+- Access berdasarkan role dan outlet.
+- Critical action wajib approval.
+- Semua edit punya timestamp.
+- Semua edit approved punya before/after log.
+- Closing yang approved harus locked.
+- Reopen closing hanya super admin.
+- Incident sensitif tidak tampil ke semua staff.
+- Backup database harian.
+- Testing dan production terpisah.
+- Staff tidak dapat menghapus log.
+
+
+20. ONE-LINER DEVELOPER
+
+Operational Module V1 adalah web app kontrol operasional outlet yang mengelola briefing, roster, opening checklist, KDS basic, visual QC, incident & complaint, waste, closing reconciliation, cash difference, operational analytics, dan menghasilkan ops_daily_summary yang siap dibaca Orchestration Layer dan Hermez AI.
+
+
+PESAN SINGKAT KE DEVELOPER
+
+Mas, setelah Finance dan HR, kita build Operational ERP YKP dari visual yang sudah ada. Fokus V1 bukan langsung KDS enterprise, tapi membuat briefing & shift board, opening checklist, incident & complaint, visual QC, waste log, closing reconciliation, cash difference, analytics, dan ops_daily_summary benar-benar jalan untuk 1 outlet pilot. Spreadsheet boleh dipakai untuk checklist/log/summary, tetapi KDS timer real-time sebaiknya pakai database real-time. Semua modul harus memakai master brand/outlet/employee yang sama, punya role access, foto bukti, approval, alert, action status, dan audit log. Belum masuk IoT, CCTV, full autonomous AI vision, full Moka API, atau multi-outlet real-time besar.

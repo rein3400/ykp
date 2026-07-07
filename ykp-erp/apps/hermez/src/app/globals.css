@@ -1,0 +1,4 @@
+@import "@ykp/config/tailwind-preset.css" layer(base);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,0 +1,45 @@
+/**
+ * POST /api/fin/telegram-test {message}
+ *
+ * Sends a test Telegram message through @ykp/engine sendTelegramMessage.
+ * Owner / Super Admin / Finance Admin only. Useful for verifying that
+ * the bot token + chat id env vars are wired correctly from Settings.
+ *
+ * sendTelegramMessage signature: (token, chatId, text) -> { ok, messageId }.
+ * Returns ok:false with a typed error string on any failure, so we surface
+ * that string rather than throwing — a misconfigured bot is a config error,
+ * not a 500.
+ */
+import { type NextRequest } from "next/server";
+import { Role } from "@ykp/config";
+import { requireRole } from "@ykp/auth";
+import { handler, ok, fail } from "@/lib/server/http.js";
+import { sendTelegramMessage } from "@ykp/engine";
+import { z } from "zod";
+
+const Body = z.object({
+  message: z.string().min(1).max(1024),
+});
+
+export const POST = handler(async (req: NextRequest) => {
+  const user = await requireRole([Role.OWNER, Role.SUPER_ADMIN, Role.FINANCE_ADMIN]);
+  const body = await req.json();
+  const parsed = Body.safeParse(body);
+  if (!parsed.success) return fail("validation_error", "Invalid body", parsed.error.flatten());
+
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.OWNER_CHAT_ID;
+  if (!token || !chatId) {
+    return fail("bad_request", "TELEGRAM_BOT_TOKEN / OWNER_CHAT_ID not configured on the server");
+  }
+
+  try {
+    const result = await sendTelegramMessage(token, chatId, parsed.data.message);
+    if (!result.ok) {
+      return fail("internal_error", `Telegram send failed: ${result.error}`);
+    }
+    return ok({ sent: true, ok: true, message_id: result.messageId, sent_by: user.id });
+  } catch (e) {
+    return fail("internal_error", `Telegram send failed: ${(e as Error).message}`);
+  }
+});

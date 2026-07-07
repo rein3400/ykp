@@ -1,0 +1,963 @@
+//@version=5
+indicator("Adibo - HTF/LTF Strategy V3 MULTI-TIMEFRAME TIMING SMC", overlay=true, max_lines_count=500, max_boxes_count=100, max_labels_count=500)
+
+//============================================================================
+// INPUTS
+//============================================================================
+// Multi-Timeframe
+htfTF = input.timeframe("240", "Higher Timeframe (Setup)", group="Multi-Timeframe")
+ltfTF = input.timeframe("15", "Lower Timeframe (Entry)", group="Multi-Timeframe")
+
+// EMA Settings
+fastEMA = input.int(9, "Fast EMA", group="EMA")
+slowEMA = input.int(21, "Slow EMA", group="EMA")
+
+// RSI Settings
+useRSI = input.bool(true, "Use RSI Filter", group="Filters")
+rsiPeriod = input.int(14, "RSI Period", group="Filters")
+rsiBullLevel = input.float(50, "RSI Bull Level", group="Filters")
+rsiBearLevel = input.float(50, "RSI Bear Level", group="Filters")
+
+// HTF Setup Requirements
+htfSetupBars = input.int(20, "HTF Setup Lookback Bars", minval=5, maxval=50, group="HTF Setup")
+requireHTFStructure = input.bool(true, "Require HTF BOS/MSS for Setup", group="HTF Setup")
+htfSetupTimeout = input.int(50, "HTF Setup Timeout (bars)", minval=10, maxval=200, group="HTF Setup")
+
+// Market Structure Settings
+showBOS = input.bool(true, "Show BOS", group="Market Structure")
+showMSS = input.bool(true, "Show MSS/CHoCH", group="Market Structure")
+showSwingPoints = input.bool(false, "Show Swing Points (HH/LL)", group="Market Structure")
+useHighLow = input.bool(false, "Use High/Low for BOS/MSS", group="Market Structure")
+
+// Chart Timeframe BOS/MSS
+chartSwingLength = input.int(7, "Chart TF Swing Length", minval=3, maxval=20, group="Chart Timeframe")
+chartShowBOS = input.bool(true, "Show Chart TF BOS", group="Chart Timeframe")
+chartShowMSS = input.bool(true, "Show Chart TF MSS", group="Chart Timeframe")
+
+// HTF BOS/MSS 
+htfSwingLength = input.int(7, "HTF Swing Length", minval=3, maxval=20, group="HTF Structure")
+htfShowBOS = input.bool(true, "Show HTF BOS", group="HTF Structure")
+htfShowMSS = input.bool(true, "Show HTF MSS", group="HTF Structure")
+
+// FVG Settings
+showFVG = input.bool(true, "Show FVG", group="FVG")
+showiFVG = input.bool(true, "Show Inverse FVG", group="FVG")
+fvgThreshold = input.float(0, "FVG Threshold %", minval=0, maxval=5, step=0.1, group="FVG")
+maxFVGs = input.int(10, "Max FVGs", minval=5, maxval=20, group="FVG")
+fvgExtension = input.int(50, "FVG Extension Bars", minval=10, maxval=200, group="FVG")
+
+// Order Block Settings
+showOB = input.bool(true, "Show Order Blocks", group="Order Blocks")
+obLength = input.int(10, "OB Detection Length", minval=5, maxval=30, group="Order Blocks")
+maxOBs = input.int(5, "Max Order Blocks", minval=3, maxval=10, group="Order Blocks")
+obExtension = input.int(30, "OB Extension Bars", minval=10, maxval=100, group="Order Blocks")
+
+// Visual Settings
+showSignals = input.bool(true, "Show Entry Signals", group="Visual")
+showReasons = input.bool(true, "Show Signal Reasons", group="Visual")
+showEMAs = input.bool(true, "Show EMAs", group="Visual")
+reasonStyle = input.string("Compact", "Reason Style", ["Off", "Compact", "Detailed"], group="Visual")
+
+// Position Management Settings
+showPositions = input.bool(true, "Show Position Tracker", group="Position Management")
+positionStyle = input.string("Subtle Lines", "Position Style", ["Subtle Lines", "Transparent Boxes", "Lines Only"], group="Position Management")
+accountSize = input.float(10000, "Account Size", minval=100, group="Position Management")
+riskPercent = input.float(2.0, "Risk Per Trade (%)", minval=0.5, maxval=10.0, step=0.1, group="Position Management")
+tpRatio = input.float(2.0, "Take Profit Ratio (R:R)", minval=1.0, maxval=10.0, step=0.1, group="Position Management")
+
+// HTF-based SL/TP Settings
+htfSlMethod = input.string("HTF Structure", "HTF SL Method", ["HTF Structure", "HTF ATR", "HTF Swing"], group="HTF SL/TP")
+htfAtrMultiplier = input.float(2.0, "HTF ATR Multiplier for SL", minval=0.5, maxval=5.0, step=0.1, group="HTF SL/TP")
+htfSwingLookback = input.int(10, "HTF Swing Lookback", minval=5, maxval=30, group="HTF SL/TP")
+
+// Signal Validation
+requireConfluence = input.bool(true, "Require Confluence for Entry", group="Signal Validation")
+minConfluences = input.int(2, "Minimum Confluences", minval=1, maxval=5, group="Signal Validation")
+
+//============================================================================
+// COLORS
+//============================================================================
+bullColor = #00ff88
+bearColor = #ff4444
+fvgBullColor = color.new(#00ff88, 85)
+fvgBearColor = color.new(#ff4444, 85)
+ifvgBullColor = color.new(#ffff00, 85)
+ifvgBearColor = color.new(#ff8800, 85)
+obBullColor = color.new(#00ff88, 75)
+obBearColor = color.new(#ff4444, 75)
+
+// BOS/MSS Colors
+bullishBosColor = color.new(color.green, 0)
+bearishBosColor = color.new(color.red, 0)
+transparentColor = color.new(color.white, 100)
+
+// Position Colors
+tpColor = color.new(#00ff88, 95)        
+slColor = color.new(#ff4444, 95)        
+entryColor = color.new(#ffff00, 98)     
+lineTPColor = color.new(#00ff88, 30)   
+lineSLColor = color.new(#ff4444, 30)   
+lineEntryColor = color.new(#ffff00, 50)
+
+// Setup Colors
+htfSetupColor = color.new(color.blue, 80)
+ltfEntryColor = color.new(color.orange, 80)
+
+//============================================================================
+// MULTI-TIMEFRAME DATA
+//============================================================================
+// HTF Data
+htfFast = request.security(syminfo.tickerid, htfTF, ta.ema(close, fastEMA), lookahead=barmerge.lookahead_off)
+htfSlow = request.security(syminfo.tickerid, htfTF, ta.ema(close, slowEMA), lookahead=barmerge.lookahead_off)
+htfHigh = request.security(syminfo.tickerid, htfTF, high, lookahead=barmerge.lookahead_off)
+htfLow = request.security(syminfo.tickerid, htfTF, low, lookahead=barmerge.lookahead_off)
+htfClose = request.security(syminfo.tickerid, htfTF, close, lookahead=barmerge.lookahead_off)
+htfATR = request.security(syminfo.tickerid, htfTF, ta.atr(14), lookahead=barmerge.lookahead_off)
+
+htfBullish = htfFast > htfSlow
+htfBearish = htfFast < htfSlow
+
+// LTF Data
+ltfFast = request.security(syminfo.tickerid, ltfTF, ta.ema(close, fastEMA), lookahead=barmerge.lookahead_off)
+ltfSlow = request.security(syminfo.tickerid, ltfTF, ta.ema(close, slowEMA), lookahead=barmerge.lookahead_off)
+ltfRSI = request.security(syminfo.tickerid, ltfTF, ta.rsi(close, rsiPeriod), lookahead=barmerge.lookahead_off)
+
+ltfBullish = ltfFast > ltfSlow
+ltfBearish = ltfFast < ltfSlow
+
+atr14 = ta.atr(14)
+
+// Extract TA function calls to global scope for consistency
+htfFastCrossOverSlow = ta.crossover(htfFast, htfSlow)
+htfFastCrossUnderSlow = ta.crossunder(htfFast, htfSlow)
+closeCrossOverLtfFast = ta.crossover(close, ltfFast)
+closeCrossUnderLtfFast = ta.crossunder(close, ltfFast)
+htfHighest = ta.highest(htfHigh, htfSetupBars)
+htfLowest = ta.lowest(htfLow, htfSetupBars)
+htfSwingHighest = ta.highest(htfHigh, htfSwingLookback)
+htfSwingLowest = ta.lowest(htfLow, htfSwingLookback)
+
+//============================================================================
+// HELPER FUNCTIONS
+//============================================================================
+tfDisplay(chartAsTimeframe, tfPeriod, tfMultip) =>
+    if chartAsTimeframe
+        switch 
+            timeframe.isminutes and timeframe.multiplier % 60 != 0 => str.tostring(timeframe.multiplier) + "min"
+            timeframe.isminutes and timeframe.multiplier % 60 == 0 => str.tostring(timeframe.multiplier/60) + "H"
+            timeframe.isdaily => str.tostring(timeframe.multiplier) + "D"
+            timeframe.isweekly => str.tostring(timeframe.multiplier) + "W"
+            timeframe.ismonthly => str.tostring(timeframe.multiplier) + "M"
+    else
+        "HTF"
+
+//============================================================================
+// 🚨 CRITICAL MULTI-TIMEFRAME TIMING FIX
+//============================================================================
+var bool htfSetupBull = false
+var bool htfSetupBear = false
+var int htfSetupBar = na
+var float htfSetupHigh = na
+var float htfSetupLow = na
+var int htfSetupTime = na
+
+// 🚨 CRITICAL FIX: HTF Setup Detection in HTF timeframe context
+htfSetupDetection() =>
+    var bool htfSetupBullHTF = false
+    var bool htfSetupBearHTF = false
+    var int htfSetupTimeHTF = na
+    var float htfSetupHighHTF = na
+    var float htfSetupLowHTF = na
+    var int htfSetupBarHTF = na
+    
+    bool setupBullish = false
+    bool setupBearish = false
+    
+    // HTF Bias + Structure confirmation
+    if htfBullish and htfFastCrossOverSlow
+        setupBullish := true
+    else if htfBearish and htfFastCrossUnderSlow
+        setupBearish := true
+    
+    // Update HTF setup status
+    if setupBullish and not htfSetupBullHTF
+        htfSetupBullHTF := true
+        htfSetupBearHTF := false
+        htfSetupTimeHTF := time
+        htfSetupHighHTF := htfHighest
+        htfSetupLowHTF := htfLowest
+        htfSetupBarHTF := bar_index
+    else if setupBearish and not htfSetupBearHTF
+        htfSetupBearHTF := true
+        htfSetupBullHTF := false
+        htfSetupTimeHTF := time
+        htfSetupHighHTF := htfHighest
+        htfSetupLowHTF := htfLowest
+        htfSetupBarHTF := bar_index
+    
+    // HTF Setup Timeout
+    if not na(htfSetupBarHTF) and (bar_index - htfSetupBarHTF) > htfSetupTimeout
+        htfSetupBullHTF := false
+        htfSetupBearHTF := false
+        htfSetupBarHTF := na
+        htfSetupTimeHTF := na
+    
+    [htfSetupBullHTF, htfSetupBearHTF, htfSetupTimeHTF, htfSetupHighHTF, htfSetupLowHTF]
+
+// 🚨 CRITICAL FIX: Get HTF setup data in chart timeframe context
+[htfSetupBullData, htfSetupBearData, htfSetupTimeData, htfSetupHighData, htfSetupLowData] = request.security(syminfo.tickerid, htfTF, htfSetupDetection(), lookahead=barmerge.lookahead_off)
+
+// Update local HTF setup variables with proper timing
+bool newHTFSetupBull = htfSetupBullData and not htfSetupBull
+bool newHTFSetupBear = htfSetupBearData and not htfSetupBear
+
+if newHTFSetupBull
+    htfSetupBull := true
+    htfSetupBear := false
+    htfSetupBar := bar_index
+    htfSetupTime := htfSetupTimeData  // 🚨 CRITICAL: Use HTF timestamp
+    htfSetupHigh := htfSetupHighData
+    htfSetupLow := htfSetupLowData
+    label.new(bar_index, high * 1.02, "🔵 HTF SETUP BULL\n" + htfTF, style=label.style_label_down, color=htfSetupColor, textcolor=color.white, size=size.normal)
+
+else if newHTFSetupBear
+    htfSetupBear := true
+    htfSetupBull := false
+    htfSetupBar := bar_index
+    htfSetupTime := htfSetupTimeData  // 🚨 CRITICAL: Use HTF timestamp
+    htfSetupHigh := htfSetupHighData
+    htfSetupLow := htfSetupLowData
+    label.new(bar_index, low * 0.98, "🔵 HTF SETUP BEAR\n" + htfTF, style=label.style_label_up, color=htfSetupColor, textcolor=color.white, size=size.normal)
+
+// Update current states
+if not htfSetupBullData
+    htfSetupBull := false
+if not htfSetupBearData
+    htfSetupBear := false
+
+// HTF Structure-based SL/TP calculation
+calculateHTFLevels(isLong, entryPrice) =>
+    float htfStopLoss = na     
+    float htfTakeProfit = na   
+    
+    if htfSlMethod == "HTF ATR"
+        if isLong
+            htfStopLoss := entryPrice - (htfATR * htfAtrMultiplier)
+        else
+            htfStopLoss := entryPrice + (htfATR * htfAtrMultiplier)
+    
+    else if htfSlMethod == "HTF Swing"
+        if isLong
+            htfStopLoss := htfSwingLowest * 0.999
+        else
+            htfStopLoss := htfSwingHighest * 1.001
+    
+    else // HTF Structure
+        if isLong
+            htfStopLoss := htfSetupLow * 0.999
+        else
+            htfStopLoss := htfSetupHigh * 1.001
+    
+    // Calculate TP based on R:R ratio
+    float riskAmount = math.abs(entryPrice - htfStopLoss)
+    if isLong
+        htfTakeProfit := entryPrice + (riskAmount * tpRatio)
+    else
+        htfTakeProfit := entryPrice - (riskAmount * tpRatio)
+    
+    [htfStopLoss, htfTakeProfit]
+
+//============================================================================
+// MARKET STRUCTURE FUNCTION
+//============================================================================
+marketStructure(tfSH, tfSL, swingLength, chartAsTimeframe, lineWidth, displayTimeframe, useBosPlot, useMssPlot) =>
+    var float tfPrevHigh = na
+    var float tfPrevLow = na
+    var int tfPrevHighTime = na
+    var int tfPrevLowTime = na
+    var bool tfHighPresent = false
+    var bool tfLowPresent = false
+    var int prevBreakoutType = 0
+    
+    bool highBroken = false
+    bool lowBroken = false
+    var int endHighTime = na
+    var int endLowTime = na
+    
+    bool HH = false
+    bool LH = false
+    bool HL = false
+    bool LL = false
+    
+    float tfHighClosePrice = useHighLow ? high : close
+    float tfLowClosePrice = useHighLow ? low : close
+    
+    if not na(tfSH)
+        if tfSH >= tfPrevHigh
+            HH := true
+        else
+            LH := true
+        tfPrevHigh := tfSH
+        tfPrevHighTime := time[swingLength]
+        tfHighPresent := true
+    
+    if not na(tfSL)
+        if tfSL >= tfPrevLow
+            HL := true
+        else
+            LL := true
+        tfPrevLow := tfSL
+        tfPrevLowTime := time[swingLength]
+        tfLowPresent := true
+    
+    if tfHighClosePrice > tfPrevHigh and tfHighPresent
+        highBroken := true
+        tfHighPresent := false
+        endHighTime := time
+    
+    if tfLowClosePrice < tfPrevLow and tfLowPresent
+        lowBroken := true
+        tfLowPresent := false
+        endLowTime := time
+    
+    if HH and showSwingPoints
+        label.new(tfPrevHighTime, tfPrevHigh, "HH\n" + tfDisplay(chartAsTimeframe, "", 0), xloc=xloc.bar_time, color=transparentColor, style=label.style_label_down, textcolor=color.white, size=size.tiny)
+    if HL and showSwingPoints
+        label.new(tfPrevLowTime, tfPrevLow, "HL\n" + tfDisplay(chartAsTimeframe, "", 0), xloc=xloc.bar_time, color=transparentColor, style=label.style_label_up, textcolor=color.white, size=size.tiny)
+    if LH and showSwingPoints
+        label.new(tfPrevHighTime, tfPrevHigh, "LH\n" + tfDisplay(chartAsTimeframe, "", 0), xloc=xloc.bar_time, color=transparentColor, style=label.style_label_down, textcolor=color.white, size=size.tiny)
+    if LL and showSwingPoints
+        label.new(tfPrevLowTime, tfPrevLow, "LL\n" + tfDisplay(chartAsTimeframe, "", 0), xloc=xloc.bar_time, color=transparentColor, style=label.style_label_up, textcolor=color.white, size=size.tiny)
+    
+    int highCount = ta.barssince(HH or LH) + swingLength
+    int lowCount = ta.barssince(HL or LL) + swingLength
+    
+    var bool bosSignalBull = false
+    var bool mssSignalBull = false
+    var bool bosSignalBear = false  
+    var bool mssSignalBear = false
+    
+    bosSignalBull := false
+    mssSignalBull := false
+    bosSignalBear := false
+    mssSignalBear := false
+    
+    if highBroken and displayTimeframe
+        if prevBreakoutType == 1 and useBosPlot and showBOS
+            line.new(x1=time[highCount], y1=tfPrevHigh, x2=endHighTime, y2=tfPrevHigh, xloc=xloc.bar_time, color=bullishBosColor, style=line.style_dotted, width=lineWidth)
+            label.new(x=time[highCount/2], y=tfPrevHigh, xloc=xloc.bar_time, text="BOS\n" + tfDisplay(chartAsTimeframe, "", 0), color=transparentColor, style=label.style_label_down, textcolor=bullishBosColor, size=size.tiny)
+            bosSignalBull := true
+        else if prevBreakoutType == -1 and useMssPlot and showMSS
+            line.new(x1=time[highCount], y1=tfPrevHigh, x2=endHighTime, y2=tfPrevHigh, xloc=xloc.bar_time, color=bullishBosColor, style=line.style_dotted, width=lineWidth)
+            label.new(x=time[highCount/2], y=tfPrevHigh, xloc=xloc.bar_time, text="MSS\n" + tfDisplay(chartAsTimeframe, "", 0), color=transparentColor, style=label.style_label_down, textcolor=bullishBosColor, size=size.tiny)
+            mssSignalBull := true
+        
+        prevBreakoutType := 1
+    
+    if lowBroken and displayTimeframe
+        if prevBreakoutType == -1 and useBosPlot and showBOS
+            line.new(x1=time[lowCount], y1=tfPrevLow, x2=endLowTime, y2=tfPrevLow, xloc=xloc.bar_time, color=bearishBosColor, style=line.style_dotted, width=lineWidth)
+            label.new(x=time[lowCount/2], y=tfPrevLow, xloc=xloc.bar_time, text="BOS\n" + tfDisplay(chartAsTimeframe, "", 0), color=transparentColor, style=label.style_label_up, textcolor=bearishBosColor, size=size.tiny)
+            bosSignalBear := true
+        else if prevBreakoutType == 1 and useMssPlot and showMSS
+            line.new(x1=time[lowCount], y1=tfPrevLow, x2=endLowTime, y2=tfPrevLow, xloc=xloc.bar_time, color=bearishBosColor, style=line.style_dotted, width=lineWidth)
+            label.new(x=time[lowCount/2], y=tfPrevLow, xloc=xloc.bar_time, text="MSS\n" + tfDisplay(chartAsTimeframe, "", 0), color=transparentColor, style=label.style_label_up, textcolor=bearishBosColor, size=size.tiny)
+            mssSignalBear := true
+        
+        prevBreakoutType := -1
+    
+    [bosSignalBull, mssSignalBull, bosSignalBear, mssSignalBear]
+
+//============================================================================
+// GET PIVOT DATA
+//============================================================================
+chartSH = ta.pivothigh(high, chartSwingLength, chartSwingLength)
+chartSL = ta.pivotlow(low, chartSwingLength, chartSwingLength)
+
+[htfSH, htfSLow] = request.security(syminfo.tickerid, htfTF, [ta.pivothigh(high, htfSwingLength, htfSwingLength), ta.pivotlow(low, htfSwingLength, htfSwingLength)], gaps=barmerge.gaps_on)
+
+//============================================================================
+// CALL MARKET STRUCTURE FUNCTIONS
+//============================================================================
+[chartBosBull, chartMssBull, chartBosBear, chartMssBear] = marketStructure(chartSH, chartSL, chartSwingLength, true, 1, true, chartShowBOS, chartShowMSS)
+[htfBosBull, htfMssBull, htfBosBear, htfMssBear] = marketStructure(htfSH, htfSLow, htfSwingLength, false, 2, true, htfShowBOS, htfShowMSS)
+
+var bool recentBosBull = false
+var bool recentMssBull = false  
+var bool recentBosBear = false
+var bool recentMssBear = false
+
+recentBosBull := ta.barssince(chartBosBull or htfBosBull) <= 5
+recentMssBull := ta.barssince(chartMssBull or htfMssBull) <= 5
+recentBosBear := ta.barssince(chartBosBear or htfBosBear) <= 5
+recentMssBear := ta.barssince(chartMssBear or htfMssBear) <= 5
+
+//============================================================================
+// REAL-TIME FVG DETECTION AND MANAGEMENT
+//============================================================================
+type FVGData
+    float top
+    float bottom
+    bool isBull
+    bool isInverse
+    int startBar
+    int endBar
+
+var fvgArray = array.new<FVGData>()
+var fvgBoxArray = array.new<box>()
+var fvgLabelArray = array.new<label>()
+
+var bool recentFVGBull = false
+var bool recentFVGBear = false
+
+detectFVG() =>
+    float threshold = fvgThreshold / 100.0
+    bool bullFVG = low > high[2] and close[1] > high[2]
+    bool bearFVG = high < low[2] and close[1] < low[2]
+    if threshold > 0
+        bullFVG := bullFVG and (low - high[2]) / high[2] > threshold
+        bearFVG := bearFVG and (low[2] - high) / high > threshold
+    [bullFVG, bearFVG]
+
+[fvgBull, fvgBear] = detectFVG()
+
+recentFVGBull := ta.barssince(fvgBull) <= 3
+recentFVGBear := ta.barssince(fvgBear) <= 3
+
+// REAL-TIME FVG Management
+if (fvgBull or fvgBear) and showFVG and bar_index >= 2
+    if array.size(fvgArray) >= maxFVGs
+        FVGData oldData = array.shift(fvgArray)
+        box oldBox = array.shift(fvgBoxArray)
+        label oldLabel = array.shift(fvgLabelArray)
+        if not na(oldBox)
+            box.delete(oldBox)
+        if not na(oldLabel)
+            label.delete(oldLabel)
+    
+    if fvgBull
+        bool isInverse = htfBearish
+        if not isInverse or showiFVG
+            color boxColor = isInverse ? ifvgBullColor : fvgBullColor
+            int endBarCalc = bar_index + fvgExtension
+            FVGData fvgData = FVGData.new(low, high[2], true, isInverse, bar_index - 2, endBarCalc)
+            box fvgBox = box.new(bar_index - 2, low, endBarCalc, high[2], border_color=na, bgcolor=boxColor)
+            label fvgLabel = label.new(bar_index - 1, high[2], isInverse ? "iFVG" : "FVG", style=label.style_label_up, color=boxColor, textcolor=color.white, size=size.tiny)
+            
+            array.push(fvgArray, fvgData)
+            array.push(fvgBoxArray, fvgBox)
+            array.push(fvgLabelArray, fvgLabel)
+    
+    if fvgBear
+        bool isInverse = htfBullish
+        if not isInverse or showiFVG
+            color boxColor = isInverse ? ifvgBearColor : fvgBearColor
+            int endBarCalc = bar_index + fvgExtension
+            FVGData fvgData = FVGData.new(low[2], high, false, isInverse, bar_index - 2, endBarCalc)
+            box fvgBox = box.new(bar_index - 2, low[2], endBarCalc, high, border_color=na, bgcolor=boxColor)
+            label fvgLabel = label.new(bar_index - 1, low[2], isInverse ? "iFVG" : "FVG", style=label.style_label_down, color=boxColor, textcolor=color.white, size=size.tiny)
+            
+            array.push(fvgArray, fvgData)
+            array.push(fvgBoxArray, fvgBox)
+            array.push(fvgLabelArray, fvgLabel)
+
+// REAL-TIME FVG Update and Invalidation
+if array.size(fvgArray) > 0
+    for i = array.size(fvgArray) - 1 to 0
+        FVGData fvgData = array.get(fvgArray, i)
+        box fvgBox = array.get(fvgBoxArray, i)
+        label fvgLabel = array.get(fvgLabelArray, i)
+        
+        bool isInvalidated = false
+        if fvgData.isBull and low <= fvgData.bottom
+            isInvalidated := true
+        else if not fvgData.isBull and high >= fvgData.top
+            isInvalidated := true
+        
+        if isInvalidated
+            if not na(fvgBox)
+                box.delete(fvgBox)
+            if not na(fvgLabel)
+                label.delete(fvgLabel)
+            array.remove(fvgArray, i)
+            array.remove(fvgBoxArray, i)
+            array.remove(fvgLabelArray, i)
+        else
+            if not na(fvgBox)
+                int newEndBar = math.max(fvgData.endBar, bar_index + 10)
+                box.set_right(fvgBox, newEndBar)
+                array.set(fvgArray, i, FVGData.new(fvgData.top, fvgData.bottom, fvgData.isBull, fvgData.isInverse, fvgData.startBar, newEndBar))
+
+//============================================================================
+// REAL-TIME ORDER BLOCKS
+//============================================================================
+var obBoxArray = array.new<box>()
+var obLabelArray = array.new<label>()
+var bool recentOBBullish = false
+var bool recentOBBearish = false
+
+if showOB and bar_index >= obLength
+    bool bigMove = math.abs(close - close[obLength]) > atr14 * 2.0
+    if bigMove
+        if array.size(obBoxArray) >= maxOBs
+            box oldOb = array.shift(obBoxArray)
+            label oldObLabel = array.shift(obLabelArray)
+            if not na(oldOb)
+                box.delete(oldOb)
+            if not na(oldObLabel)
+                label.delete(oldObLabel)
+        
+        if close > close[obLength]
+            for i = 1 to obLength
+                if close[i] < open[i]
+                    int endBarCalc = bar_index + obExtension
+                    box obBox = box.new(bar_index - i - 1, high[i], endBarCalc, low[i], border_color=na, bgcolor=obBearColor)
+                    label obLabel = label.new(bar_index - i, high[i], "Be-OB", style=label.style_label_down, color=obBearColor, textcolor=color.white, size=size.tiny)
+                    array.push(obBoxArray, obBox)
+                    array.push(obLabelArray, obLabel)
+                    recentOBBearish := true
+                    break
+                    
+        else if close < close[obLength]
+            for i = 1 to obLength
+                if close[i] > open[i]
+                    int endBarCalc = bar_index + obExtension
+                    box obBox = box.new(bar_index - i - 1, high[i], endBarCalc, low[i], border_color=na, bgcolor=obBullColor)
+                    label obLabel = label.new(bar_index - i, low[i], "Bu-OB", style=label.style_label_up, color=obBullColor, textcolor=color.white, size=size.tiny)
+                    array.push(obBoxArray, obBox)
+                    array.push(obLabelArray, obLabel)
+                    recentOBBullish := true
+                    break
+
+// REAL-TIME Order Block extension
+if array.size(obBoxArray) > 0
+    for i = 0 to array.size(obBoxArray) - 1
+        box obBox = array.get(obBoxArray, i)
+        if not na(obBox)
+            box.set_right(obBox, bar_index + 10)
+
+if ta.barssince(recentOBBullish) > 5
+    recentOBBullish := false
+if ta.barssince(recentOBBearish) > 5
+    recentOBBearish := false
+
+//============================================================================
+// 🚨 CRITICAL FIX: HTF/LTF SIGNAL GENERATION WITH MULTI-TIMEFRAME TIMING
+//============================================================================
+// RSI Filters
+bool rsiOK_Long = not useRSI or ltfRSI >= rsiBullLevel
+bool rsiOK_Short = not useRSI or ltfRSI <= rsiBearLevel
+
+// LTF Entry Conditions
+bool ltfLongEntry = ltfBullish and rsiOK_Long and closeCrossOverLtfFast
+bool ltfShortEntry = ltfBearish and rsiOK_Short and closeCrossUnderLtfFast
+
+// Pattern Detection
+bool bullEngulf = close > open and close[1] < open[1] and close > open[1] and open < close[1]
+bool bearEngulf = close < open and close[1] > open[1] and close < open[1] and open > close[1]
+
+// 🚨 CRITICAL FIX: Multi-timeframe timing validation using proper HTF timestamp
+bool validLTFTiming = not na(htfSetupTimeData) and time >= htfSetupTimeData
+
+// Confluence Counting
+int longConfluenceCount = 0
+int shortConfluenceCount = 0
+string longConfluenceText = ""
+string shortConfluenceText = ""
+
+if recentFVGBull
+    longConfluenceCount := longConfluenceCount + 1
+    longConfluenceText := longConfluenceText + "FVG "
+
+if recentBosBull or recentMssBull
+    if recentBosBull
+        longConfluenceCount := longConfluenceCount + 1
+        longConfluenceText := longConfluenceText + "BOS "
+    if recentMssBull  
+        longConfluenceCount := longConfluenceCount + 1
+        longConfluenceText := longConfluenceText + "MSS "
+
+if recentOBBullish
+    longConfluenceCount := longConfluenceCount + 1
+    longConfluenceText := longConfluenceText + "OB "
+
+if bullEngulf
+    longConfluenceCount := longConfluenceCount + 1
+    longConfluenceText := longConfluenceText + "ENG "
+
+if recentFVGBear
+    shortConfluenceCount := shortConfluenceCount + 1
+    shortConfluenceText := shortConfluenceText + "FVG "
+
+if recentBosBear or recentMssBear
+    if recentBosBear
+        shortConfluenceCount := shortConfluenceCount + 1
+        shortConfluenceText := shortConfluenceText + "BOS "
+    if recentMssBear
+        shortConfluenceCount := shortConfluenceCount + 1
+        shortConfluenceText := shortConfluenceText + "MSS "
+
+if recentOBBearish
+    shortConfluenceCount := shortConfluenceCount + 1
+    shortConfluenceText := shortConfluenceText + "OB "
+
+if bearEngulf
+    shortConfluenceCount := shortConfluenceCount + 1
+    shortConfluenceText := shortConfluenceText + "ENG "
+
+// 🚨 CRITICAL FIX: FINAL SIGNALS with proper multi-timeframe timing validation
+bool longSignal = htfSetupBull and ltfLongEntry and validLTFTiming and (not requireConfluence or longConfluenceCount >= minConfluences)
+bool shortSignal = htfSetupBear and ltfShortEntry and validLTFTiming and (not requireConfluence or shortConfluenceCount >= minConfluences)
+
+bool confluenceLong = longSignal and longConfluenceCount >= 2
+bool confluenceShort = shortSignal and shortConfluenceCount >= 2
+
+//============================================================================
+// REAL-TIME POSITION MANAGEMENT
+//============================================================================
+// Position variables
+var float entryPrice = na
+var float htfTPPrice = na
+var float htfSLPrice = na
+var float positionSize = na
+var float riskAmount = na
+var bool isLongPosition = na
+var int entryBar = na
+var bool setupValid = na
+var bool tpHitNotified = false
+
+// Drawing elements
+var box currentTPBox = na
+var box currentSLBox = na
+var line currentTPLine = na
+var line currentSLLine = na  
+var line currentEntryLine = na
+var label currentTPLabel = na
+var label currentSLLabel = na
+var label currentPnLLabel = na
+var label currentStatusLabel = na
+
+// HTF-only invalidation check
+checkHTFInvalidation() =>
+    if na(entryPrice) or na(entryBar)
+        [false, ""]
+    else
+        bool htfBiasChanged = isLongPosition ? not htfBullish : not htfBearish
+        bool htfSlHit = isLongPosition ? low <= htfSLPrice : high >= htfSLPrice
+        
+        string reasonText = ""
+        bool isInvalid = false
+        
+        if htfBiasChanged
+            reasonText := reasonText + "HTF Bias Changed | "
+            isInvalid := true
+        
+        if htfSlHit
+            reasonText := reasonText + "HTF Stop Loss Hit | "
+            isInvalid := true
+        
+        if str.length(reasonText) > 3
+            reasonText := str.substring(reasonText, 0, str.length(reasonText) - 3)
+        
+        [isInvalid, reasonText]
+
+// Check for HTF TP hit
+checkHTFTPHit() =>
+    if na(entryPrice) or na(htfTPPrice)
+        false
+    else
+        isLongPosition ? high >= htfTPPrice : low <= htfTPPrice
+
+// REAL-TIME LONG POSITION SETUP
+if longSignal and showPositions
+    // Clean up previous elements
+    if not na(currentTPBox)
+        box.delete(currentTPBox)
+        currentTPBox := na
+    if not na(currentSLBox)
+        box.delete(currentSLBox)
+        currentSLBox := na
+    if not na(currentTPLine)
+        line.delete(currentTPLine)
+        currentTPLine := na
+    if not na(currentSLLine)
+        line.delete(currentSLLine)
+        currentSLLine := na
+    if not na(currentEntryLine)
+        line.delete(currentEntryLine)
+        currentEntryLine := na
+    if not na(currentTPLabel)
+        label.delete(currentTPLabel)
+        currentTPLabel := na
+    if not na(currentSLLabel)
+        label.delete(currentSLLabel)
+        currentSLLabel := na
+    if not na(currentPnLLabel)
+        label.delete(currentPnLLabel)
+        currentPnLLabel := na
+    if not na(currentStatusLabel)
+        label.delete(currentStatusLabel)
+        currentStatusLabel := na
+    
+    // Calculate position parameters
+    entryPrice := close
+    entryBar := bar_index
+    setupValid := true
+    tpHitNotified := false
+    isLongPosition := true
+    
+    [htfStopLoss, htfTakeProfit] = calculateHTFLevels(true, entryPrice)
+    htfSLPrice := htfStopLoss
+    htfTPPrice := htfTakeProfit
+    
+    riskAmount := entryPrice - htfSLPrice
+    
+    // Position sizing
+    float riskDollar = accountSize * (riskPercent / 100)
+    positionSize := riskDollar / riskAmount
+    float potentialProfit = positionSize * (htfTPPrice - entryPrice)
+    float rrRatio = (htfTPPrice - entryPrice) / riskAmount
+    
+    // REAL-TIME visual elements with dynamic extension
+    if positionStyle == "Subtle Lines" or positionStyle == "Lines Only"
+        currentEntryLine := line.new(bar_index, entryPrice, bar_index + 50, entryPrice, color=lineEntryColor, width=1, style=line.style_solid, extend=extend.right)
+        currentTPLine := line.new(bar_index, htfTPPrice, bar_index + 50, htfTPPrice, color=lineTPColor, width=2, style=line.style_dashed, extend=extend.right)
+        currentSLLine := line.new(bar_index, htfSLPrice, bar_index + 50, htfSLPrice, color=lineSLColor, width=2, style=line.style_dashed, extend=extend.right)
+        
+        string tpText = "HTF-TP: " + str.tostring(htfTPPrice, "#.##") + " $" + str.tostring(potentialProfit, "#")
+        currentTPLabel := label.new(bar_index + 15, htfTPPrice, tpText, style=label.style_label_left, color=color.new(lineTPColor, 80), textcolor=color.white, size=size.small)
+        
+        string slText = "HTF-SL: " + str.tostring(htfSLPrice, "#.##") + " $" + str.tostring(riskDollar, "#")
+        currentSLLabel := label.new(bar_index + 15, htfSLPrice, slText, style=label.style_label_left, color=color.new(lineSLColor, 80), textcolor=color.white, size=size.small)
+        
+        string qtyText = "HTF-LONG | Qty: " + str.tostring(positionSize, "#.##") + " | R:R 1:" + str.tostring(rrRatio, "#.##")
+        currentPnLLabel := label.new(bar_index + 15, entryPrice, qtyText, style=label.style_label_center, color=color.new(lineEntryColor, 70), textcolor=color.white, size=size.normal)
+    
+    else if positionStyle == "Transparent Boxes"
+        currentTPBox := box.new(bar_index + 3, htfTPPrice, bar_index + 100, entryPrice, border_color=color.new(lineTPColor, 0), bgcolor=tpColor)
+        currentSLBox := box.new(bar_index + 3, entryPrice, bar_index + 100, htfSLPrice, border_color=color.new(lineSLColor, 0), bgcolor=slColor)
+        
+        string tpText = "HTF-TP: " + str.tostring(htfTPPrice, "#.##") + " (+$" + str.tostring(potentialProfit, "#") + ")"
+        currentTPLabel := label.new(bar_index + 25, htfTPPrice, tpText, style=label.style_label_right, color=color.new(lineTPColor, 80), textcolor=color.white, size=size.small)
+        
+        string slText = "HTF-SL: " + str.tostring(htfSLPrice, "#.##") + " (-$" + str.tostring(riskDollar, "#") + ")"
+        currentSLLabel := label.new(bar_index + 25, htfSLPrice, slText, style=label.style_label_right, color=color.new(lineSLColor, 80), textcolor=color.white, size=size.small)
+        
+        string qtyText = "HTF-LONG | Qty: " + str.tostring(positionSize, "#.##") + " | R:R 1:" + str.tostring(rrRatio, "#.##")
+        currentPnLLabel := label.new(bar_index + 14, entryPrice, qtyText, style=label.style_label_center, color=color.new(lineEntryColor, 70), textcolor=color.white, size=size.normal)
+
+// REAL-TIME SHORT POSITION SETUP
+if shortSignal and showPositions
+    // Clean up previous elements
+    if not na(currentTPBox)
+        box.delete(currentTPBox)
+        currentTPBox := na
+    if not na(currentSLBox)
+        box.delete(currentSLBox)
+        currentSLBox := na
+    if not na(currentTPLine)
+        line.delete(currentTPLine)
+        currentTPLine := na
+    if not na(currentSLLine)
+        line.delete(currentSLLine)
+        currentSLLine := na
+    if not na(currentEntryLine)
+        line.delete(currentEntryLine)
+        currentEntryLine := na
+    if not na(currentTPLabel)
+        label.delete(currentTPLabel)
+        currentTPLabel := na
+    if not na(currentSLLabel)
+        label.delete(currentSLLabel)
+        currentSLLabel := na
+    if not na(currentPnLLabel)
+        label.delete(currentPnLLabel)
+        currentPnLLabel := na
+    if not na(currentStatusLabel)
+        label.delete(currentStatusLabel)
+        currentStatusLabel := na
+    
+    // Calculate position parameters
+    entryPrice := close
+    entryBar := bar_index
+    setupValid := true
+    tpHitNotified := false
+    isLongPosition := false
+    
+    [htfStopLoss, htfTakeProfit] = calculateHTFLevels(false, entryPrice)
+    htfSLPrice := htfStopLoss
+    htfTPPrice := htfTakeProfit
+    
+    riskAmount := htfSLPrice - entryPrice
+    
+    // Position sizing
+    float riskDollar = accountSize * (riskPercent / 100)
+    positionSize := riskDollar / riskAmount
+    float potentialProfit = positionSize * (entryPrice - htfTPPrice)
+    float rrRatio = (entryPrice - htfTPPrice) / riskAmount
+    
+    // REAL-TIME visual elements with dynamic extension
+    if positionStyle == "Subtle Lines" or positionStyle == "Lines Only"
+        currentEntryLine := line.new(bar_index, entryPrice, bar_index + 50, entryPrice, color=lineEntryColor, width=1, style=line.style_solid, extend=extend.right)
+        currentTPLine := line.new(bar_index, htfTPPrice, bar_index + 50, htfTPPrice, color=lineTPColor, width=2, style=line.style_dashed, extend=extend.right)
+        currentSLLine := line.new(bar_index, htfSLPrice, bar_index + 50, htfSLPrice, color=lineSLColor, width=2, style=line.style_dashed, extend=extend.right)
+        
+        string tpText = "HTF-TP: " + str.tostring(htfTPPrice, "#.##") + " $" + str.tostring(potentialProfit, "#")
+        currentTPLabel := label.new(bar_index + 15, htfTPPrice, tpText, style=label.style_label_left, color=color.new(lineTPColor, 80), textcolor=color.white, size=size.small)
+        
+        string slText = "HTF-SL: " + str.tostring(htfSLPrice, "#.##") + " $" + str.tostring(riskDollar, "#")
+        currentSLLabel := label.new(bar_index + 15, htfSLPrice, slText, style=label.style_label_left, color=color.new(lineSLColor, 80), textcolor=color.white, size=size.small)
+        
+        string qtyText = "HTF-SHORT | Qty: " + str.tostring(positionSize, "#.##") + " | R:R 1:" + str.tostring(rrRatio, "#.##")
+        currentPnLLabel := label.new(bar_index + 15, entryPrice, qtyText, style=label.style_label_center, color=color.new(lineEntryColor, 70), textcolor=color.white, size=size.normal)
+    
+    else if positionStyle == "Transparent Boxes"
+        currentTPBox := box.new(bar_index + 3, entryPrice, bar_index + 100, htfTPPrice, border_color=color.new(lineTPColor, 0), bgcolor=tpColor)
+        currentSLBox := box.new(bar_index + 3, htfSLPrice, bar_index + 100, entryPrice, border_color=color.new(lineSLColor, 0), bgcolor=slColor)
+        
+        string tpText = "HTF-TP: " + str.tostring(htfTPPrice, "#.##") + " (+$" + str.tostring(potentialProfit, "#") + ")"
+        currentTPLabel := label.new(bar_index + 25, htfTPPrice, tpText, style=label.style_label_right, color=color.new(lineTPColor, 80), textcolor=color.white, size=size.small)
+        
+        string slText = "HTF-SL: " + str.tostring(htfSLPrice, "#.##") + " (-$" + str.tostring(riskDollar, "#") + ")"
+        currentSLLabel := label.new(bar_index + 25, htfSLPrice, slText, style=label.style_label_right, color=color.new(lineSLColor, 80), textcolor=color.white, size=size.small)
+        
+        string qtyText = "HTF-SHORT | Qty: " + str.tostring(positionSize, "#.##") + " | R:R 1:" + str.tostring(rrRatio, "#.##")
+        currentPnLLabel := label.new(bar_index + 14, entryPrice, qtyText, style=label.style_label_center, color=color.new(lineEntryColor, 70), textcolor=color.white, size=size.normal)
+
+// REAL-TIME POSITION MANAGEMENT
+if showPositions and not na(entryPrice)
+    bool htfTpHit = checkHTFTPHit()
+    
+    if htfTpHit and not tpHitNotified
+        string tpHitText = "🎯 HTF TP HIT! (" + htfTF + ")"
+        label.new(bar_index, low * 0.995, tpHitText, style=label.style_label_up, color=color.new(color.lime, 70), textcolor=color.white, size=size.normal)
+        tpHitNotified := true
+    
+    [htfSetupInvalidated, htfInvalidationReason] = checkHTFInvalidation()
+    
+    if htfSetupInvalidated and setupValid
+        setupValid := false
+        
+        string invalidText = "❌ HTF SETUP INVALID\n" + htfInvalidationReason
+        color labelColor = color.new(color.red, 70)
+        
+        currentStatusLabel := label.new(bar_index, high * 1.01, invalidText, style=label.style_label_down, color=labelColor, textcolor=color.white, size=size.normal)
+        
+        // Clean up all visual elements
+        if not na(currentTPBox)
+            box.delete(currentTPBox)
+            currentTPBox := na
+        if not na(currentSLBox)
+            box.delete(currentSLBox)
+            currentSLBox := na
+        if not na(currentTPLine)
+            line.delete(currentTPLine)
+            currentTPLine := na
+        if not na(currentSLLine)
+            line.delete(currentSLLine)
+            currentSLLine := na
+        if not na(currentEntryLine)
+            line.delete(currentEntryLine)
+            currentEntryLine := na
+        if not na(currentTPLabel)
+            label.delete(currentTPLabel)
+            currentTPLabel := na
+        if not na(currentSLLabel)
+            label.delete(currentSLLabel)
+            currentSLLabel := na
+        if not na(currentPnLLabel)
+            label.delete(currentPnLLabel)
+            currentPnLLabel := na
+        
+        // Reset position variables
+        entryPrice := na
+        htfTPPrice := na
+        htfSLPrice := na
+        positionSize := na
+        entryBar := na
+    
+    // REAL-TIME position element updates
+    else if setupValid
+        // Extend boxes for real-time positioning
+        if positionStyle == "Transparent Boxes"
+            if not na(currentTPBox)
+                box.set_right(currentTPBox, bar_index + 50)
+            if not na(currentSLBox)
+                box.set_right(currentSLBox, bar_index + 50)
+        
+        // Update P&L in real-time
+        if not na(currentPnLLabel) and not na(positionSize)
+            float currentPnL = isLongPosition ? (close - entryPrice) * positionSize : (entryPrice - close) * positionSize
+            string directionText = isLongPosition ? "HTF-LONG" : "HTF-SHORT"
+            string pnlValue = "$" + str.tostring(currentPnL, "#.##")
+            string qtyValue = "Qty: " + str.tostring(positionSize, "#.##")
+            
+            string statusText = setupValid ? " ✅" : " ❌"
+            string tpHitIndicator = htfTpHit ? " 🎯HTF-TP" : ""
+            string biasText = " | " + htfTF + " Bias: " + (isLongPosition ? (htfBullish ? "✅" : "❌") : (htfBearish ? "✅" : "❌"))
+            
+            string updatedText = directionText + " | P&L: " + pnlValue + " | " + qtyValue + statusText + tpHitIndicator + biasText
+            color pnlColor = currentPnL > 0 ? color.new(color.green, 70) : (currentPnL < 0 ? color.new(color.red, 70) : color.new(lineEntryColor, 70))
+            
+            label.set_text(currentPnLLabel, updatedText)
+            label.set_color(currentPnLLabel, pnlColor)
+
+//============================================================================
+// ENHANCED SIGNAL LABELS
+//============================================================================
+if longSignal and showSignals
+    if reasonStyle == "Compact" and showReasons
+        string reasons = "HTF/LTF LONG (" + str.tostring(longConfluenceCount) + "/" + str.tostring(minConfluences) + ")\n" + longConfluenceText
+        label.new(bar_index, low * 0.998, reasons, style=label.style_label_up, color=confluenceLong ? color.new(bullColor, 80) : color.new(bullColor, 40), textcolor=color.white, size=size.tiny)
+    else if reasonStyle == "Detailed" and showReasons
+        string rsiText = str.tostring(ltfRSI, "#.#")
+        string reasons = "🟢 HTF/LTF LONG\nHTF:" + htfTF + (htfBullish ? "✅" : "❌") + " LTF:" + ltfTF + (ltfBullish ? "✅" : "❌") + " RSI:" + rsiText
+        reasons := reasons + "\nHTF Setup: " + (htfSetupBull ? "✅" : "❌") + " | Confluences (" + str.tostring(longConfluenceCount) + "):\n" + longConfluenceText
+        label.new(bar_index, low * 0.995, reasons, style=label.style_label_up, color=confluenceLong ? color.new(bullColor, 80) : color.new(bullColor, 100), textcolor=color.white, size=size.small)
+    else
+        label.new(bar_index, low * 0.999, "HTF/LTF LONG", style=label.style_label_up, color=color.new(bullColor, 0), textcolor=color.white, size=size.small)
+
+if shortSignal and showSignals
+    if reasonStyle == "Compact" and showReasons
+        string reasons = "HTF/LTF SHORT (" + str.tostring(shortConfluenceCount) + "/" + str.tostring(minConfluences) + ")\n" + shortConfluenceText
+        label.new(bar_index, high * 1.002, reasons, style=label.style_label_down, color=confluenceShort ? color.new(bearColor, 0) : color.new(bearColor, 40), textcolor=color.white, size=size.tiny)
+    else if reasonStyle == "Detailed" and showReasons
+        string rsiText = str.tostring(ltfRSI, "#.#")
+        string reasons = "🔴 HTF/LTF SHORT\nHTF:" + htfTF + (htfBearish ? "✅" : "❌") + " LTF:" + ltfTF + (ltfBearish ? "✅" : "❌") + " RSI:" + rsiText
+        reasons := reasons + "\nHTF Setup: " + (htfSetupBear ? "✅" : "❌") + " | Confluences (" + str.tostring(shortConfluenceCount) + "):\n" + shortConfluenceText
+        label.new(bar_index, high * 1.005, reasons, style=label.style_label_down, color=confluenceShort ? color.new(bearColor, 80) : color.new(bearColor, 40), textcolor=color.white, size=size.small)
+    else
+        label.new(bar_index, high * 1.001, "HTF/LTF SHORT", style=label.style_label_down, color=color.new(bearColor, 0), textcolor=color.white, size=size.small)
+
+//============================================================================
+// ENGULFING LABELS
+//============================================================================
+if bullEngulf
+    label.new(bar_index, low, "🔥", style=label.style_label_up, color=color.new(bullColor, 0), textcolor=color.white, size=size.tiny)
+if bearEngulf
+    label.new(bar_index, high, "🔥", style=label.style_label_down, color=color.new(bearColor, 0), textcolor=color.white, size=size.tiny)
+
+//============================================================================
+// PLOTS
+//============================================================================
+plot(showEMAs ? ltfFast : na, "LTF Fast EMA", color.new(bullColor, 0), 2)
+plot(showEMAs ? ltfSlow : na, "LTF Slow EMA", color.new(bearColor, 0), 2)
+plot(showEMAs ? htfFast : na, "HTF Fast EMA", color.new(bullColor, 70), 3)
+plot(showEMAs ? htfSlow : na, "HTF Slow EMA", color.new(bearColor, 70), 3)
+
+plotshape(longSignal, "HTF/LTF Long", shape.triangleup, location.belowbar, size=size.small, color=confluenceLong ? color.new(bullColor, 0) : color.new(bullColor, 60))
+plotshape(shortSignal, "HTF/LTF Short", shape.triangledown, location.abovebar, size=size.small, color=confluenceShort ? color.new(bearColor, 0) : color.new(bearColor, 60))
+
+// Show HTF bias as background
+bgcolor(htfSetupBull ? color.new(bullColor, 98) : htfSetupBear ? color.new(bearColor, 98) : (htfBullish ? color.new(bullColor, 99) : color.new(bearColor, 99)))
+
+//============================================================================
+// ENHANCED ALERTS
+//============================================================================
+alertcondition(longSignal, "HTF/LTF Long Signal")
+alertcondition(shortSignal, "HTF/LTF Short Signal")
+alertcondition(confluenceLong, "HTF/LTF Strong Long")
+alertcondition(confluenceShort, "HTF/LTF Strong Short")
+alertcondition(htfSetupBull, "HTF Bullish Setup")
+alertcondition(htfSetupBear, "HTF Bearish Setup")
+alertcondition(checkHTFTPHit(), "HTF TP Hit")

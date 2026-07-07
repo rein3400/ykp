@@ -1,0 +1,64 @@
+//@version=5
+indicator("Smart Money Concept Pack [FVG + Liquidity + Zones + EMA]", overlay=true, max_boxes_count=500, max_lines_count=500, max_labels_count=500)
+
+// === INPUTS ===
+ema1 = input.int(9, "EMA Fast")
+ema2 = input.int(15, "EMA Mid")
+ema3 = input.int(200, "EMA Slow")
+rangeLen = input.int(50, "Swing Range Length")
+
+// === EMA CALCULATIONS ===
+emaFast = ta.ema(close, ema1)
+emaMid  = ta.ema(close, ema2)
+emaSlow = ta.ema(close, ema3)
+
+plot(emaFast, color=color.yellow, title="EMA 9")
+plot(emaMid,  color=color.orange, title="EMA 15")
+plot(emaSlow, color=color.red, title="EMA 200")
+
+// === FAIR VALUE GAP (FVG) Auto Boxes ===
+var fvgBullBoxes = array.new_box()
+var fvgBearBoxes = array.new_box()
+
+bullFVG = high[2] < low
+bearFVG = low[2] > high
+
+if bullFVG
+    b = box.new(left=bar_index-2, right=bar_index, top=low, bottom=high[2], bgcolor=color.new(color.green,80))
+    array.push(fvgBullBoxes, b)
+
+if bearFVG
+    b = box.new(left=bar_index-2, right=bar_index, top=high[2], bottom=low, bgcolor=color.new(color.red,80))
+    array.push(fvgBearBoxes, b)
+
+// === Premium / Discount Zones ===
+swingHigh = ta.highest(high, rangeLen)
+swingLow  = ta.lowest(low, rangeLen)
+midpoint  = (swingHigh + swingLow) / 2
+
+bgcolor(close > midpoint ? color.new(color.red, 90) : na, title="Premium Zone")
+bgcolor(close < midpoint ? color.new(color.green, 90) : na, title="Discount Zone")
+plot(midpoint, color=color.blue, title="Equilibrium Line")
+
+// === Liquidity Zones + Sweep Detection ===
+eqHigh = ta.highestbars(high, rangeLen)
+eqLow  = ta.lowestbars(low, rangeLen)
+
+liqHigh = high[eqHigh]
+liqLow  = low[eqLow]
+
+plot(liqHigh, "Liquidity High", color=color.purple, style=plot.style_linebr)
+plot(liqLow,  "Liquidity Low", color=color.purple, style=plot.style_linebr)
+
+// Sweep detection: price takes out liquidity
+bullSweep = ta.cross(close, liqLow)
+bearSweep = ta.cross(close, liqHigh)
+
+plotshape(bullSweep, title="Bullish Sweep", style=shape.triangleup, color=color.green, location=location.belowbar, size=size.small)
+plotshape(bearSweep, title="Bearish Sweep", style=shape.triangledown, color=color.red, location=location.abovebar, size=size.small)
+
+// === Alerts ===
+alertcondition(bullSweep, title="Bullish Liquidity Sweep", message="Bullish liquidity sweep detected")
+alertcondition(bearSweep, title="Bearish Liquidity Sweep", message="Bearish liquidity sweep detected")
+alertcondition(bullFVG, title="Bullish FVG Created", message="Bullish FVG formed")
+alertcondition(bearFVG, title="Bearish FVG Created", message="Bearish FVG formed")

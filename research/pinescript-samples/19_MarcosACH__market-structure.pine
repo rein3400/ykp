@@ -1,0 +1,118 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ActiveQuants
+// Created by ActiveQuants
+// Last updated: February 20, 2025
+
+//@version=6
+indicator(title = "Market Structure [ActiveQuants]", overlay = true, max_lines_count = 500, max_labels_count = 500)
+
+//#region ------ USER INPUTS
+int showLast = input.int(defval = 500, title = "Show Last", minval = 10, step = 10, tooltip = "Number of bars back the indicator can plot.")
+int period = input.int(defval = 10, title = "Pivots Sensitivity", minval = 2)
+bool showPivotHighs = input.bool(defval = true, title = "Show Pivot Highs")
+bool showPivotLows = input.bool(defval = true, title = "Show Pivot Lows")
+color pivotHighColor = input.color(defval = #ff5252, title = "Pivot Highs Color", inline = "pivots color")
+color pivotLowColor = input.color(defval = #089981, title = "Pivot Lows Color", inline = "pivots color")
+bool showChoch = input.bool(defval = true, title = "Show CHoCH")
+//#endregion
+
+//#region ----- FUNCTIONS
+// @function Gets pivot points.
+// @param period (int) The number of bars back to check if there is a pivot point.
+// @returns "ph" (pivot high price), "phx" (pivot high x coordenate), "pl" (pivot low price), "plx" (pivot low x coordenate), "pivots" (array of last pivot prices), "newPivotDetected" (true if a new pivot is detected).
+getPivotPoints(int period) =>
+    var int lastPivot = 1
+    var int phx = na
+    var int plx = na
+    var array<float> pivots = array.new<float>()
+    
+    float upper = ta.highest(period)
+    float lower = ta.lowest(period)
+
+    lastPivot := high[period] > upper ? 1 : low[period] < lower ? -1 : lastPivot[1]
+
+    float ph = lastPivot == 1 and lastPivot[1] != 1 ? high[period] : na
+    phx := lastPivot == 1 and lastPivot[1] != 1 ? bar_index[period] : phx
+
+    float pl = lastPivot == -1 and lastPivot[1] != -1 ? low[period] : na
+    plx := lastPivot == -1 and lastPivot[1] != -1 ? bar_index[period] : plx
+    
+    bool newPivotDetected = false
+
+    if not na(ph)
+        array.push(pivots, ph)
+        newPivotDetected := true
+    if not na(pl)
+        array.push(pivots, pl)
+        newPivotDetected := true
+
+    [ph, phx, pl, plx, pivots, newPivotDetected]
+
+// @function Gets change of characters (CHoCH).
+// @param ph (float) Pivot High price.
+// @param phx (int) Pivot High x coordinate.
+// @param pl (float) Pivot Low price.
+// @param plx (int) Pivot Low x coordinate.
+// @returns "lastChoch" (1 for bullish CHoCH, -1 for bearish CHoCH), "phChochY" (bullish CHoCH y coordinate), "plChochY" (bearish CHoCH y coordinate).
+getCHoCH(float ph, int phx, float pl, int plx) =>
+    var int lastChoch = -1
+    var bool phCrossed = false
+    var bool plCrossed = false
+    var float phChochY = na
+    var float plChochY = na   
+
+    if not na(ph)
+        phChochY := ph
+        phCrossed := false
+    if not na(pl)
+        plChochY := pl
+        plCrossed := false
+
+    if close > phChochY and not phCrossed
+        lastChoch := 1
+        phCrossed := true
+    if close < plChochY and not plCrossed
+        lastChoch := -1
+        plCrossed := true
+
+    [lastChoch, phChochY, plChochY]
+//#endregion
+
+[ph, phx, pl, plx, pivots, newPivotDetected] = getPivotPoints(period)
+[lastChoch, phChochY, plChochY] = getCHoCH(ph, phx, pl, plx)
+
+// Pivot Points
+plot(showPivotHighs ? ph : na, "Swing High", color.new(pivotHighColor, 50), 5, plot.style_circles, offset = -period, show_last = showLast)
+plot(showPivotLows ? pl : na, "Swing Low", color.new(pivotLowColor, 50), 5, plot.style_circles, offset = -period, show_last = showLast)
+
+// Change of Characters
+var array<line> lines = array.new<line>()
+var array<label> labels = array.new<label>()
+
+if array.size(lines) > 0
+    for i = array.size(lines) - 1 to 0
+        line lineObj = array.get(lines, i)
+        if line.get_x1(lineObj) < bar_index - showLast
+            line.delete(lineObj)
+            array.remove(lines, i)
+
+if array.size(labels) > 0
+    for i = array.size(labels) - 1 to 0
+        label labelObj = array.get(labels, i)
+        if label.get_x(labelObj) < bar_index - showLast
+            label.delete(labelObj)
+            array.remove(labels, i)
+
+if lastChoch != lastChoch[1]
+    if lastChoch == 1 and showChoch
+        line newLine = line.new(phx, phChochY, bar_index, phChochY, color = pivotLowColor, style = line.style_dashed)
+        label newLabel = label.new(int(math.avg(bar_index, phx)), phChochY, "CHoCH", color = color(na), style = label.style_label_down, textcolor = pivotLowColor, size = size.tiny)
+        
+        array.push(lines, newLine)
+        array.push(labels, newLabel)
+    else if showChoch
+        line newLine = line.new(plx, plChochY, bar_index, plChochY, color = pivotHighColor, style = line.style_dashed)
+        label newLabel = label.new(int(math.avg(bar_index, plx)), plChochY, "CHoCH", color = color(na), style = label.style_label_up, textcolor = pivotHighColor, size = size.tiny)
+
+        array.push(lines, newLine)
+        array.push(labels, newLabel)

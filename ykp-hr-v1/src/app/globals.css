@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: hsl(210 40% 98%);
+  color: hsl(222 47% 11%);
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-md border border-transparent px-3 py-1.5 text-sm font-medium transition-colors;
+}
+.btn-primary {
+  @apply btn bg-primary text-primary-foreground hover:opacity-90;
+}
+.btn-outline {
+  @apply btn border-border bg-background hover:bg-muted;
+}
+.btn-ghost {
+  @apply btn hover:bg-muted;
+}
+.card {
+  @apply rounded-lg border border-border bg-background p-4 shadow-sm;
+}
+.input {
+  @apply rounded-md border border-border bg-background px-3 py-1.5 text-sm;
+}
+.badge {
+  @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+}
+.badge-green { @apply badge bg-green-100 text-green-800; }
+.badge-yellow { @apply badge bg-yellow-100 text-yellow-800; }
+.badge-red { @apply badge bg-red-100 text-red-800; }
+.badge-gray { @apply badge bg-gray-100 text-gray-800; }

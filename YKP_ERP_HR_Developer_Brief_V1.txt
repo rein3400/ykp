@@ -1,0 +1,1223 @@
+DEVELOPER BRIEF — YKP ERP HR MODULE V1
+
+1. PROJECT CONTEXT
+
+YKP sedang membangun ERP internal untuk beberapa brand F&B:
+- Funkydak
+- Sekarpizza
+- Suburbuns
+- Laju Kopi
+- Uncle Masala
+
+Untuk tahap awal, HR Module akan memakai web app HR existing yang sudah pernah dibuat dan sudah running. Fokus utama bukan membangun ulang dari nol, tetapi:
+
+Clone / lanjutkan HR Web App existing
+→ ganti database/spreadsheet ke database YKP
+→ isi master data karyawan YKP
+→ migrasi aturan absensi, shift, payroll, bonus, dan potongan
+→ test perhitungan
+→ running untuk 1 brand / 1 outlet pilot
+
+HR Module harus menjadi fondasi data SDM untuk seluruh YKP ERP dan nantinya menyediakan summary yang bisa dibaca oleh Orchestration Layer dan Hermez AI.
+
+
+2. TUJUAN HR MODULE
+
+HR Module harus menjadi pusat kontrol SDM YKP.
+
+Fokus utama:
+1. Menyimpan master data karyawan.
+2. Mengelola absensi masuk dan pulang.
+3. Mengelola shift dan roster.
+4. Menghitung keterlambatan.
+5. Mencatat izin, sakit, cuti, dan ketidakhadiran.
+6. Menghitung payroll.
+7. Menghitung bonus, lembur, potongan, dan kasbon.
+8. Membuat slip gaji.
+9. Menyediakan approval payroll.
+10. Menyediakan HR daily summary untuk Orchestration Layer dan Hermez.
+11. Menyediakan audit log agar semua perubahan bisa dilacak.
+
+
+3. STATUS SAAT INI
+
+HR App:
+- Sudah ada.
+- Sudah pernah running.
+- Perlu diclone untuk versi YKP.
+- Database/spreadsheet lama perlu diganti ke database YKP.
+- Data dummy / data non-YKP harus dibersihkan.
+- Aturan payroll perlu disesuaikan dengan kebijakan YKP.
+- Perlu testing ulang dengan data karyawan YKP.
+
+Database awal:
+Untuk V1 boleh menggunakan:
+- Google Sheet / Spreadsheet Database
+
+Nanti jika sudah stabil, bisa migrasi ke:
+- PostgreSQL
+- Supabase
+- Firebase / Firestore untuk kebutuhan real-time ringan
+
+
+4. SCOPE HR MODULE V1
+
+HR Module V1 terdiri dari 9 bagian utama:
+1. HR Overview
+2. Master Karyawan
+3. Absensi
+4. Shift & Roster
+5. Keterlambatan
+6. Izin / Cuti / Sakit
+7. Payroll
+8. Bonus, Potongan, Lembur, dan Kasbon
+9. HR Daily Summary untuk Hermez
+
+
+5. VISUAL DIRECTION
+
+Gunakan gaya yang konsisten dengan ekosistem YKP ERP:
+- Bersih
+- Modern
+- Mudah dibaca admin
+- Mobile friendly untuk karyawan
+- Desktop friendly untuk owner / HR admin
+- Filter brand, outlet, periode, jabatan, dan status
+- KPI card
+- Tabel data
+- Status warna
+- Approval flow
+- Export PDF / CSV
+- Role-based access
+- Audit log
+
+Menu utama yang disarankan:
+- Ringkasan HR
+- Karyawan
+- Absensi
+- Shift & Roster
+- Izin / Cuti
+- Payroll
+- Bonus & Potongan
+- Laporan
+- Manajemen Pengguna
+- Sistem Settings
+
+
+6. MODULE DETAIL
+
+6.1 HR OVERVIEW
+
+Tujuan:
+Menampilkan kondisi SDM secara cepat untuk owner, HR admin, dan manager.
+
+KPI cards wajib:
+- Total karyawan aktif
+- Staff hadir hari ini
+- Staff telat hari ini
+- Staff absen hari ini
+- Staff izin / sakit / cuti
+- Shift belum terisi
+- Total payroll periode berjalan
+- Total bonus
+- Total potongan
+- Outlet dengan masalah HR terbanyak
+- Karyawan dengan keterlambatan tertinggi
+- Payroll yang belum approved
+
+Filter wajib:
+- Semua brand
+- Funkydak
+- Sekarpizza
+- Suburbuns
+- Laju Kopi
+- Uncle Masala
+- Outlet
+- Periode
+- Jabatan
+- Status karyawan
+- Shift
+
+Output yang ditampilkan:
+- Ringkasan absensi hari ini
+- Tren keterlambatan
+- Kehadiran per outlet
+- Payroll summary
+- Staff performance summary
+- Shift shortage alert
+- HR issue alert
+
+
+6.2 MASTER KARYAWAN
+
+Tujuan:
+Menjadi sumber data utama seluruh fungsi HR.
+
+Sheet/Table:
+master_employee
+
+Kolom:
+- employee_id
+- employee_code
+- full_name
+- nickname
+- gender
+- phone
+- email
+- telegram_id
+- address
+- date_of_birth
+- join_date
+- employment_status
+- contract_type
+- department
+- role
+- position
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- supervisor_id
+- basic_salary
+- salary_type
+- bank_name
+- bank_account
+- account_holder
+- bpjs_status
+- tax_status
+- emergency_contact_name
+- emergency_contact_phone
+- photo_url
+- active_status
+- created_at
+- updated_at
+- created_by
+- updated_by
+
+Employment status:
+- ACTIVE
+- PROBATION
+- CONTRACT
+- PERMANENT
+- RESIGNED
+- TERMINATED
+- INACTIVE
+
+Salary type:
+- MONTHLY
+- DAILY
+- SHIFT_BASED
+- HOURLY
+
+Fitur:
+- Tambah karyawan
+- Edit karyawan
+- Nonaktifkan karyawan
+- Upload foto
+- Filter brand/outlet/jabatan/status
+- Search nama / employee ID
+- Import CSV
+- Export CSV/PDF
+- Riwayat perubahan
+- Riwayat penempatan outlet
+
+
+6.3 ABSENSI
+
+Tujuan:
+Mencatat check-in dan check-out karyawan.
+
+Input source V1:
+- Web app
+- Telegram bot jika sudah ada
+- QR / GPS jika dipakai
+- Manual correction oleh HR dengan approval
+
+Sheet/Table:
+hr_attendance
+
+Kolom:
+- attendance_id
+- date
+- employee_id
+- employee_name
+- brand_id
+- outlet_id
+- shift_id
+- scheduled_check_in
+- actual_check_in
+- scheduled_check_out
+- actual_check_out
+- check_in_location
+- check_out_location
+- latitude
+- longitude
+- attendance_radius
+- check_in_photo_url
+- check_out_photo_url
+- attendance_status
+- late_minutes
+- early_leave_minutes
+- overtime_minutes
+- correction_status
+- correction_reason
+- approved_by
+- notes
+- created_at
+- updated_at
+
+Attendance status:
+- PRESENT
+- LATE
+- ABSENT
+- LEAVE
+- SICK
+- OFF
+- INCOMPLETE
+- MANUAL_CORRECTION
+
+Fitur:
+- Absen masuk
+- Absen pulang
+- Validasi outlet
+- Validasi radius lokasi
+- Validasi shift
+- Deteksi telat
+- Deteksi pulang cepat
+- Deteksi lupa checkout
+- Pengajuan koreksi
+- Approval koreksi
+- Rekap harian
+- Rekap bulanan
+
+Catatan radius:
+- Radius harus configurable per outlet.
+- Default awal boleh 100 meter.
+- GPS error tolerance perlu diperhitungkan.
+- Jika GPS gagal, sediakan fallback dengan approval supervisor.
+
+
+6.4 SHIFT & ROSTER
+
+Tujuan:
+Mengelola jadwal kerja karyawan per outlet.
+
+Sheet/Table:
+hr_shift
+
+Kolom:
+- shift_id
+- shift_name
+- brand_id
+- outlet_id
+- start_time
+- end_time
+- break_minutes
+- late_tolerance_minutes
+- overtime_rule_id
+- active_status
+
+Sheet/Table:
+hr_roster
+
+Kolom:
+- roster_id
+- date
+- employee_id
+- brand_id
+- outlet_id
+- shift_id
+- role
+- roster_status
+- replacement_employee_id
+- swap_request_id
+- approved_by
+- notes
+- created_at
+
+Roster status:
+- SCHEDULED
+- CONFIRMED
+- SWAP_REQUESTED
+- SWAPPED
+- ABSENT
+- COMPLETED
+
+Fitur:
+- Buat roster mingguan
+- Assign staff ke shift
+- Copy roster minggu sebelumnya
+- Shift swap request
+- Approval shift swap
+- Deteksi shift kosong
+- Deteksi overtime
+- Deteksi bentrok jadwal
+- Tampilan per outlet
+- Tampilan kalender
+
+
+6.5 KETERLAMBATAN
+
+Tujuan:
+Menghitung dan merekap keterlambatan secara otomatis.
+
+Sheet/Table:
+hr_lateness
+
+Kolom:
+- lateness_id
+- date
+- employee_id
+- outlet_id
+- shift_id
+- scheduled_time
+- actual_time
+- late_minutes
+- tolerance_minutes
+- payable_late_minutes
+- penalty_rule_id
+- penalty_amount
+- reason
+- approval_status
+- approved_by
+- created_at
+
+Formula dasar:
+late_minutes = actual_check_in - scheduled_check_in
+payable_late_minutes = max(0, late_minutes - tolerance_minutes)
+
+Catatan:
+Nominal potongan tidak boleh di-hardcode langsung tanpa rule table.
+
+Buat master rule:
+hr_lateness_rules
+
+Kolom:
+- rule_id
+- rule_name
+- brand_id
+- outlet_id
+- tolerance_minutes
+- calculation_method
+- flat_amount
+- amount_per_minute
+- max_penalty
+- active_status
+
+Calculation method:
+- NO_PENALTY
+- FLAT
+- PER_MINUTE
+- TIERED
+- MANUAL_REVIEW
+
+Fitur:
+- Rekap telat harian
+- Rekap telat bulanan
+- Total menit telat
+- Total potongan
+- Alert telat berulang
+- Filter outlet/brand
+- Riwayat alasan
+- Approval penghapusan potongan
+
+
+6.6 IZIN, CUTI, DAN SAKIT
+
+Tujuan:
+Mencatat ketidakhadiran dan approval.
+
+Sheet/Table:
+hr_leave_request
+
+Kolom:
+- leave_id
+- employee_id
+- leave_type
+- start_date
+- end_date
+- total_days
+- reason
+- attachment_url
+- submitted_at
+- approval_status
+- approved_by
+- approved_at
+- rejection_reason
+- notes
+
+Leave type:
+- ANNUAL_LEAVE
+- SICK
+- PERMISSION
+- UNPAID_LEAVE
+- EMERGENCY
+- MATERNITY
+- OTHER
+
+Approval status:
+- DRAFT
+- PENDING
+- APPROVED
+- REJECTED
+- CANCELLED
+
+Fitur:
+- Pengajuan izin
+- Pengajuan cuti
+- Upload surat dokter
+- Approval manager
+- Approval HR
+- Potong jatah cuti
+- Integrasi ke roster
+- Integrasi ke payroll
+- Riwayat pengajuan
+
+
+6.7 PAYROLL
+
+Tujuan:
+Menghitung gaji karyawan berdasarkan master gaji, absensi, telat, lembur, bonus, potongan, dan kasbon.
+
+Sheet/Table:
+hr_payroll
+
+Kolom:
+- payroll_id
+- payroll_period
+- employee_id
+- employee_name
+- brand_id
+- outlet_id
+- basic_salary
+- attendance_days
+- absent_days
+- paid_leave_days
+- unpaid_leave_days
+- late_minutes
+- attendance_deduction
+- overtime_hours
+- overtime_pay
+- bonus_total
+- penalty_total
+- allowance_total
+- cash_advance_deduction
+- bpjs_deduction
+- tax_deduction
+- other_deduction
+- gross_salary
+- net_salary
+- calculation_status
+- approval_status
+- payment_status
+- payment_date
+- payment_reference
+- payslip_url
+- approved_by
+- created_at
+- updated_at
+
+Formula dasar:
+Gross Salary =
+Basic Salary
++ Overtime Pay
++ Bonus
++ Allowance
+
+Net Salary =
+Gross Salary
+- Attendance Deduction
+- Penalty
+- Cash Advance Deduction
+- BPJS
+- Tax
+- Other Deduction
+
+Catatan:
+- Semua formula harus configurable.
+- Sistem harus mendukung payroll bulanan, harian, shift-based, atau hourly.
+- Payroll final wajib approval.
+- Payroll tidak boleh otomatis dibayar tanpa approval owner/finance.
+
+Calculation status:
+- DRAFT
+- CALCULATED
+- REVIEW_REQUIRED
+- FINAL
+
+Approval status:
+- PENDING
+- APPROVED
+- REJECTED
+
+Payment status:
+- UNPAID
+- READY_TO_PAY
+- PAID
+- FAILED
+- CANCELLED
+
+Fitur:
+- Generate payroll
+- Preview payroll
+- Compare dengan periode sebelumnya
+- Manual adjustment
+- Approval payroll
+- Generate slip gaji
+- Export bank transfer file / payout list
+- Mark as paid
+- Payment log
+- Reopen payroll dengan izin super admin
+- Lock payroll setelah final
+
+
+6.8 BONUS, POTONGAN, LEMBUR, DAN KASBON
+
+Sheet/Table:
+hr_adjustment
+
+Kolom:
+- adjustment_id
+- date
+- employee_id
+- adjustment_type
+- category
+- amount
+- quantity
+- unit
+- reason
+- reference_id
+- attachment_url
+- approval_status
+- approved_by
+- payroll_period
+- created_by
+- created_at
+
+Adjustment type:
+- BONUS
+- PENALTY
+- OVERTIME
+- ALLOWANCE
+- CASH_ADVANCE
+- REIMBURSEMENT
+- OTHER
+
+Fitur:
+- Input bonus
+- Input penalty
+- Input lembur
+- Input tunjangan
+- Input kasbon
+- Approval
+- Lampiran bukti
+- Integrasi otomatis ke payroll
+- Riwayat adjustment
+
+
+6.9 SLIP GAJI
+
+Tujuan:
+Membuat slip gaji yang jelas dan dapat diakses sesuai hak.
+
+Isi slip:
+- Nama karyawan
+- Employee ID
+- Brand
+- Outlet
+- Periode
+- Gaji pokok
+- Kehadiran
+- Lembur
+- Bonus
+- Tunjangan
+- Potongan telat
+- Potongan kasbon
+- Potongan lain
+- Gaji bersih
+- Status pembayaran
+- Tanggal pembayaran
+
+Fitur:
+- Generate PDF
+- Download slip
+- Kirim via Telegram/private channel jika digunakan
+- Hanya karyawan terkait, HR, finance, dan owner yang boleh mengakses
+- Jangan kirim slip ke grup umum
+
+
+7. HR SUMMARY UNTUK HERMEZ
+
+HR app wajib membuat summary harian.
+
+Hermez tidak membaca seluruh detail payroll atau data pribadi karyawan.
+Hermez membaca summary yang sudah dibatasi.
+
+Sheet/Table:
+hr_daily_summary
+
+Kolom:
+- summary_id
+- date
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- total_staff
+- scheduled_staff
+- staff_present
+- staff_late
+- staff_absent
+- staff_leave
+- incomplete_attendance
+- total_late_minutes
+- overtime_hours
+- shift_shortage
+- payroll_issue_count
+- major_hr_issue
+- recommended_action
+- created_at
+
+Contoh output:
+
+Funkydak — 2 Juli 2026
+
+Scheduled Staff: 12
+Present: 10
+Late: 2
+Absent: 1
+Incomplete Checkout: 1
+Shift Shortage: Kitchen Lunch Shift
+Issue: 2 staff opening terlambat
+Action: Supervisor lakukan briefing disiplin dan siapkan backup roster
+
+Data sensitif yang tidak dikirim ke Hermez umum:
+- Nomor rekening
+- Alamat
+- Nomor identitas
+- Detail gaji individual
+- Dokumen medis
+- Kontak darurat
+
+Hermez hanya membaca data agregat, kecuali owner secara khusus meminta detail dan memiliki izin.
+
+
+8. MASTER DATA YANG DIBUTUHKAN
+
+master_brand:
+- brand_id
+- brand_name
+- brand_code
+- status
+
+master_outlet:
+- outlet_id
+- brand_id
+- outlet_name
+- outlet_code
+- address
+- latitude
+- longitude
+- attendance_radius
+- status
+
+master_employee:
+- sesuai struktur di bagian Master Karyawan
+
+master_role:
+- role_id
+- role_name
+- department
+- access_level
+- status
+
+master_shift:
+- shift_id
+- shift_name
+- start_time
+- end_time
+- break_minutes
+- tolerance_minutes
+- status
+
+master_payroll_rule:
+- payroll_rule_id
+- rule_name
+- salary_type
+- late_rule
+- overtime_rule
+- absence_rule
+- active_status
+
+master_leave_type:
+- leave_type_id
+- leave_type_name
+- paid_status
+- document_required
+- status
+
+
+9. ROLE & PERMISSION
+
+Minimal role:
+- Owner
+- Super Admin
+- HR Admin
+- Finance Admin
+- Brand Manager
+- Outlet Manager
+- Supervisor
+- Employee
+- Viewer
+
+Owner:
+- Lihat seluruh brand
+- Lihat HR summary
+- Approve payroll
+- Lihat total payroll
+- Lihat alert HR
+- Tidak perlu membuka semua data pribadi kecuali diperlukan
+
+Super Admin:
+- Manage system
+- Manage user
+- Manage rule
+- Reopen payroll
+- Audit log
+
+HR Admin:
+- Manage employee
+- Manage attendance
+- Manage roster
+- Manage leave
+- Generate payroll
+- Edit adjustment
+- Generate payslip
+
+Finance Admin:
+- Lihat payroll yang sudah approved
+- Export payout list
+- Mark payroll as paid
+- Tidak boleh mengubah absensi
+
+Brand Manager:
+- Lihat staff brand sendiri
+- Approve leave
+- Approve roster
+- Lihat attendance summary
+- Tidak bisa melihat detail gaji semua brand
+
+Outlet Manager / Supervisor:
+- Lihat staff outlet sendiri
+- Approve correction
+- Approve shift swap
+- Input incident attendance
+- Tidak bisa edit payroll final
+
+Employee:
+- Absen masuk/pulang
+- Lihat roster
+- Ajukan izin/cuti
+- Ajukan koreksi
+- Lihat slip gaji sendiri
+- Tidak bisa melihat data karyawan lain
+
+
+10. APPROVAL RULES
+
+Wajib approval:
+- Koreksi absensi
+- Shift swap
+- Izin/cuti
+- Overtime
+- Bonus
+- Penalty
+- Kasbon
+- Payroll final
+- Reopen payroll
+- Mark payroll as paid
+- Perubahan rekening bank
+- Perubahan gaji pokok
+
+Approval status:
+- DRAFT
+- PENDING
+- APPROVED
+- REJECTED
+- CANCELLED
+
+Semua approval wajib mencatat:
+- approver
+- waktu approval
+- alasan
+- perubahan sebelum dan sesudah
+
+
+11. ALERT RULES HR V1
+
+Rules awal:
+- staff_late > 2 orang per outlet = MEDIUM
+- staff_absent tanpa keterangan = HIGH
+- incomplete attendance > 1 orang = MEDIUM
+- shift shortage = HIGH
+- late_minutes berulang 3 kali dalam 7 hari = MEDIUM
+- payroll discrepancy = HIGH
+- payroll belum approved mendekati tanggal gajian = HIGH
+- overtime berlebihan = MEDIUM
+- akun staff tidak aktif tetapi masih masuk roster = MEDIUM
+- perubahan gaji tanpa approval = CRITICAL
+- perubahan rekening mendekati payout = HIGH
+
+Alert disimpan ke:
+hermes_alert_log
+
+Kolom:
+- alert_id
+- date
+- brand
+- outlet
+- source_app
+- alert_type
+- severity
+- message
+- status
+- assigned_to
+- action_taken
+- created_at
+- resolved_at
+
+
+12. WORKFLOW HR HARIAN
+
+Pagi:
+- Sistem membaca roster hari ini
+- Karyawan check-in
+- Sistem mendeteksi tepat waktu / telat
+- Supervisor menerima alert jika shift kekurangan orang
+- Opening staff dikonfirmasi
+
+Siang:
+- HR memantau absensi tidak lengkap
+- Supervisor memproses shift swap / izin
+- Overtime dicatat bila diperlukan
+
+Malam:
+- Karyawan check-out
+- Sistem mendeteksi lupa checkout
+- Rekap attendance dibuat
+- hr_daily_summary dibuat
+- Rules engine memeriksa alert
+- Summary siap dibaca Orchestration Layer dan Hermez
+
+Akhir periode payroll:
+- Data absensi dikunci
+- Adjustment diperiksa
+- Payroll digenerate
+- HR review
+- Owner approve
+- Finance menerima payout list
+- Payment ditandai
+- Slip gaji dibuat
+
+
+13. MIGRATION TASK DEVELOPER
+
+13.1 Audit HR App Existing
+
+Developer cek:
+- Spreadsheet ID lama
+- Nama tab/sheet yang dipakai
+- Struktur kolom
+- Formula hardcoded
+- Data dummy
+- Role user
+- Format tanggal
+- Format jam
+- Format nominal gaji
+- Attendance radius
+- Telegram integration jika ada
+- Bug existing
+- Formula payroll existing
+- Security data sensitif
+
+Output:
+- Audit note
+- Daftar bagian reusable
+- Daftar bagian yang harus diganti
+- Mapping database lama ke database YKP
+- Daftar risiko migrasi
+
+13.2 Clone HR App
+
+Buat:
+- YKP HR App Testing
+- YKP HR App Production
+
+Jangan edit app lama langsung tanpa backup.
+
+13.3 Replace Database Source
+
+Ganti source ke:
+- YKP_HR_DATABASE
+- YKP_MASTER_DATABASE
+
+Pastikan:
+- Semua form menulis ke database baru
+- Dashboard membaca database baru
+- Filter brand/outlet membaca master data YKP
+- Data dummy tidak ikut
+- Payroll menggunakan rule YKP
+- Summary sheet otomatis update
+- Data sensitif dibatasi permission
+
+13.4 Import Data Awal
+
+Data yang harus dimasukkan:
+- Master brand
+- Master outlet
+- Master employee
+- Master role
+- Master shift
+- Payroll rule
+- Lateness rule
+- Leave type
+- Bank account employee
+- Opening leave balance jika ada
+- Opening cash advance jika ada
+
+13.5 Testing Minimal
+
+Test:
+- Tambah karyawan
+- Edit karyawan
+- Nonaktifkan karyawan
+- Check-in tepat waktu
+- Check-in telat
+- Check-out
+- Lupa check-out
+- Absensi di luar radius
+- Koreksi absensi
+- Shift roster
+- Shift swap
+- Izin/cuti
+- Lembur
+- Bonus
+- Penalty
+- Kasbon
+- Generate payroll
+- Manual adjustment
+- Payroll approval
+- Generate payslip
+- Mark as paid
+- Filter brand/outlet/periode
+- Generate hr_daily_summary
+- Export laporan
+
+
+14. DATA PACK YANG HARUS DIKIRIM OWNER
+
+Folder:
+YKP ERP HR — Data Pack
+
+Isi:
+
+1. Master Brand & Outlet
+Kolom:
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- alamat
+- latitude
+- longitude
+- radius absensi
+- PIC outlet
+- status
+
+2. Master Karyawan
+Kolom:
+- employee_id
+- nama
+- nomor HP
+- email
+- telegram_id
+- brand
+- outlet
+- jabatan
+- departemen
+- tanggal masuk
+- status kerja
+- jenis kontrak
+- gaji pokok
+- tipe gaji
+- bank
+- nomor rekening
+- nama rekening
+- status aktif
+
+3. Aturan Shift
+- Nama shift
+- Jam masuk
+- Jam pulang
+- Waktu istirahat
+- Toleransi telat
+- Outlet terkait
+
+4. Aturan Payroll
+- Periode payroll
+- Tanggal gajian
+- Gaji bulanan/harian/shift
+- Potongan telat
+- Potongan absen
+- Lembur
+- Bonus
+- Tunjangan
+- Kasbon
+- BPJS jika digunakan
+- Pajak jika digunakan
+
+5. Aturan Izin/Cuti
+- Jenis izin
+- Cuti tahunan
+- Sakit
+- Izin tidak dibayar
+- Dokumen wajib
+- Approval flow
+
+6. Data Absensi Lama
+Minimal 7–30 hari jika tersedia:
+- tanggal
+- employee
+- outlet
+- shift
+- check-in
+- check-out
+- status
+- telat menit
+- notes
+
+7. Data Payroll Lama
+Minimal 1–3 periode jika tersedia:
+- employee
+- periode
+- gaji pokok
+- bonus
+- lembur
+- potongan
+- kasbon
+- net salary
+- status bayar
+
+8. HR App Existing
+- link HR app
+- link spreadsheet database lama
+- akun testing
+- screenshot halaman
+- catatan bug
+- catatan fitur yang sudah jalan
+- source code / repo jika tersedia
+
+
+15. TIMELINE HR MODULE V1
+
+Week 1 — Audit & Setup
+- Audit HR app existing
+- Clone testing app
+- Buat database YKP HR
+- Setup master data
+- Mapping sheet lama ke baru
+- Finalisasi payroll rules
+
+Week 2 — Migration & Feature Test
+- Import data karyawan
+- Setup shift
+- Setup attendance
+- Setup lateness
+- Setup leave
+- Test Telegram / web attendance jika digunakan
+- Test role access
+
+Week 3 — Payroll & Pilot
+- Import data attendance
+- Setup bonus/potongan
+- Generate payroll simulation
+- Cocokkan dengan hitungan manual
+- Pilot 5–10 karyawan
+- Fix bug
+- Training HR admin
+
+Week 4 — Go Live Terbatas
+- Go-live 1 brand / 1 outlet
+- Monitor absensi 7 hari
+- Final validation payroll
+- Generate summary
+- Support bug ringan
+- Dokumentasi basic
+
+
+16. DEFINITION OF DONE HR V1
+
+HR Module V1 dianggap selesai jika:
+- HR App sudah memakai database YKP
+- Data dummy sudah hilang
+- Master brand/outlet/karyawan/shift sudah masuk
+- Absensi masuk/pulang berjalan
+- Keterlambatan dihitung benar
+- Koreksi absensi berjalan
+- Shift roster berjalan
+- Shift swap berjalan
+- Izin/cuti berjalan
+- Bonus/potongan/lembur/kasbon berjalan
+- Payroll simulation cocok dengan perhitungan manual
+- Payroll approval berjalan
+- Slip gaji bisa dibuat
+- Filter brand/outlet/periode berjalan
+- HR daily summary tersedia
+- Pilot minimal 5–10 karyawan berjalan 7 hari
+- HR admin bisa mengoperasikan sendiri
+- Data payroll dan rekening terlindungi permission
+
+
+17. OUT OF SCOPE HR V1
+
+Belum termasuk:
+- Bank API auto payroll
+- VA payroll otomatis
+- Transfer gaji otomatis
+- Full BPJS integration
+- Full tax automation
+- Biometric hardware integration
+- Face recognition
+- Mobile app native
+- PostgreSQL migration
+- Hermez full integration
+- AI performance scoring otomatis
+- Recruitment module lengkap
+- Learning management system lengkap
+- Advanced appraisal / KPI 360
+- Full multi-brand rollout tanpa pilot
+
+
+18. CATATAN KEAMANAN
+
+Wajib:
+- API key tidak disimpan di frontend
+- Password menggunakan hashing
+- Akun testing terpisah
+- Payroll dan rekening hanya bisa diakses role tertentu
+- Audit log perubahan gaji dan rekening
+- Backup database harian
+- Data pribadi tidak dikirim ke grup Telegram
+- Slip gaji hanya dikirim privat
+- Payroll final harus locked
+- Export payroll diberi watermark / access control bila memungkinkan
+
+
+19. ONE-LINER DEVELOPER
+
+HR Module V1 adalah proses mengaktifkan HR Web App existing agar berjalan dengan data YKP, memakai database YKP baru, mengelola master karyawan, absensi, shift, keterlambatan, izin/cuti, payroll, bonus, potongan, lembur, kasbon, slip gaji, dan menghasilkan HR daily summary yang siap dibaca Orchestration Layer dan Hermez AI.
+
+
+PESAN SINGKAT KE DEVELOPER
+
+Mas, setelah Finance kita siapkan HR ERP YKP dari app HR existing. App jangan dibangun ulang dari nol. Tolong clone versi testing, ganti database/spreadsheet ke database YKP, bersihkan dummy data, lalu mapping master brand, outlet, karyawan, shift, aturan telat, payroll, bonus, potongan, lembur, izin/cuti, dan kasbon. Fokus V1: absensi masuk/pulang, keterlambatan, roster, koreksi absensi, payroll simulation, approval payroll, slip gaji, filter brand/outlet/periode, HR daily summary, dan pilot 5–10 karyawan dulu. Belum masuk bank API, transfer gaji otomatis, biometric hardware, recruitment, LMS, atau Hermez full.

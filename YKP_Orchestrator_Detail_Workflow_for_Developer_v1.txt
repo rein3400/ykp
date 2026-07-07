@@ -1,0 +1,615 @@
+YKP AI ORCHESTRATOR / HERMES
+DETAIL WORKFLOW UNTUK DEVELOPER
+Versi 1.0
+
+============================================================
+1. TUJUAN SISTEM
+============================================================
+
+YKP AI Orchestrator / Hermes adalah pusat pengatur workflow AI untuk menghubungkan:
+Telegram, TradingView Webhook, PostgreSQL, Redis, AI Model, ERP, HR, Finance, SOP, Dashboard, dan SRI ICT Trading Assistant.
+
+Konsep:
+User / Event -> Gateway -> Orchestrator -> Database / Tools / AI Model -> Response / Alert / Dashboard / Journal
+
+
+============================================================
+2. ARSITEKTUR HIGH LEVEL
+============================================================
+
+Internet
+-> Cloudflare Tunnel
+-> Mini PC / Server Ubuntu
+-> Docker Compose
+-> YKP AI Orchestrator
+
+Service utama:
+- API Backend
+- Telegram Bot
+- Workers
+- Dashboard
+- PostgreSQL
+- Redis
+- Ollama / Qwen
+- OpenAI / GPT
+- Cloudflare Tunnel
+
+
+============================================================
+3. WORKFLOW TELEGRAM COMMAND
+============================================================
+
+Command awal:
+- /status
+- /omzet
+- /hr
+- /finance
+- /sop
+- /trading
+- /report
+- /help
+
+Flow:
+1. User kirim command ke Telegram.
+2. Telegram Bot menerima update.
+3. Sistem validasi Telegram user ID.
+4. Sistem cek role user di PostgreSQL.
+5. Command diparse.
+6. Orchestrator menentukan module:
+   /omzet -> Owner / Finance Engine
+   /hr -> HR Engine
+   /sop -> SOP Engine
+   /trading -> Trading Engine
+7. Module mengambil data dari database.
+8. Jika butuh reasoning, data dikirim ke AI Router.
+9. AI Router memilih model.
+10. AI membuat jawaban.
+11. Orchestrator memformat jawaban.
+12. Telegram Bot mengirim response.
+13. Semua request dan response disimpan ke logs.
+
+
+============================================================
+4. WORKFLOW /STATUS
+============================================================
+
+Input:
+User kirim /status
+
+Flow:
+1. Telegram Bot menerima command.
+2. Validasi user.
+3. Backend cek:
+   - API
+   - PostgreSQL
+   - Redis
+   - Telegram Bot
+   - Disk usage
+   - RAM usage
+   - CPU usage
+   - Last backup
+4. Telegram kirim status.
+
+Output:
+YKP SERVER STATUS
+API: OK
+PostgreSQL: OK
+Redis: OK
+Telegram: OK
+Disk: 42%
+RAM: 38%
+Last Backup: 03:00 WIB
+
+
+============================================================
+5. WORKFLOW SOP BOT
+============================================================
+
+Input:
+User kirim:
+'/sop cara handle komplain makanan terlambat'
+
+Flow:
+1. Telegram Bot menerima command.
+2. Validasi user dan role.
+3. SOP Engine mencari dokumen SOP di PostgreSQL.
+4. Jika ditemukan, ambil SOP terkait.
+5. Kirim context SOP ke AI Router.
+6. AI membuat jawaban singkat dan praktis.
+7. Jika SOP tidak ditemukan, jawab bahwa SOP belum tersedia dan log pertanyaan.
+8. Telegram kirim jawaban.
+9. Pertanyaan disimpan untuk evaluasi SOP.
+
+Output:
+SOP HANDLE KOMPLAIN MAKANAN TERLAMBAT
+1. Minta maaf.
+2. Cek status order ke kitchen.
+3. Beri estimasi waktu baru.
+4. Jika delay terlalu lama, tawarkan kompensasi sesuai SOP.
+5. Catat komplain di laporan shift.
+
+
+============================================================
+6. WORKFLOW OWNER BOT / OMZET
+============================================================
+
+Input:
+'/omzet hari ini'
+
+Flow:
+1. Telegram Bot menerima command.
+2. Validasi role owner / manager.
+3. Owner Engine ambil data sales.
+4. Hitung:
+   - omzet total
+   - omzet per outlet
+   - perbandingan kemarin
+   - produk terlaris
+   - outlet turun
+5. Jika diminta insight, data dikirim ke AI Router.
+6. Telegram kirim report.
+
+Output:
+OMZET HARI INI
+Funkydak: Rp4.850.000
+Sekarpizza: Rp3.200.000
+Laju Kopi: Rp2.700.000
+Total: Rp10.750.000
+
+Insight:
+Sekarpizza turun 12%.
+Rekomendasi: cek traffic jam makan siang dan promo.
+
+
+============================================================
+7. WORKFLOW HR BOT
+============================================================
+
+Input:
+'/hr telat hari ini'
+
+Flow:
+1. Telegram Bot menerima command.
+2. Validasi role HR / owner.
+3. HR Engine ambil attendance.
+4. Hitung keterlambatan.
+5. Kirim report.
+
+Output:
+KARYAWAN TELAT HARI INI
+1. Andi - 12 menit
+2. Rina - 8 menit
+
+Catatan:
+Andi sudah telat 3x minggu ini.
+
+
+============================================================
+8. WORKFLOW FINANCE BOT
+============================================================
+
+Input:
+'/finance minggu ini'
+
+Flow:
+1. Telegram Bot menerima command.
+2. Validasi role owner / finance.
+3. Finance Engine ambil sales, expense, purchase, HPP, cashflow.
+4. Hitung gross profit dan margin.
+5. AI Router membuat ringkasan jika perlu.
+6. Telegram kirim report.
+7. Simpan history report.
+
+Output:
+FINANCE REPORT MINGGU INI
+Omzet: Rp72.500.000
+Expense: Rp41.200.000
+Gross Profit: Rp31.300.000
+Margin: 43%
+
+Alert:
+Expense bahan baku naik 9%.
+
+
+============================================================
+9. WORKFLOW TRADINGVIEW WEBHOOK - SRI ICT
+============================================================
+
+Endpoint:
+POST /tradingview/webhook
+
+Contoh payload:
+{
+  "source": "tradingview",
+  "pair": "XAUUSD",
+  "timeframe": "M15",
+  "signal": "MSS_BULL",
+  "price": 4050.25,
+  "session": "NY_SB",
+  "timestamp": "2026-06-28T22:15:00+07:00"
+}
+
+Flow:
+1. TradingView alert masuk ke backend.
+2. Backend validasi webhook secret.
+3. Simpan event ke trading_alerts.
+4. Trading Engine baca signal.
+5. Trading Engine cek state:
+   - HTF Bias
+   - DOL
+   - Sweep
+   - MSS
+   - IFVG
+   - SMT
+   - Silver Bullet Time
+   - News Block
+6. Jika belum lengkap, kirim Telegram WAIT.
+7. Jika lengkap, kirim Telegram VALID SETUP.
+8. Semua event disimpan ke trading journal/log.
+
+Output:
+SRI ICT UPDATE
+Pair: XAUUSD
+TF: M15
+Signal: MSS BULL
+Session: NY SB
+Status: WAIT
+Next: Tunggu M5 IFVG Bull
+Rule: No IFVG = No Entry
+
+
+============================================================
+10. WORKFLOW SRI ICT COMPLETE SETUP
+============================================================
+
+Sequence:
+1. HTF Bias terbaca.
+2. DOL jelas.
+3. Liquidity sweep terjadi.
+4. MSS muncul.
+5. IFVG muncul.
+6. SMT menjadi confluence tambahan.
+7. Masuk waktu Silver Bullet.
+8. Tidak ada high impact news.
+9. Orchestrator kirim alert valid.
+
+Rules:
+No Sweep = No MSS.
+No MSS = No Trade.
+No IFVG = No Entry.
+
+Output valid:
+SRI ICT VALID SETUP
+Pair: XAUUSD
+Bias: BUY
+Session: NY SB
+HTF: Mixed
+Sweep: SSL taken
+MSS: Bull confirmed
+IFVG: Bull confirmed
+SMT: Bull
+DOL: Buy Side
+Action: Setup valid. Tunggu entry sesuai SOP.
+
+
+============================================================
+11. WORKFLOW AI ROUTER
+============================================================
+
+Input:
+- task_type
+- user_message
+- context
+- preferred_model
+- role
+- priority
+
+Routing awal:
+- sop -> Qwen Local
+- trading_reasoning -> GPT
+- coding -> Claude
+- image/screenshot -> Gemini
+- fallback -> GPT
+
+Flow:
+1. Module kirim request ke AI Router.
+2. AI Router cek task_type.
+3. AI Router cek model availability.
+4. Jika model utama gagal, pakai fallback.
+5. Response dikembalikan ke module.
+6. Log model, token, cost, error disimpan.
+
+
+============================================================
+12. WORKFLOW MEMORY / KNOWLEDGE BASE
+============================================================
+
+Memory:
+A. Short-term memory
+- Redis
+- Session percakapan
+- State command sementara
+
+B. Long-term memory
+- PostgreSQL
+- SOP
+- rules
+- owner preference
+- trading journal
+- outlet history
+
+C. Document knowledge
+- SOP docs
+- resep
+- HR policy
+- finance rules
+- trading SOP
+
+Flow RAG:
+1. User bertanya.
+2. Sistem cari dokumen relevan.
+3. Ambil context.
+4. Kirim context ke AI.
+5. AI menjawab berdasarkan dokumen.
+6. Jika data tidak ditemukan, AI harus bilang tidak ada data.
+
+
+============================================================
+13. WORKFLOW DAILY REPORT
+============================================================
+
+Scheduled worker:
+Setiap malam jam 23:30 WIB.
+
+Flow:
+1. Worker ambil sales harian.
+2. Ambil expense.
+3. Ambil attendance.
+4. Ambil komplain.
+5. Ambil trading journal.
+6. AI Router membuat ringkasan.
+7. Telegram kirim ke owner.
+
+Output:
+YKP DAILY REPORT
+Omzet total:
+Outlet tertinggi:
+Outlet turun:
+Expense:
+Karyawan telat:
+Komplain:
+Insight:
+Rekomendasi besok:
+
+
+============================================================
+14. WORKFLOW BACKUP
+============================================================
+
+Jadwal:
+Setiap hari jam 03:00 WIB.
+
+Flow:
+1. Worker menjalankan pg_dump PostgreSQL.
+2. File disimpan lokal.
+3. Optional upload ke cloud drive.
+4. Simpan log backup.
+5. Jika gagal, kirim Telegram alert.
+
+Output:
+YKP BACKUP STATUS
+Backup: SUCCESS
+Time: 03:00 WIB
+File: backup_2026_06_28.sql
+
+
+============================================================
+15. WORKFLOW MONITORING SERVER
+============================================================
+
+Cek:
+- API
+- PostgreSQL
+- Redis
+- Disk
+- RAM
+- CPU
+- Docker container
+- Cloudflare Tunnel
+- Telegram Bot
+
+Jika error:
+1. Worker mendeteksi service down.
+2. Kirim Telegram alert.
+3. Simpan log incident.
+
+Output:
+YKP SERVER WARNING
+PostgreSQL: OK
+Redis: OK
+API: DOWN
+Disk: 86%
+Action: Please check server.
+
+
+============================================================
+16. DATABASE TABLE AWAL
+============================================================
+
+users:
+id, telegram_id, name, role, is_active, created_at
+
+roles:
+id, role_name, permissions
+
+outlets:
+id, name, brand, location, is_active
+
+sales:
+id, outlet_id, date, gross_sales, net_sales, transaction_count, source
+
+expenses:
+id, outlet_id, date, category, amount, note
+
+employees:
+id, name, outlet_id, position, is_active
+
+attendance:
+id, employee_id, date, check_in, check_out, late_minutes
+
+sop_documents:
+id, title, category, content, version, is_active
+
+recipes:
+id, menu_name, brand, ingredients, steps, hpp
+
+trading_alerts:
+id, pair, timeframe, signal, price, session, raw_payload, created_at
+
+trading_journal:
+id, pair, bias, setup_type, entry, sl, tp, result, notes, created_at
+
+ai_logs:
+id, user_id, task_type, model_used, prompt, response, created_at
+
+system_logs:
+id, service, level, message, created_at
+
+
+============================================================
+17. API ENDPOINT AWAL
+============================================================
+
+GET /health
+POST /telegram/webhook
+POST /tradingview/webhook
+POST /ai/chat
+GET /reports/daily
+GET /outlets
+GET /trading/journal
+POST /sop/search
+POST /finance/report
+POST /hr/report
+
+
+============================================================
+18. SECURITY REQUIREMENT
+============================================================
+
+Wajib:
+- .env untuk secret
+- Jangan hardcode API key
+- Telegram whitelist
+- Role-based access
+- TradingView webhook secret
+- HTTPS via Cloudflare
+- Database password kuat
+- Backup otomatis
+- Log request
+- Rate limit basic
+- Docker network dipisah
+
+
+============================================================
+19. DOCKER SERVICES
+============================================================
+
+Minimal docker-compose:
+- api
+- telegram-bot
+- worker
+- dashboard
+- postgres
+- redis
+- ollama
+- open-webui
+- cloudflared
+
+Catatan:
+Cloudflared boleh di luar compose jika developer lebih nyaman.
+
+
+============================================================
+20. MVP PRIORITY
+============================================================
+
+MVP 1:
+- Ubuntu server setup
+- Docker Compose
+- PostgreSQL
+- Redis
+- API backend
+- Telegram Bot
+- TradingView webhook
+- GPT integration
+- Logs
+
+MVP 2:
+- Qwen via Ollama
+- SOP Bot
+- Owner Bot simple
+- Daily report
+- Backup
+- Dashboard simple
+
+MVP 3:
+- HR Bot
+- Finance Bot
+- Trading journal
+- Memory/RAG
+- Screenshot analyzer
+- ERP connector
+
+
+============================================================
+21. ACCEPTANCE CRITERIA MVP 1
+============================================================
+
+MVP 1 selesai jika:
+1. /status di Telegram berhasil.
+2. /sop test berhasil dijawab AI.
+3. TradingView webhook berhasil diterima.
+4. Alert TradingView berhasil dikirim ke Telegram.
+5. Data webhook tersimpan di PostgreSQL.
+6. Redis aktif.
+7. Log request tersimpan.
+8. Docker compose bisa start/stop tanpa error.
+9. Dokumentasi install tersedia.
+10. Backup database basic tersedia.
+
+
+============================================================
+22. ENV VARIABLE
+============================================================
+
+OPENAI_API_KEY=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_OWNER_ID=
+DATABASE_URL=
+REDIS_URL=
+TRADINGVIEW_WEBHOOK_SECRET=
+CLOUDFLARE_TUNNEL_TOKEN=
+OLLAMA_BASE_URL=http://ollama:11434
+DEFAULT_AI_MODEL=gpt
+LOCAL_AI_MODEL=qwen
+
+
+============================================================
+23. CATATAN UNTUK DEVELOPER
+============================================================
+
+Project ini jangan dibuat sebagai chatbot biasa.
+Ini harus dibuat sebagai orchestration layer yang modular.
+
+Prioritas awal:
+- routing command
+- database
+- webhook
+- AI router
+- logging
+- deployment
+
+Semua module harus bisa ditambah tanpa bongkar ulang.
+
+Nama sementara:
+Hermes / YKP AI Orchestrator.

@@ -1,0 +1,668 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0
+// https://mozilla.org/MPL/2.0/
+// © hungpixi — Comarai (https://comarai.com)
+// Reference: jbondata/pinescript-indicator-suite, FibAlgo ICT Premium & Discount
+//@version=6
+indicator("[hungpixi] ICT SSL Premium & Discount", overlay=true, max_lines_count=500, max_boxes_count=500, max_labels_count=500)
+
+// ─── INPUTS ───────────────────────────────────────────────────────────────────
+// Display Range
+grpDisplay     = "📐 Display Range"
+int lookbackBars = input.int(2000, "Show Last N Bars", minval=100, maxval=10000, step=100, group=grpDisplay, tooltip="Chỉ hiển thị indicator trong N bars gần nhất. Giảm xuống để chart sạch hơn.")
+
+// Fractal / Swing Detection
+grpSwing       = "🔍 Swing Detection"
+int leftBars   = input.int(1, "Fractal Bars (each side)", minval=1, maxval=10, group=grpSwing, tooltip="Bars mỗi bên để xác nhận fractal. 3 = 7-bar fractal.")
+int maxSwings  = input.int(5, "Max Swings to Show", minval=3, maxval=20, group=grpSwing)
+
+// SSL / BSL Display
+grpLiq         = "💧 Liquidity Levels"
+bool showBSL   = input.bool(true, "Show BSL (Buy-Side Liquidity)", group=grpLiq)
+bool showSSL   = input.bool(true, "Show SSL (Sell-Side Liquidity)", group=grpLiq)
+color colBSL   = input.color(color.new(#089981, 0), "BSL Color", group=grpLiq)
+color colSSL   = input.color(color.new(#F23645, 0), "SSL Color", group=grpLiq)
+int lineWidth  = input.int(1, "Line Width", minval=1, maxval=4, group=grpLiq)
+
+// Sweep Detection
+grpSweep       = "⚡ Sweep Detection"
+bool showSweep = input.bool(true, "Show Sweep Labels", group=grpSweep)
+color colSweepBull = input.color(color.new(#089981, 0), "Bullish Sweep Color", group=grpSweep)
+color colSweepBear = input.color(color.new(#F23645, 0), "Bearish Sweep Color", group=grpSweep)
+
+// Premium / Discount Zones
+grpPD          = "📊 Premium & Discount Zones"
+bool showPD    = input.bool(true, "Show Premium / Discount", group=grpPD)
+int pdLookback = input.int(50, "Dealing Range Lookback", minval=10, maxval=200, group=grpPD)
+color colPrem  = input.color(color.new(#F23645, 88), "Premium Zone", group=grpPD)
+color colDisc  = input.color(color.new(#089981, 88), "Discount Zone", group=grpPD)
+color colEQ    = input.color(color.new(#787B86, 30), "Equilibrium Line", group=grpPD)
+
+// OTE Zone
+grpOTE         = "🎯 OTE Zone"
+bool showOTE   = input.bool(true, "Show OTE (62%-79%)", group=grpOTE)
+color colOTE   = input.color(color.new(#FF9800, 85), "OTE Zone Color", group=grpOTE)
+
+// ─── ENTRY / SL / TP SETTINGS ─────────────────────────────────────────────────
+grpEntry       = "🎯 Entry Signals (SL/TP)"
+bool showEntry = input.bool(true, "Show Entry Signals", group=grpEntry)
+bool requireOTE = input.bool(false, "Require OTE Zone for Entry", group=grpEntry, tooltip="Chỉ hiện signal khi sweep xảy ra trong OTE zone — setup chất lượng cao hơn nhưng ít tín hiệu hơn.")
+float rrRatio  = input.float(3.0, "Risk:Reward Ratio", minval=1.0, maxval=10.0, step=0.5, group=grpEntry, tooltip="TP cố định theo R:R. 3.0 = TP gấp 3 lần SL. 3R là đã win.")
+int maxTrades  = input.int(50, "Max Trades Shown", minval=5, maxval=100, group=grpEntry)
+bool showTP2   = input.bool(true, "Show TP2 (at EQ)", group=grpEntry, tooltip="TP2 tại đường Equilibrium. Partial close tại đây.")
+bool showTP3   = input.bool(false, "Show TP3 (opposite zone)", group=grpEntry, tooltip="TP3 tại vùng ngược lại (Premium→Discount hoặc ngược lại).")
+int cooldownBars = input.int(5, "Cooldown (bars)", minval=1, maxval=30, group=grpEntry, tooltip="Chờ N bars sau mỗi signal trước khi cho signal tiếp.")
+bool oneAtATime = input.bool(true, "One Trade at a Time", group=grpEntry, tooltip="Phải chạm SL hoặc TP mới cho signal mới.")
+color colBuy   = input.color(color.new(#00E676, 0), "Buy Signal Color", group=grpEntry)
+color colSell  = input.color(color.new(#FF1744, 0), "Sell Signal Color", group=grpEntry)
+color colSL    = input.color(color.new(#FF5252, 0), "SL Line Color", group=grpEntry)
+color colTP    = input.color(color.new(#69F0AE, 0), "TP Line Color", group=grpEntry)
+
+// SL Structure Settings
+grpSL          = "🛡️ SL Settings"
+int slLookback = input.int(14, "SL Structure Lookback (bars)", minval=1, maxval=50, group=grpSL, tooltip="Tìm structural low/high trong N bars gần nhất để đặt SL. 14 = nhìn lại 14 cây nến.")
+float minSLDist = input.float(5.0, "Min SL Distance (price)", minval=0.1, step=1.0, group=grpSL, tooltip="Khoảng cách SL tối thiểu tính theo giá. VD: 5.0 cho XAUUSD = ít nhất $5.")
+float maxSLDist = input.float(30.0, "Max SL Distance (price)", minval=1.0, step=5.0, group=grpSL, tooltip="Khoảng cách SL tối đa. Nếu SL xa hơn → clamp về max. VD: 30.0 cho XAUUSD.")
+string slMethod = input.string("Sweep Wick", "SL Method", options=["Sweep Wick", "Structure", "Both (farthest)"], group=grpSL, tooltip="Sweep Wick = wick của sweep candle (khuyên dùng). Structure = low/high N bars. Both = lấy cái xa nhất.")
+
+// Dashboard
+grpDash        = "📋 Dashboard"
+bool showDash  = input.bool(true, "Show Dashboard", group=grpDash)
+string dashPos = input.string("Top Right", "Position", options=["Top Right", "Top Left", "Bottom Right", "Bottom Left"], group=grpDash)
+
+// ─── DISPLAY RANGE CHECK ──────────────────────────────────────────────────────
+bool inRange = bar_index >= last_bar_index - lookbackBars
+
+// ─── FRACTAL DETECTION ────────────────────────────────────────────────────────
+float highestInRange = ta.highest(high, leftBars * 2 + 1)
+float lowestInRange  = ta.lowest(low, leftBars * 2 + 1)
+bool isFractalHigh   = high[leftBars] == highestInRange and high[leftBars] > high[leftBars - 1] and high[leftBars] > high[leftBars + 1]
+bool isFractalLow    = low[leftBars] == lowestInRange and low[leftBars] < low[leftBars - 1] and low[leftBars] < low[leftBars + 1]
+
+// ─── LIQUIDITY LEVEL ARRAYS ──────────────────────────────────────────────────
+// BSL arrays (swing highs)
+var array<line>  linesBSL    = array.new_line()
+var array<int>   barsBSL     = array.new_int()
+var array<float> pricesBSL   = array.new_float()
+var array<bool>  brokenBSL   = array.new_bool()
+var array<bool>  sweptBSL    = array.new_bool()
+
+// SSL arrays (swing lows)
+var array<line>  linesSSL    = array.new_line()
+var array<int>   barsSSL     = array.new_int()
+var array<float> pricesSSL   = array.new_float()
+var array<bool>  brokenSSL   = array.new_bool()
+var array<bool>  sweptSSL    = array.new_bool()
+
+int fractalBar = bar_index - leftBars
+
+// ─── PUSH NEW SWING HIGHS (BSL) ──────────────────────────────────────────────
+if isFractalHigh and barstate.isconfirmed and showBSL and inRange
+    float swingPrice = high[leftBars]
+    line ln = line.new(fractalBar, swingPrice, fractalBar + 20, swingPrice, xloc.bar_index, color=colBSL, width=lineWidth, style=line.style_solid)
+    array.push(linesBSL, ln)
+    array.push(barsBSL, fractalBar)
+    array.push(pricesBSL, swingPrice)
+    array.push(brokenBSL, false)
+    array.push(sweptBSL, false)
+    // Trim oldest
+    if array.size(linesBSL) > maxSwings
+        line.delete(array.shift(linesBSL))
+        array.shift(barsBSL)
+        array.shift(pricesBSL)
+        array.shift(brokenBSL)
+        array.shift(sweptBSL)
+
+// ─── PUSH NEW SWING LOWS (SSL) ──────────────────────────────────────────────
+if isFractalLow and barstate.isconfirmed and showSSL and inRange
+    float swingPrice = low[leftBars]
+    line ln = line.new(fractalBar, swingPrice, fractalBar + 20, swingPrice, xloc.bar_index, color=colSSL, width=lineWidth, style=line.style_solid)
+    array.push(linesSSL, ln)
+    array.push(barsSSL, fractalBar)
+    array.push(pricesSSL, swingPrice)
+    array.push(brokenSSL, false)
+    array.push(sweptSSL, false)
+    // Trim oldest
+    if array.size(linesSSL) > maxSwings
+        line.delete(array.shift(linesSSL))
+        array.shift(barsSSL)
+        array.shift(pricesSSL)
+        array.shift(brokenSSL)
+        array.shift(sweptSSL)
+
+// ─── PREMIUM & DISCOUNT ZONES (calculated before sweep detection) ────────────
+float rangeHigh = ta.highest(high, pdLookback)
+float rangeLow  = ta.lowest(low, pdLookback)
+float eq        = (rangeHigh + rangeLow) / 2.0
+
+// OTE zone
+float rangeSize   = rangeHigh - rangeLow
+float oteBuyHigh  = rangeLow + rangeSize * 0.382   // 38.2% from bottom = 61.8% retracement from top
+float oteBuyLow   = rangeLow + rangeSize * 0.21    // 21% from bottom = 79% retracement from top
+float oteSellHigh = rangeLow + rangeSize * 0.79    // 79% from bottom
+float oteSellLow  = rangeLow + rangeSize * 0.618   // 61.8% from bottom
+
+bool inPremium  = close > eq
+bool inDiscount = close <= eq
+bool inOTEBuy   = close >= oteBuyLow and close <= oteBuyHigh
+bool inOTESell  = close >= oteSellLow and close <= oteSellHigh
+
+// ─── TRADE STATE ─────────────────────────────────────────────────────────────
+var array<line>  tradeSLLines  = array.new_line()
+var array<line>  tradeTP1Lines = array.new_line()
+var array<line>  tradeTP2Lines = array.new_line()
+var array<line>  tradeTP3Lines = array.new_line()
+var array<label> tradeLabels   = array.new_label()
+var array<int>   tradeBars     = array.new_int()
+var array<float> tradeEntries  = array.new_float()
+var array<float> tradeSLs      = array.new_float()
+var array<float> tradeTP1s     = array.new_float()
+var array<int>   tradeDirs     = array.new_int() // 1=buy, -1=sell
+var array<bool>  tradeActive   = array.new_bool()
+
+var int totalBuys      = 0
+var int totalSells     = 0
+var int totalTPHits    = 0
+var int totalSLHits    = 0
+var int lastSignalBar  = 0
+var bool hasActiveTrade = false
+var float activeSL     = na
+var float activeTP     = na
+var int   activeDir    = 0
+
+// ─── PENDING ENTRY STATE (retest model) ──────────────────────────────────────
+// Khi sweep xảy ra → lưu "pending order" tại swept level
+// Bar sau nếu giá chạm lại level → trigger entry (như limit order)
+var bool  pendingBuy     = false
+var float pendBuyEntry   = na   // entry = SSL level bị swept
+var float pendBuySL      = na   // SL = wick low của sweep candle
+var int   pendBuyBar     = 0    // bar khi sweep xảy ra
+var int   pendBuyExpiry  = 10   // hết hạn sau N bars
+
+var bool  pendingSell    = false
+var float pendSellEntry  = na   // entry = BSL level bị swept
+var float pendSellSL     = na   // SL = wick high của sweep candle
+var int   pendSellBar    = 0
+var int   pendSellExpiry = 10
+
+// ─── HELPER: Create trade visualization ──────────────────────────────────────
+f_drawTrade(int dir, float entry, float sl, float tp1, float tp2, float tp3) =>
+    // Colors
+    color sigCol = dir == 1 ? colBuy : colSell
+    string sigIcon = dir == 1 ? "🟢" : "🔴"
+    string sigDir = dir == 1 ? "BUY" : "SELL"
+    float riskPips = math.abs(entry - sl)
+    float rrActual = riskPips > 0 ? math.abs(tp1 - entry) / riskPips : 0
+
+    // Entry label — compact
+    label entryLbl = label.new(bar_index, dir == 1 ? low : high, 
+         sigIcon + " " + sigDir + " @ " + str.tostring(entry, format.mintick),
+         color=sigCol, textcolor=color.white, 
+         style=dir == 1 ? label.style_label_up : label.style_label_down, 
+         size=size.tiny,
+         tooltip="Entry: " + str.tostring(entry, format.mintick) + "\nSL: " + str.tostring(sl, format.mintick) + "\nTP: " + str.tostring(tp1, format.mintick) + "\nR:R " + str.tostring(rrActual, "#.#"))
+
+    // SL line + label
+    line slLine = line.new(bar_index, sl, bar_index + 15, sl, 
+         color=colSL, width=1, style=line.style_dashed)
+    label.new(bar_index + 15, sl, "SL " + str.tostring(sl, format.mintick),
+         color=color.new(colSL, 80), textcolor=colSL,
+         style=label.style_label_left, size=size.tiny)
+
+    // TP1 line + label — prominent target
+    line tp1Line = line.new(bar_index, tp1, bar_index + 15, tp1, 
+         color=colTP, width=2, style=line.style_dashed)
+    label.new(bar_index + 15, tp1, "TP " + str.tostring(rrActual, "#.#") + "R  " + str.tostring(tp1, format.mintick),
+         color=color.new(colTP, 80), textcolor=colTP,
+         style=label.style_label_left, size=size.tiny)
+
+    // TP2 line at EQ (if enabled)
+    line tp2Line = na
+    if showTP2 and not na(tp2)
+        tp2Line := line.new(bar_index, tp2, bar_index + 10, tp2, 
+             color=color.new(#42A5F5, 40), width=1, style=line.style_dotted)
+
+    // TP3 line at opposite zone (if enabled)
+    line tp3Line = na
+    if showTP3 and not na(tp3)
+        tp3Line := line.new(bar_index, tp3, bar_index + 10, tp3, 
+             color=color.new(#AB47BC, 40), width=1, style=line.style_dotted)
+
+    // Entry-to-SL zone fill (subtle red)
+    box.new(bar_index, entry, bar_index + 15, sl, 
+         border_color=color.new(colSL, 100), bgcolor=color.new(colSL, 94), 
+         border_width=0)
+
+    // Entry-to-TP1 zone fill (subtle green)
+    box.new(bar_index, entry, bar_index + 15, tp1, 
+         border_color=color.new(colTP, 100), bgcolor=color.new(colTP, 94), 
+         border_width=0)
+
+    // Store trade data
+    array.push(tradeSLLines, slLine)
+    array.push(tradeTP1Lines, tp1Line)
+    array.push(tradeTP2Lines, tp2Line)
+    array.push(tradeTP3Lines, tp3Line)
+    array.push(tradeLabels, entryLbl)
+    array.push(tradeBars, bar_index)
+    array.push(tradeEntries, entry)
+    array.push(tradeSLs, sl)
+    array.push(tradeTP1s, tp1)
+    array.push(tradeDirs, dir)
+    array.push(tradeActive, true)
+
+    // Trim oldest trades
+    if array.size(tradeLabels) > maxTrades
+        line.delete(array.shift(tradeSLLines))
+        line.delete(array.shift(tradeTP1Lines))
+        line.delete(array.shift(tradeTP2Lines))
+        line.delete(array.shift(tradeTP3Lines))
+        label.delete(array.shift(tradeLabels))
+        array.shift(tradeBars)
+        array.shift(tradeEntries)
+        array.shift(tradeSLs)
+        array.shift(tradeTP1s)
+        array.shift(tradeDirs)
+        array.shift(tradeActive)
+
+// ─── UPDATE BSL LEVELS & SWEEP DETECTION ─────────────────────────────────────
+var array<label> sweepLabels = array.new_label()  // managed sweep labels
+var array<label> pendLabels  = array.new_label()  // managed pending labels
+var array<line>  pendLines   = array.new_line()   // managed pending lines
+
+var int bslSweepCount = 0
+bool bslSweepNow = false
+float bslSweepPrice = na
+
+for i = 0 to array.size(linesBSL) - 1
+    if i >= array.size(linesBSL)
+        break
+    line  ln       = array.get(linesBSL, i)
+    float priceI   = array.get(pricesBSL, i)
+    int   barI     = array.get(barsBSL, i)
+    bool  wasBroken = array.get(brokenBSL, i)
+    bool  wasSwept  = array.get(sweptBSL, i)
+
+    if not wasBroken
+        line.set_xy2(ln, bar_index, priceI)
+        if high >= priceI and close < priceI and not wasSwept
+            array.set(sweptBSL, i, true)
+            bslSweepCount += 1
+            bslSweepNow := true
+            bslSweepPrice := priceI
+            if showSweep
+                label swLbl = label.new(bar_index, high, "▼", color=colSweepBear, textcolor=color.white, style=label.style_label_down, size=size.tiny, tooltip="BSL Sweep @ " + str.tostring(priceI, format.mintick))
+                array.push(sweepLabels, swLbl)
+                if array.size(sweepLabels) > maxTrades * 2
+                    label.delete(array.shift(sweepLabels))
+        if close > priceI
+            array.set(brokenBSL, i, true)
+            line.set_xy2(ln, bar_index, priceI)
+            line.set_style(ln, line.style_dashed)
+    if wasBroken
+        line.set_style(ln, line.style_dashed)
+
+// ─── UPDATE SSL LEVELS & SWEEP DETECTION ─────────────────────────────────────
+var int sslSweepCount = 0
+bool sslSweepNow = false
+float sslSweepPrice = na
+
+for i = 0 to array.size(linesSSL) - 1
+    if i >= array.size(linesSSL)
+        break
+    line  ln       = array.get(linesSSL, i)
+    float priceI   = array.get(pricesSSL, i)
+    int   barI     = array.get(barsSSL, i)
+    bool  wasBroken = array.get(brokenSSL, i)
+    bool  wasSwept  = array.get(sweptSSL, i)
+
+    if not wasBroken
+        line.set_xy2(ln, bar_index, priceI)
+        if low <= priceI and close > priceI and not wasSwept
+            array.set(sweptSSL, i, true)
+            sslSweepCount += 1
+            sslSweepNow := true
+            sslSweepPrice := priceI
+            if showSweep
+                label swLbl = label.new(bar_index, low, "▲", color=colSweepBull, textcolor=color.white, style=label.style_label_up, size=size.tiny, tooltip="SSL Sweep @ " + str.tostring(priceI, format.mintick))
+                array.push(sweepLabels, swLbl)
+                if array.size(sweepLabels) > maxTrades * 2
+                    label.delete(array.shift(sweepLabels))
+        if close < priceI
+            array.set(brokenSSL, i, true)
+            line.set_xy2(ln, bar_index, priceI)
+            line.set_style(ln, line.style_dashed)
+    if wasBroken
+        line.set_style(ln, line.style_dashed)
+
+// ─── CHECK ACTIVE TRADE: SL/TP HIT ──────────────────────────────────────────
+var array<label> hitLabels = array.new_label()
+
+if hasActiveTrade
+    bool slHit = activeDir == 1 ? low <= activeSL : high >= activeSL
+    bool tpHit = activeDir == 1 ? high >= activeTP : low <= activeTP
+    if slHit
+        hasActiveTrade := false
+        totalSLHits += 1
+        label hitLbl = label.new(bar_index, activeDir == 1 ? low : high, "✖",
+             color=color.new(#FF5252, 0), textcolor=color.white,
+             style=activeDir == 1 ? label.style_label_up : label.style_label_down,
+             size=size.tiny)
+        array.push(hitLabels, hitLbl)
+        if array.size(hitLabels) > maxTrades
+            label.delete(array.shift(hitLabels))
+        activeSL := na
+        activeTP := na
+        activeDir := 0
+    else if tpHit
+        hasActiveTrade := false
+        totalTPHits += 1
+        label hitLbl = label.new(bar_index, activeDir == 1 ? high : low, "✔",
+             color=color.new(#69F0AE, 0), textcolor=color.white,
+             style=activeDir == 1 ? label.style_label_down : label.style_label_up,
+             size=size.tiny)
+        array.push(hitLabels, hitLbl)
+        if array.size(hitLabels) > maxTrades
+            label.delete(array.shift(hitLabels))
+        activeSL := na
+        activeTP := na
+        activeDir := 0
+
+// ─── HELPER: Find nearest opposite liquidity level ───────────────────────────
+f_nearestBSL(float abovePrice) =>
+    float nearest = na
+    for i = 0 to array.size(pricesBSL) - 1
+        if i >= array.size(pricesBSL)
+            break
+        float p = array.get(pricesBSL, i)
+        bool broken = array.get(brokenBSL, i)
+        if not broken and p > abovePrice
+            if na(nearest) or p < nearest
+                nearest := p
+    nearest
+
+f_nearestSSL(float belowPrice) =>
+    float nearest = na
+    for i = 0 to array.size(pricesSSL) - 1
+        if i >= array.size(pricesSSL)
+            break
+        float p = array.get(pricesSSL, i)
+        bool broken = array.get(brokenSSL, i)
+        if not broken and p < belowPrice
+            if na(nearest) or p > nearest
+                nearest := p
+    nearest
+
+// ─── ENTRY SIGNAL: RETEST MODEL ─────────────────────────────────────────────
+// ICT Retest Entry Model:
+//
+// 1. Sweep xảy ra → tạo "pending limit order" tại swept level
+// 2. Chờ giá retest lại level đó trên bar sau → trigger entry
+// 3. Nếu giá không retest trong N bars → pending hết hạn
+//
+// BUY:  SSL Sweep → pending buy tại SSL level
+//       Khi giá pullback xuống chạm SSL level → Entry = SSL level
+//       SL = wick low của sweep candle
+//       TP = nearest BSL above
+//
+// SELL: BSL Sweep → pending sell tại BSL level
+//       Khi giá pullback lên chạm BSL level → Entry = BSL level
+//       SL = wick high của sweep candle
+//       TP = nearest SSL below
+
+bool cooldownOk = bar_index - lastSignalBar >= cooldownBars
+bool tradeSlotOk = oneAtATime ? not hasActiveTrade : true
+
+// ── Step 1: Create pending orders when sweep detected ──
+if showEntry and barstate.isconfirmed and cooldownOk and tradeSlotOk and inRange
+
+    // SSL Sweep in Discount → create pending BUY at SSL level
+    if sslSweepNow and inDiscount
+        bool oteOk = requireOTE ? inOTEBuy : true
+        if oteOk and not na(sslSweepPrice)
+            pendingBuy   := true
+            pendBuyEntry := sslSweepPrice  // entry = tại swept SSL level
+            // SL calculation based on method
+            float wickSL = low  // sweep candle wick
+            float structSL = ta.lowest(low, slLookback)  // structural low over N bars
+            float rawSL = slMethod == "Structure" ? structSL : slMethod == "Sweep Wick" ? wickSL : math.min(wickSL, structSL)
+            // Enforce min/max SL distance
+            float distFromEntry = pendBuyEntry - rawSL
+            float clampedSL = distFromEntry < minSLDist ? pendBuyEntry - minSLDist : distFromEntry > maxSLDist ? pendBuyEntry - maxSLDist : rawSL
+            pendBuySL := clampedSL > 0 ? clampedSL : pendBuyEntry - minSLDist  // safety: SL must be > 0
+            pendBuyBar := bar_index
+            if showSweep
+                line pLine = line.new(bar_index, sslSweepPrice, bar_index + pendBuyExpiry, sslSweepPrice,
+                     color=color.new(colBuy, 50), width=1, style=line.style_dotted)
+                label pLbl = label.new(bar_index, sslSweepPrice, "⏳ BUY @ " + str.tostring(sslSweepPrice, format.mintick),
+                     color=color.new(colBuy, 70), textcolor=color.white,
+                     style=label.style_label_right, size=size.tiny)
+                array.push(pendLines, pLine)
+                array.push(pendLabels, pLbl)
+                if array.size(pendLabels) > maxTrades
+                    line.delete(array.shift(pendLines))
+                    label.delete(array.shift(pendLabels))
+
+    // BSL Sweep in Premium → create pending SELL at BSL level
+    if bslSweepNow and inPremium
+        bool oteOk = requireOTE ? inOTESell : true
+        if oteOk and not na(bslSweepPrice)
+            pendingSell   := true
+            pendSellEntry := bslSweepPrice  // entry = tại swept BSL level
+            // SL calculation based on method
+            float wickSL = high  // sweep candle wick
+            float structSL = ta.highest(high, slLookback)  // structural high over N bars
+            float rawSL = slMethod == "Structure" ? structSL : slMethod == "Sweep Wick" ? wickSL : math.max(wickSL, structSL)
+            // Enforce min/max SL distance
+            float distFromEntry = rawSL - pendSellEntry
+            float clampedSL = distFromEntry < minSLDist ? pendSellEntry + minSLDist : distFromEntry > maxSLDist ? pendSellEntry + maxSLDist : rawSL
+            pendSellSL := clampedSL
+            pendSellBar := bar_index
+            if showSweep
+                line pLine = line.new(bar_index, bslSweepPrice, bar_index + pendSellExpiry, bslSweepPrice,
+                     color=color.new(colSell, 50), width=1, style=line.style_dotted)
+                label pLbl = label.new(bar_index, bslSweepPrice, "⏳ SELL @ " + str.tostring(bslSweepPrice, format.mintick),
+                     color=color.new(colSell, 70), textcolor=color.white,
+                     style=label.style_label_right, size=size.tiny)
+                array.push(pendLines, pLine)
+                array.push(pendLabels, pLbl)
+                if array.size(pendLabels) > maxTrades
+                    line.delete(array.shift(pendLines))
+                    label.delete(array.shift(pendLabels))
+
+// ── Step 2: Check pending orders for retest fill ──
+// Pending BUY: giá pullback xuống chạm pendBuyEntry → fill
+if pendingBuy and not hasActiveTrade
+    // Expired?
+    if bar_index - pendBuyBar > pendBuyExpiry
+        pendingBuy := false
+        pendBuyEntry := na
+        pendBuySL := na
+    // SL hit trước khi fill? (giá phá qua wick low)
+    else if not na(pendBuySL) and low < pendBuySL
+        pendingBuy := false
+        pendBuyEntry := na
+        pendBuySL := na
+    // FILL: giá chạm lại SSL level (low <= entry level)
+    else if inRange and low <= pendBuyEntry and not na(pendBuySL)
+        float entryPrice = pendBuyEntry
+        float slPrice = pendBuySL
+        float risk = entryPrice - slPrice
+        // Sanity: risk must be positive and SL must be reasonable
+        bool slValid = risk > 0 and risk >= minSLDist and risk <= maxSLDist and slPrice > 0
+        // TP = fixed R:R (3R default)
+        float tp1Price = entryPrice + risk * rrRatio
+        float tp2Price = showTP2 ? eq : na
+        float tp3Price = showTP3 ? rangeHigh : na
+
+        if slValid
+            f_drawTrade(1, entryPrice, slPrice, tp1Price, tp2Price, tp3Price)
+            totalBuys += 1
+            lastSignalBar := bar_index
+            hasActiveTrade := true
+            activeSL := slPrice
+            activeTP := tp1Price
+            activeDir := 1
+        pendingBuy := false
+        pendBuyEntry := na
+        pendBuySL := na
+
+// Pending SELL: giá pullback lên chạm pendSellEntry → fill
+if pendingSell and not hasActiveTrade
+    // Expired?
+    if bar_index - pendSellBar > pendSellExpiry
+        pendingSell := false
+        pendSellEntry := na
+        pendSellSL := na
+    // SL hit trước khi fill? (giá phá qua wick high)
+    else if not na(pendSellSL) and high > pendSellSL
+        pendingSell := false
+        pendSellEntry := na
+        pendSellSL := na
+    // FILL: giá chạm lại BSL level (high >= entry level)
+    else if inRange and high >= pendSellEntry and not na(pendSellSL)
+        float entryPrice = pendSellEntry
+        float slPrice = pendSellSL
+        float risk = slPrice - entryPrice
+        // Sanity: risk must be positive and SL must be reasonable
+        bool slValid = risk > 0 and risk >= minSLDist and risk <= maxSLDist
+        // TP = fixed R:R (3R default)
+        float tp1Price = entryPrice - risk * rrRatio
+        float tp2Price = showTP2 ? eq : na
+        float tp3Price = showTP3 ? rangeLow : na
+
+        if slValid
+            f_drawTrade(-1, entryPrice, slPrice, tp1Price, tp2Price, tp3Price)
+            totalSells += 1
+            lastSignalBar := bar_index
+            hasActiveTrade := true
+            activeSL := slPrice
+            activeTP := tp1Price
+            activeDir := -1
+        pendingSell := false
+        pendSellEntry := na
+        pendSellSL := na
+
+// ─── ZONE VISUALIZATION ──────────────────────────────────────────────────────
+// (bgcolor removed — using box zones only for cleaner display)
+
+// EQ line
+plot(showPD and inRange ? eq : na, "Equilibrium (50%)", color=colEQ, linewidth=1, style=plot.style_line)
+
+// ─── PREMIUM & DISCOUNT ZONE BOXES ───────────────────────────────────────────
+var box premBox  = na
+var box discBox  = na
+var box oteBoxBuy  = na
+var box oteBoxSell = na
+
+if showPD and inRange
+    box.delete(premBox)
+    box.delete(discBox)
+    premBox := box.new(bar_index - pdLookback, rangeHigh, bar_index, eq, 
+         border_color=color.new(#F23645, 80), bgcolor=color.new(#F23645, 96), 
+         border_width=1, border_style=line.style_dotted)
+    discBox := box.new(bar_index - pdLookback, eq, bar_index, rangeLow, 
+         border_color=color.new(#089981, 80), bgcolor=color.new(#089981, 96), 
+         border_width=1, border_style=line.style_dotted)
+
+if showOTE and inRange
+    box.delete(oteBoxBuy)
+    box.delete(oteBoxSell)
+    oteBoxBuy := box.new(bar_index - pdLookback, oteBuyHigh, bar_index, oteBuyLow, 
+         border_color=color.new(#FF9800, 70), bgcolor=color.new(#FF9800, 94), 
+         border_width=1, border_style=line.style_dashed)
+    oteBoxSell := box.new(bar_index - pdLookback, oteSellHigh, bar_index, oteSellLow, 
+         border_color=color.new(#FF9800, 70), bgcolor=color.new(#FF9800, 94), 
+         border_width=1, border_style=line.style_dashed)
+
+// ─── ZONE LABELS ─────────────────────────────────────────────────────────────
+var label lblPrem = na
+var label lblDisc = na
+var label lblEQ   = na
+var label lblOTEBuy  = na
+var label lblOTESell = na
+
+if showPD and inRange
+    label.delete(lblPrem)
+    label.delete(lblDisc)
+    label.delete(lblEQ)
+    lblPrem := label.new(bar_index + 10, (rangeHigh + eq) / 2, "PREMIUM", 
+         color=color.new(color.white, 100), textcolor=color.new(#F23645, 50), 
+         style=label.style_label_left, size=size.tiny)
+    lblDisc := label.new(bar_index + 10, (rangeLow + eq) / 2, "DISCOUNT", 
+         color=color.new(color.white, 100), textcolor=color.new(#089981, 50), 
+         style=label.style_label_left, size=size.tiny)
+    lblEQ := label.new(bar_index + 10, eq, "EQ", 
+         color=color.new(color.white, 100), textcolor=color.new(colEQ, 30), 
+         style=label.style_label_left, size=size.tiny)
+
+if showOTE and inRange
+    label.delete(lblOTEBuy)
+    label.delete(lblOTESell)
+    lblOTEBuy := label.new(bar_index + 10, (oteBuyHigh + oteBuyLow) / 2, "OTE Buy", 
+         color=color.new(color.white, 100), textcolor=color.new(#FF9800, 40), 
+         style=label.style_label_left, size=size.tiny)
+    lblOTESell := label.new(bar_index + 10, (oteSellHigh + oteSellLow) / 2, "OTE Sell", 
+         color=color.new(color.white, 100), textcolor=color.new(#FF9800, 40), 
+         style=label.style_label_left, size=size.tiny)
+
+// ─── DASHBOARD TABLE ─────────────────────────────────────────────────────────
+if showDash
+    var table dash = na
+    tablePos = switch dashPos
+        "Top Right"    => position.top_right
+        "Top Left"     => position.top_left
+        "Bottom Right"  => position.bottom_right
+        "Bottom Left"   => position.bottom_left
+        => position.top_right
+
+    if barstate.islast
+        int totalTrades = totalTPHits + totalSLHits
+        float winRate = totalTrades > 0 ? totalTPHits / totalTrades * 100 : 0
+
+        dash := table.new(tablePos, 2, 9, bgcolor=color.new(#1e222d, 10), border_color=color.new(#363a45, 0), border_width=1, frame_color=color.new(#363a45, 0), frame_width=2)
+
+        // Header
+        table.cell(dash, 0, 0, "ICT SSL P&D", text_color=color.white, text_size=size.small, bgcolor=color.new(#2962FF, 20))
+        table.cell(dash, 1, 0, "Status", text_color=color.white, text_size=size.small, bgcolor=color.new(#2962FF, 20))
+
+        // Zone
+        string zoneText = inPremium ? "PREMIUM ⬆" : "DISCOUNT ⬇"
+        color zoneColor = inPremium ? color.new(#F23645, 20) : color.new(#089981, 20)
+        table.cell(dash, 0, 1, "Zone", text_color=color.gray, text_size=size.small)
+        table.cell(dash, 1, 1, zoneText, text_color=color.white, text_size=size.small, bgcolor=zoneColor)
+
+        // OTE
+        string oteText = inOTEBuy ? "OTE BUY 🎯" : inOTESell ? "OTE SELL 🎯" : "—"
+        color oteColor = inOTEBuy ? color.new(#FF9800, 30) : inOTESell ? color.new(#FF9800, 30) : color.new(#363a45, 0)
+        table.cell(dash, 0, 2, "OTE", text_color=color.gray, text_size=size.small)
+        table.cell(dash, 1, 2, oteText, text_color=color.white, text_size=size.small, bgcolor=oteColor)
+
+        // EQ
+        table.cell(dash, 0, 3, "EQ", text_color=color.gray, text_size=size.small)
+        table.cell(dash, 1, 3, str.tostring(eq, format.mintick), text_color=color.white, text_size=size.small)
+
+        // Sweeps
+        table.cell(dash, 0, 4, "Sweeps", text_color=color.gray, text_size=size.small)
+        table.cell(dash, 1, 4, "SSL:" + str.tostring(sslSweepCount) + " BSL:" + str.tostring(bslSweepCount), text_color=color.white, text_size=size.small)
+
+        // Trade header
+        table.cell(dash, 0, 5, "──────", text_color=color.new(#363a45, 0), text_size=size.small, bgcolor=color.new(#2962FF, 20))
+        table.cell(dash, 1, 5, "Trades", text_color=color.white, text_size=size.small, bgcolor=color.new(#2962FF, 20))
+
+        // Signals
+        table.cell(dash, 0, 6, "Signals", text_color=color.gray, text_size=size.small)
+        table.cell(dash, 1, 6, "🟢" + str.tostring(totalBuys) + " 🔴" + str.tostring(totalSells), text_color=color.white, text_size=size.small)
+
+        // Results
+        table.cell(dash, 0, 7, "Results", text_color=color.gray, text_size=size.small)
+        table.cell(dash, 1, 7, "✔" + str.tostring(totalTPHits) + " ✖" + str.tostring(totalSLHits), text_color=color.white, text_size=size.small, bgcolor=winRate >= 50 ? color.new(#089981, 30) : totalTrades > 0 ? color.new(#F23645, 30) : color.new(#363a45, 0))
+
+        // Win Rate
+        table.cell(dash, 0, 8, "Win %", text_color=color.gray, text_size=size.small)
+        table.cell(dash, 1, 8, totalTrades > 0 ? str.tostring(winRate, "#.#") + "%" : "—", text_color=color.white, text_size=size.small)
+
+// ─── ALERTS ──────────────────────────────────────────────────────────────────
+alertcondition(ta.crossover(close, eq), "Price crossed above EQ (entering Premium)", "Price entered PREMIUM zone — EQ crossover")
+alertcondition(ta.crossunder(close, eq), "Price crossed below EQ (entering Discount)", "Price entered DISCOUNT zone — EQ crossunder")
+alertcondition(sslSweepNow and inDiscount, "BUY Signal (SSL Sweep in Discount)", "🟢 BUY: SSL Sweep detected in Discount zone")
+alertcondition(bslSweepNow and inPremium, "SELL Signal (BSL Sweep in Premium)", "🔴 SELL: BSL Sweep detected in Premium zone")

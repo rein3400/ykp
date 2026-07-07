@@ -1,0 +1,95 @@
+//@version=6
+indicator("3-Candle Pattern Clean", overlay = true, max_lines_count = 500, max_labels_count = 500)
+
+//=====================================================
+// INPUTS
+//=====================================================
+useTfFilter   = input.bool(false, "Activate timeframe filter")
+allowedTf     = input.string("60", "Allowed timeframe", options = ["240", "60", "30", "15", "5", "3", "1"])
+multiCandle   = input.bool(false, "Include multi-candle version")
+multiBarsMax  = input.int(3, "Max candles after 2nd candle (multi mode)", minval = 1, maxval = 20)
+showBearish   = input.bool(true, "Show bearish pattern")
+lineBars      = input.int(3, "Line length in bars", minval = 1, maxval = 30)
+
+//=====================================================
+// TIMEFRAME FILTER
+// If filter is OFF, script works on any chart timeframe.
+// If filter is ON, script works only when chart timeframe matches selected one.
+//=====================================================
+bool isTfOk = not useTfFilter or timeframe.period == allowedTf
+
+//=====================================================
+// EXACT 3-CANDLE BULLISH
+// 1st candle bearish
+// 2nd candle bullish, sweeps 1st candle low, closes above 1st bearish candle
+// 3rd candle bullish, closes above both previous highs
+//=====================================================
+bool bullC1 = close[2] < open[2]
+bool bullC2 = close[1] > open[1]
+bool bullSweep = low[1] < low[2]
+bool bullCloseAboveFirstBearish = close[1] > open[2]
+bool bullC3 = close > open
+bool bullBreak = close > math.max(high[2], high[1])
+
+bool bullishExact = isTfOk and bullC1 and bullC2 and bullSweep and bullCloseAboveFirstBearish and bullC3 and bullBreak
+
+//=====================================================
+// EXACT 3-CANDLE BEARISH
+// 1st candle bullish
+// 2nd candle bearish, sweeps 1st candle high, closes below 1st bullish candle
+// 3rd candle bearish, closes below both previous lows
+//=====================================================
+bool bearC1 = close[2] > open[2]
+bool bearC2 = close[1] < open[1]
+bool bearSweep = high[1] > high[2]
+bool bearCloseBelowFirstBullish = close[1] < open[2]
+bool bearC3 = close < open
+bool bearBreak = close < math.min(low[2], low[1])
+
+bool bearishExact = isTfOk and showBearish and bearC1 and bearC2 and bearSweep and bearCloseBelowFirstBullish and bearC3 and bearBreak
+
+//=====================================================
+// MULTI-CANDLE MODE
+// Base = candle 1 + candle 2 relationship
+// Trigger = later candle breaks the structure within multiBarsMax bars
+//=====================================================
+bool bullBase = isTfOk and bullC1 and bullC2 and bullSweep and bullCloseAboveFirstBearish
+int bullBarsSinceBase = ta.barssince(bullBase)
+bool bullishMulti = isTfOk and bullC3 and bullBreak and not na(bullBarsSinceBase) and bullBarsSinceBase >= 1 and bullBarsSinceBase <= multiBarsMax
+
+bool bearBase = isTfOk and bearC1 and bearC2 and bearSweep and bearCloseBelowFirstBullish
+int bearBarsSinceBase = ta.barssince(bearBase)
+bool bearishMulti = isTfOk and showBearish and bearC3 and bearBreak and not na(bearBarsSinceBase) and bearBarsSinceBase >= 1 and bearBarsSinceBase <= multiBarsMax
+
+//=====================================================
+// FINAL SIGNALS
+//=====================================================
+bool bullishPattern = multiCandle ? bullishMulti : bullishExact
+bool bearishPattern = multiCandle ? bearishMulti : bearishExact
+
+//=====================================================
+// MARKERS
+//=====================================================
+plotshape(bullishPattern, title = "Bullish 3C", style = shape.labelup, location = location.belowbar, color = color.lime, text = "BULL", textcolor = color.white, size = size.small)
+plotshape(bearishPattern, title = "Bearish 3C", style = shape.labeldown, location = location.abovebar, color = color.red, text = "BEAR", textcolor = color.white, size = size.small)
+
+//=====================================================
+// LINES
+// Bullish = low of 1st bearish candle + close of 2nd bullish candle
+// Bearish = high of 1st bullish candle + close of 2nd bearish candle
+//=====================================================
+if bullishPattern
+    int xEnd = bar_index + lineBars
+    line.new(x1 = bar_index[2], y1 = low[2],   x2 = xEnd, y2 = low[2],   xloc = xloc.bar_index, extend = extend.none, color = color.red,  width = 1)
+    line.new(x1 = bar_index[1], y1 = close[1], x2 = xEnd, y2 = close[1], xloc = xloc.bar_index, extend = extend.none, color = color.blue, width = 2)
+
+if bearishPattern
+    int xEndB = bar_index + lineBars
+    line.new(x1 = bar_index[2], y1 = high[2],  x2 = xEndB, y2 = high[2],  xloc = xloc.bar_index, extend = extend.none, color = color.red,  width = 1)
+    line.new(x1 = bar_index[1], y1 = close[1], x2 = xEndB, y2 = close[1], xloc = xloc.bar_index, extend = extend.none, color = color.blue, width = 2)
+
+//=====================================================
+// ALERTS
+//=====================================================
+alertcondition(bullishPattern, title = "Bullish 3-Candle Pattern", message = "Bullish 3-candle pattern on {{ticker}} {{interval}}")
+alertcondition(bearishPattern, title = "Bearish 3-Candle Pattern", message = "Bearish 3-candle pattern on {{ticker}} {{interval}}")

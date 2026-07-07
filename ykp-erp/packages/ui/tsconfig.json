@@ -1,0 +1,15 @@
+{
+  "extends": "@ykp/config/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "jsx": "preserve",
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["src/**/*"]
+}
