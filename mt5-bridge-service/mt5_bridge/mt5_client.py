@@ -3,8 +3,17 @@ import MetaTrader5 as mt5
 from .models import SymbolInfo, AccountInfo, TradeInfo, OrderRequest, OrderResult, OrderCalc
 
 
-def init(login: int, password: str, server: str) -> None:
-    if not mt5.initialize(login=login, password=password, server=server, timeout=10000):
+# Brokers (Exness, etc.) often append a suffix to canonical FX pair names.
+# We try the canonical name first, then common suffixes in order.
+_SYMBOL_SUFFIXES = ("", "m", ".raw", "micro", ".ec", ".s", ".i", "c")
+
+
+def init(login: int, password: str, server: str, terminal_path: str | None = None) -> None:
+    kwargs: dict = {"login": login, "password": password, "server": server, "timeout": 30000}
+    if terminal_path:
+        # Attach to a specific terminal64.exe (needed when multiple MT5 builds are installed).
+        kwargs["path"] = terminal_path
+    if not mt5.initialize(**kwargs):
         err = mt5.last_error()
         raise RuntimeError(f"mt5.initialize failed: {err}")
 
@@ -13,11 +22,26 @@ def shutdown() -> None:
     mt5.shutdown()
 
 
+def resolve_symbol(symbol: str) -> str:
+    """Return the broker's actual symbol name for the given canonical pair.
+    Falls back across common suffixes when the canonical name is not visible."""
+    if mt5.symbol_info(symbol) is not None:
+        return symbol
+    for sfx in _SYMBOL_SUFFIXES:
+        if not sfx:
+            continue
+        candidate = f"{symbol}{sfx}"
+        if mt5.symbol_info(candidate) is not None:
+            return candidate
+    raise ValueError(f"symbol {symbol!r} not found (tried suffixes: {_SYMBOL_SUFFIXES})")
+
+
 def get_symbol(symbol: str) -> SymbolInfo:
-    info = mt5.symbol_info(symbol)
+    resolved = resolve_symbol(symbol)
+    info = mt5.symbol_info(resolved)
     if info is None:
         raise ValueError(f"symbol {symbol!r} not found")
-    tick = mt5.symbol_info_tick(symbol)
+    tick = mt5.symbol_info_tick(resolved)
     pip = info.point * 10  # pip = 10 points for FX 5-digit
     pip_value = info.trade_tick_value * (info.trade_tick_size / pip) if pip else info.trade_tick_value
     return SymbolInfo(
@@ -67,12 +91,13 @@ def list_open_trades() -> list[TradeInfo]:
 
 
 def calc_order(req: OrderRequest) -> OrderCalc:
+    resolved = resolve_symbol(req.symbol)
     side = mt5.ORDER_TYPE_BUY if req.side == "BUY" else mt5.ORDER_TYPE_SELL
     # Fall back to current market price when caller does not supply one — passing 0.0
     # can crash order_calc_margin on some symbols.
-    ref_price = req.price if req.price else _current_price(req.symbol, req.side)
-    margin = mt5.order_calc_margin(side, req.symbol, req.lots, ref_price)
-    profit = mt5.order_calc_profit(side, req.symbol, req.lots, ref_price, req.tp or 0.0) or 0.0
+    ref_price = req.price if req.price else _current_price(resolved, req.side)
+    margin = mt5.order_calc_margin(side, resolved, req.lots, ref_price)
+    profit = mt5.order_calc_profit(side, resolved, req.lots, ref_price, req.tp or 0.0) or 0.0
     return OrderCalc(margin=margin or 0.0, profit=profit)
 
 
@@ -85,12 +110,13 @@ def _current_price(symbol: str, side: str) -> float:
 
 
 def send_order(req: OrderRequest) -> OrderResult:
+    resolved = resolve_symbol(req.symbol)
     side = mt5.ORDER_TYPE_BUY if req.side == "BUY" else mt5.ORDER_TYPE_SELL
     # Explicit parentheses — `or` binds looser than the conditional expression.
-    price = req.price if req.price else _current_price(req.symbol, req.side)
+    price = req.price if req.price else _current_price(resolved, req.side)
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
-        "symbol": req.symbol,
+        "symbol": resolved,
         "volume": req.lots,
         "type": side,
         "price": price,

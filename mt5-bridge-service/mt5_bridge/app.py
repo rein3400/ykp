@@ -1,7 +1,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import JSONResponse
 
 from .config import load_config
@@ -33,8 +33,8 @@ def _check_init():
 async def lifespan(_app: FastAPI):
     global _initialized
     cfg = get_cfg()
-    log.info("initializing MT5 login=%s server=%s", cfg.login, cfg.server)
-    mt5_client.init(cfg.login, cfg.password, cfg.server)
+    log.info("initializing MT5 login=%s server=%s path=%s", cfg.login, cfg.server, cfg.terminal_path)
+    mt5_client.init(cfg.login, cfg.password, cfg.server, cfg.terminal_path)
     _initialized = True
     log.info("MT5 ready")
     try:
@@ -48,8 +48,11 @@ app = FastAPI(title="YKP MT5 Bridge", version="0.1.0",
               docs_url=None, redoc_url=None, lifespan=lifespan)
 
 
-def _bearer_auth():
-    return require_bearer(expected_token=get_cfg().token)
+def _make_require_bearer():
+    expected_token = get_cfg().token
+    def _require(authorization: str | None = Header(default=None)):
+        require_bearer(authorization, expected_token=expected_token)
+    return _require
 
 
 @app.get("/health")
@@ -58,7 +61,7 @@ def health():
     return {"ok": _initialized, "login": cfg.login}
 
 
-@app.get("/symbol/{symbol}", dependencies=[Depends(_bearer_auth)])
+@app.get("/symbol/{symbol}", dependencies=[Depends(_make_require_bearer())])
 def symbol_ep(symbol: str):
     _check_init()
     try:
@@ -67,31 +70,31 @@ def symbol_ep(symbol: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@app.get("/account", dependencies=[Depends(_bearer_auth)])
+@app.get("/account", dependencies=[Depends(_make_require_bearer())])
 def account_ep():
     _check_init()
     return mt5_client.get_account().model_dump()
 
 
-@app.get("/trades/open", dependencies=[Depends(_bearer_auth)])
+@app.get("/trades/open", dependencies=[Depends(_make_require_bearer())])
 def open_ep():
     _check_init()
     return [t.model_dump() for t in mt5_client.list_open_trades()]
 
 
-@app.post("/order/calc", dependencies=[Depends(_bearer_auth)])
+@app.post("/order/calc", dependencies=[Depends(_make_require_bearer())])
 async def calc_ep(req: OrderRequest):
     _check_init()
     return mt5_client.calc_order(req).model_dump()
 
 
-@app.post("/order/send", dependencies=[Depends(_bearer_auth)])
+@app.post("/order/send", dependencies=[Depends(_make_require_bearer())])
 async def send_ep(req: OrderRequest):
     _check_init()
     return mt5_client.send_order(req).model_dump()
 
 
-@app.post("/trade/{order_id}/close", dependencies=[Depends(_bearer_auth)])
+@app.post("/trade/{order_id}/close", dependencies=[Depends(_make_require_bearer())])
 def close_ep(order_id: str):
     _check_init()
     return mt5_client.close_trade(order_id).model_dump()

@@ -7,10 +7,10 @@ def require_bearer(authorization: str | None = Header(default=None),
     if not expected_token:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                             detail="bridge token not configured")
-    if not authorization or not authorization.startswith("Bearer "):
+    if not authorization or not str(authorization).startswith("Bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="missing bearer token")
-    provided = authorization[len("Bearer "):].strip()
+    provided = str(authorization)[len("Bearer "):].strip()
     if provided != expected_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="invalid token")
