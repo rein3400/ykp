@@ -109,14 +109,59 @@ async function callGpt(req: AiRequest): Promise<AiResponse> {
   };
 }
 
+function isOllamaCloud(): boolean {
+  const url = env.OLLAMA_BASE_URL.toLowerCase();
+  return url.includes('ollama.com') || url.includes('api.ollama.ai');
+}
+
+function ollamaHeaders(): Record<string, string> {
+  const h: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (env.OLLAMA_API_KEY) {
+    h.Authorization = `Bearer ${env.OLLAMA_API_KEY}`;
+  }
+  return h;
+}
+
 async function callQwen(req: AiRequest): Promise<AiResponse> {
   const model = env.LOCAL_AI_MODEL || 'qwen2.5:7b';
-  const res = await fetch(`${env.OLLAMA_BASE_URL}/api/generate`, {
+  const base = env.OLLAMA_BASE_URL;
+  const sys = req.context ? `${req.context}\n\nQuestion: ${req.userMessage}` : req.userMessage;
+
+  if (isOllamaCloud()) {
+    // Ollama cloud endpoints use /api/chat (not /api/generate).
+    const res = await fetch(`${base}/api/chat`, {
+      method: 'POST',
+      headers: ollamaHeaders(),
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: 'You are YKP AI Assistant, helpful and concise.' },
+          { role: 'user', content: sys }
+        ],
+        stream: false,
+        options: { temperature: 0.4, num_predict: 800 }
+      })
+    });
+    if (!res.ok) {
+      throw new Error(`Ollama cloud HTTP ${res.status}: ${await res.text()}`);
+    }
+    const json = await res.json() as { message?: { content?: string }; prompt_eval_count?: number; eval_count?: number };
+    return {
+      ok: true,
+      modelUsed: 'qwen',
+      response: json.message?.content ?? '',
+      tokensIn: json.prompt_eval_count ?? 0,
+      tokensOut: json.eval_count ?? 0
+    };
+  }
+
+  // Local Ollama: legacy /api/generate endpoint.
+  const res = await fetch(`${base}/api/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: ollamaHeaders(),
     body: JSON.stringify({
       model,
-      prompt: req.context ? `${req.context}\n\nQuestion: ${req.userMessage}` : req.userMessage,
+      prompt: sys,
       stream: false,
       options: { temperature: 0.4, num_predict: 800 }
     })

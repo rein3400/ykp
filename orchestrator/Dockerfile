@@ -15,6 +15,7 @@ COPY src ./src
 COPY drizzle ./drizzle
 COPY tsconfig.json ./tsconfig.json
 COPY drizzle.config.ts ./drizzle.config.ts
+COPY dashboard ./dashboard
 RUN mkdir -p /var/lib/ykp/backups && chown -R ykp:ykp /app /var/lib/ykp
 ENV NODE_ENV=production
 USER ykp

@@ -68,20 +68,32 @@ def list_open_trades() -> list[TradeInfo]:
 
 def calc_order(req: OrderRequest) -> OrderCalc:
     side = mt5.ORDER_TYPE_BUY if req.side == "BUY" else mt5.ORDER_TYPE_SELL
-    margin = mt5.order_calc_margin(side, req.symbol, req.lots, req.price or 0.0)
-    profit = mt5.order_calc_profit(side, req.symbol, req.lots, req.price or 0.0, req.tp or 0.0) or 0.0
+    # Fall back to current market price when caller does not supply one — passing 0.0
+    # can crash order_calc_margin on some symbols.
+    ref_price = req.price if req.price else _current_price(req.symbol, req.side)
+    margin = mt5.order_calc_margin(side, req.symbol, req.lots, ref_price)
+    profit = mt5.order_calc_profit(side, req.symbol, req.lots, ref_price, req.tp or 0.0) or 0.0
     return OrderCalc(margin=margin or 0.0, profit=profit)
+
+
+def _current_price(symbol: str, side: str) -> float:
+    """Return latest market price for the given side. Raises if tick unavailable."""
+    tick = mt5.symbol_info_tick(symbol)
+    if tick is None:
+        raise ValueError(f"no tick for {symbol!r}")
+    return tick.ask if side == "BUY" else tick.bid
 
 
 def send_order(req: OrderRequest) -> OrderResult:
     side = mt5.ORDER_TYPE_BUY if req.side == "BUY" else mt5.ORDER_TYPE_SELL
+    # Explicit parentheses — `or` binds looser than the conditional expression.
+    price = req.price if req.price else _current_price(req.symbol, req.side)
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
         "symbol": req.symbol,
         "volume": req.lots,
         "type": side,
-        "price": req.price or mt5.symbol_info_tick(req.symbol).ask if req.side == "BUY"
-                  else mt5.symbol_info_tick(req.symbol).bid,
+        "price": price,
         "sl": req.sl or 0.0,
         "tp": req.tp or 0.0,
         "deviation": req.deviation or 10,

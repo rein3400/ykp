@@ -36,7 +36,11 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().min(1).optional(),
   DEFAULT_AI_MODEL: z.enum(['gpt', 'qwen']).default('gpt'),
   LOCAL_AI_MODEL: z.string().default('qwen2.5:7b'),
+  // Ollama base URL — supports local (http://ollama:11434) or cloud (https://ollama.com).
+  // Ollama cloud is detected by the URL containing 'ollama.com' or 'api.ollama.ai'.
   OLLAMA_BASE_URL: z.string().url().default('http://ollama:11434'),
+  // Required when OLLAMA_BASE_URL points to Ollama cloud. Leave blank for local.
+  OLLAMA_API_KEY: z.string().optional(),
 
   CLOUDFLARE_TUNNEL_TOKEN: z.string().min(1).optional(),
   PUBLIC_BASE_URL: z.string().optional(),

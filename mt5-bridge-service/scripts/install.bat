@@ -17,5 +17,7 @@ if errorlevel 1 exit /b 1
 
 echo [install] creating logs dir ...
 if not exist "logs" mkdir logs
-echo [install] OK. Next: edit nssm\install_service.bat env vars, then run it.
+echo [install] OK.
+echo [install] For manual testing, edit scripts\run_manual_dev.bat then run it.
+echo [install] For auto-start on boot (optional), edit nssm\install_service.bat then run as Administrator.
 endlocal

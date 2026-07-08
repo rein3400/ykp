@@ -8,7 +8,12 @@ import { pingQdrant } from '../services/vector-db.js';
 export async function healthRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => {
     const checks = await runHealth();
-    const allOk = Object.values(checks).every((v) => v === 'ok' || v === 'configured' || v === 'stub');
+    // Accept configured variants: "configured", "configured (http)", "configured (mock)", etc.
+    const allOk = Object.values(checks).every((v) => {
+      if (v === 'ok' || v === 'stub') return true;
+      if (typeof v === 'string' && v.startsWith('configured')) return true;
+      return false;
+    });
     return { status: allOk ? 'ok' : 'degraded', checks, ts: new Date().toISOString() };
   });
 
