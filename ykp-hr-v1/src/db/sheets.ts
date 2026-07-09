@@ -373,7 +373,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
   const lastCol = columnLetter(headers.length);
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sid,
-    range: `'${tab}'!A1:${lastCol}1`
+    range: `${quoteTab(tab)}!A1:${lastCol}1`
   });
   const rows = res.data.values ?? [];
   if (rows.length < 2) return [];
@@ -396,7 +396,7 @@ export async function appendRows(tab: TabName, rows: Record<string, string>[]): 
   const values = rows.map((r) => headers.map((h) => r[h] ?? ''));
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId: sid,
-    range: `'${tab}'!A1`,
+    range: `${quoteTab(tab)}!A1`,
     valueInputOption: 'USER_ENTERED',
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values }
@@ -405,6 +405,20 @@ export async function appendRows(tab: TabName, rows: Record<string, string>[]): 
   const updatedRange = res.data.updates?.updatedRange ?? '';
   const m = updatedRange.match(/![A-Z]+(\d+):/);
   return m && m[1] ? Number(m[1]) : -1;
+}
+
+/**
+ * Format a tab name for use in a Sheets A1 range.
+ *
+ * Sheets API requires single-quoting the tab name when it contains spaces
+ * or special characters; quoting a simple alphanumeric+underscore name
+ * (e.g. `users`, `hr_attendance`) produces a malformed range like `'users'!A1:I`
+ * which Google rejects with `Unable to parse range`.
+ *
+ * Quote only when the name needs it.
+ */
+function quoteTab(tab: string): string {
+  return /^[A-Za-z0-9_]+$/.test(tab) ? tab : `'${tab}'`;
 }
 
 /** Convert a 1-based column index to a spreadsheet column letter (1→A, 27→AA, 34→AH). */
@@ -433,7 +447,7 @@ export async function updateRow(
   const arr = headers.map((h) => values[h] ?? '');
   await sheets.spreadsheets.values.update({
     spreadsheetId: sid,
-    range: `'${tab}'!A${rowNumber}:${lastCol}${rowNumber}`,
+    range: `${quoteTab(tab)}!A${rowNumber}:${lastCol}${rowNumber}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: { values: [arr] }
   });
@@ -454,7 +468,7 @@ export async function findRow(
   const lastCol = columnLetter(headers.length);
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sid,
-    range: `'${tab}'!A1:${lastCol}`
+    range: `${quoteTab(tab)}!A1:${lastCol}`
   });
   const rows = res.data.values ?? [];
   for (let i = 1; i < rows.length; i++) {

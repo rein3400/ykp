@@ -53,7 +53,10 @@ function isSensitivePath(pathname: string): boolean {
 function buildCsp(): string {
   return [
     "default-src 'self'",
-    "script-src 'self'",
+    // Next.js 14 hydrates via inline scripts that get blocked by strict CSP.
+    // 'unsafe-inline' is required for client component interactivity (buttons,
+    // forms, dialogs). Internal apps only — not exposed to untrusted content.
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "connect-src 'self' https:",

@@ -4,12 +4,12 @@
 "use client";
 
 import * as React from "react";
-import { Button, Card, CardContent, CardHeader, CardTitle, ExportButton, KpiCard, formatIdr } from "@ykp/ui";
-import { ExpenseTable } from "@/features/finance/components/expense-table";
-import { useExpenseList } from "@/features/finance/api/queries";
-import { useApproveExpense, useExportCsv, useExportPdf } from "@/features/finance/api/mutations";
-import { Plus } from "lucide-react";
-import type { Expense } from "@/features/finance/api/types";
+import { Card, CardContent, CardHeader, CardTitle, ExportButton, KpiCard, formatIdr } from "@ykp/ui";
+import { ExpenseTable } from "@finance/features/finance/components/expense-table";
+import { ExpenseFormDialog } from "@finance/features/finance/components/expense-form-dialog";
+import { useExpenseList } from "@finance/features/finance/api/queries";
+import { useApproveExpense, useExportCsv, useExportPdf } from "@finance/features/finance/api/mutations";
+import type { Expense } from "@finance/features/finance/api/types";
 
 export default function ExpensesPage() {
   const today = new Date().toISOString().slice(0, 10);
@@ -32,10 +32,10 @@ export default function ExpensesPage() {
         <h2 className="text-xl font-semibold">Expense Log</h2>
         <div className="flex items-center gap-2">
           <ExportButton
-            onExportPdf={() => exportPdf.mutateAsync({ report: "expense", date_from: from, date_to: today, filters: {} })}
-            onExportCsv={() => exportCsv.mutateAsync({ report: "expense", date_from: from, date_to: today, filters: {} })}
+            onExportPdf={async () => { await exportPdf.mutateAsync({ report: "expense", date_from: from, date_to: today, filters: {} }); }}
+            onExportCsv={async () => { await exportCsv.mutateAsync({ report: "expense", date_from: from, date_to: today, filters: {} }); }}
           />
-          <Button><Plus className="mr-2 h-4 w-4" /> Tambah Expense</Button>
+          <ExpenseFormDialog />
         </div>
       </div>
 
