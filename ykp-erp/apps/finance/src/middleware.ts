@@ -18,8 +18,8 @@ const SENSITIVE_PATHS = [
 ];
 
 const TOKEN_BUCKET = new Map<string, { tokens: number; ts: number }>();
-const LIMIT_DEFAULT = 30;
-const LIMIT_SENSITIVE = 5;
+const LIMIT_DEFAULT = 120;
+const LIMIT_SENSITIVE = 60;
 const WINDOW_MS = 60_000;
 
 function clientIp(req: NextRequest): string {
