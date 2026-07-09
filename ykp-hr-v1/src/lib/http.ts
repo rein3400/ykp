@@ -44,9 +44,10 @@ export function serverError(logId?: string): NextResponse {
 }
 
 /** Wrap an async route handler; catch all errors, never leak.
- * Next.js 16 changed route context params to Promise<unknown>; we await + spread. */
+ * Next.js 16 changed route context params to Promise<unknown>; we await inside
+ * the wrapper and pass a plain `params` object to the handler. */
 export function handler(
-  fn: (req: Request, ctx: { params: Promise<Record<string, string>> }) => Promise<NextResponse>
+  fn: (req: Request, ctx: { params: Record<string, string> }) => Promise<NextResponse>
 ) {
   return async (
     req: Request,
