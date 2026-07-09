@@ -43,13 +43,18 @@ export function serverError(logId?: string): NextResponse {
   return fail('internal_error', `Internal server error${logId ? ` (ref ${logId})` : ''}`, 500);
 }
 
-/** Wrap an async route handler; catch all errors, never leak. */
+/** Wrap an async route handler; catch all errors, never leak.
+ * Next.js 16 changed route context params to Promise<unknown>; we await + spread. */
 export function handler(
-  fn: (req: Request, ctx: { params: Record<string, string> }) => Promise<NextResponse>
+  fn: (req: Request, ctx: { params: Promise<Record<string, string>> }) => Promise<NextResponse>
 ) {
-  return async (req: Request, ctx: { params: Record<string, string> }): Promise<NextResponse> => {
+  return async (
+    req: Request,
+    ctx: { params: Promise<Record<string, string>> }
+  ): Promise<NextResponse> => {
     try {
-      return await fn(req, ctx);
+      const params = await ctx.params;
+      return await fn(req, { params });
     } catch (e) {
       const logId = Date.now().toString(36).toUpperCase();
       console.error(`[route:${logId}]`, e);
