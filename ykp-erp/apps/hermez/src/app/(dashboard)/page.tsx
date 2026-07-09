@@ -79,7 +79,11 @@ export default function DailyBriefPage() {
         </Card>
       ) : error ? (
         <Card>
-          <CardContent className="p-6 text-sm text-destructive">Error: {error}</CardContent>
+          <CardContent className="p-6 text-sm text-destructive">
+            {error?.match(/unauthor/i) || error?.match(/forbidden/i)
+              ? "Silakan login untuk melihat daily brief"
+              : `Error: ${error}`}
+          </CardContent>
         </Card>
       ) : brief ? (
         <Card>

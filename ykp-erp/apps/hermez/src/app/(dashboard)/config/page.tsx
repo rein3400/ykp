@@ -81,7 +81,13 @@ export default function ConfigPage() {
         </p>
       </div>
 
-      {error ? <p className="text-sm text-destructive">Error: {error}</p> : null}
+      {error ? (
+        <p className="text-sm text-destructive">
+          {error?.match(/unauthor/i) || error?.match(/forbidden/i)
+            ? "Silakan login untuk mengakses konfigurasi"
+            : `Error: ${error}`}
+        </p>
+      ) : null}
 
       <Card>
         <CardHeader>

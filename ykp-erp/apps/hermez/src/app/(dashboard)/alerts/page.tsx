@@ -148,7 +148,11 @@ export default function AlertsPage() {
       </Card>
 
       {error ? (
-        <p className="text-sm text-destructive">Error: {error}</p>
+        <p className="text-sm text-destructive">
+          {error?.match(/unauthor/i)
+            ? "Silakan login untuk mengakses data alert"
+            : `Error: ${error}`}
+        </p>
       ) : null}
 
       <Card>
