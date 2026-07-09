@@ -1,6 +1,5 @@
 import {
-  pgTable,
-  pgEnum,
+  pgSchema,
   text,
   integer,
   boolean,
@@ -12,18 +11,20 @@ import {
 } from "drizzle-orm/pg-core";
 import { finPettyCashAccount, finExpenseCategory, finPaymentMethod } from "./master.js";
 
+const finance = pgSchema("finance");
+
 // ============================================================
 // Enums
 // ============================================================
 
-export const posSourceEnum = pgEnum("pos_source", [
+export const posSourceEnum = finance.enum("pos_source", [
   "moka",
   "manual",
   "import",
   "receipt",
 ]);
 
-export const paymentStatusEnum = pgEnum("payment_status", [
+export const paymentStatusEnum = finance.enum("payment_status", [
   "UNPAID",
   "PARTIAL",
   "PAID",
@@ -31,9 +32,9 @@ export const paymentStatusEnum = pgEnum("payment_status", [
   "CANCELLED",
 ]);
 
-export const pettyCashTypeEnum = pgEnum("petty_cash_type", ["in", "out"]);
+export const pettyCashTypeEnum = finance.enum("petty_cash_type", ["in", "out"]);
 
-export const approvalStatusEnum = pgEnum("finance_approval_status", [
+export const approvalStatusEnum = finance.enum("finance_approval_status", [
   "DRAFT",
   "PENDING",
   "APPROVED",
@@ -47,7 +48,7 @@ export const approvalStatusEnum = pgEnum("finance_approval_status", [
 // UNIQUE (date, outlet_id)
 // ============================================================
 
-export const finPosDaily = pgTable(
+export const finPosDaily = finance.table(
   "fin_pos_daily",
   {
     posId: text("pos_id").primaryKey(),
@@ -86,7 +87,7 @@ export const finPosDaily = pgTable(
 // fin_supplier_cost
 // ============================================================
 
-export const finSupplierCost = pgTable("fin_supplier_cost", {
+export const finSupplierCost = finance.table("fin_supplier_cost", {
   costId: text("cost_id").primaryKey(),
   date: date("date", { mode: "date" }).notNull(),
   brandId: text("brand_id").notNull(),
@@ -124,7 +125,7 @@ export const finSupplierCost = pgTable("fin_supplier_cost", {
 // relationship is application-resolved (400 on missing account).
 // ============================================================
 
-export const finPettyCash = pgTable("fin_petty_cash", {
+export const finPettyCash = finance.table("fin_petty_cash", {
   pcId: text("pc_id").primaryKey(),
   date: date("date", { mode: "date" }).notNull(),
   brandId: text("brand_id").notNull(),
@@ -154,7 +155,7 @@ export const finPettyCash = pgTable("fin_petty_cash", {
 // so FKs are omitted; app layer resolves and rejects on mismatch (400).
 // ============================================================
 
-export const finExpense = pgTable("fin_expense", {
+export const finExpense = finance.table("fin_expense", {
   expenseId: text("expense_id").primaryKey(),
   date: date("date", { mode: "date" }).notNull(),
   brandId: text("brand_id").notNull(),
@@ -180,7 +181,7 @@ export const finExpense = pgTable("fin_expense", {
 // fin_opening_balance
 // ============================================================
 
-export const finOpeningBalance = pgTable("fin_opening_balance", {
+export const finOpeningBalance = finance.table("fin_opening_balance", {
   balanceId: text("balance_id").primaryKey(),
   outletId: text("outlet_id").notNull(),
   effectiveDate: date("effective_date", { mode: "date" }).notNull(),
@@ -197,7 +198,7 @@ export const finOpeningBalance = pgTable("fin_opening_balance", {
 // fin_closing_cash
 // ============================================================
 
-export const finClosingCash = pgTable("fin_closing_cash", {
+export const finClosingCash = finance.table("fin_closing_cash", {
   closingId: text("closing_id").primaryKey(),
   date: date("date", { mode: "date" }).notNull(),
   outletId: text("outlet_id").notNull(),
@@ -220,7 +221,7 @@ export const finClosingCash = pgTable("fin_closing_cash", {
 // UNIQUE (date, outlet)
 // ============================================================
 
-export const finDailySummary = pgTable(
+export const finDailySummary = finance.table(
   "fin_daily_summary",
   {
     summaryId: text("summary_id").primaryKey(),
@@ -271,7 +272,7 @@ export type NewFinDailySummary = typeof finDailySummary.$inferInsert;
 // transitions (expense, petty cash, supplier cost, payroll PAID).
 // ============================================================
 
-export const financeAuditLog = pgTable("audit_log", {
+export const financeAuditLog = finance.table("audit_log", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
   actor: text("actor").notNull(),
   action: text("action").notNull(),

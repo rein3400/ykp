@@ -1,6 +1,5 @@
 import {
-  pgTable,
-  pgEnum,
+  pgSchema,
   text,
   integer,
   boolean,
@@ -13,11 +12,13 @@ import {
   uniqueConstraint,
 } from "drizzle-orm/pg-core";
 
+const hr = pgSchema("hr");
+
 // ============================================================
 // Enums
 // ============================================================
 
-export const attendanceStatusEnum = pgEnum("attendance_status", [
+export const attendanceStatusEnum = hr.enum("attendance_status", [
   "present",
   "absent",
   "izin",
@@ -25,7 +26,7 @@ export const attendanceStatusEnum = pgEnum("attendance_status", [
   "cuti",
 ]);
 
-export const approvalStatusEnum = pgEnum("approval_status", [
+export const approvalStatusEnum = hr.enum("approval_status", [
   "DRAFT",
   "PENDING",
   "APPROVED",
@@ -34,14 +35,14 @@ export const approvalStatusEnum = pgEnum("approval_status", [
   "CANCELLED",
 ]);
 
-export const payrollLineSignEnum = pgEnum("payroll_line_sign", ["plus", "minus"]);
+export const payrollLineSignEnum = hr.enum("payroll_line_sign", ["plus", "minus"]);
 
 // ============================================================
 // hr_attendance
 // employeeId references master_employee across DBs (no PG FK — app resolves).
 // ============================================================
 
-export const hrAttendance = pgTable(
+export const hrAttendance = hr.table(
   "hr_attendance",
   {
     attendanceId: text("attendance_id").primaryKey(),
@@ -75,7 +76,7 @@ export const hrAttendance = pgTable(
 // employeeId references master_employee across DBs (no PG FK — app resolves).
 // ============================================================
 
-export const hrPayroll = pgTable("hr_payroll", {
+export const hrPayroll = hr.table("hr_payroll", {
   payrollId: text("payroll_id").primaryKey(),
   employeeId: text("employee_id").notNull(),
   periodStart: date("period_start", { mode: "date" }).notNull(),
@@ -108,7 +109,7 @@ export const hrPayroll = pgTable("hr_payroll", {
 // hr_payroll_line (FK -> hr_payroll, same DB)
 // ============================================================
 
-export const hrPayrollLine = pgTable("hr_payroll_line", {
+export const hrPayrollLine = hr.table("hr_payroll_line", {
   lineId: text("line_id").primaryKey(),
   payrollId: text("payroll_id")
     .notNull()
@@ -124,7 +125,7 @@ export const hrPayrollLine = pgTable("hr_payroll_line", {
 // UNIQUE (date, outlet)
 // ============================================================
 
-export const hrDailySummary = pgTable(
+export const hrDailySummary = hr.table(
   "hr_daily_summary",
   {
     summaryId: text("summary_id").primaryKey(),
@@ -168,7 +169,7 @@ export type NewHrDailySummary = typeof hrDailySummary.$inferInsert;
 // (payroll approval, attendance corrections, etc.).
 // ============================================================
 
-export const hrAuditLog = pgTable("audit_log", {
+export const hrAuditLog = hr.table("audit_log", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
   actor: text("actor").notNull(),
   action: text("action").notNull(),

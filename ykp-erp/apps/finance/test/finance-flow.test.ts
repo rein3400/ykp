@@ -72,6 +72,7 @@ vi.mock("@ykp/schema", () => {
 
   return {
     initDbClients: () => ({}),
+    getDb: () => makeFakeDb(store, "finPosDaily"),
     getMasterDb: () => makeFakeDb(store, "masterOutlet"),
     getFinanceDb: () => makeFakeDb(store, "finPosDaily"),
     getHermezDb: () => makeFakeDb(store, "finDailySummary"),

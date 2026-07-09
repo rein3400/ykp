@@ -36,10 +36,15 @@ export const POST = handler(async (req: NextRequest) => {
   try {
     const result = await sendTelegramMessage(token, chatId, parsed.data.message);
     if (!result.ok) {
-      return fail("internal_error", `Telegram send failed: ${result.error}`);
+      // Defect 10b: never leak provider error body / token info to caller.
+      // Log the detail server-side for ops triage.
+      console.error("[telegram-test] send failed", { error: result.error });
+      return fail("internal_error", "Telegram send failed");
     }
     return ok({ sent: true, ok: true, message_id: result.messageId, sent_by: user.id });
   } catch (e) {
-    return fail("internal_error", `Telegram send failed: ${(e as Error).message}`);
+    // Same: log detail, return fixed message.
+    console.error("[telegram-test] exception", e);
+    return fail("internal_error", "Telegram send failed");
   }
 });

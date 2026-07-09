@@ -15,7 +15,7 @@
  *   - transactions run inside a single DB transaction so a batch is atomic.
  * Returns {rows_imported, errors[]}.
  */
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
@@ -52,8 +52,12 @@ export const POST = handler(async (req: NextRequest) => {
     }
   } else {
     csvText = await req.text();
-    if (csvText.length > MAX_BYTES) {
-      return fail("validation_error", `CSV body exceeds ${MAX_BYTES} byte limit (got ${csvText.length})`);
+    // Defect F2 / F11a: byte-length cap (UTF-8) instead of UTF-16 code units.
+    // Multi-byte CSV could otherwise exceed the 10 MiB memory budget while
+    // passing the .length check (DoS vector).
+    const byteLen = Buffer.byteLength(csvText, "utf8");
+    if (byteLen > MAX_BYTES) {
+      return fail("validation_error", `CSV body exceeds ${MAX_BYTES} byte limit (got ${byteLen})`);
     }
   }
 
@@ -94,7 +98,10 @@ export const POST = handler(async (req: NextRequest) => {
     const outletIds = Array.from(new Set(resolved.map((r) => r.outletId)));
     const existing = await financeDb
       .select({
-        date: finPosDaily.date,
+        // Defect F4: project date as canonical YYYY-MM-DD string in SQL so
+        // the dedupe key does not depend on Node's Date coercion (timezone-
+        // independent, no UTC shift between insert and select).
+        dateStr: sql<string>`to_char(${finPosDaily.date}, 'YYYY-MM-DD')`,
         outletId: finPosDaily.outletId,
         posId: finPosDaily.posId,
         grossSales: finPosDaily.grossSales,
@@ -103,7 +110,7 @@ export const POST = handler(async (req: NextRequest) => {
       .from(finPosDaily)
       .where(and(inArray(finPosDaily.date, dates), inArray(finPosDaily.outletId, outletIds)));
     for (const e of existing) {
-      const key = `${new Date(e.date).toISOString().slice(0, 10)}|${e.outletId}`;
+      const key = `${e.dateStr}|${e.outletId}`;
       existingKeys.add(key);
       existingTotals.set(key, { grossSales: e.grossSales ?? 0, netSales: e.netSales ?? 0 });
     }
@@ -144,12 +151,19 @@ export const POST = handler(async (req: NextRequest) => {
   const insertKeys = Array.from(new Set(toInsert.map((r) => `${r.date}|${r.outletId}`)));
   const seqCounters = new Map<string, number>();
   if (insertKeys.length > 0) {
+    // Defect F3: scope seq-counter query by (date, outlet) pairs being inserted.
+    // Previously loaded the full table which is O(N) over all outlets+dates.
+    const dates = Array.from(new Set(toInsert.map((r) => r.date)));
+    const outletIds = Array.from(new Set(toInsert.map((r) => r.outletId)));
     const existingRows = await financeDb
-      .select({ posId: finPosDaily.posId, date: finPosDaily.date, outletId: finPosDaily.outletId })
-      .from(finPosDaily);
+      .select({
+        dateStr: sql<string>`to_char(${finPosDaily.date}, 'YYYY-MM-DD')`,
+        outletId: finPosDaily.outletId,
+      })
+      .from(finPosDaily)
+      .where(and(inArray(finPosDaily.date, dates), inArray(finPosDaily.outletId, outletIds)));
     for (const r of existingRows) {
-      const dStr = new Date(r.date).toISOString().slice(0, 10);
-      const k = `${dStr}|${r.outletId}`;
+      const k = `${r.dateStr}|${r.outletId}`;
       seqCounters.set(k, (seqCounters.get(k) ?? 0) + 1);
     }
     for (const k of insertKeys) {

@@ -182,7 +182,9 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
   const firedAlerts: HermezAlertLog[] = [];
   let alertLevel: "green" | "yellow" | "red" = "green";
   let hasCritical = false;
-  let alertSeq = 0;
+  // Defect Z8 fix: per-date sequence counter feeding hermezAlertId(date, seq)
+  // for contract-compliant HZAL-YYYYMMDD-NNN ids.
+  const alertSeqMap = new Map<string, number>();
 
   const maybeFire = async (
     type: HermezAlertLog["alertType"],
@@ -198,11 +200,13 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
     } else if (alertLevel === "green") {
       alertLevel = "yellow";
     }
-    // Defect Z5 fix: encode (date, outlet, type) in the alertId so the
-    // (date, outlet, alert_type) unique index in hermez.schema makes the
-    // upsert target a single row instead of duplicating.
-    const stableOutlet = outlet ?? "_global";
-    const alertId = `HZAL-${date.replace(/-/g, "")}-${stableOutlet}-${type}`;
+    // Defect Z8 fix: use hermezAlertId(date, seq) for contract-compliant
+    // HZAL-YYYYMMDD-NNN id. Per-date seq counter is in-memory; the unique
+    // constraint on (date, outlet, alert_type) handles dedupe across runs.
+    const dateKey = date.replace(/-/g, "");
+    const next = (alertSeqMap.get(dateKey) ?? 0) + 1;
+    alertSeqMap.set(dateKey, next);
+    const alertId = hermezAlertId(date, next);
     const defaultSourceApp: HermezAlertLog["sourceApp"] =
       type === "late_staff" ? "hr" : "finance";
     // Defect Z2 fix: global alerts (no outlet) store outlet as "" instead of
@@ -240,9 +244,6 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
       });
 
     firedAlerts.push(entry);
-    // Keep alertSeq for backward compatibility / diagnostics.
-    alertSeq += 1;
-    void hermezAlertId;
   };
 
   // Defect Z6 fix: build a set of outlets for which hr_daily_summary exists
@@ -358,8 +359,12 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
         briefText: sql`excluded.brief_text`,
         alertLevel: sql`excluded.alert_level`,
         generatedAt: new Date(),
-        sentToOwner: false,
-        sentAt: null,
+        // Defect Z7 fix: preserve sentToOwner / sentAt on upsert so manual
+        // re-runs do not re-notify the owner. If the row was already sent,
+        // keep true + the original sentAt; otherwise take the inserted values
+        // (which default to false/null).
+        sentToOwner: sql`CASE WHEN hermez_daily_brief.sent_to_owner THEN true ELSE excluded.sent_to_owner END`,
+        sentAt: sql`CASE WHEN hermez_daily_brief.sent_to_owner THEN hermez_daily_brief.sent_at ELSE excluded.sent_at END`,
       },
     });
 

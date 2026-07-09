@@ -7,7 +7,7 @@ import {
   hrDailySummary,
   masterOutlet,
 } from "@ykp/schema";
-import { requireRole, Role } from "@ykp/auth";
+import { requireRole, Role, applyOutletScope } from "@ykp/auth";
 import { generateHrDailySummary } from "@ykp/engine";
 import { jsonOk, jsonError, handleError } from "@/lib/api-error";
 import { resolveBody, resolveQuery } from "@/lib/zod-resolver";
@@ -42,7 +42,7 @@ const rebuildSchema = z.object({
 export async function GET(req: Request): Promise<Response> {
   boot();
   try {
-    await requireRole([Role.OWNER, Role.HR_ADMIN, Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER]);
+    const user = await requireRole([Role.OWNER, Role.HR_ADMIN, Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER]);
     const url = new URL(req.url);
     const parsed = resolveQuery(url, querySchema);
     if (parsed instanceof Response) return parsed;
@@ -54,6 +54,7 @@ export async function GET(req: Request): Promise<Response> {
     // old query compared the outletId query param to hr_daily_summary.outlet,
     // which stores the outlet NAME, so cross-outlet IDs matched nothing.
     if (parsed.outletId) filters.push(eq(hrDailySummary.outletId, parsed.outletId));
+    applyOutletScope(user, filters, hrDailySummary.outletId);
 
     const rows = await hrDb
       .select()

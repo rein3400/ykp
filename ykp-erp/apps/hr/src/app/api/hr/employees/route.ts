@@ -7,7 +7,7 @@ import {
   masterBrand,
   masterOutlet,
 } from "@ykp/schema";
-import { requireRole, Role } from "@ykp/auth";
+import { requireRole, Role, applyOutletScope } from "@ykp/auth";
 import {
   logAudit,
   getBrandName,
@@ -58,7 +58,7 @@ const createSchema = z.object({
 export async function GET(req: Request): Promise<Response> {
   boot();
   try {
-    await requireRole([Role.OWNER, Role.HR_ADMIN, Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER]);
+    const user = await requireRole([Role.OWNER, Role.HR_ADMIN, Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER]);
     const url = new URL(req.url);
     const parsed = resolveQuery(url, querySchema);
     if (parsed instanceof Response) return parsed;
@@ -67,6 +67,7 @@ export async function GET(req: Request): Promise<Response> {
     const filters = [];
     if (parsed.outletId) filters.push(eq(masterEmployee.outletId, parsed.outletId));
     if (parsed.status) filters.push(eq(masterEmployee.status, parsed.status));
+    applyOutletScope(user, filters, masterEmployee.outletId);
 
     const rows = await masterDb
       .select()

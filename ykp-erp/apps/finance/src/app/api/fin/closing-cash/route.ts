@@ -63,7 +63,7 @@ export const POST = handler(async (req: NextRequest) => {
     const existing = await tx
       .select({ count: finClosingCash.closingId })
       .from(finClosingCash)
-      .where(eq(finClosingCash.date, data.date))
+      .where(and(eq(finClosingCash.date, data.date), eq(finClosingCash.outletId, data.outlet_id)))
       .for("update");
     const seq = existing.length + 1;
     return financeDayId(data.date, seq, data.outlet_id);

@@ -4,7 +4,7 @@
  * Returns revenue, expense, supplier_cost, petty_cash_out, and net
  * (revenue - expense - supplier_cost - petty_cash_out) for the window.
  */
-import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
+import { and, eq, gte, lte, notInArray, sql, sum } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
@@ -59,10 +59,25 @@ export const GET = handler(async (req: NextRequest) => {
   const to = date_to ?? win.to;
 
   const posConds = [gte(finPosDaily.date, from), lte(finPosDaily.date, to)];
-  const expConds = [gte(finExpense.date, from), lte(finExpense.date, to)];
-  const supConds = [gte(finSupplierCost.date, from), lte(finSupplierCost.date, to)];
+  // Defect F6: exclude CANCELLED/REJECTED rows from cost sums so voided entries
+  // do not inflate deductions.
+  const expConds = [
+    gte(finExpense.date, from),
+    lte(finExpense.date, to),
+    notInArray(finExpense.approvalStatus, ["CANCELLED", "REJECTED"]),
+  ];
+  const supConds = [
+    gte(finSupplierCost.date, from),
+    lte(finSupplierCost.date, to),
+    notInArray(finSupplierCost.approvalStatus, ["CANCELLED", "REJECTED"]),
+  ];
   // Only money leaving the till (type='out') counts toward net profit.
-  const pettyConds = [gte(finPettyCash.date, from), lte(finPettyCash.date, to), eq(finPettyCash.type, "out")];
+  const pettyConds = [
+    gte(finPettyCash.date, from),
+    lte(finPettyCash.date, to),
+    eq(finPettyCash.type, "out"),
+    notInArray(finPettyCash.approvalStatus, ["CANCELLED", "REJECTED"]),
+  ];
   if (brand_id) {
     posConds.push(eq(finPosDaily.brandId, brand_id));
     expConds.push(eq(finExpense.brandId, brand_id));

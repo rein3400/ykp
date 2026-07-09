@@ -10,7 +10,7 @@
 import { and, eq, gte, lte, desc } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
-import { requireRole, can } from "@ykp/auth";
+import { requireRole, can, applyOutletScope } from "@ykp/auth";
 import { finExpense } from "@ykp/schema";
 import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
 import { handler, ok, fail } from "@/lib/server/http.js";
@@ -23,7 +23,6 @@ export const GET = handler(async (req: NextRequest) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
-  void user;
   const search = Object.fromEntries(req.nextUrl.searchParams.entries());
   const parsed = FinExpenseQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
@@ -37,6 +36,7 @@ export const GET = handler(async (req: NextRequest) => {
   if (category_id) conds.push(eq(finExpense.categoryId, category_id));
   if (outlet_id) conds.push(eq(finExpense.outletId, outlet_id));
   if (approval_status) conds.push(eq(finExpense.approvalStatus, approval_status));
+  applyOutletScope(user, conds, finExpense.outletId);
 
   const rows = await db
     .select()
@@ -77,7 +77,7 @@ export const POST = handler(async (req: NextRequest) => {
     const existing = await tx
       .select({ count: finExpense.expenseId })
       .from(finExpense)
-      .where(eq(finExpense.date, data.date))
+      .where(and(eq(finExpense.date, data.date), eq(finExpense.outletId, data.outlet_id)))
       .for("update");
     const seq = existing.length + 1;
     return financeDayId(data.date, seq, data.outlet_id);

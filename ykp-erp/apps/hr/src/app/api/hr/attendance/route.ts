@@ -7,7 +7,7 @@ import {
   createMasterDb,
   hrAttendance,
 } from "@ykp/schema";
-import { requireRole, Role } from "@ykp/auth";
+import { requireRole, Role, applyOutletScope } from "@ykp/auth";
 import {
   computeLate,
   computeEarlyLeave,
@@ -64,7 +64,7 @@ const checkoutSchema = z.object({
 export async function GET(req: Request): Promise<Response> {
   boot();
   try {
-    await requireRole([Role.OWNER, Role.HR_ADMIN, Role.SUPER_ADMIN, Role.OUTLET_MANAGER, Role.BRAND_MANAGER, Role.VIEWER]);
+    const user = await requireRole([Role.OWNER, Role.HR_ADMIN, Role.SUPER_ADMIN, Role.OUTLET_MANAGER, Role.BRAND_MANAGER, Role.VIEWER]);
     const url = new URL(req.url);
     const parsed = resolveQuery(url, querySchema);
     if (parsed instanceof Response) return parsed;
@@ -76,6 +76,7 @@ export async function GET(req: Request): Promise<Response> {
     if (parsed.date) filters.push(eq(hrAttendance.date, parsed.date));
     if (parsed.outletId) filters.push(eq(hrAttendance.outletId, parsed.outletId));
     if (parsed.employeeId) filters.push(eq(hrAttendance.employeeId, parsed.employeeId));
+    applyOutletScope(user, filters, hrAttendance.outletId);
 
     const rows = await hrDb
       .select()

@@ -12,7 +12,7 @@
 import { and, eq, gte, lte, desc } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
-import { requireRole, can } from "@ykp/auth";
+import { requireRole, can, applyOutletScope } from "@ykp/auth";
 import { finSupplierCost } from "@ykp/schema";
 import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
 import { handler, ok, fail } from "@/lib/server/http.js";
@@ -38,6 +38,7 @@ export const GET = handler(async (req: NextRequest) => {
   if (supplier_id) conds.push(eq(finSupplierCost.supplierId, supplier_id));
   if (status) conds.push(eq(finSupplierCost.paymentStatus, status));
   if (outlet_id) conds.push(eq(finSupplierCost.outletId, outlet_id));
+  applyOutletScope(user, conds, finSupplierCost.outletId);
 
   const rows = await db
     .select()
@@ -75,7 +76,7 @@ export const POST = handler(async (req: NextRequest) => {
     const existing = await tx
       .select({ posId: finSupplierCost.costId })
       .from(finSupplierCost)
-      .where(eq(finSupplierCost.date, data.date))
+      .where(and(eq(finSupplierCost.date, data.date), eq(finSupplierCost.outletId, data.outlet_id)))
       .for("update");
     const seq = existing.length + 1;
     return financeDayId(data.date, seq, data.outlet_id);

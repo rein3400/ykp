@@ -92,19 +92,18 @@ const PAYMENT_ALIASES: Record<string, string> = {
 };
 
 /**
- * Parse an IDR-formatted string back into a positive integer. Rejects
- * negative amounts so callers can detect upstream data corruption via a
- * thrown error (F3 fix). Empty / null returns 0; non-numeric returns 0.
+ * Parse an IDR-formatted string into a non-negative integer. Moka encodes
+ * refund/void rows as negative literals (e.g. "-15000") — we strip the sign
+ * so those rows are preserved in the aggregate. The caller is responsible
+ * for distinguishing refund vs gross via the column name (`refund`, `void`).
+ * Empty / null returns 0; non-numeric returns 0.
  */
 export function parseIdrAmount(s: string | undefined): number {
   if (!s) return 0;
   const cleaned = s.replace(/\s+/g, "").replace(/rp/i, "").replace(/\./g, "").replace(/,/g, "");
-  // Reject negative input outright so refunds/refunds-of-refunds are caught
-  // by the route's try/catch and recorded in errors[].
-  if (cleaned.startsWith("-")) {
-    throw new Error(`negative amount not allowed: ${s}`);
-  }
-  const n = Number.parseInt(cleaned, 10);
+  // Strip leading minus (Moka refund/void convention) so magnitude is kept.
+  const abs = cleaned.replace(/^-+/, "");
+  const n = Number.parseInt(abs, 10);
   return Number.isFinite(n) ? Math.max(0, n) : 0;
 }
 

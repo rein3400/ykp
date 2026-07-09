@@ -93,7 +93,7 @@ export const POST = handler(async (req: NextRequest) => {
       const existing = await tx
         .select({ pcId: finPettyCash.pcId })
         .from(finPettyCash)
-        .where(eq(finPettyCash.date, data.date))
+        .where(and(eq(finPettyCash.date, data.date), eq(finPettyCash.outletId, data.outlet_id)))
         .for("update");
       const seq = existing.length + 1;
       const pcId = financeDayId(data.date, seq, data.outlet_id);
@@ -175,7 +175,8 @@ export const POST = handler(async (req: NextRequest) => {
   } catch (err) {
     const e = err as Error & { status?: number; code?: string };
     if (e?.status === 422 && e?.code === "approval_required") {
-      return fail("approval_required", e.message ?? "Urgent petty cash FSM transition not allowed");
+      // Defect 10c: return fixed message instead of raw FSM error string.
+      return fail("approval_required", "Urgent petty cash FSM transition not allowed");
     }
     // Unexpected infra error: surface as 500 via the handler wrapper.
     throw err;

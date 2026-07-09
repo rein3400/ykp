@@ -17,6 +17,7 @@
     "db:generate": "drizzle-kit generate --config=packages/schema/drizzle.config.ts",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
+    "db:seed:pilot": "node scripts/seed-pilot.mjs",
     "test": "vitest run",
     "smoke": "node scripts/smoke.mjs"
   },

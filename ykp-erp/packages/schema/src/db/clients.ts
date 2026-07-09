@@ -1,166 +1,119 @@
+/**
+ * @ykp/schema/db/clients
+ *
+ * Single postgres connection carrying the four domain schemas (master, hr,
+ * finance, hermez) as Postgres schemas within one database. Refactored from
+ * the original 4-separate-DB layout to support Supabase free-tier (1 DB
+ * per project) and simpler Vercel deployment.
+ *
+ * Cross-schema FKs are still impossible in Postgres (FK constraints cannot
+ * cross schema boundaries the same way they couldn't cross databases
+ * previously); the application layer continues to validate all master
+ * references before INSERT/UPDATE.
+ */
 import postgres, { type Sql } from "postgres";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+
 import * as masterSchema from "../master.js";
 import * as hrSchema from "../hr.js";
 import * as financeSchema from "../finance.js";
 import * as hermezSchema from "../hermez.js";
 
-// ============================================================
-// Cross-DB FK note
-// ------------------------------------------------------------
-// PostgreSQL cannot enforce foreign keys across databases.
-// Four logical databases (master / hr / finance / hermez) live in
-// separate physical Postgres databases, so any reference in hr /
-// finance / hermez back to master tables (outlet_id, brand_id,
-// supplier_id, employee_id, account_id, category_id,
-// payment_method_id, user_id) MUST be validated by the application
-// layer before INSERT/UPDATE. On mismatch the API returns HTTP 400
-// with a clear "reference not found" message — Postgres will not
-// raise an FK violation because there is no constraint to violate.
-// The same applies to master references that cross schemas but not
-// databases (e.g. hr_rules -> master_outlet inside master DB): those
-// CAN and SHOULD be declared as real PG FKs (see master.ts).
-// ============================================================
+const fullSchema = {
+  ...masterSchema,
+  ...hrSchema,
+  ...financeSchema,
+  ...hermezSchema,
+} as const;
 
-// Schemas keyed per database so drizzle can carry full schema knowledge.
+export type FullSchema = typeof fullSchema;
+export type Db = PostgresJsDatabase<FullSchema>;
+
+/** Read a single connection URL from env. */
+function requireUrl(envVar = "YKP_DATABASE_URL"): string {
+  const v = process.env[envVar];
+  if (!v || v.trim().length === 0) {
+    throw new Error(
+      `[schema/db] Missing required env var "${envVar}". ` +
+        `Set it before booting the app (single URL for all 4 schemas).`,
+    );
+  }
+  return v;
+}
+
+let _db: Db | undefined;
+let _sql: Sql | undefined;
+
+/** Materialise the single db client. Idempotent. */
+export function initDbClients(): { db: Db; sql: Sql } {
+  if (!_db) {
+    const url = requireUrl();
+    _sql = postgres(url, { max: 10, prepare: false });
+    _db = drizzle(_sql, { schema: fullSchema as never });
+  }
+  return { db: _db!, sql: _sql! };
+}
+
+/** Get the singleton db client; throws if init has not run. */
+export function getDb(): Db {
+  if (!_db) {
+    throw new Error("[schema/db] db not initialised — call initDbClients() at boot.");
+  }
+  return _db;
+}
+
+/** Raw postgres Sql handle (for advisory locks, manual queries). */
+export function sql(): Sql {
+  if (!_sql) {
+    throw new Error("[schema/db] sql not initialised — call initDbClients() at boot.");
+  }
+  return _sql;
+}
+
+// ----- Back-compat shims -----
+// Existing code references `masterDb`, `hrDb`, etc. via getMasterDb/getHrDb
+// accessors. Keep these working during the refactor by aliasing them to the
+// single `db`. Code that actually uses the aliases will work because the
+// exported table symbols (e.g. masterOutlet) are pgSchema-qualified; Drizzle
+// generates `master.master_outlet` regardless of which `db` handle is used.
+
+const _db_ = (): Db => getDb();
+export const masterDb = (() => {
+  // Lazy proxy: returns the singleton db for any code that imports masterDb
+  // and calls select/insert/etc. The table references (masterOutlet, etc.) carry
+  // their schema qualifier internally, so SELECT/INSERT target the right schema.
+  return new Proxy({} as Db, {
+    get(_target, prop) {
+      const db = _db_();
+      const value = (db as unknown as Record<string | symbol, unknown>)[prop as string];
+      return typeof value === "function" ? (value as (...a: unknown[]) => unknown).bind(db) : value;
+    }
+  });
+})();
+
+export type MasterDb = Db;
+export type HrDb = Db;
+export type FinanceDb = Db;
+export type HermezDb = Db;
+
+export function getMasterDb(): Db { return getDb(); }
+export function getHrDb(): Db { return getDb(); }
+export function getFinanceDb(): Db { return getDb(); }
+export function getHermezDb(): Db { return getDb(); }
+export function createMasterDb(): Db { return getDb(); }
+export function createHrDb(): Db { return getDb(); }
+export function createFinanceDb(): Db { return getDb(); }
+export function createHermezDb(): Db { return getDb(); }
+export function masterSql(): Sql { return sql(); }
+export function hrSql(): Sql { return sql(); }
+export function financeSql(): Sql { return sql(); }
+export function hermezSql(): Sql { return sql(); }
+
+// Keep schemaByDb symbol for any external import (engine modules).
 export const schemaByDb = {
   master: masterSchema,
   hr: hrSchema,
   finance: financeSchema,
   hermez: hermezSchema,
 } as const;
-
 export type SchemaByDb = typeof schemaByDb;
-
-export type MasterDb = PostgresJsDatabase<typeof masterSchema>;
-export type HrDb = PostgresJsDatabase<typeof hrSchema>;
-export type FinanceDb = PostgresJsDatabase<typeof financeSchema>;
-export type HermezDb = PostgresJsDatabase<typeof hermezSchema>;
-
-// ----- factory -----------------------------------------------------------
-
-/**
- * Build a drizzle client for one logical database.
- *
- * @param url   Postgres connection URL
- * @param dbKey Which schema bundle to attach (master/hr/finance/hermez)
- */
-export function createDrizzleClient<TDbKey extends keyof SchemaByDb>(
-  url: string,
-  dbKey: TDbKey,
-): PostgresJsDatabase<SchemaByDb[TDbKey]> {
-  const sql = postgres(url, { max: 10, prepare: false });
-  return drizzle(sql, { schema: schemaByDb[dbKey] as never }) as PostgresJsDatabase<
-    SchemaByDb[TDbKey]
-  >;
-}
-
-// ----- env resolution ---------------------------------------------------
-
-/**
- * Reads a required DATABASE_URL env var. Throws at boot if missing —
- * we want the process to fail fast rather than silently connecting to
- * a wrong default.
- */
-function requireUrl(envVar: string): string {
-  const v = process.env[envVar];
-  if (!v || v.trim().length === 0) {
-    throw new Error(
-      `[schema/db] Missing required env var "${envVar}". ` +
-        `Set it before booting the app (e.g. in .env or container env).`,
-    );
-  }
-  return v;
-}
-
-// ----- factories (lazy) --------------------------------------------------
-// We expose factory functions instead of pre-built clients so that the
-// schema package can be imported by tooling (drizzle-kit, typecheck)
-// without requiring live env vars. The runtime apps call these at boot.
-
-export function createMasterDb(url = process.env.YKP_MASTER_DATABASE_URL): MasterDb {
-  return createDrizzleClient(requireUrl("YKP_MASTER_DATABASE_URL"), "master") as MasterDb;
-}
-
-export function createHrDb(): HrDb {
-  return createDrizzleClient(requireUrl("YKP_HR_DATABASE_URL"), "hr") as HrDb;
-}
-
-export function createFinanceDb(): FinanceDb {
-  return createDrizzleClient(requireUrl("YKP_FINANCE_DATABASE_URL"), "finance") as FinanceDb;
-}
-
-export function createHermezDb(): HermezDb {
-  return createDrizzleClient(requireUrl("YKP_HERMEZ_DATABASE_URL"), "hermez") as HermezDb;
-}
-
-// ----- boot-time singletons ---------------------------------------------
-// `masterDb`/`hrDb`/`financeDb`/`hermezDb` are created lazily on first
-// access; importing this module does NOT touch the env. The app calls
-// `initDbClients()` once at boot to materialise them and surface any
-// missing env var immediately.
-
-let masterDb: MasterDb | undefined;
-let hrDb: HrDb | undefined;
-let financeDb: FinanceDb | undefined;
-let hermezDb: HermezDb | undefined;
-
-/**
- * Materialise all four clients. Throws if any DATABASE_URL env var is
- * missing. Idempotent — calling twice returns the existing instances.
- */
-export function initDbClients(): {
-  masterDb: MasterDb;
-  hrDb: HrDb;
-  financeDb: FinanceDb;
-  hermezDb: HermezDb;
-} {
-  if (!masterDb) masterDb = createMasterDb();
-  if (!hrDb) hrDb = createHrDb();
-  if (!financeDb) financeDb = createFinanceDb();
-  if (!hermezDb) hermezDb = createHermezDb();
-  return { masterDb, hrDb, financeDb, hermezDb };
-}
-
-/** Accessors that throw a helpful error if init hasn't run yet. */
-export function getMasterDb(): MasterDb {
-  if (!masterDb) {
-    throw new Error("[schema/db] masterDb not initialised — call initDbClients() at boot.");
-  }
-  return masterDb;
-}
-
-export function getHrDb(): HrDb {
-  if (!hrDb) {
-    throw new Error("[schema/db] hrDb not initialised — call initDbClients() at boot.");
-  }
-  return hrDb;
-}
-
-export function getFinanceDb(): FinanceDb {
-  if (!financeDb) {
-    throw new Error("[schema/db] financeDb not initialised — call initDbClients() at boot.");
-  }
-  return financeDb;
-}
-
-export function getHermezDb(): HermezDb {
-  if (!hermezDb) {
-    throw new Error("[schema/db] hermezDb not initialised — call initDbClients() at boot.");
-  }
-  return hermezDb;
-}
-
-// Raw postgres `Sql` handles (for advisory locks, etc.).
-export function masterSql(): Sql {
-  return (getMasterDb() as unknown as { $client: Sql }).$client;
-}
-export function hrSql(): Sql {
-  return (getHrDb() as unknown as { $client: Sql }).$client;
-}
-export function financeSql(): Sql {
-  return (getFinanceDb() as unknown as { $client: Sql }).$client;
-}
-export function hermezSql(): Sql {
-  return (getHermezDb() as unknown as { $client: Sql }).$client;
-}

@@ -10,7 +10,7 @@
 import { and, eq, gte, lte, desc, sql } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
-import { requireRole, can } from "@ykp/auth";
+import { requireRole, can, applyOutletScope } from "@ykp/auth";
 import { finDailySummary, masterOutlet } from "@ykp/schema";
 import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
 import { handler, ok, fail } from "@/lib/server/http.js";
@@ -22,7 +22,6 @@ export const GET = handler(async (req: NextRequest) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
-  void user;
   const search = Object.fromEntries(req.nextUrl.searchParams.entries());
   const parsed = FinSummaryQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
@@ -34,6 +33,7 @@ export const GET = handler(async (req: NextRequest) => {
   if (date_from) conds.push(gte(finDailySummary.date, date_from));
   if (date_to) conds.push(lte(finDailySummary.date, date_to));
   if (outlet) conds.push(eq(finDailySummary.outlet, outlet));
+  applyOutletScope(user, conds, finDailySummary.outletId);
 
   const rows = await db
     .select()

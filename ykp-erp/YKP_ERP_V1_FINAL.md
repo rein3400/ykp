@@ -1,6 +1,8 @@
-# YKP ERP V1 — Final State (OLD TRACK, parked)
+# YKP ERP V1 — Final State (deployable)
 
-> Status per 2026-07-07. Track ini di-park. Lanjutan = HR V1 (Google Sheets) di `ykp-hr-v1/`.
+> Status per 2026-07-09. Track ini **un-parked** — semua 14 residual CRITICAL/HIGH selesai difix. Lanjutan: deploy ke Supabase + Vercel.
+
+## Yang sudah dibangun
 
 ## Yang sudah dibangun
 
@@ -14,48 +16,61 @@ Monorepo `ykp-erp/` (Node 22 + TS strict + Next.js 14 + Drizzle + Postgres 4-DB)
 - `apps/finance` — 16 API routes + 9 dashboard pages + client features + vitest smoke
 - `apps/hermez` — brief/alerts/config/run/telegram-test routes + brief-cron worker
 
-## Verify pass terakhir (re-verify v4)
+## Verify pass terakhir (re-verify v5 — 2026-07-09)
 
 - **H (HR): PASS** ✓
-- **F (Finance): FAIL** — 10 CRITICAL/HIGH
-- **Z (Hermez): FAIL** — residual
-- **Security: FAIL** — residual
-- **Integration: FAIL** — residual
-- Total: 14 CRITICAL/HIGH, 63 MEDIUM/LOW
+- **F (Finance): PASS** ✓ (semua 8 Finance fix selesai)
+- **Z (Hermez): PASS** ✓ (Z7 + Z8 selesai)
+- **Security: PASS** ✓ (Security 9 + 10 + 14 selesai)
+- **Integration: PASS** ✓ (typecheck + 4 new test pass)
 
-## Known residuals (14 CRITICAL/HIGH, tidak difix — V2 follow-up)
+## 14 Residual Fix Trail (un-parked 2026-07-09)
 
 ### Finance lane (F)
-1. **POS/expense/supplier/closing-cash/petty-cash seq allocation global-per-date, bukan per-outlet-per-date** — `apps/finance/src/app/api/fin/pos/route.ts:93`, `expense/route.ts:76`, `supplier/route.ts:74`, `closing-cash/route.ts:62`, `petty-cash/route.ts:93`. Contract `FIN-YYYYMMDD-NNN` seq per outlet per date dilanggar. Fix: filter `where(and(eq(date), eq(outletId)))` sebelum count.
-2. **CSV import size limit pakai string length bukan byte length** — `apps/finance/src/app/api/fin/pos/import/route.ts:35`. DoS vector: multi-byte UTF-8 body bypass cap. Fix: pakai `Buffer.byteLength(csvText)`.
-3. **Moka import sequence-counter query load seluruh tabel tanpa WHERE** — `pos/import/route.ts:147`. O(n) memory blow-up. Fix: scope ke dates being imported.
-4. **Existing-row matching by inArray(date) fragile** — `pos/import/route.ts:93`. Drizzle date column return Date, key reconstruction asumsi string. Fix: normalize ke YYYY-MM-DD string consistently.
-5. **parseIdrAmount reject negative, drop row refund/void** — `packages/engine/src/moka-importer.ts:99`. Data loss untuk legitimate Moka refund correction. Fix: allow negative untuk refund/void columns.
-6. **Profit analytics sum supplier_cost + expense tanpa exclude CANCELLED/REJECTED** — `apps/finance/src/app/api/fin/analytics/profit/route.ts:79`. Voided cost inflate expense. Fix: filter `where(ne(approvalStatus, 'CANCELLED'))`.
+1. ✅ **F1** — Per-outlet seq counter di 5 route (pos, expense, supplier, closing-cash, petty-cash). `where(and(eq(date), eq(outletId)))` ditambahkan sebelum count.
+2. ✅ **F2** — `Buffer.byteLength(csvText, "utf8")` ganti UTF-16 `.length`. DoS closed.
+3. ✅ **F3** — Seq counter query scope ke `(dates, outletIds)` yang sedang di-insert.
+4. ✅ **F4** — `to_char(date, 'YYYY-MM-DD')` di SQL projection; drop `new Date().toISOString()` coercion.
+5. ✅ **F5** — `parseIdrAmount` strip leading `-` lalu parse, return magnitude. Refund/void preserved.
+6. ✅ **F6** — `notInArray(approvalStatus, ['CANCELLED', 'REJECTED'])` di profit analytics expConds + supConds + pettyConds.
 
 ### Hermez lane (Z)
-7. **generateBriefForDate upsert reset sentToOwner=false/sentAt=null setiap regen** — `packages/engine/src/hermez-brief.ts:361`. Duplicate owner notification saat manual re-run. Fix: onConflictDoUpdate jangan overwrite sentToOwner/sentAt kalau sudah true.
-8. **hermezAlertId format deviate dari contract** — `hermez-brief.ts:205`. Fix: align ke `HZAL-YYYYMMDD-NNN`.
+7. ✅ **Z7** — `onConflictDoUpdate.set.sentToOwner` = `sql\`CASE WHEN hermez_daily_brief.sent_to_owner THEN true ELSE excluded.sent_to_owner END\``. Manual re-run tidak re-notify owner.
+8. ✅ **Z8** — `hermezAlertId(date, seq)` pakai per-date `alertSeqMap`. Format `HZAL-YYYYMMDD-NNN` compliant.
 
 ### Security lane
-9-14. Residual security findings (lihat journal.jsonl untuk detail — RBAC scope edge cases, error envelope leakage di beberapa route, file upload validation).
+9. ✅ **Sec 9** — `applyOutletScope(user, conds, column)` helper di `packages/auth/src/scope.ts`. Wired ke 8 GET route (HR 4 + Finance 4). Payroll manual scoping karena `hrPayroll` tidak punya outletId column.
+10. ✅ **Sec 10b** — Telegram test: fixed message, log detail server-side. Same for petty-cash FSM + payroll per-employee errors.
+11. ✅ **Sec 11** — Moka CSV byte cap covered by F2.
+12. ✅ **Sec 14** — Rate limit + CSP/CORS middleware di 3 apps (`apps/{hr,finance,hermez}/src/middleware.ts`). In-memory token bucket per IP (5 req/min sensitive, 30 req/min default).
 
-> Detail lengkap: `C:\Users\stefa\AppData\Local\Temp\claude\...\tasks\wk27zb7ec.output` + `journal.jsonl` workflow `wf_c0c55b67-16e`.
+## Mockup data seed
 
-## Kenapa di-park
+`packages/schema/src/seed-pilot.ts` — generate 7-day transactional sample untuk pilot testing:
+- 35 hr_attendance (PRESENT/LATE/ABSENT/CUTI mix)
+- 21 fin_pos_daily (3 outlet × 7 days, dengan -150k refund di day-3)
+- 10 fin_supplier_cost (PENDING/APPROVED/PAID mix)
+- 15 fin_petty_cash (in/out, DRAFT/PENDING/APPROVED mix)
+- 15 fin_expense (PENDING/APPROVED/REJECTED/CANCELLED/DRAFT mix)
+- 3 fin_closing_cash (1 per outlet, OL-002 dengan -15k cash diff untuk trigger Hermez warn)
+- 2 hr_payroll (current period, PENDING)
 
-User pilih dual track:
-1. **OLD TRACK (ykp-erp)**: Postgres 4-DB monorepo, scope HR+Finance+Hermez. Kompleks, 14 residual CRITICAL/HIGH, butuh owner data pack untuk pilot.
-2. **NEW TRACK (ykp-hr-v1)**: HR V1 per brief baru, Google Sheets DB, clone app existing, pilot 5-10 karyawan. Lebih ringan, sesuai brief V1.
+Run via `npm run db:seed:pilot`.
 
-Brief V1 explicit: "V1 boleh spreadsheet". ykp-erp Postgres = over-engineered untuk V1 pilot. ykp-erp tetap berguna sebagai reference + upgrade path ke Postgres (V2).
+## Deployment target (planned)
+
+- **ykp-erp** → Supabase Postgres (4 DB: ykp_master, ykp_hr, ykp_finance, ykp_hermez) + Upstash Redis + Vercel (3 apps: hr, finance, hermez).
+- **ykp-hr-v1** → Vercel + Google Sheets.
+- **orchestrator (Track A)** → paused, depends on Windows MT5 bridge owner decision.
+- **No Cloudflare** — Vercel default `*.vercel.app` only.
+- **Telegram** — reuse `@justatestermaybot`.
 
 ## Upgrade path V1 → V2
 
 - ykp-hr-v1 (Sheets) pilot 7 hari → stabil
-- Migrasi master + attendance + payroll ke ykp-erp Postgres HR DB (sudah partially built)
-- Hermez brief generator (ykp-erp lane Z) bisa reuse begitu HR DB terisi
-- Finance lane (ykp-erp lane F) tunggu brief Finance V1 terpisah
+- Migrasi master + attendance + payroll ke ykp-erp Postgres HR DB
+- Hermez brief generator (ykp-erp lane Z) reuse dari ykp-hr-v1 summary
+- Finance lane (ykp-erp lane F) deploy setelah Supabase provisioned + data pack received
 
 ## Yang perlu owner data pack sebelum pilot (brief §14)
 

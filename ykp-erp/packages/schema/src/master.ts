@@ -1,6 +1,5 @@
 import {
-  pgTable,
-  pgEnum,
+  pgSchema,
   text,
   integer,
   boolean,
@@ -11,11 +10,13 @@ import {
   bigserial,
 } from "drizzle-orm/pg-core";
 
+const master = pgSchema("master");
+
 // ============================================================
 // Enums (fixed value sets — drizzle maps to Postgres enum types)
 // ============================================================
 
-export const userRoleEnum = pgEnum("user_role", [
+export const userRoleEnum = master.enum("user_role", [
   "OWNER",
   "SUPER_ADMIN",
   "FINANCE_ADMIN",
@@ -26,7 +27,7 @@ export const userRoleEnum = pgEnum("user_role", [
   "VIEWER",
 ]);
 
-export const expenseAccountTypeEnum = pgEnum("expense_account_type", [
+export const expenseAccountTypeEnum = master.enum("expense_account_type", [
   "OPEX",
   "CAPEX",
   "COGS",
@@ -37,7 +38,7 @@ export const expenseAccountTypeEnum = pgEnum("expense_account_type", [
 // master_brand
 // ============================================================
 
-export const masterBrand = pgTable("master_brand", {
+export const masterBrand = master.table("master_brand", {
   brandId: text("brand_id").primaryKey(),
   brandName: text("brand_name").notNull(),
   brandCode: text("brand_code").notNull().unique(),
@@ -50,7 +51,7 @@ export const masterBrand = pgTable("master_brand", {
 // master_outlet (FK -> master_brand, same DB)
 // ============================================================
 
-export const masterOutlet = pgTable(
+export const masterOutlet = master.table(
   "master_outlet",
   {
     outletId: text("outlet_id").primaryKey(),
@@ -74,7 +75,7 @@ export const masterOutlet = pgTable(
 // master_employee (cross-DB referenced by hr schema; no FK here)
 // ============================================================
 
-export const masterEmployee = pgTable("master_employee", {
+export const masterEmployee = master.table("master_employee", {
   employeeId: text("employee_id").primaryKey(),
   fullName: text("full_name").notNull(),
   role: text("role"),
@@ -98,7 +99,7 @@ export const masterEmployee = pgTable("master_employee", {
 // master_supplier (cross-DB referenced by finance; no FK here)
 // ============================================================
 
-export const masterSupplier = pgTable("master_supplier", {
+export const masterSupplier = master.table("master_supplier", {
   supplierId: text("supplier_id").primaryKey(),
   supplierName: text("supplier_name").notNull(),
   category: text("category"),
@@ -115,7 +116,7 @@ export const masterSupplier = pgTable("master_supplier", {
 // master_shift
 // ============================================================
 
-export const masterShift = pgTable("master_shift", {
+export const masterShift = master.table("master_shift", {
   shiftId: text("shift_id").primaryKey(),
   shiftName: text("shift_name").notNull().unique(),
   startTime: text("start_time").notNull(),
@@ -129,7 +130,7 @@ export const masterShift = pgTable("master_shift", {
 // hr_rules (FK -> master_outlet, same DB)
 // ============================================================
 
-export const hrRules = pgTable("hr_rules", {
+export const hrRules = master.table("hr_rules", {
   ruleId: text("rule_id").primaryKey(),
   outletId: text("outlet_id")
     .notNull()
@@ -159,7 +160,7 @@ export const hrRules = pgTable("hr_rules", {
 // fin_expense_category
 // ============================================================
 
-export const finExpenseCategory = pgTable("fin_expense_category", {
+export const finExpenseCategory = master.table("fin_expense_category", {
   categoryId: text("category_id").primaryKey(),
   categoryName: text("category_name").notNull(),
   accountType: expenseAccountTypeEnum("account_type").notNull(),
@@ -172,7 +173,7 @@ export const finExpenseCategory = pgTable("fin_expense_category", {
 // fin_payment_method
 // ============================================================
 
-export const finPaymentMethod = pgTable("fin_payment_method", {
+export const finPaymentMethod = master.table("fin_payment_method", {
   methodId: text("method_id").primaryKey(),
   methodName: text("method_name").notNull(),
   isCash: boolean("is_cash").notNull().default(false),
@@ -185,7 +186,7 @@ export const finPaymentMethod = pgTable("fin_payment_method", {
 // fin_petty_cash_account (FK -> master_outlet, same DB)
 // ============================================================
 
-export const finPettyCashAccount = pgTable("fin_petty_cash_account", {
+export const finPettyCashAccount = master.table("fin_petty_cash_account", {
   accountId: text("account_id").primaryKey(),
   outletId: text("outlet_id")
     .notNull()
@@ -201,7 +202,7 @@ export const finPettyCashAccount = pgTable("fin_petty_cash_account", {
 // users (auth + RBAC; cross-DB refs are application-resolved)
 // ============================================================
 
-export const users = pgTable("users", {
+export const users = master.table("users", {
   userId: text("user_id").primaryKey(),
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
@@ -244,7 +245,7 @@ export type NewUser = typeof users.$inferInsert;
 // CRUD, user role changes, etc.) are captured alongside business rows.
 // ============================================================
 
-export const masterAuditLog = pgTable("audit_log", {
+export const masterAuditLog = master.table("audit_log", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
   actor: text("actor").notNull(),
   action: text("action").notNull(),

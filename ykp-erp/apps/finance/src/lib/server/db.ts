@@ -16,6 +16,7 @@ export {
   getHrDb,
   getFinanceDb,
   getHermezDb,
+  getDb,
   financeSql,
   masterSql,
   type MasterDb,

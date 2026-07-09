@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql, inArray } from "drizzle-orm";
 import {
   initDbClients,
   createHrDb,
@@ -55,7 +55,7 @@ const runSchema = z.object({
 export async function GET(req: Request): Promise<Response> {
   boot();
   try {
-    await requireRole([Role.OWNER, Role.HR_ADMIN, Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER]);
+    const user = await requireRole([Role.OWNER, Role.HR_ADMIN, Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER]);
     const url = new URL(req.url);
     const parsed = resolveQuery(url, querySchema);
     if (parsed instanceof Response) return parsed;
@@ -67,6 +67,24 @@ export async function GET(req: Request): Promise<Response> {
     if (parsed.employeeId) filters.push(eq(hrPayroll.employeeId, parsed.employeeId));
     if (parsed.periodStart) filters.push(gte(hrPayroll.periodStart, parsed.periodStart));
     if (parsed.periodEnd) filters.push(lte(hrPayroll.periodEnd, parsed.periodEnd));
+    // hrPayroll has no outletId column; scope by joining via master_employee.outletId.
+    // applyOutletScope does not help here (column missing), so we resolve scoped
+    // employeeIds manually for OUTLET_MANAGER (the only scoped role allowed by
+    // this route's role list).
+    if (user.role === Role.OUTLET_MANAGER) {
+      const scopedOutlets = user.outletIds ?? [];
+      const empRows = scopedOutlets.length
+        ? await masterDb
+            .select({ employeeId: masterEmployee.employeeId })
+            .from(masterEmployee)
+            .where(inArray(masterEmployee.outletId, scopedOutlets as string[]))
+        : [];
+      const empIds = empRows.map((r) => r.employeeId);
+      if (empIds.length === 0) {
+        return jsonOk({ payroll: [] });
+      }
+      filters.push(inArray(hrPayroll.employeeId, empIds));
+    }
 
     const rows = await hrDb
       .select()
@@ -284,9 +302,12 @@ export async function POST(req: Request): Promise<Response> {
           // abort the whole batch. Rethrow only on truly fatal infra errors
           // (non-Error with no status) so a connection drop still surfaces.
           const e = err as Error & { status?: number };
+          // Defect 10d: surface a category-level hint rather than the raw
+          // engine/driver error which may leak internal details.
+          const code = (e as Error & { code?: string }).code;
           payrollErrors.push({
             employeeId: emp.employeeId,
-            error: e?.message ?? String(err),
+            error: code ? `${code}: payroll failed` : e?.status ? `payroll failed (${e.status})` : "payroll failed",
           });
         }
       }
