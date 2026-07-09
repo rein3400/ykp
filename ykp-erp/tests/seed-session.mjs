@@ -20,7 +20,7 @@ const ownerToken = sign({
   id: "U-001",
   email: "owner@ykp.local",
   name: "Owner",
-  role: "owner",
+  role: "OWNER", // must match Role enum (uppercase) in packages/auth/src/roles.ts
   iat: Math.floor(Date.now() / 1000),
   exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
   jti: randomBytes(8).toString("hex"),
