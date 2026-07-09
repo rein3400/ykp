@@ -7,7 +7,7 @@ import { appendRows, readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, ok } from '@/lib/http';
-import { can } from '@/lib/rbac';
+import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { assertBrand, assertOutlet } from '@/lib/repo';
 
@@ -59,7 +59,7 @@ async function nextEmployeeId(): Promise<string> {
 export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
-  if (!can(session.role as any, 'create', 'employee')) return forbidden();
+  if (!can(session.role as Role, 'create', 'employee')) return forbidden();
 
   const contentLength = Number(req.headers.get('content-length') ?? '0');
   if (contentLength > MAX_BYTES) return badRequest(`File too large (max ${MAX_BYTES} bytes)`);

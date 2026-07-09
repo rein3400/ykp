@@ -5,7 +5,7 @@
  *
  * Also seeds master brands + 5 roles (RBAC matrix per brief §9).
  */
-import { getSheetsClient, getSpreadsheetId, TAB_HEADERS, TABS, type TabName } from '../src/db/sheets';
+import { getSheetsClient, getSpreadsheetId, TAB_HEADERS, TABS, columnLetter, type TabName } from '../src/db/sheets';
 import { nowTimestampWib } from '../src/lib/format';
 
 const SEED_BRANDS = [
@@ -68,7 +68,7 @@ async function ensureTab(sheets: ReturnType<typeof getSheetsClient>, sid: string
   }
   // Always rewrite header row (idempotent if identical)
   const headers = TAB_HEADERS[tab];
-  const lastCol = String.fromCharCode(64 + headers.length);
+  const lastCol = columnLetter(headers.length);
   await sheets.spreadsheets.values.update({
     spreadsheetId: sid,
     range: `'${tab}'!A1:${lastCol}1`,
@@ -111,10 +111,10 @@ async function main(): Promise<void> {
   for (const tab of Object.values(TABS)) {
     await ensureTab(sheets, sid, tab);
   }
-  await seedIfEmpty(sheets, sid, TABS.brands, SEED_BRANDS);
-  await seedIfEmpty(sheets, sid, TABS.roles, SEED_ROLES);
-  await seedIfEmpty(sheets, sid, TABS.leaveTypes, SEED_LEAVE_TYPES);
-  await seedIfEmpty(sheets, sid, TABS.latenessRules, SEED_LATENESS_RULES);
+  await seedIfEmpty(sheets, sid, TABS.brands, SEED_BRANDS as string[][]);
+  await seedIfEmpty(sheets, sid, TABS.roles, SEED_ROLES as string[][]);
+  await seedIfEmpty(sheets, sid, TABS.leaveTypes, SEED_LEAVE_TYPES as string[][]);
+  await seedIfEmpty(sheets, sid, TABS.latenessRules, SEED_LATENESS_RULES as string[][]);
   console.log('[bootstrap] done');
 }
 

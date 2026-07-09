@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Local secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# Logs
+logs/
+*.log

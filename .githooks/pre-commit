@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# YKP monorepo pre-commit hook — blocks accidental secret commits.
+#
+# Install: git config core.hooksPath .githooks
+# Disable for a single commit: git commit --no-verify
+#
+# Scans staged files (added/modified/copied) for credential patterns.
+# Exits 1 with a list of offending lines if any are found.
+
+set -euo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMRT || true)
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+PATTERNS=(
+  'MT5_LOGIN=[0-9]+'
+  'MT5_PASSWORD=[^"\s][^"\s]*'
+  'MT5_BRIDGE_TOKEN=[a-fA-F0-9]{32,}'
+  'SESSION_SECRET=[A-Za-z0-9]{32,}'
+  'GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY=-----BEGIN'
+  'POSTGRES_PASSWORD=[^"\s][^"\s]*'
+  'OPENAI_API_KEY=sk-[A-Za-z0-9_-]+'
+  'TELEGRAM_BOT_TOKEN=[0-9]+:[A-Za-z0-9_-]+'
+  'TRADINGVIEW_WEBHOOK_SECRET=[a-fA-F0-9]{32,}'
+)
+
+VIOLATIONS=0
+for file in $STAGED; do
+  # Only scan text-like files we care about.
+  case "$file" in
+    *.bat|*.ps1|*.sh|*.ts|*.tsx|*.js|*.mjs|*.json|*.env|*.yml|*.yaml|*.md) ;;
+    *) continue ;;
+  esac
+  for pattern in "${PATTERNS[@]}"; do
+    if matches=$(git show ":$file" 2>/dev/null | grep -nE "$pattern" || true); then
+      if [ -n "$matches" ]; then
+        echo "❌ $file matches forbidden pattern: $pattern" >&2
+        echo "$matches" >&2
+        VIOLATIONS=$((VIOLATIONS + 1))
+      fi
+    fi
+  done
+done
+
+if [ "$VIOLATIONS" -gt 0 ]; then
+  echo "" >&2
+  echo "Pre-commit blocked: $VIOLATIONS file(s) contain credential patterns." >&2
+  echo "Move secrets to .env (gitignored) or NSSM AppEnvironmentExtra." >&2
+  echo "Override with: git commit --no-verify" >&2
+  exit 1
+fi
+
+exit 0

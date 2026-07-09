@@ -3,7 +3,7 @@ import { assertEmployee, assertOutlet, assertShift, nextSequentialId } from '@/l
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, list, badRequest, missingRef, conflict, unauthorized, forbidden, ok } from '@/lib/http';
-import { can } from '@/lib/rbac';
+import { can, Role } from '@/lib/rbac';
 import { formatTimeWib, nowTimestampWib, todayWib } from '@/lib/format';
 import { z } from 'zod';
 
@@ -46,7 +46,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
-  if (!can(session.role as any, 'create', 'attendance')) return forbidden();
+  if (!can(session.role as Role, 'create', 'attendance')) return forbidden();
 
   const body = await req.json();
   const parsed = insertSchema.safeParse(body);

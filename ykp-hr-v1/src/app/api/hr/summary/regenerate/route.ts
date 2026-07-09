@@ -1,14 +1,16 @@
 /**
  * Regenerate hr_daily_summary for a date, per outlet.
  * Idempotent: writes are by (outlet_id, date) summary_id.
+ * Also writes hermes_alert_log rows per brief §11.
  */
 import { readTab, appendRows, TABS, findRow, updateRow } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, ok } from '@/lib/http';
-import { can } from '@/lib/rbac';
+import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { buildSummary, type SummaryInput } from '@/features/hr/lib/summary';
+import { generateAlerts, type HermesAlert } from '@/lib/hermez-alerts';
 import { z } from 'zod';
 
 const schema = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) });
@@ -18,32 +20,35 @@ interface Attendance { date: string; employee_id: string; outlet_id: string; att
 interface Roster { date: string; employee_id: string; outlet_id: string; shift_id: string; roster_status: string }
 interface Payroll { payroll_period: string; outlet_id: string; employee_id: string; approval_status: string }
 interface Brand { brand_id: string; brand_name: string }
-interface Outlet { outlet_id: string; brand_id: string; outlet_name: string }
+interface Outlet { outlet_id: string; brand_id: string; outlet_name: string; status: string }
+interface Leave { employee_id: string; start_date: string; end_date: string; approval_status: string }
 
 export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
-  if (!can(session.role as any, 'generate', 'summary')) return forbidden();
+  if (!can(session.role as Role, 'generate', 'summary')) return forbidden();
 
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.message);
 
   const date = parsed.data.date;
-  const [employees, attendance, rosters, payrolls, brands, outlets] = await Promise.all([
+  const [employees, attendance, rosters, payrolls, brands, outlets, leaves] = await Promise.all([
     readTab<Employee>(TABS.employees),
     readTab<Attendance>(TABS.attendance),
     readTab<Roster>(TABS.roster),
     readTab<Payroll>(TABS.payroll),
     readTab<Brand>(TABS.brands),
-    readTab<Outlet>(TABS.outlets)
+    readTab<Outlet>(TABS.outlets),
+    readTab<Leave>(TABS.leaves)
   ]);
   const brandById = new Map(brands.map((b) => [b.brand_id, b.brand_name]));
-  const outletById = new Map(outlets.map((o) => [o.outlet_id, o]));
 
   // For each outlet: compute aggregates for that date
   const out = outlets.filter((o) => o.status === 'active' || o.status === 'pilot' || o.status === '');
-  const generatedRows: Record<string, string>[] = [];
+  const summaryRows: Record<string, string>[] = [];
+  const newAlertRows: Record<string, string>[] = [];
+  const updateAlerts: Array<{ rowNumber: number; row: Record<string, string> }> = [];
   const now = nowTimestampWib();
 
   for (const o of out) {
@@ -51,9 +56,18 @@ export const POST = handler(async (req) => {
     const outletAtt = attendance.filter((a) => a.outlet_id === o.outlet_id && a.date === date);
     const todayRoster = rosters.filter((r) => r.outlet_id === o.outlet_id && r.date === date);
 
+    // Counts per brief §7 / §11.
     const present = outletAtt.filter((a) => a.attendance_status === 'PRESENT' || a.attendance_status === 'LATE').length;
     const late = outletAtt.filter((a) => a.attendance_status === 'LATE').length;
-    const absent = Math.max(0, todayRoster.length - present);
+    // staff_absent = actual ABSENT status (brief §11: "absent tanpa keterangan").
+    const absent = outletAtt.filter((a) => a.attendance_status === 'ABSENT').length;
+    // staff_leave = approved leaves overlapping this date for outlet employees.
+    const outletEmpIds = new Set(outletEmployees.map((e) => e.employee_id));
+    const staffLeave = leaves.filter((l) => {
+      if (l.approval_status !== 'APPROVED') return false;
+      if (!outletEmpIds.has(l.employee_id)) return false;
+      return l.start_date <= date && l.end_date >= date;
+    }).length;
     const incomplete = outletAtt.filter((a) => !a.actual_check_out).length;
     const totalLateMinutes = outletAtt.reduce((s, a) => s + Number(a.late_minutes || 0), 0);
     const overtimeHours = Math.round(outletAtt.reduce((s, a) => s + Number(a.overtime_minutes || 0), 0) / 60);
@@ -73,7 +87,7 @@ export const POST = handler(async (req) => {
       staff_present: present,
       staff_late: late,
       staff_absent: absent,
-      staff_leave: 0,
+      staff_leave: staffLeave,
       incomplete_attendance: incomplete,
       total_late_minutes: totalLateMinutes,
       overtime_hours: overtimeHours,
@@ -111,12 +125,45 @@ export const POST = handler(async (req) => {
     if (existing) {
       await updateRow(TABS.dailySummary, existing.rowNumber, row);
     } else {
-      generatedRows.push(row);
+      summaryRows.push(row);
+    }
+
+    // Generate alerts (brief §11) and upsert each.
+    const inactiveIds = new Set(outletEmployees.filter((e) => e.active_status !== 'active' && e.active_status !== '1').map((e) => e.employee_id));
+    const hasInactiveInRoster = todayRoster.some((r) => inactiveIds.has(r.employee_id));
+    const alerts = generateAlerts({
+      date,
+      brand_name: result.brand_name,
+      outlet_id: result.outlet_id,
+      outlet_name: result.outlet_name,
+      staff_late: late,
+      staff_absent: absent,
+      staff_leave: staffLeave,
+      staff_present: present,
+      incomplete_attendance: incomplete,
+      shift_shortage: shiftShortage,
+      total_late_minutes: totalLateMinutes,
+      payroll_pending_count: payrollIssues,
+      has_inactive_in_roster: hasInactiveInRoster
+    }, now);
+    for (const a of alerts) {
+      const existingAlert = await findRow(TABS.hermezAlerts, 'alert_id', a.alert_id);
+      if (existingAlert) {
+        updateAlerts.push({ rowNumber: existingAlert.rowNumber, row: alertToRow(a) });
+      } else {
+        newAlertRows.push(alertToRow(a));
+      }
     }
   }
 
-  if (generatedRows.length > 0) {
-    await appendRows(TABS.dailySummary, generatedRows);
+  if (summaryRows.length > 0) {
+    await appendRows(TABS.dailySummary, summaryRows);
+  }
+  if (newAlertRows.length > 0) {
+    await appendRows(TABS.hermezAlerts, newAlertRows);
+  }
+  for (const u of updateAlerts) {
+    await updateRow(TABS.hermezAlerts, u.rowNumber, u.row);
   }
 
   await logAudit({
@@ -125,8 +172,32 @@ export const POST = handler(async (req) => {
     action: 'generate',
     entity: 'summary',
     entityId: date,
-    afterValue: `${out.length} outlets`
+    afterValue: `${out.length} outlets, ${newAlertRows.length + updateAlerts.length} alerts`
   });
 
-  return ok({ date, count: out.length, total_rows: out.length });
+  return ok({
+    date,
+    count: out.length,
+    total_rows: out.length,
+    alerts_created: newAlertRows.length,
+    alerts_updated: updateAlerts.length
+  });
 });
+
+function alertToRow(a: HermesAlert): Record<string, string> {
+  return {
+    alert_id: a.alert_id,
+    date: a.date,
+    brand: a.brand,
+    outlet: a.outlet,
+    source_app: a.source_app,
+    alert_type: a.alert_type,
+    severity: a.severity,
+    message: a.message,
+    status: a.status,
+    assigned_to: a.assigned_to,
+    action_taken: a.action_taken,
+    created_at: a.created_at,
+    resolved_at: a.resolved_at
+  };
+}

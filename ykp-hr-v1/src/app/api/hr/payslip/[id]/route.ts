@@ -7,6 +7,7 @@ import { findRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { handler, unauthorized, forbidden, notFound } from '@/lib/http';
 import { formatIdr } from '@/lib/format';
+import { NextResponse } from 'next/server';
 
 export const GET = handler(async (req, { params }) => {
   const session = await getSession();
@@ -48,7 +49,7 @@ export const GET = handler(async (req, { params }) => {
     '--- CONFIDENTIAL ---'
   ];
   const body = lines.join('\n');
-  return new Response(body, {
+  return new NextResponse(body, {
     status: 200,
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',

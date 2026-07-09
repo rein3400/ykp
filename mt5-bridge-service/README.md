@@ -32,10 +32,13 @@ The orchestrator reaches the bridge via `MT5_BRIDGE_URL=http://host.docker.inter
 2. Download NSSM from nssm.cc → `C:\Tools\nssm\nssm.exe`. Add to PATH.
 3. Verify MetaTrader5 terminal is installed and auto-logged-in to the production account.
 4. Clone this folder onto the Windows host.
-5. Edit `nssm\install_service.bat` — set `MT5_LOGIN`, `MT5_PASSWORD`, `MT5_SERVER`, `MT5_BRIDGE_TOKEN`, `PYTHON_EXE`.
-6. Run `scripts\install.bat` to create venv + install deps.
-7. Run `nssm\install_service.bat` to register the Windows service.
-8. Verify: `nssm status YKPMT5Bridge` → `SERVICE_RUNNING`. `curl -H "Authorization: Bearer <token>" http://127.0.0.1:8765/health`.
+5. **Copy `scripts\.env.example` → `scripts\.env` (or `mt5-bridge-service\.env`)**. Fill in real values. `.env` is gitignored — never commit it.
+6. Edit `nssm\install_service.bat` and set `MT5_BRIDGE_TOKEN` to match `.env`. Leave the `MT5_LOGIN=REPLACE_ME_*` placeholders — NSSM will read them from `AppEnvironmentExtra` below.
+7. Run `scripts\install.bat` to create venv + install deps.
+8. Either:
+   - **Manual dev:** `scripts\run_manual_dev.bat` (loads `.env`, runs uvicorn in foreground).
+   - **NSSM service:** set `AppEnvironmentExtra` values in `nssm\install_service.bat` (or via `nssm set YKPMT5Bridge AppEnvironmentExtra MT5_LOGIN=... ...`) to mirror `.env`. Run `nssm\install_service.bat`.
+9. Verify: `nssm status YKPMT5Bridge` → `SERVICE_RUNNING`. `curl -H "Authorization: Bearer <token>" http://127.0.0.1:8765/health`.
 
 ## Smoke test
 ```bat

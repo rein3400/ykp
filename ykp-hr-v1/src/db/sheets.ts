@@ -65,7 +65,9 @@ export const TABS = {
   dailySummary: 'hr_daily_summary',
   // Auth + audit
   users: 'users',
-  auditLog: 'audit_log'
+  auditLog: 'audit_log',
+  // Hermez alert log (brief §11)
+  hermezAlerts: 'hermes_alert_log'
 } as const;
 
 export type TabName = (typeof TABS)[keyof typeof TABS];
@@ -345,11 +347,26 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'after_value',
     'reason',
     'ip_address'
+  ],
+  [TABS.hermezAlerts]: [
+    'alert_id',
+    'date',
+    'brand',
+    'outlet',
+    'source_app',
+    'alert_type',
+    'severity',
+    'message',
+    'status',
+    'assigned_to',
+    'action_taken',
+    'created_at',
+    'resolved_at'
   ]
 };
 
 /** Read a tab as array of objects keyed by header. Empty cells → "". */
-export async function readTab<T extends Record<string, string>>(tab: TabName): Promise<T[]> {
+export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const res = await sheets.spreadsheets.values.get({
@@ -388,7 +405,20 @@ export async function appendRows(tab: TabName, rows: Record<string, string>[]): 
   return m && m[1] ? Number(m[1]) : -1;
 }
 
-/** Update a single row identified by tab + range (e.g. "A5:Z5"). */
+/** Convert a 1-based column index to a spreadsheet column letter (1→A, 27→AA, 34→AH). */
+export function columnLetter(colIdx1Based: number): string {
+  if (colIdx1Based < 1) throw new Error('columnLetter requires 1-based index >= 1');
+  let n = colIdx1Based;
+  let s = '';
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    s = String.fromCharCode(65 + rem) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
+/** Update a single row identified by tab + row number. */
 export async function updateRow(
   tab: TabName,
   rowNumber: number,
@@ -397,7 +427,7 @@ export async function updateRow(
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
-  const lastCol = String.fromCharCode(64 + headers.length); // A=65
+  const lastCol = columnLetter(headers.length); // supports >26 columns (AA, AH, AI)
   const arr = headers.map((h) => values[h] ?? '');
   await sheets.spreadsheets.values.update({
     spreadsheetId: sid,
@@ -418,14 +448,16 @@ export async function findRow(
   const headers = TAB_HEADERS[tab];
   const colIdx = headers.indexOf(keyCol);
   if (colIdx < 0) throw new Error(`Column ${keyCol} not in ${tab}`);
-  const colLetter = String.fromCharCode(65 + colIdx);
+  // Fetch the full tab (up to header count) so we can compare by keyCol AND return the whole row.
+  const lastCol = columnLetter(headers.length);
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sid,
-    range: `'${tab}'!A:${colLetter}`
+    range: `'${tab}'!A1:${lastCol}`
   });
   const rows = res.data.values ?? [];
   for (let i = 1; i < rows.length; i++) {
-    if ((rows[i]?.[0] !== undefined ? rows[i]![0] : '') === value) {
+    const cell = rows[i]?.[colIdx];
+    if (cell === value) {
       const obj: Record<string, string> = {};
       headers.forEach((h, idx) => {
         obj[h] = (rows[i]?.[idx] !== undefined ? rows[i]![idx] : '') as string;

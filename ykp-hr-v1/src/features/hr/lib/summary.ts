@@ -63,7 +63,7 @@ export function buildSummary(input: SummaryInput, now: string): SummaryResult {
   if (input.staff_absent > 0) {
     issues.push(`${input.staff_absent} staff absen tanpa keterangan`);
     actions.push('Konfirmasi SPV, cek leave request');
-    level = level === 'red' ? 'red' : 'yellow';
+    level = 'yellow';
   }
   if (input.incomplete_attendance > INCOMPLETE_THRESHOLD) {
     issues.push(`${input.incomplete_attendance} staff belum checkout`);

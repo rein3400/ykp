@@ -7,7 +7,7 @@ import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, ok } from '@/lib/http';
-import { can } from '@/lib/rbac';
+import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { computePayroll, type PayrollInput, periodDays, attendanceDeduction, overtimePay, hourlyRate } from '@/features/hr/lib/payroll';
 import { z } from 'zod';
@@ -56,7 +56,7 @@ interface LatenessRule {
 export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
-  if (!can(session.role as any, 'generate', 'payroll')) return forbidden();
+  if (!can(session.role as Role, 'generate', 'payroll')) return forbidden();
 
   const body = await req.json();
   const parsed = schema.safeParse(body);

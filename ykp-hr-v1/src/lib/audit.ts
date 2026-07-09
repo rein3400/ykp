@@ -1,7 +1,13 @@
 /**
  * Audit log writer. Every mutation writes one row to audit_log sheet.
  * Brief §10: all approvals + bank/salary changes must be audited.
+ *
+ * auditId format: `AUD-<ts36>-<randHex>`. ts36 keeps rough time ordering
+ * for human scan; randomBytes(5) guarantees uniqueness across processes,
+ * concurrent calls, and server restarts (collision probability < 1e-9
+ * for pilot scale of 5-10 staff × 30 days ≈ 1k entries).
  */
+import { randomBytes } from 'crypto';
 import { appendRows, TABS } from '@/db/sheets';
 import { nowTimestampWib } from './format';
 
@@ -17,11 +23,10 @@ export interface AuditEntry {
   ipAddress?: string;
 }
 
-let counter = 0;
-function auditId(): string {
-  counter += 1;
+export function auditId(): string {
   const ts = Date.now().toString(36).toUpperCase();
-  return `AUD-${ts}-${counter.toString(36).toUpperCase()}`;
+  const rand = randomBytes(5).toString('hex').toUpperCase();
+  return `AUD-${ts}-${rand}`;
 }
 
 export async function logAudit(entry: AuditEntry): Promise<void> {

@@ -6,7 +6,7 @@ import { updateRow, TABS, findRow } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, conflict, ok, notFound } from '@/lib/http';
-import { can } from '@/lib/rbac';
+import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { z } from 'zod';
 
@@ -18,7 +18,7 @@ const schema = z.object({
 export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
-  if (!can(session.role as any, 'approve', 'payroll')) return forbidden();
+  if (!can(session.role as Role, 'approve', 'payroll')) return forbidden();
 
   const body = await req.json();
   const parsed = schema.safeParse(body);

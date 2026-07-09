@@ -103,6 +103,22 @@
 Bank API, VA payroll, auto transfer, full BPJS, full tax, biometric, face recognition,
 native mobile, PostgreSQL migration, Hermez full integration, AI scoring, recruitment, LMS.
 
+## Pre-launch code fixes (2026-07-09)
+
+Sebelum pilot, verifikasi perubahan kode hasil audit blocker:
+
+- [x] `findRow` match by `keyCol`, not hardcoded col 0 (`src/db/sheets.ts`)
+- [x] `updateRow` / bootstrap header row correct untuk tab >26 kolom (`columnLetter()`)
+- [x] `auditId` unik antar restart (crypto random)
+- [x] `nextSequentialId` race-safe (timestamp + random suffix)
+- [x] `hermes_alert_log` tab + writer per brief §11 (`src/lib/hermez-alerts.ts`)
+- [x] `summary/regenerate` load leaves, `staff_leave` populated, `staff_absent` = ABSENT status
+- [x] `attendance/clock-in` deteksi telat vs shift + tolerance
+- [x] 15 route `can(session.role as any, ...)` diganti `as Role`
+- [x] Type-check `npx tsc --noEmit` clean
+- [x] Unit tests 28/28 pass
+- [ ] Full `npm run build` — blocked segfault di Next.js 16/Turbopack (pre-existing environment issue), disetujui owner untuk diurus di cloud deploy
+
 ## Known limitations V1 (follow-up V1.1)
 
 - Shift swap request belum ada form (edit roster manual)

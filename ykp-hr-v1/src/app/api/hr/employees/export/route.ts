@@ -5,8 +5,9 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { handler, unauthorized, forbidden } from '@/lib/http';
-import { can } from '@/lib/rbac';
+import { can, Role } from '@/lib/rbac';
 import { formatIdr } from '@/lib/format';
+import { NextResponse } from 'next/server';
 
 function csvEscape(v: string): string {
   const needsQuote = /[",\n]/.test(v);
@@ -16,7 +17,7 @@ function csvEscape(v: string): string {
 export const GET = handler(async () => {
   const session = await getSession();
   if (!session) return unauthorized();
-  if (!can(session.role as any, 'export', 'employee')) return forbidden();
+  if (!can(session.role as Role, 'export', 'employee')) return forbidden();
 
   const rows = await readTab<{
     employee_id: string;
@@ -45,7 +46,7 @@ export const GET = handler(async () => {
     )
   ];
   const csv = lines.join('\n');
-  return new Response(csv, {
+  return new NextResponse(csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="employees-${new Date().toISOString().slice(0, 10)}.csv"`
