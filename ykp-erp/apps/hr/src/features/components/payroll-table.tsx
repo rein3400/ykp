@@ -24,8 +24,8 @@ import {
   usePayroll,
   useRunPayroll,
   useApprovePayroll,
-} from "@/features/api/queries";
-import type { PayrollRow } from "@/features/api/types";
+} from "@hr/features/api/queries";
+import type { PayrollRow } from "@hr/features/api/types";
 
 const statusColor: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",

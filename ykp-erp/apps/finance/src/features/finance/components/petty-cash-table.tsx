@@ -7,10 +7,10 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable, Button, Badge, formatIdr, formatDateWib } from "@ykp/ui";
-import { usePettyCashList } from "../api/queries.js";
-import { useApprovePettyCash } from "../api/mutations.js";
-import { ApprovalStatusBadge, CurrencyCell } from "./finance-shared.js";
-import type { PettyCash } from "../api/types.js";
+import { usePettyCashList } from '../api/queries';
+import { useApprovePettyCash } from '../api/mutations';
+import { ApprovalStatusBadge, CurrencyCell } from './finance-shared';
+import type { PettyCash } from '../api/types';
 
 export interface PettyCashTableProps {
   params: URLSearchParams;

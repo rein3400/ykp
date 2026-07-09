@@ -9,23 +9,22 @@
  * Cashier records; Finance Admin can approve when difference != 0.
  */
 import { and, eq, desc } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can } from "@ykp/auth";
 import { finClosingCash } from "@ykp/schema";
-import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { assertOutlet } from "@/lib/server/refs.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getMasterDb, getFinanceDb, type FinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { assertOutlet } from "@finance/lib/server/refs";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { financeDayId } from "@ykp/engine";
-import { FinClosingQuerySchema, FinClosingCreateSchema } from "@/lib/schemas.js";
+import { FinClosingQuerySchema, FinClosingCreateSchema } from "@finance/lib/schemas";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
   void user;
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinClosingQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 
@@ -34,12 +33,12 @@ export const GET = handler(async (req: NextRequest) => {
   const rows = await db
     .select()
     .from(finClosingCash)
-    .where(and(eq(finClosingCash.date, date), eq(finClosingCash.outletId, outlet_id)))
+    .where(and(eq(finClosingCash.date, new Date(date)), eq(finClosingCash.outletId, outlet_id)))
     .orderBy(desc(finClosingCash.createdAt));
   return ok(rows[0] ?? null);
 });
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([Role.OUTLET_MANAGER, Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.STAFF_INPUT]);
   if (!can(user.role, "closing", "update")) {
     return fail("forbidden", "Role cannot record closing cash");
@@ -59,11 +58,11 @@ export const POST = handler(async (req: NextRequest) => {
 
   // Defect S1 fix: allocate closingId inside a transaction with FOR UPDATE
   // so concurrent POSTs don't collide on the FIN-YYYYMMDD-NNN sequence.
-  const closingId = await financeDb.transaction(async (tx) => {
+  const closingId = await financeDb.transaction(async (tx: FinanceDb) => {
     const existing = await tx
       .select({ count: finClosingCash.closingId })
       .from(finClosingCash)
-      .where(and(eq(finClosingCash.date, data.date), eq(finClosingCash.outletId, data.outlet_id)))
+      .where(and(eq(finClosingCash.date, new Date(data.date)), eq(finClosingCash.outletId, data.outlet_id)))
       .for("update");
     const seq = existing.length + 1;
     return financeDayId(data.date, seq, data.outlet_id);

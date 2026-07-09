@@ -5,8 +5,8 @@
 
 import * as React from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, formatIdr, formatDateWib } from "@ykp/ui";
-import { useSummaryList } from "@/features/finance/api/queries";
-import { useRebuildSummary } from "@/features/finance/api/mutations";
+import { useSummaryList } from "@finance/features/finance/api/queries";
+import { useRebuildSummary } from "@finance/features/finance/api/mutations";
 import { RefreshCw } from "lucide-react";
 
 export default function SummaryPage() {

@@ -6,7 +6,7 @@
  * salah membaca angka contoh sebagai data produksi.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@ykp/ui";
-import { FinanceDashboardCards } from "@/features/finance/components/finance-dashboard-cards";
+import { FinanceDashboardCards } from "@finance/features/finance/components/finance-dashboard-cards";
 
 export default function DashboardPage() {
   return (

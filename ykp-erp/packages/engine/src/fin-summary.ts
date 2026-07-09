@@ -26,8 +26,8 @@ import {
   masterOutlet,
   type FinDailySummary,
 } from "@ykp/schema";
-import { getOutletName, getBrandName } from "./lookup.js";
-import { financeDayId } from "./id-gen.js";
+import { getOutletName, getBrandName } from './lookup';
+import { financeDayId } from './id-gen';
 
 type AnyDb = PostgresJsDatabase<Record<string, unknown>>;
 
@@ -60,19 +60,19 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
   const revenueRows = await financeDb
     .select({ value: finPosDaily.netSales })
     .from(finPosDaily)
-    .where(and(eq(finPosDaily.date, date), eq(finPosDaily.outletId, outlet_id)));
+    .where(and(eq(finPosDaily.date, new Date(date)), eq(finPosDaily.outletId, outlet_id)));
   const revenue = revenueRows.reduce((acc, r) => acc + (r.value ?? 0), 0);
 
   const expenseRows = await financeDb
     .select({ value: finExpense.amount })
     .from(finExpense)
-    .where(and(eq(finExpense.date, date), eq(finExpense.outletId, outlet_id)));
+    .where(and(eq(finExpense.date, new Date(date)), eq(finExpense.outletId, outlet_id)));
   const expense = expenseRows.reduce((acc, r) => acc + (r.value ?? 0), 0);
 
   const supplierRows = await financeDb
     .select({ amount: finSupplierCost.amount, unpaid: finSupplierCost.unpaidAmount, status: finSupplierCost.paymentStatus })
     .from(finSupplierCost)
-    .where(and(eq(finSupplierCost.date, date), eq(finSupplierCost.outletId, outlet_id)));
+    .where(and(eq(finSupplierCost.date, new Date(date)), eq(finSupplierCost.outletId, outlet_id)));
   const supplierCost = supplierRows.reduce((acc, r) => acc + (r.amount ?? 0), 0);
 
   const unpaidRows = await financeDb
@@ -80,22 +80,22 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
     .from(finSupplierCost)
     .where(and(
       eq(finSupplierCost.outletId, outlet_id),
-      lte(finSupplierCost.date, date),
+      lte(finSupplierCost.date, new Date(date)),
     ));
   const unpaidSupplier = unpaidRows
-    .filter((r) => r.unpaid && (r as { unpaid: number | null }).unpaid > 0)
-    .reduce((acc, r) => acc + ((r as { unpaid: number }).unpaid ?? 0), 0);
+    .filter((r) => r.unpaid != null && (r.unpaid as number) > 0)
+    .reduce((acc, r) => acc + ((r.unpaid as number) ?? 0), 0);
 
   const pettyRows = await financeDb
     .select({ value: finPettyCash.amount })
     .from(finPettyCash)
-    .where(and(eq(finPettyCash.date, date), eq(finPettyCash.outletId, outlet_id), eq(finPettyCash.type, "out")));
+    .where(and(eq(finPettyCash.date, new Date(date)), eq(finPettyCash.outletId, outlet_id), eq(finPettyCash.type, "out")));
   const pettyCashOut = pettyRows.reduce((acc, r) => acc + (r.value ?? 0), 0);
 
   const closingRows = await financeDb
     .select({ value: finClosingCash.cashDifference })
     .from(finClosingCash)
-    .where(and(eq(finClosingCash.date, date), eq(finClosingCash.outletId, outlet_id)))
+    .where(and(eq(finClosingCash.date, new Date(date)), eq(finClosingCash.outletId, outlet_id)))
     .orderBy(desc(finClosingCash.recordedAt))
     .limit(1);
   const cashDifference = closingRows[0]?.value ?? 0;

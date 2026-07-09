@@ -6,19 +6,20 @@
 // cron, audit, id-gen, lookup.
 // ============================================================
 
-export * from "./payroll.js";
-export * from "./attendance.js";
-export * from "./hr-summary.js";
-export * from "./fin-summary.js";
-export * from "./moka-importer.js";
-export * from "./approval.js";
-export * from "./hermez-brief.js"; // includes getHermezConfig + TriggerConfig
-export * from "./triggers.js";
-export * from "./lookup.js";
-export * from "./telegram.js";
-export * from "./cron.js";
-export * from "./audit.js";
-export * from "./id-gen.js";
+export * from './payroll';
+export * from './attendance';
+export * from './hr-summary';
+export * from './fin-summary';
+export * from './moka-importer';
+export * from './approval';
+export * from './hermez-brief'; // includes getHermezConfig + TriggerConfig
+export * from './triggers';
+export * from './lookup';
+// NOTE: cron/telegram are server-only (BullMQ + ioredis). Import from
+// `@ykp/engine/cron` and `@ykp/engine/telegram` directly from worker code
+// to avoid bundling them into client apps.
+export { logAudit, nowWibIso, todayWib, type AuditDomain, type AuditEntry } from './audit';
+export * from './id-gen';
 
 export const ENGINE_VERSION = "0.1.0";
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Download, FileText, Sheet } from "lucide-react";
-import { Button } from "./button.js";
+import { Button } from './button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./dropdown-menu.js";
+} from './dropdown-menu';
 
 export interface ExportButtonProps {
   /** Triggered when user picks PDF export. Wire to a server action or jsPDF. */

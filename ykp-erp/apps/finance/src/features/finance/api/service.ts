@@ -4,7 +4,7 @@
  * touch this layer — never raw fetch — so error handling stays uniform.
  */
 
-import type { PosDaily } from "./types.js";
+import type { PosDaily } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {

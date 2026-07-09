@@ -16,8 +16,8 @@ import {
   Badge,
 } from "@ykp/ui";
 import { formatIdr } from "@ykp/ui";
-import { useCreateEmployee, useEmployees } from "@/features/api/queries";
-import type { EmployeeRow } from "@/features/api/types";
+import { useCreateEmployee, useEmployees } from "@hr/features/api/queries";
+import type { EmployeeRow } from "@hr/features/api/types";
 
 /**
  * Employees client island. Roster + create-employee dialog + CSV import.

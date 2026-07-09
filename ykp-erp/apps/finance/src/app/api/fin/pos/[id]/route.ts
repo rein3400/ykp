@@ -3,16 +3,15 @@
  * Only Finance Admin / Super Admin / Owner can patch.
  */
 import { eq, and } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import { finPosDaily } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
-import { FinPosPatchSchema } from "@/lib/schemas.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { logFinanceAudit } from "@finance/lib/server/audit";
+import { FinPosPatchSchema } from "@finance/lib/schemas";
 
-export const PATCH = handler(async (req: NextRequest, ctx: { params: { id: string } }) => {
+export const PATCH = handler(async (req: Request, ctx: { params: { id: string } }) => {
   const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER]);
   const id = ctx.params.id;
   const financeDb = getFinanceDb();

@@ -26,8 +26,8 @@ import {
   type HermezAlertLog,
 } from "@ykp/schema";
 import { formatIdr, formatDateWib } from "@ykp/format";
-import { getBrandName, getOutletName } from "./lookup.js";
-import { hermezBriefId, hermezAlertId } from "./id-gen.js";
+import { getBrandName, getOutletName } from './lookup';
+import { hermezBriefId, hermezAlertId } from './id-gen';
 import {
   lateStaffTrigger,
   cashDiffTrigger,
@@ -38,8 +38,8 @@ import {
   dataMissingTrigger,
   DEFAULT_TRIGGER_CONFIG,
   type TriggerConfig,
-} from "./triggers.js";
-import type { TriggerDecision } from "./triggers.js";
+} from './triggers';
+import type { TriggerDecision } from './triggers';
 
 type AnyDb = PostgresJsDatabase<Record<string, unknown>>;
 
@@ -84,8 +84,8 @@ export async function getPettyCashMovingAverage(
         // Defect H2/Z1 fix: filter by outletId (ID column) instead of outlet
         // (NAME). Matches the rest of the lookup-by-id pipeline.
         eq(finDailySummary.outletId, outletId),
-        gte(finDailySummary.date, start),
-        lt(finDailySummary.date, end),
+        gte(finDailySummary.date, new Date(start)),
+        lt(finDailySummary.date, new Date(end)),
       ),
     );
   if (!rows.length) return undefined;
@@ -143,8 +143,8 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
   const triggerConfig = await getHermezConfig(hermezDb);
 
   // 1. Load all summaries for the day
-  const hrRows = await hrDb.select().from(hrDailySummary).where(eq(hrDailySummary.date, date));
-  const finRows = await financeDb.select().from(finDailySummary).where(eq(finDailySummary.date, date));
+  const hrRows = await hrDb.select().from(hrDailySummary).where(eq(hrDailySummary.date, new Date(date)));
+  const finRows = await financeDb.select().from(finDailySummary).where(eq(finDailySummary.date, new Date(date)));
 
   // 2. Validate brand/outlet IDs against master.
   // Defect Z1 fix: summary rows now carry brandId + outletId. Validation must

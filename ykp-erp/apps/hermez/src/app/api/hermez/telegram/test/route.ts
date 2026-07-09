@@ -1,4 +1,4 @@
-import { sendTelegramMessage } from "@ykp/engine";
+import { sendTelegramMessage } from "@ykp/engine/telegram";
 import { requireSuperAdmin, fail, ok, mapAuthError } from "../../_helpers";
 
 export const dynamic = "force-dynamic";

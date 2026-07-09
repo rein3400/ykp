@@ -10,6 +10,7 @@ export default defineConfig({
     environment: "node",
     include: ["test/**/*.test.ts"],
     globals: false,
+    // @ts-expect-error - vitest overload ambiguity on numeric timeout literal
     timeout: 10_000,
   },
 });

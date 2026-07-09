@@ -8,21 +8,20 @@
  * When outlet_id is omitted, every active outlet in master DB is rebuilt.
  */
 import { and, eq, gte, lte, desc, sql } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can, applyOutletScope } from "@ykp/auth";
 import { finDailySummary, masterOutlet } from "@ykp/schema";
-import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getMasterDb, getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { generateFinDailySummary } from "@ykp/engine";
-import { FinSummaryQuerySchema, FinSummaryRebuildSchema } from "@/lib/schemas.js";
+import { FinSummaryQuerySchema, FinSummaryRebuildSchema } from "@finance/lib/schemas";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinSummaryQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 
@@ -30,8 +29,8 @@ export const GET = handler(async (req: NextRequest) => {
   const db = getFinanceDb();
 
   const conds = [];
-  if (date_from) conds.push(gte(finDailySummary.date, date_from));
-  if (date_to) conds.push(lte(finDailySummary.date, date_to));
+  if (date_from) conds.push(gte(finDailySummary.date, new Date(date_from)));
+  if (date_to) conds.push(lte(finDailySummary.date, new Date(date_to)));
   if (outlet) conds.push(eq(finDailySummary.outlet, outlet));
   applyOutletScope(user, conds, finDailySummary.outletId);
 
@@ -45,7 +44,7 @@ export const GET = handler(async (req: NextRequest) => {
   return ok(rows);
 });
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER]);
   if (!can(user.role, "report", "read")) {
     return fail("forbidden", "Role cannot rebuild summary");

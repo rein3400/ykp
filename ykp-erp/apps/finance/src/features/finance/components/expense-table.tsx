@@ -7,9 +7,9 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable, Button, formatIdr, formatDateWib } from "@ykp/ui";
-import { useExpenseList } from "../api/queries.js";
-import { ApprovalStatusBadge, CurrencyCell } from "./finance-shared.js";
-import type { Expense } from "../api/types.js";
+import { useExpenseList } from '../api/queries';
+import { ApprovalStatusBadge, CurrencyCell } from './finance-shared';
+import type { Expense } from '../api/types';
 
 export interface ExpenseTableProps {
   params: URLSearchParams;

@@ -1,5 +1,5 @@
 import { z, type ZodSchema, type ZodError } from "zod";
-import { jsonError } from "./api-error.js";
+import { jsonError } from './api-error';
 
 /**
  * Parse a request body with a zod schema. Returns a typed value on success

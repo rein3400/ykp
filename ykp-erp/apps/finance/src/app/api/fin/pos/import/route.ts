@@ -16,19 +16,18 @@
  * Returns {rows_imported, errors[]}.
  */
 import { eq, and, inArray, sql } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import { finPosDaily, masterOutlet } from "@ykp/schema";
-import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getMasterDb, getFinanceDb, type FinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { parseMokaCsv, type MokaParsedRow } from "@ykp/engine";
 import { financeDayId } from "@ykp/engine";
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MiB
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.OUTLET_MANAGER]);
 
   // Reject oversize uploads up-front so we never buffer huge bodies in memory.
@@ -72,7 +71,7 @@ export const POST = handler(async (req: NextRequest) => {
 
   // Match each parsed row to a real outlet by name (one DB hit, not N).
   const outlets = await masterDb.select().from(masterOutlet);
-  const byName = new Map(outlets.map((o) => [o.outletName, o]));
+  const byName = new Map(outlets.map((o: { outletName: string; outletId: string; brandId: string }) => [o.outletName, o]));
 
   // Decorate rows with resolved ids; collect the valid rows for batch ops.
   const resolved: MokaParsedRow[] = [];
@@ -108,7 +107,7 @@ export const POST = handler(async (req: NextRequest) => {
         netSales: finPosDaily.netSales,
       })
       .from(finPosDaily)
-      .where(and(inArray(finPosDaily.date, dates), inArray(finPosDaily.outletId, outletIds)));
+      .where(and(inArray(finPosDaily.date, dates.map((d) => new Date(d))), inArray(finPosDaily.outletId, outletIds)));
     for (const e of existing) {
       const key = `${e.dateStr}|${e.outletId}`;
       existingKeys.add(key);
@@ -161,7 +160,7 @@ export const POST = handler(async (req: NextRequest) => {
         outletId: finPosDaily.outletId,
       })
       .from(finPosDaily)
-      .where(and(inArray(finPosDaily.date, dates), inArray(finPosDaily.outletId, outletIds)));
+      .where(and(inArray(finPosDaily.date, dates.map((d) => new Date(d))), inArray(finPosDaily.outletId, outletIds)));
     for (const r of existingRows) {
       const k = `${r.dateStr}|${r.outletId}`;
       seqCounters.set(k, (seqCounters.get(k) ?? 0) + 1);
@@ -231,7 +230,7 @@ export const POST = handler(async (req: NextRequest) => {
             source: "moka",
             updatedAt: new Date(),
           })
-          .where(and(eq(finPosDaily.date, row.date), eq(finPosDaily.outletId, row.outletId)))
+          .where(and(eq(finPosDaily.date, new Date(row.date)), eq(finPosDaily.outletId, row.outletId)))
           .returning({ posId: finPosDaily.posId, date: finPosDaily.date, outletId: finPosDaily.outletId });
         for (const r of updatedRows) {
           imported.push({

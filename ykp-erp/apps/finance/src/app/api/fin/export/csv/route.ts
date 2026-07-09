@@ -11,7 +11,6 @@
  * function that handles all the corner cases of the spec.
  */
 import { and, eq, gte, lte, asc } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can } from "@ykp/auth";
 import {
@@ -22,9 +21,9 @@ import {
   finClosingCash,
   finDailySummary,
 } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { FinExportRequestSchema } from "@/lib/schemas.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { FinExportRequestSchema } from "@finance/lib/schemas";
 import { todayWib } from "@ykp/engine";
 
 /** RFC 4180 §2.6: quote a field when it contains the separator, a quote,
@@ -63,7 +62,7 @@ function toDataUrl(content: string, mime: string): string {
   return `data:${mime};base64,${b64}`;
 }
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER]);
   if (!can(user.role, "report", "export")) return fail("forbidden", "Role cannot export CSV");
 
@@ -80,7 +79,7 @@ export const POST = handler(async (req: NextRequest) => {
 
   switch (report) {
     case "pos_daily": {
-      const conds = [gte(finPosDaily.date, date_from), lte(finPosDaily.date, date_to)];
+      const conds = [gte(finPosDaily.date, new Date(date_from)), lte(finPosDaily.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finPosDaily.outletId, filters_.outlet_id));
       if (filters_.brand_id) conds.push(eq(finPosDaily.brandId, filters_.brand_id));
       const result = await db.select().from(finPosDaily).where(and(...conds)).orderBy(asc(finPosDaily.date));
@@ -94,7 +93,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "supplier_cost": {
-      const conds = [gte(finSupplierCost.date, date_from), lte(finSupplierCost.date, date_to)];
+      const conds = [gte(finSupplierCost.date, new Date(date_from)), lte(finSupplierCost.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finSupplierCost.outletId, filters_.outlet_id));
       if (filters_.brand_id) conds.push(eq(finSupplierCost.brandId, filters_.brand_id));
       if (filters_.supplier_id) conds.push(eq(finSupplierCost.supplierId, filters_.supplier_id));
@@ -108,7 +107,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "petty_cash": {
-      const conds = [gte(finPettyCash.date, date_from), lte(finPettyCash.date, date_to)];
+      const conds = [gte(finPettyCash.date, new Date(date_from)), lte(finPettyCash.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finPettyCash.outletId, filters_.outlet_id));
       const result = await db.select().from(finPettyCash).where(and(...conds)).orderBy(asc(finPettyCash.date));
       headers = ["pc_id", "date", "outlet_id", "account_id", "type", "amount", "urgent_flag", "approval_status", "description", "recorded_by"];
@@ -119,7 +118,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "expense": {
-      const conds = [gte(finExpense.date, date_from), lte(finExpense.date, date_to)];
+      const conds = [gte(finExpense.date, new Date(date_from)), lte(finExpense.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finExpense.outletId, filters_.outlet_id));
       const result = await db.select().from(finExpense).where(and(...conds)).orderBy(asc(finExpense.date));
       headers = ["expense_id", "date", "outlet_id", "category_id", "amount", "payment_method_id", "approval_status", "approved_by", "description", "recorded_by"];
@@ -130,7 +129,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "closing_cash": {
-      const conds = [gte(finClosingCash.date, date_from), lte(finClosingCash.date, date_to)];
+      const conds = [gte(finClosingCash.date, new Date(date_from)), lte(finClosingCash.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finClosingCash.outletId, filters_.outlet_id));
       const result = await db.select().from(finClosingCash).where(and(...conds)).orderBy(asc(finClosingCash.date));
       headers = ["closing_id", "date", "outlet_id", "physical_cash", "expected_cash", "cash_difference", "recorded_by"];
@@ -140,7 +139,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "summary": {
-      const conds = [gte(finDailySummary.date, date_from), lte(finDailySummary.date, date_to)];
+      const conds = [gte(finDailySummary.date, new Date(date_from)), lte(finDailySummary.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finDailySummary.outlet, filters_.outlet_id));
       const result = await db.select().from(finDailySummary).where(and(...conds)).orderBy(asc(finDailySummary.date));
       headers = ["summary_id", "date", "outlet", "revenue", "expense", "supplier_cost", "petty_cash_out", "unpaid_supplier", "cash_difference", "net_profit_estimate", "major_finance_issue"];
@@ -153,7 +152,7 @@ export const POST = handler(async (req: NextRequest) => {
     case "profit": {
       // Same shape as summary; export the computed rows so the caller can
       // audit the per-day P&L that the analytics/profit route derives.
-      const conds = [gte(finDailySummary.date, date_from), lte(finDailySummary.date, date_to)];
+      const conds = [gte(finDailySummary.date, new Date(date_from)), lte(finDailySummary.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finDailySummary.outlet, filters_.outlet_id));
       const result = await db.select().from(finDailySummary).where(and(...conds)).orderBy(asc(finDailySummary.date));
       headers = ["summary_id", "date", "outlet", "revenue", "expense", "supplier_cost", "petty_cash_out", "net_profit_estimate"];

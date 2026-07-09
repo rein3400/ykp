@@ -5,12 +5,12 @@
 
 import * as React from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, ExportButton, KpiCard, formatIdr } from "@ykp/ui";
-import { usePosList } from "@/features/finance/api/queries";
-import { useExportCsv, useExportPdf, useImportPos } from "@/features/finance/api/mutations";
-import { PosTable } from "@/features/finance/components/pos-table";
-import { PosFormDialog } from "@/features/finance/components/pos-form-dialog";
+import { usePosList } from "@finance/features/finance/api/queries";
+import { useExportCsv, useExportPdf, useImportPos } from "@finance/features/finance/api/mutations";
+import { PosTable } from "@finance/features/finance/components/pos-table";
+import { PosFormDialog } from "@finance/features/finance/components/pos-form-dialog";
 import { Upload } from "lucide-react";
-import type { PosDaily } from "@/features/finance/api/types";
+import type { PosDaily } from "@finance/features/finance/api/types";
 
 export default function PosPage() {
   const today = new Date().toISOString().slice(0, 10);
@@ -53,8 +53,8 @@ export default function PosPage() {
           </Button>
           <ExportButton
             label="Export"
-            onExportPdf={() => exportPdf.mutateAsync({ report: "pos_daily", date_from: monthStartStr, date_to: today, filters: {} })}
-            onExportCsv={() => exportCsv.mutateAsync({ report: "pos_daily", date_from: monthStartStr, date_to: today, filters: {} })}
+            onExportPdf={async () => { await exportPdf.mutateAsync({ report: "pos_daily", date_from: monthStartStr, date_to: today, filters: {} }); }}
+            onExportCsv={async () => { await exportCsv.mutateAsync({ report: "pos_daily", date_from: monthStartStr, date_to: today, filters: {} }); }}
           />
           <PosFormDialog />
         </div>

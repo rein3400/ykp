@@ -14,10 +14,10 @@
 import postgres, { type Sql } from "postgres";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
-import * as masterSchema from "../master.js";
-import * as hrSchema from "../hr.js";
-import * as financeSchema from "../finance.js";
-import * as hermezSchema from "../hermez.js";
+import * as masterSchema from '../master';
+import * as hrSchema from '../hr';
+import * as financeSchema from '../finance';
+import * as hermezSchema from '../hermez';
 
 const fullSchema = {
   ...masterSchema,

@@ -11,20 +11,19 @@
  * Only FINANCE_ADMIN / SUPER_ADMIN / OWNER / OUTLET_MANAGER can create.
  */
 import { and, eq, gte, lte, inArray, desc } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can, applyOutletScope } from "@ykp/auth";
 import { finPosDaily, finPaymentMethod } from "@ykp/schema";
-import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { assertOutlet, assertBrand } from "@/lib/server/refs.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getMasterDb, getFinanceDb, type FinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { assertOutlet, assertBrand } from "@finance/lib/server/refs";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { financeDayId } from "@ykp/engine";
-import { FinPosQuerySchema, FinPosCreateSchema } from "@/lib/schemas.js";
+import { FinPosQuerySchema, FinPosCreateSchema } from "@finance/lib/schemas";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER]);
-  const search = req.nextUrl.searchParams;
+  const search = new URL(req.url).searchParams;
   const parsed = FinPosQuerySchema.safeParse(Object.fromEntries(search.entries()));
   if (!parsed.success) return fail("validation_error", "Invalid query parameters", parsed.error.flatten());
 
@@ -32,8 +31,8 @@ export const GET = handler(async (req: NextRequest) => {
   const db = getFinanceDb();
 
   const conditions = [];
-  if (date_from) conditions.push(gte(finPosDaily.date, date_from));
-  if (date_to) conditions.push(lte(finPosDaily.date, date_to));
+  if (date_from) conditions.push(gte(finPosDaily.date, new Date(date_from)));
+  if (date_to) conditions.push(lte(finPosDaily.date, new Date(date_to)));
   if (outlet_id) conditions.push(eq(finPosDaily.outletId, outlet_id));
   applyOutletScope(user, conditions, finPosDaily.outletId);
 
@@ -51,7 +50,7 @@ export const GET = handler(async (req: NextRequest) => {
   return ok(filtered);
 });
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.OUTLET_MANAGER]);
   // Defect S3 fix: resource must be "pos" / "moka_import", not "closing".
   if (!can(user.role, "pos", "create")) {
@@ -91,11 +90,11 @@ export const POST = handler(async (req: NextRequest) => {
 
   // Defect S1 fix: deterministic per-(date,outlet,seq) id computed inside a
   // transaction with FOR UPDATE so concurrent POSTs never allocate the same seq.
-  const posId = await financeDb.transaction(async (tx) => {
+  const posId = await financeDb.transaction(async (tx: FinanceDb) => {
     const existing = await tx
       .select({ count: finPosDaily.posId })
       .from(finPosDaily)
-      .where(and(eq(finPosDaily.date, data.date), eq(finPosDaily.outletId, data.outlet_id)))
+      .where(and(eq(finPosDaily.date, new Date(data.date)), eq(finPosDaily.outletId, data.outlet_id)))
       .for("update");
     const seq = existing.length + 1;
     return financeDayId(data.date, seq, data.outlet_id);

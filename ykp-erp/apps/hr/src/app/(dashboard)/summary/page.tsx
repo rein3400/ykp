@@ -1,4 +1,4 @@
-import { HrSummaryClient } from "@/features/components/hr-summary-cards";
+import { HrSummaryClient } from "@hr/features/components/hr-summary-cards";
 
 /**
  * HR daily summary page. Grid of hr_daily_summary rows + rebuild button

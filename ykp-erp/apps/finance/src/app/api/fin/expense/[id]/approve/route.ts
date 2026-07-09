@@ -8,19 +8,18 @@
  * Body: { decision: "APPROVE" | "REJECT", reason?: string }
  */
 import { eq } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import { finExpense } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { transitionApproval } from "@ykp/engine";
-import { FinExpenseApproveSchema } from "@/lib/schemas.js";
+import { FinExpenseApproveSchema } from "@finance/lib/schemas";
 
 const OWNER_ONLY_THRESHOLD = 5_000_000;
 
-export const POST = handler(async (req: NextRequest, ctx: { params: { id: string } }) => {
+export const POST = handler(async (req: Request, ctx: { params: { id: string } }) => {
   const id = ctx.params.id;
   const financeDb = getFinanceDb();
   const existing = await financeDb.select().from(finExpense).where(eq(finExpense.expenseId, id)).limit(1);

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "corepack enable && pnpm install --frozen-lockfile",
+  "buildCommand": "YKP_DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder corepack enable && YKP_DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder pnpm --filter @ykp/hr build",
+  "outputDirectory": "apps/hr/.next",
+  "framework": "nextjs"
+}

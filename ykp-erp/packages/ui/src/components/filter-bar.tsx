@@ -8,8 +8,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./select.js";
-import { cn } from "../lib/utils.js";
+} from './select';
+import { cn } from '../lib/utils';
 
 export interface FilterOption {
   label: string;

@@ -10,11 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ykp/schema": "workspace:*",
-    "@ykp/ui": "workspace:*",
-    "@ykp/auth": "workspace:*",
-    "@ykp/config": "workspace:*",
-    "@ykp/engine": "workspace:*",
+    "@ykp/schema": "file:../../packages/schema",
+    "@ykp/ui": "file:../../packages/ui",
+    "@ykp/auth": "file:../../packages/auth",
+    "@ykp/config": "file:../../packages/config",
+    "@ykp/engine": "file:../../packages/engine",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

@@ -8,19 +8,18 @@
  * Body: { decision: "APPROVE" | "REJECT", paid_amount?, reason? }
  */
 import { eq } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can } from "@ykp/auth";
 import { finSupplierCost } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
-import { transitionApproval } from "@ykp/engine";
-import { FinSupplierApprovePaymentSchema } from "@/lib/schemas.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { logFinanceAudit } from "@finance/lib/server/audit";
+import { transitionApproval, type TransitionResult } from "@ykp/engine";
+import { FinSupplierApprovePaymentSchema } from "@finance/lib/schemas";
 
 const OWNER_ONLY_THRESHOLD = 5_000_000;
 
-export const POST = handler(async (req: NextRequest, ctx: { params: { id: string } }) => {
+export const POST = handler(async (req: Request, ctx: { params: { id: string } }) => {
   const user = await requireRole([Role.OWNER, Role.FINANCE_ADMIN, Role.SUPER_ADMIN]);
   if (!can(user.role, "approval", "approve")) {
     return fail("forbidden", "You cannot approve supplier payments");
@@ -87,7 +86,7 @@ export const POST = handler(async (req: NextRequest, ctx: { params: { id: string
 
   // F5: if row was DRAFT, transition DRAFT->PENDING first, then PENDING->APPROVED.
   // Default supplier POST is PENDING, so the common path is direct PENDING->APPROVED.
-  let preTransition = { ok: true } as const;
+  let preTransition: TransitionResult = { ok: true } as TransitionResult;
   if (approvalStatus === "DRAFT") {
     const t = transitionApproval(
       { id: row.costId, entity: "supplier_cost", amount: row.amount, status: "DRAFT" },

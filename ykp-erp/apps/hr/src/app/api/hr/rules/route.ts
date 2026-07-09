@@ -7,8 +7,8 @@ import {
 } from "@ykp/schema";
 import { requireRole, Role } from "@ykp/auth";
 import { logAudit, hrRuleId, getOutletName, PrefixIdSequence } from "@ykp/engine";
-import { jsonOk, jsonError, handleError } from "@/lib/api-error";
-import { resolveBody, resolveQuery } from "@/lib/zod-resolver";
+import { jsonOk, jsonError, handleError } from "@hr/lib/api-error";
+import { resolveBody, resolveQuery } from "@hr/lib/zod-resolver";
 
 export const dynamic = "force-dynamic";
 
@@ -98,8 +98,18 @@ export async function POST(req: Request): Promise<Response> {
 
     await masterDb.insert(hrRules).values({
       ruleId,
-      ...parsed,
-    });
+      outletId: parsed.outletId,
+      shiftName: parsed.shiftName,
+      shiftStart: parsed.shiftStart,
+      shiftEnd: parsed.shiftEnd,
+      lateToleranceMinutes: parsed.lateToleranceMinutes,
+      overtimeRateMultiplier: parsed.overtimeRateMultiplier as unknown as string,
+      overtimeDailyCapHours: parsed.overtimeDailyCapHours as unknown as string,
+      earlyClockinToleranceMin: parsed.earlyClockinToleranceMin,
+      mandatoryCheckout: parsed.mandatoryCheckout,
+      payrollPeriodStart: parsed.payrollPeriodStart,
+      payrollPeriodEnd: parsed.payrollPeriodEnd,
+    } as typeof hrRules.$inferInsert);
 
     await logAudit(masterDb, {
       actor: user.id,

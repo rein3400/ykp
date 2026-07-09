@@ -15,8 +15,8 @@ import {
   employeeId,
   PrefixIdSequence,
 } from "@ykp/engine";
-import { jsonOk, jsonError, handleError } from "@/lib/api-error";
-import { resolveBody, resolveQuery } from "@/lib/zod-resolver";
+import { jsonOk, jsonError, handleError } from "@hr/lib/api-error";
+import { resolveBody, resolveQuery } from "@hr/lib/zod-resolver";
 
 export const dynamic = "force-dynamic";
 
@@ -138,7 +138,7 @@ export async function POST(req: Request): Promise<Response> {
       phone: parsed.phone ?? null,
       telegramId: parsed.telegramId ?? null,
       employmentType: parsed.employmentType ?? null,
-      joinDate: parsed.joinDate ?? null,
+      joinDate: parsed.joinDate ? new Date(parsed.joinDate) : null,
       baseSalary: parsed.baseSalary,
       status: "active",
     });

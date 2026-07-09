@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, KpiCard, formatIdr } from "@ykp/ui";
-import { useProfitAnalytics, useRevenueAnalytics } from "@/features/finance/api/queries";
+import { useProfitAnalytics, useRevenueAnalytics } from "@finance/features/finance/api/queries";
 
 export default function AnalyticsPage() {
   const params = React.useMemo(() => new URLSearchParams({ period: "month" }), []);

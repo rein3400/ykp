@@ -4,7 +4,7 @@
  * Toast notifications are wired by the calling component, not here.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { finService } from "./service.js";
+import { finService } from './service';
 import type {
   CreatePosBody,
   CreateSupplierCostBody,
@@ -13,7 +13,7 @@ import type {
   CreateClosingBody,
   ApproveBody,
   ApprovePaymentBody,
-} from "./types.js";
+} from './types';
 
 function useFinMutation<TBody, TRes>(path: string[], mutFn: (b: TBody) => Promise<TRes>, invalid: string[][]) {
   const qc = useQueryClient();

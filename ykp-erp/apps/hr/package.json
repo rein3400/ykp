@@ -11,11 +11,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ykp/schema": "workspace:*",
-    "@ykp/engine": "workspace:*",
-    "@ykp/ui": "workspace:*",
-    "@ykp/auth": "workspace:*",
-    "@ykp/config": "workspace:*",
+    "@ykp/schema": "file:../../packages/schema",
+    "@ykp/engine": "file:../../packages/engine",
+    "@ykp/ui": "file:../../packages/ui",
+    "@ykp/auth": "file:../../packages/auth",
+    "@ykp/config": "file:../../packages/config",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

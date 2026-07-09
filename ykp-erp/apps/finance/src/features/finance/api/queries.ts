@@ -4,7 +4,7 @@
  * Mutation invalidation lives in mutations.ts.
  */
 import { useQuery } from "@tanstack/react-query";
-import { finService } from "./service.js";
+import { finService } from './service';
 import type {
   PosDaily,
   SupplierCost,
@@ -20,7 +20,7 @@ import type {
   PettyCashAccount,
   RevenueAnalytics,
   ProfitAnalytics,
-} from "./types.js";
+} from './types';
 
 const STALE = 30_000;
 

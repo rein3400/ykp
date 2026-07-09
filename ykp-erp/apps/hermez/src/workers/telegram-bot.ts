@@ -10,7 +10,7 @@
  * Chat priority:
  *   OWNER_CHAT_ID > TELEGRAM_OWNER_CHAT_ID
  */
-import { sendTelegramMessage } from "@ykp/engine";
+import { sendTelegramMessage } from "@ykp/engine/telegram";
 
 export async function sendHermezTelegramMessage(text: string) {
   const token =

@@ -4,15 +4,14 @@
  * Filter: only rows whose payment_status is UNPAID, PARTIAL, or OVERDUE.
  */
 import { or, eq, lte, sql, desc } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import { finSupplierCost } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok } from "@/lib/server/http.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok } from "@finance/lib/server/http";
 import { todayWib } from "@ykp/engine";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.VIEWER]);
   const db = getFinanceDb();
   const today = todayWib();

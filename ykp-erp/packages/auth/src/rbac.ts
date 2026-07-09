@@ -10,8 +10,8 @@
  * change — every callsite already depends on the SessionUser shape.
  */
 
-import { Role } from "./roles.js";
-import { getSession } from "./session.js";
+import { Role } from './roles';
+import { getSession } from './session';
 
 /** Logical resources guarded by RBAC. Stable identifiers, not display labels. */
 export type Resource =

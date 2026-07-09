@@ -12,8 +12,8 @@
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { and, eq, sql } from "drizzle-orm";
 import { hrAttendance, hrDailySummary, masterOutlet, type HrDailySummary } from "@ykp/schema";
-import { getOutletName, getBrandName } from "./lookup.js";
-import { hrDailySummaryId } from "./id-gen.js";
+import { getOutletName, getBrandName } from './lookup';
+import { hrDailySummaryId } from './id-gen';
 
 type AnyDb = PostgresJsDatabase<Record<string, unknown>>;
 
@@ -60,7 +60,7 @@ export async function generateHrDailySummary(
       isLate: hrAttendance.isLate,
     })
     .from(hrAttendance)
-    .where(and(eq(hrAttendance.date, date), eq(hrAttendance.outletId, outlet_id)));
+    .where(and(eq(hrAttendance.date, new Date(date)), eq(hrAttendance.outletId, outlet_id)));
 
   const totalStaff = rows.length;
   // Present = any of {present, izin, sakit, cuti}; only status="absent" is true absence.

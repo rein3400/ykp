@@ -13,7 +13,14 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@finance/*": ["./apps/finance/src/*"],
+      "@hr/*": ["./apps/hr/src/*"],
+      "@hermez/*": ["./apps/hermez/src/*"]
+    },
     "plugins": [{ "name": "next" }]
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".next", "dist"]
 }

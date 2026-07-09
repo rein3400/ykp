@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { initDbClients, createHrDb, hrAttendance } from "@ykp/schema";
 import { requireRole, Role } from "@ykp/auth";
 import { logAudit } from "@ykp/engine";
-import { jsonOk, jsonError, handleError } from "@/lib/api-error";
-import { resolveBody } from "@/lib/zod-resolver";
+import { jsonOk, jsonError, handleError } from "@hr/lib/api-error";
+import { resolveBody } from "@hr/lib/zod-resolver";
 
 export const dynamic = "force-dynamic";
 

@@ -6,8 +6,8 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable, formatIdr, formatDateWib } from "@ykp/ui";
-import { usePosList } from "../api/queries.js";
-import type { PosDaily } from "../api/types.js";
+import { usePosList } from '../api/queries';
+import type { PosDaily } from '../api/types';
 
 export interface PosTableProps {
   params: URLSearchParams;

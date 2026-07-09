@@ -7,9 +7,9 @@ import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable, Button, formatIdr, formatDateWib } from "@ykp/ui";
 import { CheckCircle, XCircle, Upload } from "lucide-react";
-import { useSupplierList, useUnpaidList } from "../api/queries.js";
-import { PaymentStatusBadge, CurrencyCell } from "./finance-shared.js";
-import type { SupplierCost } from "../api/types.js";
+import { useSupplierList, useUnpaidList } from '../api/queries';
+import { PaymentStatusBadge, CurrencyCell } from './finance-shared';
+import type { SupplierCost } from '../api/types';
 
 export interface SupplierCostTableProps {
   params: URLSearchParams;

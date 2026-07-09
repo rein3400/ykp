@@ -6,7 +6,7 @@ import {
   date,
   jsonb,
   bigserial,
-  uniqueConstraint,
+  unique,
 } from "drizzle-orm/pg-core";
 
 const hermez = pgSchema("hermez");
@@ -90,7 +90,7 @@ export const hermezAlertLog = hermez.table(
     // Defect Z5 fix: unique by (date, outlet, alert_type) so the daily
     // brief can upsert a single alert row per day/outlet/type instead of
     // creating duplicates.
-    dateOutletTypeUnique: uniqueConstraint("hermez_alert_date_outlet_type_unique").on(t.date, t.outlet, t.alertType),
+    dateOutletTypeUnique: unique("hermez_alert_date_outlet_type_unique").on(t.date, t.outlet, t.alertType),
   }),
 );
 

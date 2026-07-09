@@ -10,18 +10,17 @@
  * that string rather than throwing — a misconfigured bot is a config error,
  * not a 500.
  */
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { sendTelegramMessage } from "@ykp/engine";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { sendTelegramMessage } from "@ykp/engine/telegram";
 import { z } from "zod";
 
 const Body = z.object({
   message: z.string().min(1).max(1024),
 });
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([Role.OWNER, Role.SUPER_ADMIN, Role.FINANCE_ADMIN]);
   const body = await req.json();
   const parsed = Body.safeParse(body);

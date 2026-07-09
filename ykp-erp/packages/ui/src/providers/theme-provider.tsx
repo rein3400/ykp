@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
-import { Button } from "../components/button.js";
+import { Button } from '../components/button';
 
 export interface ThemeProviderProps {
   children: React.ReactNode;

@@ -55,8 +55,9 @@ export function fail(code: ApiErrorCode, message: string, details?: unknown): Re
  * Errors carrying a numeric `status` property (from requireRole / can
  * guards) keep that status; everything else maps to internal_error 500.
  */
-export function handler(fn: (req: Request, ctx?: unknown) => Promise<Response>): (req: Request, ctx?: unknown) => Promise<Response> {
-  return async (req, ctx) => {
+export function handler(fn: (req: any, ctx?: any) => Promise<Response>): (req: any, ctx?: any) => Promise<Response> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return async (req: any, ctx?: any) => {
     try {
       return await fn(req, ctx);
     } catch (err) {

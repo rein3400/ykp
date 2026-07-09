@@ -19,8 +19,8 @@ import {
   useCreateRule,
   useHrRules,
   useUpdateRule,
-} from "@/features/api/queries";
-import type { HrRuleRow } from "@/features/api/types";
+} from "@hr/features/api/queries";
+import type { HrRuleRow } from "@hr/features/api/types";
 
 /**
  * HR rules table client. Lists hr_rules per outlet, opens an edit modal

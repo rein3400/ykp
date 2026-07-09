@@ -19,8 +19,8 @@ import {
   uuid,
   todayWib,
 } from "@ykp/engine";
-import { jsonOk, jsonError, handleError } from "@/lib/api-error";
-import { resolveBody, resolveQuery } from "@/lib/zod-resolver";
+import { jsonOk, jsonError, handleError } from "@hr/lib/api-error";
+import { resolveBody, resolveQuery } from "@hr/lib/zod-resolver";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +73,7 @@ export async function GET(req: Request): Promise<Response> {
     const masterDb = createMasterDb();
 
     const filters = [];
-    if (parsed.date) filters.push(eq(hrAttendance.date, parsed.date));
+    if (parsed.date) filters.push(eq(hrAttendance.date, new Date(parsed.date)));
     if (parsed.outletId) filters.push(eq(hrAttendance.outletId, parsed.outletId));
     if (parsed.employeeId) filters.push(eq(hrAttendance.employeeId, parsed.employeeId));
     applyOutletScope(user, filters, hrAttendance.outletId);
@@ -199,7 +199,7 @@ async function handleCheckin(
       and(
         eq(hrAttendance.employeeId, employeeId),
         eq(hrAttendance.outletId, outletId),
-        eq(hrAttendance.date, today),
+        eq(hrAttendance.date, new Date(today)),
       ),
     )
     .limit(1);
@@ -210,7 +210,7 @@ async function handleCheckin(
   const attendanceId = `ATT-${uuid()}`;
   await hrDb.insert(hrAttendance).values({
     attendanceId,
-    date: today,
+    date: new Date(today),
     employeeId,
     outletId,
     shiftName: shiftName ?? rule.shiftName,

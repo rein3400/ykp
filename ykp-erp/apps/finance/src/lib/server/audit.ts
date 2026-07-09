@@ -4,7 +4,7 @@
  * table. The shape mirrors @ykp/engine logAudit but targets the finance
  * DB so cross-DB writes are not required.
  */
-import type { FinanceDb } from "./db.js";
+import type { FinanceDb } from './db';
 import { financeAuditLog } from "@ykp/schema";
 
 export interface AuditRecord {

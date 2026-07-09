@@ -9,20 +9,19 @@
  * fin_opening_balance for the latest effective opening, sums cashbook.
  */
 import { and, eq, lte, sql } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import { finPettyCash, finOpeningBalance } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { FinPettyCashBalanceQuerySchema } from "@/lib/schemas.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { FinPettyCashBalanceQuerySchema } from "@finance/lib/schemas";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
   void user;
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinPettyCashBalanceQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 
@@ -36,7 +35,7 @@ export const GET = handler(async (req: NextRequest) => {
       effective_date: finOpeningBalance.effectiveDate,
     })
     .from(finOpeningBalance)
-    .where(and(eq(finOpeningBalance.outletId, outlet_id), lte(finOpeningBalance.effectiveDate, as_of)))
+    .where(and(eq(finOpeningBalance.outletId, outlet_id), lte(finOpeningBalance.effectiveDate, new Date(as_of))))
     .orderBy(sql`${finOpeningBalance.effectiveDate} desc`)
     .limit(1);
   const openingBalance = opening[0]?.petty_cash_balance ?? 0;
@@ -45,7 +44,7 @@ export const GET = handler(async (req: NextRequest) => {
   const rows = await db
     .select({ type: finPettyCash.type, amount: finPettyCash.amount, status: finPettyCash.approvalStatus })
     .from(finPettyCash)
-    .where(and(eq(finPettyCash.outletId, outlet_id), lte(finPettyCash.date, as_of)));
+    .where(and(eq(finPettyCash.outletId, outlet_id), lte(finPettyCash.date, new Date(as_of))));
 
   let cashIn = 0;
   let cashOut = 0;

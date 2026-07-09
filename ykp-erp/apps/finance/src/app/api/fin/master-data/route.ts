@@ -6,7 +6,6 @@
  * (per Hermez boundary, master writes happen in the master app).
  */
 import { eq } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import {
@@ -17,16 +16,16 @@ import {
   finPaymentMethod,
   finPettyCashAccount,
 } from "@ykp/schema";
-import { getMasterDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { FinMasterQuerySchema } from "@/lib/schemas.js";
+import { getMasterDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { FinMasterQuerySchema } from "@finance/lib/schemas";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
   void user;
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinMasterQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 

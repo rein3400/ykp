@@ -9,7 +9,7 @@ import {
   jsonb,
   bigserial,
   uniqueIndex,
-  uniqueConstraint,
+  unique,
 } from "drizzle-orm/pg-core";
 
 const hr = pgSchema("hr");
@@ -147,7 +147,7 @@ export const hrDailySummary = hr.table(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   },
   (t) => ({
-    dateOutletUnique: uniqueConstraint("hr_daily_summary_date_outlet_unique").on(t.date, t.outlet),
+    dateOutletUnique: unique("hr_daily_summary_date_outlet_unique").on(t.date, t.outlet),
   }),
 );
 

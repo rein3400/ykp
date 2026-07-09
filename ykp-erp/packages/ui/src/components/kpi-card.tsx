@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
-import { Card, CardContent } from "./card.js";
-import { cn } from "../lib/utils.js";
+import { Card, CardContent } from './card';
+import { cn } from '../lib/utils';
 
 export interface KpiCardProps {
   /** Display title of the metric. */

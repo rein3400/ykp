@@ -42,8 +42,8 @@ export async function scheduleHermezCron(cfg: CronConfig) {
   const hour = cfg.runHourUtc ?? 15;
   const conn = makeConnection(cfg.redisUrl);
 
-  const brief = new Queue<BriefJobData>(HERMEZ_BRIEF_QUEUE, { connection: conn });
-  const retry = new Queue<BriefJobData>(HERMEZ_RETRY_QUEUE, { connection: conn });
+  const brief = new Queue<BriefJobData>(HERMEZ_BRIEF_QUEUE, { connection: conn as any });
+  const retry = new Queue<BriefJobData>(HERMEZ_RETRY_QUEUE, { connection: conn as any });
 
   // Wipe any existing repeatable jobs and re-add with current schedule.
   const briefRepeatables = await brief.getRepeatableJobs();
@@ -51,7 +51,7 @@ export async function scheduleHermezCron(cfg: CronConfig) {
   await brief.add(
     "generate",
     { date: "", triggeredBy: "cron" },
-    { repeat: { pattern: `0 ${hour} * * *`, tz: "UTC" }, removeOnComplete: 100, removeOnFail: 200 },
+    { repeat: { pattern: `0 ${hour} * * *`, tz: "UTC" }, removeOnComplete: 100, removeOnFail: 200 } as any,
   );
 
   const retryRepeatables = await retry.getRepeatableJobs();
@@ -59,7 +59,7 @@ export async function scheduleHermezCron(cfg: CronConfig) {
   await retry.add(
     "retry-send",
     { date: "", triggeredBy: "cron" },
-    { repeat: { pattern: `15 ${hour} * * *`, tz: "UTC" }, removeOnComplete: 100, removeOnFail: 200 },
+    { repeat: { pattern: `15 ${hour} * * *`, tz: "UTC" }, removeOnComplete: 100, removeOnFail: 200 } as any,
   );
 
   return { brief, retry, connection: conn };
@@ -75,7 +75,7 @@ export function makeBriefWorker(
   handler: (job: Job<BriefJobData>) => Promise<void>,
 ): Worker<BriefJobData> {
   return new Worker<BriefJobData>(HERMEZ_BRIEF_QUEUE, handler, {
-    connection: makeConnection(redisUrl),
+    connection: makeConnection(redisUrl) as any,
     concurrency: 1,
   });
 }
@@ -85,7 +85,7 @@ export function makeRetryWorker(
   handler: (job: Job<BriefJobData>) => Promise<void>,
 ): Worker<BriefJobData> {
   return new Worker<BriefJobData>(HERMEZ_RETRY_QUEUE, handler, {
-    connection: makeConnection(redisUrl),
+    connection: makeConnection(redisUrl) as any,
     concurrency: 1,
   });
 }

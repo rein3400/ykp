@@ -6,10 +6,10 @@
 import * as React from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, ExportButton, KpiCard, formatIdr } from "@ykp/ui";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@ykp/ui";
-import { usePettyCashBalance, usePettyCashList } from "@/features/finance/api/queries";
-import { useApprovePettyCash, useExportCsv, useExportPdf } from "@/features/finance/api/mutations";
-import { PettyCashTable } from "@/features/finance/components/petty-cash-table";
-import { todayWib } from "@ykp/engine";
+import { usePettyCashBalance, usePettyCashList } from "@finance/features/finance/api/queries";
+import { useApprovePettyCash, useExportCsv, useExportPdf } from "@finance/features/finance/api/mutations";
+import { PettyCashTable } from "@finance/features/finance/components/petty-cash-table";
+import { todayWib } from "@ykp/engine/client";
 
 export default function PettyCashPage() {
   const today = todayWib();
@@ -28,8 +28,8 @@ export default function PettyCashPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Petty Cash</h2>
         <ExportButton
-          onExportPdf={() => exportPdf.mutateAsync({ report: "petty_cash", date_from: today, date_to: today, filters: {} })}
-          onExportCsv={() => exportCsv.mutateAsync({ report: "petty_cash", date_from: today, date_to: today, filters: {} })}
+          onExportPdf={async () => { await exportPdf.mutateAsync({ report: "petty_cash", date_from: today, date_to: today, filters: {} }); }}
+          onExportCsv={async () => { await exportCsv.mutateAsync({ report: "petty_cash", date_from: today, date_to: today, filters: {} }); }}
         />
       </div>
 

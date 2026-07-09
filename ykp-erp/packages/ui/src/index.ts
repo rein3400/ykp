@@ -5,30 +5,30 @@
  */
 
 // primitives
-export * from "./components/button.js";
-export * from "./components/card.js";
-export * from "./components/input.js";
-export * from "./components/table.js";
-export * from "./components/badge.js";
-export * from "./components/dialog.js";
-export * from "./components/select.js";
-export * from "./components/tabs.js";
-export * from "./components/toast.js";
-export * from "./components/dropdown-menu.js";
-export * from "./components/form.js";
+export * from './components/button';
+export * from './components/card';
+export * from './components/input';
+export * from './components/table';
+export * from './components/badge';
+export * from './components/dialog';
+export * from './components/select';
+export * from './components/tabs';
+export * from './components/toast';
+export * from './components/dropdown-menu';
+export * from './components/form';
 
 // composite
-export * from "./components/kpi-card.js";
-export * from "./components/data-table.js";
-export * from "./components/filter-bar.js";
-export * from "./components/export-button.js";
+export * from './components/kpi-card';
+export * from './components/data-table';
+export * from './components/filter-bar';
+export * from './components/export-button';
 
 // lib
-export * from "./lib/utils.js";
-export * from "./lib/format.js";
+export * from './lib/utils';
+export * from './lib/format';
 
 // providers
-export * from "./providers/theme-provider.js";
-export * from "./providers/query-provider.js";
+export * from './providers/theme-provider';
+export * from './providers/query-provider';
 
 export const UI_VERSION = "0.1.0";

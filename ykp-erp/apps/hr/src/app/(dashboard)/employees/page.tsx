@@ -1,4 +1,4 @@
-import { EmployeesTableClient } from "@/features/components/employees-table";
+import { EmployeesTableClient } from "@hr/features/components/employees-table";
 
 /**
  * Employee roster page. Reads master_employee from master DB. HR_ADMIN

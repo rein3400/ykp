@@ -3,9 +3,9 @@
 import * as React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Badge, Button, Card, CardContent, DataTable, Input } from "@ykp/ui";
-import { useHrSummary, useRebuildSummary } from "@/features/api/queries";
-import { todayWib } from "@/features/lib/wib";
-import type { HrDailySummaryRow } from "@/features/api/types";
+import { useHrSummary, useRebuildSummary } from "@hr/features/api/queries";
+import { todayWib } from "@hr/features/lib/wib";
+import type { HrDailySummaryRow } from "@hr/features/api/types";
 
 /**
  * HR daily summary island. Grid of hr_daily_summary rows + a rebuild

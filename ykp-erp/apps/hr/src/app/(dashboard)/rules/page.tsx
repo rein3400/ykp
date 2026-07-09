@@ -1,4 +1,4 @@
-import { RulesTableClient } from "@/features/components/rules-table";
+import { RulesTableClient } from "@hr/features/components/rules-table";
 
 /**
  * HR rules page. One hr_rules row per outlet+shift. Edit modal lets

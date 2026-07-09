@@ -16,7 +16,7 @@ import {
   masterSql,
   financeSql,
   hermezSql,
-} from "./db/clients.js";
+} from './db/clients';
 import {
   masterBrand,
   masterOutlet,
@@ -28,9 +28,9 @@ import {
   finPaymentMethod,
   finPettyCashAccount,
   users,
-} from "./master.js";
-import { finOpeningBalance } from "./finance.js";
-import { hermezConfig } from "./hermez.js";
+} from './master';
+import { finOpeningBalance } from './finance';
+import { hermezConfig } from './hermez';
 
 // ----- Static seed data -----
 

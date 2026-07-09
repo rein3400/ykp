@@ -12,14 +12,13 @@
  *   year  -> last 365 days
  */
 import { and, eq, gte, lte, sql, sum, desc } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import { finPosDaily } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
 import { todayWib } from "@ykp/engine";
-import { FinAnalyticsPeriodSchema } from "@/lib/schemas.js";
+import { FinAnalyticsPeriodSchema } from "@finance/lib/schemas";
 
 function windowFor(period: string): { from: string; to: string } {
   const today = new Date(todayWib());
@@ -45,12 +44,12 @@ function windowFor(period: string): { from: string; to: string } {
   return { from: `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`, to: `${to.getFullYear()}-${pad(to.getMonth() + 1)}-${pad(to.getDate())}` };
 }
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
   void user;
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinAnalyticsPeriodSchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 
@@ -60,7 +59,7 @@ export const GET = handler(async (req: NextRequest) => {
   const to = date_to ?? win.to;
 
   const db = getFinanceDb();
-  const conds = [gte(finPosDaily.date, from), lte(finPosDaily.date, to)];
+  const conds = [gte(finPosDaily.date, new Date(from)), lte(finPosDaily.date, new Date(to))];
   if (brand_id) conds.push(eq(finPosDaily.brandId, brand_id));
   if (outlet_id) conds.push(eq(finPosDaily.outletId, outlet_id));
 

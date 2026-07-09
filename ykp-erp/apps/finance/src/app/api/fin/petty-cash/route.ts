@@ -8,23 +8,22 @@
  * audit chain when urgent.
  */
 import { and, eq, gte, lte, desc } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can } from "@ykp/auth";
 import { finPettyCash } from "@ykp/schema";
-import { getMasterDb, getFinanceDb, type FinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { assertOutlet, assertPettyCashAccount, assertExpenseCategory } from "@/lib/server/refs.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getMasterDb, getFinanceDb, type FinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { assertOutlet, assertPettyCashAccount, assertExpenseCategory } from "@finance/lib/server/refs";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { financeDayId, transitionApproval } from "@ykp/engine";
-import { FinPettyCashQuerySchema, FinPettyCashCreateSchema } from "@/lib/schemas.js";
+import { FinPettyCashQuerySchema, FinPettyCashCreateSchema } from "@finance/lib/schemas";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
   void user; // available for future RBAC scope checks
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinPettyCashQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 
@@ -32,8 +31,8 @@ export const GET = handler(async (req: NextRequest) => {
   const db = getFinanceDb();
 
   const conds = [];
-  if (date_from) conds.push(gte(finPettyCash.date, date_from));
-  if (date_to) conds.push(lte(finPettyCash.date, date_to));
+  if (date_from) conds.push(gte(finPettyCash.date, new Date(date_from)));
+  if (date_to) conds.push(lte(finPettyCash.date, new Date(date_to)));
   if (outlet_id) conds.push(eq(finPettyCash.outletId, outlet_id));
   if (account_id) conds.push(eq(finPettyCash.accountId, account_id));
   if (type) conds.push(eq(finPettyCash.type, type));
@@ -49,7 +48,7 @@ export const GET = handler(async (req: NextRequest) => {
   return ok(rows);
 });
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.OUTLET_MANAGER, Role.STAFF_INPUT,
   ]);
@@ -87,13 +86,13 @@ export const POST = handler(async (req: NextRequest) => {
   // the transition fails we throw inside the tx, which rolls back the insert
   // automatically. The tx handle is also used for the audit log write.
   try {
-    const outcome = await financeDb.transaction(async (tx) => {
+    const outcome = await financeDb.transaction(async (tx: FinanceDb) => {
       // Allocate pcId with FOR UPDATE so concurrent inserts for the same
       // date+outlet serialise and never collide.
       const existing = await tx
         .select({ pcId: finPettyCash.pcId })
         .from(finPettyCash)
-        .where(and(eq(finPettyCash.date, data.date), eq(finPettyCash.outletId, data.outlet_id)))
+        .where(and(eq(finPettyCash.date, new Date(data.date)), eq(finPettyCash.outletId, data.outlet_id)))
         .for("update");
       const seq = existing.length + 1;
       const pcId = financeDayId(data.date, seq, data.outlet_id);
@@ -124,7 +123,7 @@ export const POST = handler(async (req: NextRequest) => {
 
       if (!data.urgent_flag) {
         // Non-urgent: stays DRAFT. Audit the create inside the same tx.
-        await logFinanceAudit(tx as unknown as FinanceDb, {
+        await logFinanceAudit(tx, {
           actor: user.id,
           action: `petty_cash:${data.type}`,
           entity: "fin_petty_cash",
@@ -160,7 +159,7 @@ export const POST = handler(async (req: NextRequest) => {
         .where(eq(finPettyCash.pcId, inserted.pcId))
         .returning();
 
-      await logFinanceAudit(tx as unknown as FinanceDb, {
+      await logFinanceAudit(tx, {
         actor: transition.audit_entry.actor,
         action: transition.audit_entry.action,
         entity: transition.audit_entry.entity,

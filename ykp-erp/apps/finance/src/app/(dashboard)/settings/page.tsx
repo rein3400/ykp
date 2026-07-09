@@ -5,8 +5,8 @@
 
 import * as React from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Tabs, TabsList, TabsTrigger, TabsContent } from "@ykp/ui";
-import { useBrands, useExpenseCategories, useOutlets, usePaymentMethods, usePettyCashAccounts, useSuppliers } from "@/features/finance/api/queries";
-import { useTelegramTest } from "@/features/finance/api/mutations";
+import { useBrands, useExpenseCategories, useOutlets, usePaymentMethods, usePettyCashAccounts, useSuppliers } from "@finance/features/finance/api/queries";
+import { useTelegramTest } from "@finance/features/finance/api/mutations";
 import { Send } from "lucide-react";
 
 export default function SettingsPage() {

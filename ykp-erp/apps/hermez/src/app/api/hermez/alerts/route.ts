@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, type SQL } from "drizzle-orm";
 import { createHermezDb, hermezAlertLog } from "@ykp/schema";
 import { requireAuth } from "@ykp/auth";
 import { fail, ok, parseDateParam, toIsoString } from "../_helpers";
@@ -41,7 +41,14 @@ export async function GET(req: Request) {
     if (status === "open" || status === "ack" || status === "resolved") {
       filters.push(eq(hermezAlertLog.status, status));
     }
-    if (alertType) filters.push(eq(hermezAlertLog.alertType, alertType));
+    if (alertType) {
+      // alertType is a PgEnumColumn; `eq` only accepts the enum literal union.
+      // The user-supplied query param is typed as string; cast to satisfy
+      // the overload. Unknown enum values yield zero rows at the DB layer.
+      filters.push(
+        eq(hermezAlertLog.alertType, alertType as unknown as SQL<unknown>),
+      );
+    }
     if (outletId) filters.push(eq(hermezAlertLog.outlet, outletId));
 
     const rows = await db

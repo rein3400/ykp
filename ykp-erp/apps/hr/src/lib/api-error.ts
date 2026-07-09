@@ -25,6 +25,27 @@ export function jsonOk<T>(data: T): Response {
   return Response.json({ data }, { headers: { "Content-Type": "application/json" } });
 }
 
+// Convenience aliases for handler/ok/fail used by other route files.
+export function ok<T>(data: T, status = 200): Response {
+  return jsonOk(data);
+}
+
+export function fail(code: ErrorCode, message: string): Response {
+  return jsonError(code, message);
+}
+
+export type HandlerFn = (req: any, ctx?: any) => Promise<Response>;
+
+export function handler(fn: HandlerFn): HandlerFn {
+  return async (req, ctx) => {
+    try {
+      return await fn(req, ctx);
+    } catch (err) {
+      return handleError(err);
+    }
+  };
+}
+
 /** Convert a thrown value into a JSON response with best-effort code. */
 export function handleError(err: unknown): Response {
   if (err instanceof Error && (err as Error & { status?: number }).status) {

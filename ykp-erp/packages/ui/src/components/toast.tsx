@@ -4,7 +4,7 @@ import * as React from "react";
 import * as ToastPrimitives from "@radix-ui/react-toast";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
-import { cn } from "../lib/utils.js";
+import { cn } from '../lib/utils';
 
 const ToastProvider = ToastPrimitives.Provider;
 
@@ -101,5 +101,8 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
-  type ToastProps,
+  type ToastProps as ToastPrimitivesRootProps,
 };
+// Re-export the underlying Radix Toast prop type so callers can type variant
+// refs without importing @radix-ui/react-toast directly.
+export type ToastProps = React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root>;

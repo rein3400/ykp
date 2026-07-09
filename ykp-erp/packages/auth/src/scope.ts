@@ -13,10 +13,9 @@
  *   applyOutletScope(user, conds, table.outletId);
  *   db.select(...).from(table).where(and(...conds));
  */
-import { SQL, inArray } from "drizzle-orm";
-import { type SQLWrapper } from "drizzle-orm";
-import { type SessionUser } from "./rbac.js";
-import { Role } from "./roles.js";
+import { SQL, inArray, type SQLWrapper } from "drizzle-orm";
+import { type SessionUser } from './rbac';
+import { Role } from './roles';
 
 /**
  * Push an outlet-scope filter onto `conds` for users whose role is bound to

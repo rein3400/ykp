@@ -6,12 +6,12 @@
 import * as React from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, ExportButton, KpiCard, formatIdr } from "@ykp/ui";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@ykp/ui";
-import { SupplierCostTable } from "@/features/finance/components/supplier-cost-table";
-import { SupplierCostFormDialog } from "@/features/finance/components/supplier-cost-form-dialog";
-import { useSupplierList, useUnpaidList } from "@/features/finance/api/queries";
-import { useApproveSupplierPayment, useExportCsv, useExportPdf } from "@/features/finance/api/mutations";
+import { SupplierCostTable } from "@finance/features/finance/components/supplier-cost-table";
+import { SupplierCostFormDialog } from "@finance/features/finance/components/supplier-cost-form-dialog";
+import { useSupplierList, useUnpaidList } from "@finance/features/finance/api/queries";
+import { useApproveSupplierPayment, useExportCsv, useExportPdf } from "@finance/features/finance/api/mutations";
 import { Plus, Bell } from "lucide-react";
-import type { SupplierCost } from "@/features/finance/api/types";
+import type { SupplierCost } from "@finance/features/finance/api/types";
 
 export default function SuppliersPage() {
   const today = new Date().toISOString().slice(0, 10);
@@ -40,8 +40,8 @@ export default function SuppliersPage() {
         <h2 className="text-xl font-semibold">Costing Supplier</h2>
         <div className="flex items-center gap-2">
           <ExportButton
-            onExportPdf={() => exportPdf.mutateAsync({ report: "supplier_cost", date_from: from, date_to: today, filters: {} })}
-            onExportCsv={() => exportCsv.mutateAsync({ report: "supplier_cost", date_from: from, date_to: today, filters: {} })}
+            onExportPdf={async () => { await exportPdf.mutateAsync({ report: "supplier_cost", date_from: from, date_to: today, filters: {} }); }}
+            onExportCsv={async () => { await exportCsv.mutateAsync({ report: "supplier_cost", date_from: from, date_to: today, filters: {} }); }}
           />
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="mr-2 h-4 w-4" /> Tambah Cost

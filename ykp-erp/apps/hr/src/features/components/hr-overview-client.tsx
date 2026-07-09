@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import { Users, Clock, AlertTriangle, CalendarX, Wallet } from "lucide-react";
 import { Card, CardContent, KpiCard } from "@ykp/ui";
-import { useAttendance, usePayroll } from "@/features/api/queries";
-import { todayWib } from "@/features/lib/wib";
+import { useAttendance, usePayroll } from "@hr/features/api/queries";
+import { todayWib } from "@hr/features/lib/wib";
 
 /**
  * HR overview island. Drives the KPI cards on the dashboard with live

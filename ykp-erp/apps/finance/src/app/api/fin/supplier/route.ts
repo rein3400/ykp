@@ -10,22 +10,21 @@
  *   - audit row in finance audit_log
  */
 import { and, eq, gte, lte, desc } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can, applyOutletScope } from "@ykp/auth";
 import { finSupplierCost } from "@ykp/schema";
-import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { assertOutlet, assertSupplier } from "@/lib/server/refs.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getMasterDb, getFinanceDb, type FinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { assertOutlet, assertSupplier } from "@finance/lib/server/refs";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { financeDayId } from "@ykp/engine";
-import { FinSupplierQuerySchema, FinSupplierCreateSchema } from "@/lib/schemas.js";
+import { FinSupplierQuerySchema, FinSupplierCreateSchema } from "@finance/lib/schemas";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinSupplierQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 
@@ -33,8 +32,8 @@ export const GET = handler(async (req: NextRequest) => {
   const db = getFinanceDb();
 
   const conds = [];
-  if (date_from) conds.push(gte(finSupplierCost.date, date_from));
-  if (date_to) conds.push(lte(finSupplierCost.date, date_to));
+  if (date_from) conds.push(gte(finSupplierCost.date, new Date(date_from)));
+  if (date_to) conds.push(lte(finSupplierCost.date, new Date(date_to)));
   if (supplier_id) conds.push(eq(finSupplierCost.supplierId, supplier_id));
   if (status) conds.push(eq(finSupplierCost.paymentStatus, status));
   if (outlet_id) conds.push(eq(finSupplierCost.outletId, outlet_id));
@@ -50,7 +49,7 @@ export const GET = handler(async (req: NextRequest) => {
   return ok(rows);
 });
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER]);
   const body = await req.json();
   const parsed = FinSupplierCreateSchema.safeParse(body);
@@ -72,11 +71,11 @@ export const POST = handler(async (req: NextRequest) => {
 
   // Defect S1 fix: wrap ID allocation in a transaction with FOR UPDATE to
   // avoid duplicate FIN-YYYYMMDD-NNN ids under concurrent POSTs.
-  const costId = await financeDb.transaction(async (tx) => {
+  const costId = await financeDb.transaction(async (tx: FinanceDb) => {
     const existing = await tx
       .select({ posId: finSupplierCost.costId })
       .from(finSupplierCost)
-      .where(and(eq(finSupplierCost.date, data.date), eq(finSupplierCost.outletId, data.outlet_id)))
+      .where(and(eq(finSupplierCost.date, new Date(data.date)), eq(finSupplierCost.outletId, data.outlet_id)))
       .for("update");
     const seq = existing.length + 1;
     return financeDayId(data.date, seq, data.outlet_id);

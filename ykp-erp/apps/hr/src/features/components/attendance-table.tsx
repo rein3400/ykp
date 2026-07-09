@@ -4,9 +4,9 @@ import * as React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Badge, Button, DataTable, FilterBar, ExportButton, type FilterBarValue } from "@ykp/ui";
 import { formatDateWib } from "@ykp/ui";
-import { useAttendance, useCheckin, useCheckout } from "@/features/api/queries";
-import { todayWib } from "@/features/lib/wib";
-import type { AttendanceRow } from "@/features/api/types";
+import { useAttendance, useCheckin, useCheckout } from "@hr/features/api/queries";
+import { todayWib } from "@hr/features/lib/wib";
+import type { AttendanceRow } from "@hr/features/api/types";
 
 const statusColor: Record<string, string> = {
   present: "bg-success/10 text-success",

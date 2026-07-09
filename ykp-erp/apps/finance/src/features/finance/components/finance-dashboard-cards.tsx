@@ -19,8 +19,8 @@ import {
   Users,
   Package,
 } from "lucide-react";
-import { useSummaryList } from "../api/queries.js";
-import type { DailySummary } from "../api/types.js";
+import { useSummaryList } from '../api/queries';
+import type { DailySummary } from '../api/types';
 
 export function FinanceDashboardCards() {
   const today = nowWib().toISOString().slice(0, 10);

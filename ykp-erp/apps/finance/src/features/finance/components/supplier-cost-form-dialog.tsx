@@ -19,9 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ykp/ui";
-import { useOutlets, useSuppliers } from "../api/queries.js";
-import { useCreateSupplier, usePatchSupplier } from "../api/mutations.js";
-import type { SupplierCost } from "../api/types.js";
+import { useOutlets, useSuppliers } from '../api/queries';
+import { useCreateSupplier, usePatchSupplier } from '../api/mutations';
+import type { SupplierCost } from '../api/types';
 
 interface Props {
   open: boolean;

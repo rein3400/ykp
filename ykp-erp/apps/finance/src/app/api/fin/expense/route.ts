@@ -8,22 +8,21 @@
  * that every spend is reviewable and the audit log stays complete.
  */
 import { and, eq, gte, lte, desc } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can, applyOutletScope } from "@ykp/auth";
 import { finExpense } from "@ykp/schema";
-import { getMasterDb, getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { assertOutlet, assertExpenseCategory, assertPaymentMethod } from "@/lib/server/refs.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getMasterDb, getFinanceDb, type FinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { assertOutlet, assertExpenseCategory, assertPaymentMethod } from "@finance/lib/server/refs";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { financeDayId } from "@ykp/engine";
-import { FinExpenseQuerySchema, FinExpenseCreateSchema } from "@/lib/schemas.js";
+import { FinExpenseQuerySchema, FinExpenseCreateSchema } from "@finance/lib/schemas";
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.OUTLET_MANAGER, Role.VIEWER,
   ]);
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinExpenseQuerySchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 
@@ -31,8 +30,8 @@ export const GET = handler(async (req: NextRequest) => {
   const db = getFinanceDb();
 
   const conds = [];
-  if (date_from) conds.push(gte(finExpense.date, date_from));
-  if (date_to) conds.push(lte(finExpense.date, date_to));
+  if (date_from) conds.push(gte(finExpense.date, new Date(date_from)));
+  if (date_to) conds.push(lte(finExpense.date, new Date(date_to)));
   if (category_id) conds.push(eq(finExpense.categoryId, category_id));
   if (outlet_id) conds.push(eq(finExpense.outletId, outlet_id));
   if (approval_status) conds.push(eq(finExpense.approvalStatus, approval_status));
@@ -48,7 +47,7 @@ export const GET = handler(async (req: NextRequest) => {
   return ok(rows);
 });
 
-export const POST = handler(async (req: NextRequest) => {
+export const POST = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.OUTLET_MANAGER, Role.STAFF_INPUT,
   ]);
@@ -73,11 +72,11 @@ export const POST = handler(async (req: NextRequest) => {
   const approvalStatus: "PENDING" = "PENDING";
 
   // Defect S1 fix: allocate expenseId inside a transaction with FOR UPDATE.
-  const expenseId = await financeDb.transaction(async (tx) => {
+  const expenseId = await financeDb.transaction(async (tx: FinanceDb) => {
     const existing = await tx
       .select({ count: finExpense.expenseId })
       .from(finExpense)
-      .where(and(eq(finExpense.date, data.date), eq(finExpense.outletId, data.outlet_id)))
+      .where(and(eq(finExpense.date, new Date(data.date)), eq(finExpense.outletId, data.outlet_id)))
       .for("update");
     const seq = existing.length + 1;
     return financeDayId(data.date, seq, data.outlet_id);

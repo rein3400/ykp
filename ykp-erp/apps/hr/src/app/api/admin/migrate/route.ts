@@ -5,9 +5,9 @@
 import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
-import { handler, ok, fail } from "@/lib/api-error";
+import { handler, ok, fail } from "@hr/lib/api-error";
 import { sql } from "@ykp/schema";
-import { resolveBody } from "@/lib/zod-resolver";
+import { resolveBody } from "@hr/lib/zod-resolver";
 import { z } from "zod";
 
 const bodySchema = z.object({ confirm: z.literal("MIGRATE") });

@@ -21,9 +21,9 @@ import {
   SelectValue,
 } from "@ykp/ui";
 import { Plus } from "lucide-react";
-import { useCreatePos } from "../api/mutations.js";
-import { useOutlets } from "../api/queries.js";
-import type { CreatePosBody } from "../api/types.js";
+import { useCreatePos } from '../api/mutations';
+import { useOutlets } from '../api/queries';
+import type { CreatePosBody } from '../api/types';
 
 export function PosFormDialog() {
   const [open, setOpen] = React.useState(false);

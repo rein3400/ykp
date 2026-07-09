@@ -1,4 +1,4 @@
-import { PayrollTableClient } from "@/features/components/payroll-table";
+import { PayrollTableClient } from "@hr/features/components/payroll-table";
 
 /**
  * Payroll page. Lists payroll runs, hosts the generate-payroll modal,

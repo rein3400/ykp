@@ -31,8 +31,9 @@ import {
   finPettyCash,
   finExpense,
   finClosingCash,
-} from "./index.js";
-import { todayWib } from "@ykp/engine";
+} from './index';
+// @ts-expect-error - @ykp/engine types not resolved in @ykp/schema workspace; runtime ok
+import { todayWib } from "../../engine/src/audit";
 
 // ============================================================
 // Static reference data (mirrors packages/schema/src/seed.ts)
@@ -78,7 +79,7 @@ const PAYMENT_METHODS = ["PM-CASH", "PM-QRIS", "PM-DEBIT", "PM-TRANSFER", "PM-EW
  */
 function last7DaysWib(): string[] {
   const today = todayWib(); // YYYY-MM-DD
-  const [y, m, d] = today.split("-").map((x) => Number.parseInt(x, 10));
+  const [y, m, d] = today.split("-").map((x: string) => Number.parseInt(x, 10));
   const baseUtc = Date.UTC(y, m - 1, d);
   const out: string[] = [];
   for (let i = 6; i >= 0; i -= 1) {
@@ -91,6 +92,7 @@ function last7DaysWib(): string[] {
   }
   return out;
 }
+
 
 /** Format `2026-07-08` -> `20260708`. */
 function toCompact(d: string): string {
@@ -106,6 +108,14 @@ function pick<T>(arr: readonly T[], i: number): T {
 function rand(min: number, max: number, i: number): number {
   const span = max - min + 1;
   return min + ((i * 2654435761) % span);
+}
+
+/** Parse a `YYYY-MM-DD` loop variable into a JS Date at 00:00 UTC.
+ * drizzle-orm columns declared with `date({mode:"date"})` require a real
+ * Date instance for the pg mapper to call `.toISOString()`.
+ */
+function ddAsDate(s: string): Date {
+  return new Date(s + "T00:00:00.000Z");
 }
 
 /** Combine shift start `HH:mm` + late minutes into a JS Date on `dStr`. */
@@ -176,7 +186,9 @@ async function seedHrAttendance() {
       const attendanceId = `HRR-${emp.outletId}-${d}-${String(seq).padStart(3, "0")}`;
       rows.push({
         attendanceId,
-        date: d,
+        // drizzle-orm date({mode:"date"}) column requires a JS Date object;
+        // the loop variable `d` is a YYYY-MM-DD string from last7DaysWib().
+        date: ddAsDate(d),
         employeeId: emp.employeeId,
         outletId: emp.outletId,
         shiftName,
@@ -196,7 +208,7 @@ async function seedHrAttendance() {
   }
 
   for (const r of rows) {
-    await getHrDb().insert(hrAttendance).values(r).onConflictDoNothing();
+    await getHrDb().insert(hrAttendance).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }
@@ -234,7 +246,7 @@ async function seedFinPosDaily() {
       const posId = `FIN-${toCompact(d)}-${o.outletId}-${String(seq).padStart(3, "0")}`;
       rows.push({
         posId,
-        date: d,
+        date: ddAsDate(d),
         brandId: brand.brandId,
         brandName: brand.brandName,
         outletId: o.outletId,
@@ -269,7 +281,7 @@ async function seedFinPosDaily() {
   }
 
   for (const r of rows) {
-    await getFinanceDb().insert(finPosDaily).values(r).onConflictDoNothing();
+    await getFinanceDb().insert(finPosDaily).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }
@@ -287,17 +299,17 @@ async function seedFinSupplierCost() {
   const supplierSlots = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0];
   const amountSlots = [350_000, 1_200_000, 720_000, 480_000, 2_000_000, 950_000, 250_000, 1_650_000, 540_000, 880_000];
   // Status cycle: 4 PENDING, 4 APPROVED, 2 PAID -> 10 total.
-  const statusSlots: Array<"PENDING" | "APPROVED" | "PAID"> = [
-    "PENDING",
-    "APPROVED",
-    "PENDING",
-    "APPROVED",
+  const statusSlots: Array<"UNPAID" | "PARTIAL" | "PAID"> = [
+    "UNPAID",
+    "PARTIAL",
+    "UNPAID",
+    "PARTIAL",
     "PAID",
-    "PENDING",
-    "APPROVED",
-    "PENDING",
+    "UNPAID",
+    "PARTIAL",
+    "UNPAID",
     "PAID",
-    "APPROVED",
+    "PARTIAL",
   ];
   const approvalSlots: Array<"DRAFT" | "PENDING" | "APPROVED" | "PAID" | "CANCELLED"> = [
     "PENDING",
@@ -325,7 +337,7 @@ async function seedFinSupplierCost() {
     const unpaidAmount = amount - paidAmount;
     rows.push({
       costId: `FIN-${toCompact(d)}-SUP-${String(i + 1).padStart(3, "0")}`,
-      date: d,
+      date: ddAsDate(d),
       brandId: brand.brandId,
       brandName: brand.brandName,
       outletId: outlet.outletId,
@@ -351,7 +363,7 @@ async function seedFinSupplierCost() {
   }
 
   for (const r of rows) {
-    await getFinanceDb().insert(finSupplierCost).values(r).onConflictDoNothing();
+    await getFinanceDb().insert(finSupplierCost).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }
@@ -424,7 +436,7 @@ async function seedFinPettyCash() {
     const brand = BRANDS_BY_OUTLET[outlet.outletId];
     rows.push({
       pcId: `PC-${toCompact(d)}-${String(i + 1).padStart(3, "0")}`,
-      date: d,
+      date: ddAsDate(d),
       brandId: brand.brandId,
       brandName: brand.brandName,
       outletId: outlet.outletId,
@@ -445,7 +457,7 @@ async function seedFinPettyCash() {
   }
 
   for (const r of rows) {
-    await getFinanceDb().insert(finPettyCash).values(r).onConflictDoNothing();
+    await getFinanceDb().insert(finPettyCash).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }
@@ -505,7 +517,7 @@ async function seedFinExpense() {
     const status = statusPattern[i];
     rows.push({
       expenseId: `EXP-${toCompact(d)}-${String(i + 1).padStart(3, "0")}`,
-      date: d,
+      date: ddAsDate(d),
       brandId: brand.brandId,
       brandName: brand.brandName,
       outletId: outlet.outletId,
@@ -530,7 +542,7 @@ async function seedFinExpense() {
   }
 
   for (const r of rows) {
-    await getFinanceDb().insert(finExpense).values(r).onConflictDoNothing();
+    await getFinanceDb().insert(finExpense).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }
@@ -558,7 +570,7 @@ async function seedFinClosingCash() {
     const diff = physical - expected;
     rows.push({
       closingId: `CLS-${toCompact(closingDate)}-${o.outletId}`,
-      date: closingDate,
+      date: ddAsDate(closingDate),
       outletId: o.outletId,
       physicalCash: physical,
       openingCash: opening,
@@ -575,7 +587,7 @@ async function seedFinClosingCash() {
   }
 
   for (const r of rows) {
-    await getFinanceDb().insert(finClosingCash).values(r).onConflictDoNothing();
+    await getFinanceDb().insert(finClosingCash).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }
@@ -595,8 +607,9 @@ async function seedHrPayroll() {
   rows.push({
     payrollId: `PAY-${toCompact(periodStart)}-${EMPLOYEES[0].employeeId}`,
     employeeId: EMPLOYEES[0].employeeId,
-    periodStart,
-    periodEnd,
+    periodStart: ddAsDate(periodStart),
+    _origPeriodStart: periodStart,
+    periodEnd: ddAsDate(periodEnd),
     payrollDays: 7,
     attendanceCount: 7,
     absentDays: 0,
@@ -623,8 +636,9 @@ async function seedHrPayroll() {
   rows.push({
     payrollId: `PAY-${toCompact(periodStart)}-${EMPLOYEES[2].employeeId}`,
     employeeId: EMPLOYEES[2].employeeId,
-    periodStart,
-    periodEnd,
+    periodStart: ddAsDate(periodStart),
+    _origPeriodStart: periodStart,
+    periodEnd: ddAsDate(periodEnd),
     payrollDays: 7,
     attendanceCount: 6,
     absentDays: 1,
@@ -648,7 +662,7 @@ async function seedHrPayroll() {
   });
 
   for (const r of rows) {
-    await getHrDb().insert(hrPayroll).values(r).onConflictDoNothing();
+    await getHrDb().insert(hrPayroll).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }

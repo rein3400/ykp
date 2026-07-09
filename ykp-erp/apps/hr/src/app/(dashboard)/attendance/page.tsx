@@ -1,4 +1,4 @@
-import { AttendanceTableClient } from "@/features/components/attendance-table";
+import { AttendanceTableClient } from "@hr/features/components/attendance-table";
 
 /**
  * Attendance page. Server component shell; the interactive table, filters

@@ -7,9 +7,9 @@ import {
   date,
   jsonb,
   bigserial,
-  uniqueConstraint,
+  unique,
 } from "drizzle-orm/pg-core";
-import { finPettyCashAccount, finExpenseCategory, finPaymentMethod } from "./master.js";
+import { finPettyCashAccount, finExpenseCategory, finPaymentMethod } from './master';
 
 const finance = pgSchema("finance");
 
@@ -34,7 +34,7 @@ export const paymentStatusEnum = finance.enum("payment_status", [
 
 export const pettyCashTypeEnum = finance.enum("petty_cash_type", ["in", "out"]);
 
-export const approvalStatusEnum = finance.enum("finance_approval_status", [
+export const financeApprovalStatusEnum = finance.enum("finance_approval_status", [
   "DRAFT",
   "PENDING",
   "APPROVED",
@@ -79,7 +79,7 @@ export const finPosDaily = finance.table(
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
   },
   (t) => ({
-    dateOutletUnique: uniqueConstraint("fin_pos_daily_date_outlet_unique").on(t.date, t.outletId),
+    dateOutletUnique: unique("fin_pos_daily_date_outlet_unique").on(t.date, t.outletId),
   }),
 );
 
@@ -106,7 +106,7 @@ export const finSupplierCost = finance.table("fin_supplier_cost", {
   // Defect F4 fix: explicit approval FSM column. Supplier POST defaults to
   // PENDING so the approve-payment flow can transition DRAFT->PENDING or
   // PENDING->APPROVED/REJECTED. Approve-payment rejects from PAID/CANCELLED.
-  approvalStatus: approvalStatusEnum("approval_status").notNull().default("PENDING"),
+  approvalStatus: financeApprovalStatusEnum("approval_status").notNull().default("PENDING"),
   dueDate: date("due_date", { mode: "date" }),
   invoiceNumber: text("invoice_number"),
   bankAccount: text("bank_account"),
@@ -140,7 +140,7 @@ export const finPettyCash = finance.table("fin_petty_cash", {
   description: text("description"),
   attachmentUrl: text("attachment_url"),
   urgentFlag: boolean("urgent_flag").notNull().default(false),
-  approvalStatus: approvalStatusEnum("approval_status").notNull().default("DRAFT"),
+  approvalStatus: financeApprovalStatusEnum("approval_status").notNull().default("DRAFT"),
   approvedBy: text("approved_by"),
   source: text("source"),
   recordedAt: timestamp("recorded_at", { mode: "date" }).defaultNow().notNull(),
@@ -167,7 +167,7 @@ export const finExpense = finance.table("fin_expense", {
   amount: integer("amount").notNull().default(0),
   paymentMethodId: text("payment_method_id").notNull(),
   attachmentUrl: text("attachment_url"),
-  approvalStatus: approvalStatusEnum("approval_status").notNull().default("DRAFT"),
+  approvalStatus: financeApprovalStatusEnum("approval_status").notNull().default("DRAFT"),
   approvedBy: text("approved_by"),
   notes: text("notes"),
   source: text("source"),
@@ -244,7 +244,7 @@ export const finDailySummary = finance.table(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   },
   (t) => ({
-    dateOutletUnique: uniqueConstraint("fin_daily_summary_date_outlet_unique").on(t.date, t.outlet),
+    dateOutletUnique: unique("fin_daily_summary_date_outlet_unique").on(t.date, t.outlet),
   }),
 );
 

@@ -9,19 +9,18 @@
  * out" record without further mutation.
  */
 import { eq } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can } from "@ykp/auth";
 import { finPettyCash } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { logFinanceAudit } from "@/lib/server/audit.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { transitionApproval } from "@ykp/engine";
-import { FinPettyCashApproveSchema } from "@/lib/schemas.js";
+import { FinPettyCashApproveSchema } from "@finance/lib/schemas";
 
 const OWNER_ONLY_THRESHOLD = 5_000_000;
 
-export const POST = handler(async (req: NextRequest, ctx: { params: { id: string } }) => {
+export const POST = handler(async (req: Request, ctx: { params: { id: string } }) => {
   const id = ctx.params.id;
   const financeDb = getFinanceDb();
   const existing = await financeDb.select().from(finPettyCash).where(eq(finPettyCash.pcId, id)).limit(1);

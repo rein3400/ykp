@@ -11,7 +11,7 @@
  */
 
 import { createHmac, timingSafeEqual, randomBytes } from "node:crypto";
-import type { SessionUser } from "./rbac.js";
+import type { SessionUser } from './rbac';
 
 export const SESSION_COOKIE_NAME = "ykp_session";
 /** 24 hours max, binding contract §6. */

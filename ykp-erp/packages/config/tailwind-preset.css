@@ -11,6 +11,7 @@
  *   - Operational app: choose per view
  */
 
+@tailwind base;
 @layer base {
   :root {
     /* Default radius scale */

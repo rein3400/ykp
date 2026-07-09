@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { initDbClients, createMasterDb, hrRules } from "@ykp/schema";
 import { requireRole, Role } from "@ykp/auth";
 import { logAudit } from "@ykp/engine";
-import { jsonOk, jsonError, handleError } from "@/lib/api-error";
-import { resolveBody } from "@/lib/zod-resolver";
+import { jsonOk, jsonError, handleError } from "@hr/lib/api-error";
+import { resolveBody } from "@hr/lib/zod-resolver";
 
 export const dynamic = "force-dynamic";
 
@@ -55,9 +55,22 @@ export async function PATCH(
     const before = rows[0];
     if (!before) return jsonError(404, `rule ${ctx.params.id} not found`);
 
+    const patch: Record<string, unknown> = {};
+    if (parsed.shiftName !== undefined) patch.shiftName = parsed.shiftName;
+    if (parsed.shiftStart !== undefined) patch.shiftStart = parsed.shiftStart;
+    if (parsed.shiftEnd !== undefined) patch.shiftEnd = parsed.shiftEnd;
+    if (parsed.lateToleranceMinutes !== undefined) patch.lateToleranceMinutes = parsed.lateToleranceMinutes;
+    if (parsed.overtimeRateMultiplier !== undefined) patch.overtimeRateMultiplier = String(parsed.overtimeRateMultiplier);
+    if (parsed.overtimeDailyCapHours !== undefined) patch.overtimeDailyCapHours = String(parsed.overtimeDailyCapHours);
+    if (parsed.earlyClockinToleranceMin !== undefined) patch.earlyClockinToleranceMin = parsed.earlyClockinToleranceMin;
+    if (parsed.mandatoryCheckout !== undefined) patch.mandatoryCheckout = parsed.mandatoryCheckout;
+    if (parsed.payrollPeriodStart !== undefined) patch.payrollPeriodStart = parsed.payrollPeriodStart;
+    if (parsed.payrollPeriodEnd !== undefined) patch.payrollPeriodEnd = parsed.payrollPeriodEnd;
+    patch.updatedAt = new Date();
+
     await masterDb
       .update(hrRules)
-      .set({ ...parsed, updatedAt: new Date() })
+      .set(patch)
       .where(eq(hrRules.ruleId, ctx.params.id));
 
     await logAudit(masterDb, {

@@ -9,8 +9,8 @@ import {
 } from "@ykp/schema";
 import { requireRole, Role, applyOutletScope } from "@ykp/auth";
 import { generateHrDailySummary } from "@ykp/engine";
-import { jsonOk, jsonError, handleError } from "@/lib/api-error";
-import { resolveBody, resolveQuery } from "@/lib/zod-resolver";
+import { jsonOk, jsonError, handleError } from "@hr/lib/api-error";
+import { resolveBody, resolveQuery } from "@hr/lib/zod-resolver";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +49,7 @@ export async function GET(req: Request): Promise<Response> {
 
     const hrDb = createHrDb();
     const filters = [];
-    if (parsed.date) filters.push(eq(hrDailySummary.date, parsed.date));
+    if (parsed.date) filters.push(eq(hrDailySummary.date, new Date(parsed.date)));
     // Defect H2 fix: filter by outletId (ID column) not outlet (NAME). The
     // old query compared the outletId query param to hr_daily_summary.outlet,
     // which stores the outlet NAME, so cross-outlet IDs matched nothing.

@@ -21,10 +21,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./table.js";
-import { Button } from "./button.js";
-import { Input } from "./input.js";
-import { cn } from "../lib/utils.js";
+} from './table';
+import { Button } from './button';
+import { Input } from './input';
+import { cn } from '../lib/utils';
 
 export interface DataTableProps<TData, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[];

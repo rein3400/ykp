@@ -8,7 +8,7 @@
  * caller can surface "reference not found" cleanly.
  */
 import { eq } from "drizzle-orm";
-import type { MasterDb } from "./db.js";
+import type { MasterDb } from './db';
 import {
   masterBrand,
   masterOutlet,

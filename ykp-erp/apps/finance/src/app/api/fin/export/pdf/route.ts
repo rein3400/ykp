@@ -21,9 +21,9 @@ import {
   finClosingCash,
   finDailySummary,
 } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
-import { FinExportRequestSchema } from "@/lib/schemas.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
+import { FinExportRequestSchema } from "@finance/lib/schemas";
 import { todayWib } from "@ykp/engine";
 
 /** Transliterate to WinAnsi-ish ASCII so Helvetica's single-byte encoder
@@ -64,11 +64,11 @@ function buildPdf(opts: { title: string; headers: string[]; rows: string[][] }):
   let cursor = 0;
   // page 1 (title + headers + body)
   const firstBody = opts.rows.slice(cursor, cursor + Math.max(0, rowsPerFirstPage - 1));
-  pages.push(["__TITLE__", ...opts.headers, ...firstBody]);
+  pages.push(["__TITLE__", ...opts.headers, ...firstBody.flat()]);
   cursor += firstBody.length;
   while (cursor < opts.rows.length) {
     const slice = opts.rows.slice(cursor, cursor + rowsPerPage - 1);
-    pages.push([...opts.headers, ...slice]);
+    pages.push([...opts.headers, ...slice.flat()]);
     cursor += slice.length;
   }
   if (pages.length === 0) pages.push(["__TITLE__", ...opts.headers]);
@@ -177,7 +177,7 @@ export const POST = handler(async (req: NextRequest) => {
 
   switch (report) {
     case "pos_daily": {
-      const conds = [gte(finPosDaily.date, date_from), lte(finPosDaily.date, date_to)];
+      const conds = [gte(finPosDaily.date, new Date(date_from)), lte(finPosDaily.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finPosDaily.outletId, filters_.outlet_id));
       if (filters_.brand_id) conds.push(eq(finPosDaily.brandId, filters_.brand_id));
       const result = await db.select().from(finPosDaily).where(and(...conds)).orderBy(asc(finPosDaily.date));
@@ -195,7 +195,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "supplier_cost": {
-      const conds = [gte(finSupplierCost.date, date_from), lte(finSupplierCost.date, date_to)];
+      const conds = [gte(finSupplierCost.date, new Date(date_from)), lte(finSupplierCost.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finSupplierCost.outletId, filters_.outlet_id));
       if (filters_.supplier_id) conds.push(eq(finSupplierCost.supplierId, filters_.supplier_id));
       if (filters_.status) conds.push(eq(finSupplierCost.paymentStatus, filters_.status as never));
@@ -212,7 +212,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "petty_cash": {
-      const conds = [gte(finPettyCash.date, date_from), lte(finPettyCash.date, date_to)];
+      const conds = [gte(finPettyCash.date, new Date(date_from)), lte(finPettyCash.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finPettyCash.outletId, filters_.outlet_id));
       const result = await db.select().from(finPettyCash).where(and(...conds)).orderBy(asc(finPettyCash.date));
       headers = ["date", "outlet", "type", "amount", "urgent", "status"];
@@ -227,7 +227,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "expense": {
-      const conds = [gte(finExpense.date, date_from), lte(finExpense.date, date_to)];
+      const conds = [gte(finExpense.date, new Date(date_from)), lte(finExpense.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finExpense.outletId, filters_.outlet_id));
       const result = await db.select().from(finExpense).where(and(...conds)).orderBy(asc(finExpense.date));
       headers = ["date", "outlet", "amount", "method", "status"];
@@ -241,7 +241,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "closing_cash": {
-      const conds = [gte(finClosingCash.date, date_from), lte(finClosingCash.date, date_to)];
+      const conds = [gte(finClosingCash.date, new Date(date_from)), lte(finClosingCash.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finClosingCash.outletId, filters_.outlet_id));
       const result = await db.select().from(finClosingCash).where(and(...conds)).orderBy(asc(finClosingCash.date));
       headers = ["date", "outlet", "physical", "expected", "difference"];
@@ -255,7 +255,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "summary": {
-      const conds = [gte(finDailySummary.date, date_from), lte(finDailySummary.date, date_to)];
+      const conds = [gte(finDailySummary.date, new Date(date_from)), lte(finDailySummary.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finDailySummary.outlet, filters_.outlet_id));
       const result = await db.select().from(finDailySummary).where(and(...conds)).orderBy(asc(finDailySummary.date));
       headers = ["date", "outlet", "revenue", "expense", "supplier", "petty", "net"];
@@ -271,7 +271,7 @@ export const POST = handler(async (req: NextRequest) => {
       break;
     }
     case "profit": {
-      const conds = [gte(finDailySummary.date, date_from), lte(finDailySummary.date, date_to)];
+      const conds = [gte(finDailySummary.date, new Date(date_from)), lte(finDailySummary.date, new Date(date_to))];
       if (filters_.outlet_id) conds.push(eq(finDailySummary.outlet, filters_.outlet_id));
       const result = await db.select().from(finDailySummary).where(and(...conds)).orderBy(asc(finDailySummary.date));
       headers = ["date", "outlet", "revenue", "expense", "supplier", "petty", "net"];

@@ -5,14 +5,13 @@
  * (revenue - expense - supplier_cost - petty_cash_out) for the window.
  */
 import { and, eq, gte, lte, notInArray, sql, sum } from "drizzle-orm";
-import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import { finPosDaily, finExpense, finSupplierCost, finPettyCash } from "@ykp/schema";
-import { getFinanceDb } from "@/lib/server/db.js";
-import { handler, ok, fail } from "@/lib/server/http.js";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { handler, ok, fail } from "@finance/lib/server/http";
 import { todayWib } from "@ykp/engine";
-import { FinAnalyticsPeriodSchema } from "@/lib/schemas.js";
+import { FinAnalyticsPeriodSchema } from "@finance/lib/schemas";
 
 function windowFor(period: string): { from: string; to: string } {
   const today = new Date(todayWib());
@@ -44,12 +43,12 @@ async function sumWhere(table: typeof finPosDaily | typeof finExpense | typeof f
   return Number(rows[0]?.v ?? 0);
 }
 
-export const GET = handler(async (req: NextRequest) => {
+export const GET = handler(async (req: Request) => {
   const user = await requireRole([
     Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER, Role.VIEWER,
   ]);
   void user;
-  const search = Object.fromEntries(req.nextUrl.searchParams.entries());
+  const search = Object.fromEntries(new URL(req.url).searchParams.entries());
   const parsed = FinAnalyticsPeriodSchema.safeParse(search);
   if (!parsed.success) return fail("validation_error", "Invalid query", parsed.error.flatten());
 
@@ -58,23 +57,23 @@ export const GET = handler(async (req: NextRequest) => {
   const from = date_from ?? win.from;
   const to = date_to ?? win.to;
 
-  const posConds = [gte(finPosDaily.date, from), lte(finPosDaily.date, to)];
+  const posConds = [gte(finPosDaily.date, new Date(from)), lte(finPosDaily.date, new Date(to))];
   // Defect F6: exclude CANCELLED/REJECTED rows from cost sums so voided entries
   // do not inflate deductions.
   const expConds = [
-    gte(finExpense.date, from),
-    lte(finExpense.date, to),
+    gte(finExpense.date, new Date(from)),
+    lte(finExpense.date, new Date(to)),
     notInArray(finExpense.approvalStatus, ["CANCELLED", "REJECTED"]),
   ];
   const supConds = [
-    gte(finSupplierCost.date, from),
-    lte(finSupplierCost.date, to),
+    gte(finSupplierCost.date, new Date(from)),
+    lte(finSupplierCost.date, new Date(to)),
     notInArray(finSupplierCost.approvalStatus, ["CANCELLED", "REJECTED"]),
   ];
   // Only money leaving the till (type='out') counts toward net profit.
   const pettyConds = [
-    gte(finPettyCash.date, from),
-    lte(finPettyCash.date, to),
+    gte(finPettyCash.date, new Date(from)),
+    lte(finPettyCash.date, new Date(to)),
     eq(finPettyCash.type, "out"),
     notInArray(finPettyCash.approvalStatus, ["CANCELLED", "REJECTED"]),
   ];

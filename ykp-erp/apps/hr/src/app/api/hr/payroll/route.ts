@@ -20,8 +20,8 @@ import {
   getHrRulesForOutlet,
   uuid,
 } from "@ykp/engine";
-import { jsonOk, jsonError, handleError } from "@/lib/api-error";
-import { resolveBody, resolveQuery } from "@/lib/zod-resolver";
+import { jsonOk, jsonError, handleError } from "@hr/lib/api-error";
+import { resolveBody, resolveQuery } from "@hr/lib/zod-resolver";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +65,8 @@ export async function GET(req: Request): Promise<Response> {
 
     const filters = [];
     if (parsed.employeeId) filters.push(eq(hrPayroll.employeeId, parsed.employeeId));
-    if (parsed.periodStart) filters.push(gte(hrPayroll.periodStart, parsed.periodStart));
-    if (parsed.periodEnd) filters.push(lte(hrPayroll.periodEnd, parsed.periodEnd));
+    if (parsed.periodStart) filters.push(gte(hrPayroll.periodStart, new Date(parsed.periodStart)));
+    if (parsed.periodEnd) filters.push(lte(hrPayroll.periodEnd, new Date(parsed.periodEnd)));
     // hrPayroll has no outletId column; scope by joining via master_employee.outletId.
     // applyOutletScope does not help here (column missing), so we resolve scoped
     // employeeIds manually for OUTLET_MANAGER (the only scoped role allowed by
@@ -191,8 +191,8 @@ export async function POST(req: Request): Promise<Response> {
             .where(
               and(
                 eq(hrAttendance.employeeId, emp.employeeId),
-                gte(hrAttendance.date, parsed.periodStart),
-                lte(hrAttendance.date, parsed.periodEnd),
+                gte(hrAttendance.date, new Date(parsed.periodStart)),
+                lte(hrAttendance.date, new Date(parsed.periodEnd)),
               ),
             );
 
@@ -204,12 +204,14 @@ export async function POST(req: Request): Promise<Response> {
 
           // Defect 4 fix: pro-ration for mid-period joiners.
           const joinDate = emp.joinDate ?? null;
+          const periodStartDate = new Date(parsed.periodStart);
+          const periodEndDate = new Date(parsed.periodEnd);
           let effectivePeriodDays = periodLength;
-          if (joinDate && joinDate > parsed.periodStart) {
-            const start = joinDate < parsed.periodStart ? parsed.periodStart : joinDate;
+          if (joinDate && joinDate.getTime() > periodStartDate.getTime()) {
+            const start = joinDate.getTime() < periodStartDate.getTime() ? periodStartDate : joinDate;
             effectivePeriodDays = Math.max(
               0,
-              Math.round((new Date(parsed.periodEnd).getTime() - new Date(start).getTime()) / 86_400_000) + 1,
+              Math.round((periodEndDate.getTime() - start.getTime()) / 86_400_000) + 1,
             );
           }
 
@@ -257,8 +259,8 @@ export async function POST(req: Request): Promise<Response> {
           await tx.insert(hrPayroll).values({
             payrollId,
             employeeId: emp.employeeId,
-            periodStart: parsed.periodStart,
-            periodEnd: parsed.periodEnd,
+            periodStart: periodStartDate,
+            periodEnd: periodEndDate,
             payrollDays: effectivePeriodDays,
             attendanceCount,
             absentDays,

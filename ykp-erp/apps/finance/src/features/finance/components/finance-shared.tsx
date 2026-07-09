@@ -7,7 +7,7 @@
 import * as React from "react";
 import { Badge } from "@ykp/ui";
 import { formatIdr } from "@ykp/ui";
-import type { PaymentStatus, ApprovalStatus } from "../api/types.js";
+import type { PaymentStatus, ApprovalStatus } from '../api/types';
 
 const paymentVariant: Record<PaymentStatus, "default" | "secondary" | "destructive" | "outline"> = {
   UNPAID: "destructive",

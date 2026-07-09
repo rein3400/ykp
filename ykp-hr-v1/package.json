@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
-    "start": "next start -p 3002",
+    "start": "next start -p ${PORT:-3002} -H 0.0.0.0",
     "lint": "oxlint",
     "sheets:bootstrap": "tsx scripts/bootstrap-sheets.ts",
     "sheets:smoke": "tsx scripts/sheets-smoke.ts",
