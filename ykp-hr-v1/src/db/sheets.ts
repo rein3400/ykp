@@ -369,16 +369,18 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
+  const headers = TAB_HEADERS[tab];
+  const lastCol = columnLetter(headers.length);
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sid,
-    range: `'${tab}'!A1:ZZ`
+    range: `'${tab}'!A1:${lastCol}1`
   });
   const rows = res.data.values ?? [];
   if (rows.length < 2) return [];
-  const headers = rows[0] as string[];
+  const headerRow = rows[0] as string[];
   return rows.slice(1).map((row) => {
     const obj: Record<string, string> = {};
-    headers.forEach((h, i) => {
+    headerRow.forEach((h, i) => {
       obj[h] = (row[i] as string) ?? '';
     });
     return obj as T;
