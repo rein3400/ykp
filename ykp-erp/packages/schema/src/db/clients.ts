@@ -44,11 +44,24 @@ function requireUrl(envVar = "YKP_DATABASE_URL"): string {
 let _db: Db | undefined;
 let _sql: Sql | undefined;
 
-/** Materialise the single db client. Idempotent. */
+/**
+ * Materialise the single db client. Idempotent.
+ *
+ * SSL note: Supabase's transaction pooler (port 6543) presents a self-signed
+ * certificate that node-postgres rejects by default. Direct connections to
+ * `db.<ref>.supabase.co:5432` use a public CA. If a direct connection is
+ * not available, opt out of cert verification for the pooler path only.
+ * Prefer the direct host for production traffic.
+ */
 export function initDbClients(): { db: Db; sql: Sql } {
   if (!_db) {
     const url = requireUrl();
-    _sql = postgres(url, { max: 10, prepare: false });
+    const isPooler = url.includes(".pooler.supabase.com");
+    _sql = postgres(url, {
+      max: 10,
+      prepare: false,
+      ssl: isPooler ? { rejectUnauthorized: false } : "require",
+    });
     _db = drizzle(_sql, { schema: fullSchema as never });
   }
   return { db: _db!, sql: _sql! };
