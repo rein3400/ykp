@@ -48,6 +48,8 @@ export type Action =
 
 /** Returns true if role can do action on resource. Scope filtering handled by caller. */
 export function can(role: Role, action: Action, resource: Resource): boolean {
+  // Owner has full access to everything (wildcard).
+  if (role === 'owner') return true;
   const m = MATRIX[role];
   if (!m) return false;
   const a = m[resource];

@@ -28,7 +28,7 @@ async function main(): Promise<void> {
       user_id: 'U-001',
       username,
       password_hash: hashPw(password),
-      role: 'owner',
+      role: 'OWNER',
       brand_id: '',
       outlet_id: '',
       active_status: 'active',
