@@ -29,7 +29,7 @@ export default async function RosterPage() {
   const today = todayWib();
   const todayRoster = rosters
     .filter((r) => r.date === today)
-    .sort((a, b) => a.employee_name.localeCompare(b.employee_name));
+    .sort((a, b) => (a.employee_id ?? '').localeCompare(b.employee_id ?? ''));
 
   const upcoming = rosters
     .filter((r) => r.date > today)
