@@ -1,7 +1,10 @@
-"use client";
 /**
  * Generic data table with consistent styling. Use for simple read-only lists.
  * For tables with row actions / inline edits, prefer a dedicated component.
+ *
+ * Server-renderable: pure presentation, no client-side state, no functions
+ * passed in. Caller is responsible for any client interactivity (wrap with
+ * a client component, or add it as a row subcomponent).
  */
 import * as React from "react";
 
