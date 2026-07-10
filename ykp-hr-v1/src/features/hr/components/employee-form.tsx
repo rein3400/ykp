@@ -3,27 +3,48 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export function EmployeeForm() {
+interface EmployeeInitial {
+  employee_id?: string;
+  full_name?: string;
+  nickname?: string;
+  gender?: string;
+  phone?: string;
+  email?: string;
+  role?: string;
+  position?: string;
+  brand_id?: string;
+  outlet_id?: string;
+  basic_salary?: string | number;
+  salary_type?: string;
+  employment_status?: string;
+  join_date?: string;
+  bank_name?: string;
+  bank_account?: string;
+  account_holder?: string;
+}
+
+export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mode: 'create' | 'edit' }) {
   const router = useRouter();
+  const employeeId = initial?.employee_id ?? '';
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
-    full_name: '',
-    nickname: '',
-    gender: 'M',
-    phone: '',
-    email: '',
-    role: 'staff',
-    position: '',
-    brand_id: 'BR-001',
-    outlet_id: '',
-    basic_salary: '',
-    salary_type: 'MONTHLY',
-    employment_status: 'PROBATION',
-    join_date: new Date().toISOString().slice(0, 10),
-    bank_name: '',
-    bank_account: '',
-    account_holder: ''
+    full_name: initial?.full_name ?? '',
+    nickname: initial?.nickname ?? '',
+    gender: initial?.gender ?? 'M',
+    phone: initial?.phone ?? '',
+    email: initial?.email ?? '',
+    role: initial?.role ?? 'staff',
+    position: initial?.position ?? '',
+    brand_id: initial?.brand_id ?? 'BR-001',
+    outlet_id: initial?.outlet_id ?? '',
+    basic_salary: initial?.basic_salary != null ? String(initial.basic_salary) : '',
+    salary_type: initial?.salary_type ?? 'MONTHLY',
+    employment_status: initial?.employment_status ?? 'PROBATION',
+    join_date: initial?.join_date ?? new Date().toISOString().slice(0, 10),
+    bank_name: initial?.bank_name ?? '',
+    bank_account: initial?.bank_account ?? '',
+    account_holder: initial?.account_holder ?? ''
   });
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -33,8 +54,10 @@ export function EmployeeForm() {
     setSaving(true);
     setError('');
     try {
-      const res = await fetch('/api/hr/employees', {
-        method: 'POST',
+      const url = mode === 'edit' ? `/api/hr/employees/${employeeId}` : '/api/hr/employees';
+      const method = mode === 'edit' ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
@@ -53,6 +76,12 @@ export function EmployeeForm() {
 
   return (
     <form onSubmit={submit} className='grid gap-3'>
+      {mode === 'edit' && employeeId && (
+        <div className='rounded-md border border-border bg-slate-50 px-3 py-2 text-sm'>
+          <span className='text-muted-foreground'>Editing: </span>
+          <span className='font-mono font-semibold'>{employeeId}</span>
+        </div>
+      )}
       <div className='grid grid-cols-2 gap-3'>
         <label className='text-sm'>
           Nama Lengkap *
@@ -155,7 +184,7 @@ export function EmployeeForm() {
       {error && <div className='text-sm text-red-600'>{error}</div>}
       <div className='flex gap-2'>
         <button type='submit' disabled={saving} className='btn-primary'>
-          {saving ? 'Menyimpan...' : 'Simpan'}
+          {saving ? 'Menyimpan...' : mode === 'edit' ? 'Update' : 'Simpan'}
         </button>
         <button type='button' onClick={() => router.back()} className='btn-ghost'>Batal</button>
       </div>

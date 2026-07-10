@@ -14,6 +14,7 @@ interface Adj {
   amount: string;
   reason: string;
   approval_status: string;
+  approved_by: string;
   payroll_period: string;
 }
 

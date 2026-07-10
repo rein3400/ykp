@@ -1,6 +1,8 @@
 import { readTab, TABS } from '@/db/sheets';
-import { formatIdr } from '@/lib/format';
+import { getSession } from '@/lib/session';
+import { can, Role } from '@/lib/rbac';
 import Link from 'next/link';
+import { EmployeesTable } from '@/features/hr/components/employees-table';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +28,8 @@ interface Brand { brand_id: string; brand_name: string }
 interface Outlet { outlet_id: string; brand_id: string; outlet_name: string }
 
 export default async function EmployeesPage() {
-  const [employees, brands, outlets] = await Promise.all([
+  const [session, employees, brands, outlets] = await Promise.all([
+    getSession(),
     readTab<Employee>(TABS.employees),
     readTab<Brand>(TABS.brands),
     readTab<Outlet>(TABS.outlets)
@@ -34,6 +37,7 @@ export default async function EmployeesPage() {
 
   const brandById = new Map(brands.map((b) => [b.brand_id, b.brand_name]));
   const outletById = new Map(outlets.map((o) => [o.outlet_id, o.outlet_name]));
+  const canEdit = session ? can(session.role as Role, 'update', 'employee') : false;
 
   return (
     <div className='space-y-4'>
@@ -55,40 +59,12 @@ export default async function EmployeesPage() {
             Belum ada karyawan. Tambah lewat tombol di atas.
           </div>
         ) : (
-          <table className='w-full text-sm'>
-            <thead className='text-left text-xs text-muted-foreground'>
-              <tr>
-                <th className='py-2'>Employee ID</th>
-                <th>Nama</th>
-                <th>Role</th>
-                <th>Brand</th>
-                <th>Outlet</th>
-                <th>Gaji Pokok</th>
-                <th>Tipe</th>
-                <th>Status</th>
-                <th>Join</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((e) => (
-                <tr key={e.employee_id} className='border-t border-border'>
-                  <td className='py-1 font-mono text-xs'>{e.employee_id}</td>
-                  <td>{e.full_name}</td>
-                  <td>{e.role || 'staff'}</td>
-                  <td>{brandById.get(e.brand_id) ?? e.brand_id}</td>
-                  <td>{outletById.get(e.outlet_id) ?? e.outlet_id}</td>
-                  <td>{formatIdr(e.basic_salary || '0')}</td>
-                  <td>{e.salary_type || 'MONTHLY'}</td>
-                  <td>
-                    <span className={e.active_status === 'active' || e.active_status === '1' ? 'badge-green' : 'badge-gray'}>
-                      {e.employment_status || e.active_status || '-'}
-                    </span>
-                  </td>
-                  <td>{e.join_date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <EmployeesTable
+            data={employees}
+            brandById={brandById}
+            outletById={outletById}
+            canEdit={canEdit}
+          />
         )}
       </div>
     </div>

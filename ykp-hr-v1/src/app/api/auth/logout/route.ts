@@ -1,7 +1,7 @@
 import { clearSession } from '@/lib/session';
-import { ok } from '@/lib/http';
+import { redirect } from 'next/navigation';
 
 export async function POST() {
   await clearSession();
-  return ok({ logged_out: true });
+  redirect('/login');
 }

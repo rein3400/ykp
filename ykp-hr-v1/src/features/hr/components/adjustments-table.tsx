@@ -7,7 +7,10 @@ interface Adjustment {
   adjustment_id: string;
   date: string;
   employee_id: string;
-  type: string;
+  employee_name?: string;
+  adjustment_type?: string;
+  category?: string;
+  type?: string;
   amount: string;
   reason: string;
   payroll_period: string;
@@ -72,8 +75,8 @@ export function AdjustmentsTable({ data: initial }: { data: Adjustment[] }) {
             return (
               <tr key={row.adjustment_id} className="hover:bg-slate-50">
                 <td className="px-3 py-2 text-sm">{row.date}</td>
-                <td className="px-3 py-2 text-sm">{row.employee_id}</td>
-                <td className="px-3 py-2 text-sm">{row.type}</td>
+                <td className="px-3 py-2 text-sm">{row.employee_name || row.employee_id}</td>
+                <td className="px-3 py-2 text-sm">{row.adjustment_type || row.type || row.category || '-'}</td>
                 <td className="px-3 py-2 text-sm">{row.amount}</td>
                 <td className="px-3 py-2 text-sm">{row.payroll_period}</td>
                 <td className="px-3 py-2 text-sm">{row.reason}</td>
