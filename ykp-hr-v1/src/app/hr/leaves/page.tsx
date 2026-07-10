@@ -1,5 +1,6 @@
 import { readTab, TABS } from '@/db/sheets';
 import { LeaveForm } from '@/features/hr/components/leave-form';
+import { LeavesTable } from '@/features/hr/components/leaves-table';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,42 +36,7 @@ export default async function LeavesPage() {
         </div>
         <div className='card lg:col-span-2'>
           <h2 className='mb-2 font-semibold'>Daftar Pengajuan</h2>
-          {leaves.length === 0 ? (
-            <div className='text-sm text-muted-foreground'>Belum ada pengajuan.</div>
-          ) : (
-            <table className='w-full text-sm'>
-              <thead className='text-left text-xs text-muted-foreground'>
-                <tr>
-                  <th className='py-2'>Karyawan</th>
-                  <th>Tipe</th>
-                  <th>Mulai</th>
-                  <th>Selesai</th>
-                  <th>Hari</th>
-                  <th>Alasan</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaves.map((l) => (
-                  <tr key={l.leave_id} className='border-t border-border'>
-                    <td className='py-1'>{l.employee_name || l.employee_id}</td>
-                    <td>{l.leave_type}</td>
-                    <td className='font-mono text-xs'>{l.start_date}</td>
-                    <td className='font-mono text-xs'>{l.end_date}</td>
-                    <td>{l.total_days}</td>
-                    <td className='max-w-xs truncate'>{l.reason}</td>
-                    <td>
-                      <span className={
-                        l.approval_status === 'APPROVED' ? 'badge-green' :
-                        l.approval_status === 'REJECTED' ? 'badge-red' :
-                        l.approval_status === 'PENDING' ? 'badge-yellow' : 'badge-gray'
-                      }>{l.approval_status || 'DRAFT'}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <LeavesTable data={leaves} />
         </div>
       </div>
     </div>
