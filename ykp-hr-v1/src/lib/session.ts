@@ -73,7 +73,7 @@ export async function getSession(): Promise<SessionUser | null> {
   return {
     userId: payload.userId as string,
     username: payload.username as string,
-    role: payload.role as string,
+    role: (payload.role as string)?.toLowerCase() as string,
     brandId: payload.brandId as string | undefined,
     outletId: payload.outletId as string | undefined
   };
