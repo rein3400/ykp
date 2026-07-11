@@ -27,12 +27,28 @@ export function FinanceDashboardCards() {
   // WIB calendar date — DB rows are dated by WIB. nowWib().toISOString()
   // returns UTC, which excludes the most recent WIB-day rows.
   const today = todayWib();
-  const params = new URLSearchParams({ date_from: today, date_to: today });
+  // Query the last 14 WIB days (ordered desc by the API). If today's summary
+  // has not been rebuilt yet, fall back to the most recent day that has data
+  // so the dashboard cards show the latest snapshot instead of all-zero.
+  const from = new Date();
+  from.setDate(from.getDate() - 13);
+  const fromStr = from.toISOString().slice(0, 10);
+  const params = new URLSearchParams({ date_from: fromStr, date_to: today, limit: "400" });
   const { data: rows = [], isLoading } = useSummaryList(params);
 
   const consolidated = React.useMemo(() => {
     const base: DailySummary[] = rows.length ? (rows as DailySummary[]) : [];
-    return base.reduce(
+    // Pick the latest date present in the data; fall back to today if none.
+    let latestDate = today;
+    if (base.length) {
+      const dates = base.map((r) => (r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10)));
+      latestDate = dates.sort().reverse()[0];
+    }
+    const sameDay = base.filter((r) => {
+      const d = r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10);
+      return d === latestDate;
+    });
+    const sum = sameDay.reduce(
       (acc, r) => ({
         revenue: acc.revenue + (r.revenue ?? 0),
         expense: acc.expense + (r.expense ?? 0),
@@ -44,7 +60,8 @@ export function FinanceDashboardCards() {
       }),
       { revenue: 0, expense: 0, supplierCost: 0, pettyCashOut: 0, unpaidSupplier: 0, cashDifference: 0, netProfitEstimate: 0 },
     );
-  }, [rows]);
+    return { ...sum, latestDate };
+  }, [rows, today]);
 
   const net = consolidated.netProfitEstimate;
   const positive = net >= 0;
