@@ -68,7 +68,7 @@ export default function HubDashboard() {
   });
 
   async function login(username: string, password: string): Promise<void> {
-    const r = await fetch("https://ykp-hr-v1-standalone-production.up.railway.app/api/auth/login", {
+    const r = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password })
