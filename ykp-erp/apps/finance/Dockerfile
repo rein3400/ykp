@@ -11,6 +11,13 @@ COPY apps/finance ./apps/finance
 COPY tsconfig.json ./
 
 RUN npm install --legacy-peer-deps --no-audit
+# Build workspace packages in dependency order so dist/ folders exist
+# (@ykp/ui main=./dist/index.js, but dist/ is gitignored).
+RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true
+RUN npm run build --workspace @ykp/config --if-present \
+ && npm run build --workspace @ykp/engine --if-present \
+ && npm run build --workspace @ykp/auth --if-present \
+ && npm run build --workspace @ykp/ui --if-present
 RUN npm run build --workspace=@ykp/finance
 
 EXPOSE 3003
