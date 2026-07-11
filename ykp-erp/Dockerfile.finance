@@ -21,6 +21,11 @@ ENV YKP_MASTER_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HR_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_FINANCE_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HERMEZ_DATABASE_URL=postgresql://placeholder/db
+# Build all workspace packages (e.g. @ykp/ui) before next build so the
+# dist/ folders exist for resolution.
+WORKDIR /repo
+RUN npm run build --workspaces --if-present
+WORKDIR /repo/apps/finance
 RUN npx next build
 
 FROM node:22-slim AS runner
