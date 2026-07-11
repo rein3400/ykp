@@ -10,13 +10,13 @@ import { useExportCsv, useExportPdf, useImportPos } from "@finance/features/fina
 import { PosTable } from "@finance/features/finance/components/pos-table";
 import { PosFormDialog } from "@finance/features/finance/components/pos-form-dialog";
 import { Upload } from "lucide-react";
+import { todayWib } from "@ykp/engine/client";
 import type { PosDaily } from "@finance/features/finance/api/types";
 
 export default function PosPage() {
-  const today = new Date().toISOString().slice(0, 10);
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  const monthStartStr = monthStart.toISOString().slice(0, 10);
+  // WIB calendar date — DB rows are dated by WIB.
+  const today = todayWib();
+  const monthStartStr = `${today.slice(0, 7)}-01`;
 
   const params = React.useMemo(() => new URLSearchParams({ date_from: monthStartStr, date_to: today }), [monthStartStr, today]);
   const { data = [] } = usePosList(params);

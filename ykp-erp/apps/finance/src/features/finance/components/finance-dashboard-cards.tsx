@@ -7,7 +7,8 @@
 "use client";
 
 import * as React from "react";
-import { KpiCard, formatIdr, nowWib } from "@ykp/ui";
+import { KpiCard, formatIdr } from "@ykp/ui";
+import { todayWib } from "@ykp/engine/client";
 import {
   Wallet,
   TrendingUp,
@@ -23,7 +24,9 @@ import { useSummaryList } from '../api/queries';
 import type { DailySummary } from '../api/types';
 
 export function FinanceDashboardCards() {
-  const today = nowWib().toISOString().slice(0, 10);
+  // WIB calendar date — DB rows are dated by WIB. nowWib().toISOString()
+  // returns UTC, which excludes the most recent WIB-day rows.
+  const today = todayWib();
   const params = new URLSearchParams({ date_from: today, date_to: today });
   const { data: rows = [], isLoading } = useSummaryList(params);
 

@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@ykp/ui";
 import { Plus } from "lucide-react";
+import { todayWib } from "@ykp/engine/client";
 import { useCreatePos } from '../api/mutations';
 import { useOutlets } from '../api/queries';
 import type { CreatePosBody } from '../api/types';
@@ -31,7 +32,7 @@ export function PosFormDialog() {
   const create = useCreatePos();
 
   const [form, setForm] = React.useState<CreatePosBody>({
-    date: new Date().toISOString().slice(0, 10),
+    date: todayWib(),
     outlet_id: "",
     gross_sales: 0,
     payment_method: "Cash",

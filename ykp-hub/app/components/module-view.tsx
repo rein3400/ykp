@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { AppDef } from "./apps";
+import { ssoUrl } from "./apps";
 import type { HealthResult } from "../hooks/use-health";
 import { ArrowLeftIcon, ExternalLinkIcon, ReloadIcon, AlertTriangleIcon, HubLogo, ChevronRightIcon, LogOutIcon } from "./icons";
 import { Avatar } from "./avatar";
@@ -70,11 +71,11 @@ export function ModuleView({ app, session, result, onBack, onLogout }: Props) {
             </div>
             <ModuleStatusInline result={result} />
             <a
-              href={app.url}
+              href={ssoUrl(app, session.role)}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 focus-ring"
-              title="Open in new tab"
+              title="Open in new tab (auto-login)"
             >
               <ExternalLinkIcon className="h-3.5 w-3.5" />
               <span className="hidden lg:inline">New tab</span>
@@ -141,7 +142,7 @@ export function ModuleView({ app, session, result, onBack, onLogout }: Props) {
                   Coba lagi
                 </button>
                 <a
-                  href={app.url}
+                  href={ssoUrl(app, session.role)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 focus-ring"
@@ -155,7 +156,7 @@ export function ModuleView({ app, session, result, onBack, onLogout }: Props) {
         )}
         <iframe
           key={reloadKey}
-          src={app.url}
+          src={ssoUrl(app, session.role)}
           onLoad={() => setLoaded(true)}
           onError={() => setTimedOut(true)}
           className="absolute inset-0 w-full h-full border-0 bg-white"

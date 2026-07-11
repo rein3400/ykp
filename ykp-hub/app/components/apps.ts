@@ -77,3 +77,24 @@ export const APPS: AppDef[] = [
 export function findApp(id: AppId | null): AppDef | undefined {
   return APPS.find((a) => a.id === id);
 }
+
+/**
+ * Apps whose login is a demo role-picker (POST /api/auth/login {role}).
+ * These accept a GET SSO bridge: /api/auth/login?role=X&redirect=/ → cookie → 302.
+ * hr-v1 has real username/password auth (Google Sheets users tab), so it
+ * cannot be auto-logged-in from Hub — the user logs in manually there.
+ */
+export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["finance", "hr", "hermez"]);
+
+/**
+ * Build the URL to open an app from Hub so the user lands authenticated.
+ * - Role-picker apps (finance/hr/hermez): hit /api/auth/login?role=&redirect=/
+ *   which mints the ykp_session cookie then 302s to "/". Pass the Hub session
+ *   role so the ERP app grants the same access level.
+ * - hr-v1: no SSO (real credentials) → bare root, user logs in manually.
+ */
+export function ssoUrl(app: AppDef, role: string): string {
+  if (!ROLE_SSO_APPS.has(app.id)) return app.url;
+  const r = encodeURIComponent(role || "OWNER");
+  return `${app.url}/api/auth/login?role=${r}&redirect=/`;
+}

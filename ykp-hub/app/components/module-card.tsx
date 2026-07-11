@@ -1,5 +1,6 @@
 "use client";
 import type { AppDef } from "./apps";
+import { ssoUrl } from "./apps";
 import type { HealthResult } from "../hooks/use-health";
 import { BoltIcon, DatabaseIcon, ChevronRightIcon, LockIcon, ActivityIcon, ExternalLinkIcon, EyeIcon } from "./icons";
 import { StatusBadge, fmtCount, pingColor } from "./status-primitives";
@@ -7,11 +8,13 @@ import { StatusBadge, fmtCount, pingColor } from "./status-primitives";
 interface Props {
   app: AppDef;
   result?: HealthResult;
+  /** Hub session role — passed to the ERP app so it grants the same access. */
+  role?: string;
   onPreview: (id: AppDef["id"]) => void;
   lastAccessedAt?: string | null;
 }
 
-export function ModuleCard({ app, result, onPreview, lastAccessedAt }: Props) {
+export function ModuleCard({ app, result, role, onPreview, lastAccessedAt }: Props) {
   const state: "up" | "down" | "warn" | "probing" =
     !result ? "probing" :
     !result.reachable ? "down" :
@@ -70,7 +73,7 @@ export function ModuleCard({ app, result, onPreview, lastAccessedAt }: Props) {
               </div>
             ) : (
               <a
-                href={app.url}
+                href={ssoUrl(app, role ?? "OWNER")}
                 target="_blank"
                 rel="noreferrer"
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r ${tone.gradient} px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition focus-ring`}

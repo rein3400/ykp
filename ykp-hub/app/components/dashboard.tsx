@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Health, HealthResult } from "../hooks/use-health";
 import type { AppDef } from "./apps";
+import { ssoUrl } from "./apps";
 import { HubLogo, SearchIcon, LogOutIcon, ChevronRightIcon } from "./icons";
 import { Avatar } from "./avatar";
 import { ThemeToggle } from "./theme-toggle";
@@ -123,6 +124,7 @@ export function Dashboard(props: Props) {
                 key={app.id}
                 app={app}
                 result={r}
+                role={session.role}
                 onPreview={onPreview}
                 lastAccessedAt={lastAccess[app.id] ?? null}
               />
@@ -139,13 +141,13 @@ export function Dashboard(props: Props) {
           loading={loading}
         />
 
-        <Footer />
+        <Footer apps={props.apps} role={session.role} />
       </main>
     </div>
   );
 }
 
-function Footer() {
+function Footer({ apps, role }: { apps: AppDef[]; role: string }) {
   const buildDate = new Date().toISOString().slice(0, 10);
   return (
     <footer className="mt-4 pt-6 border-t border-slate-200/60 dark:border-slate-800/60">
@@ -157,10 +159,18 @@ function Footer() {
         <div>
           <div className="font-semibold text-slate-700 dark:text-slate-200">Modules</div>
           <ul className="mt-1 space-y-0.5 text-slate-500 dark:text-slate-400">
-            <li><a className="hover:text-blue-600 dark:hover:text-blue-400" href="https://ykp-erp-finance-production.up.railway.app" target="_blank" rel="noreferrer">Finance</a></li>
-            <li><a className="hover:text-emerald-600 dark:hover:text-emerald-400" href="https://ykp-erp-hr-production.up.railway.app" target="_blank" rel="noreferrer">HR Production</a></li>
-            <li><a className="hover:text-purple-600 dark:hover:text-purple-400" href="https://ykp-erp-hermez-production.up.railway.app" target="_blank" rel="noreferrer">Hermez AI</a></li>
-            <li><a className="hover:text-orange-600 dark:hover:text-orange-400" href="https://ykp-hr-v1-standalone-production.up.railway.app" target="_blank" rel="noreferrer">HR Pilot</a></li>
+            {apps.map((app) => (
+              <li key={app.id}>
+                <a
+                  className={`hover:underline ${app.tone.text}`}
+                  href={ssoUrl(app, role)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {app.name}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
         <div className="text-right">

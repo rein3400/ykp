@@ -11,13 +11,13 @@ import { SupplierCostFormDialog } from "@finance/features/finance/components/sup
 import { useSupplierList, useUnpaidList } from "@finance/features/finance/api/queries";
 import { useApproveSupplierPayment, useExportCsv, useExportPdf } from "@finance/features/finance/api/mutations";
 import { Plus, Bell } from "lucide-react";
+import { todayWib } from "@ykp/engine/client";
 import type { SupplierCost } from "@finance/features/finance/api/types";
 
 export default function SuppliersPage() {
-  const today = new Date().toISOString().slice(0, 10);
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  const from = monthStart.toISOString().slice(0, 10);
+  // WIB calendar date — DB rows are dated by WIB.
+  const today = todayWib();
+  const from = `${today.slice(0, 7)}-01`;
 
   const params = React.useMemo(() => new URLSearchParams({ date_from: from, date_to: today }), [from, today]);
   const list = useSupplierList(params);

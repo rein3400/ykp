@@ -21,6 +21,7 @@ import {
 } from "@ykp/ui";
 import { useOutlets, useSuppliers } from '../api/queries';
 import { useCreateSupplier, usePatchSupplier } from '../api/mutations';
+import { todayWib } from "@ykp/engine/client";
 import type { SupplierCost } from '../api/types';
 
 interface Props {
@@ -36,7 +37,7 @@ export function SupplierCostFormDialog({ open, onOpenChange, row }: Props) {
   const patch = usePatchSupplier();
 
   const [form, setForm] = React.useState({
-    date: new Date().toISOString().slice(0, 10),
+    date: todayWib(),
     outlet_id: "",
     supplier_id: "",
     description: "",
@@ -62,7 +63,7 @@ export function SupplierCostFormDialog({ open, onOpenChange, row }: Props) {
       });
     } else {
       setForm({
-        date: new Date().toISOString().slice(0, 10),
+        date: todayWib(),
         outlet_id: "",
         supplier_id: "",
         description: "",

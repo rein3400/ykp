@@ -9,13 +9,13 @@ import { ExpenseTable } from "@finance/features/finance/components/expense-table
 import { ExpenseFormDialog } from "@finance/features/finance/components/expense-form-dialog";
 import { useExpenseList } from "@finance/features/finance/api/queries";
 import { useApproveExpense, useExportCsv, useExportPdf } from "@finance/features/finance/api/mutations";
+import { todayWib } from "@ykp/engine/client";
 import type { Expense } from "@finance/features/finance/api/types";
 
 export default function ExpensesPage() {
-  const today = new Date().toISOString().slice(0, 10);
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  const from = monthStart.toISOString().slice(0, 10);
+  // WIB calendar date — DB rows are dated by WIB.
+  const today = todayWib();
+  const from = `${today.slice(0, 7)}-01`;
 
   const params = React.useMemo(() => new URLSearchParams({ date_from: from, date_to: today }), [from, today]);
   const { data = [] } = useExpenseList(params);

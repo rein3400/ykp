@@ -7,10 +7,14 @@ import * as React from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, formatIdr, formatDateWib } from "@ykp/ui";
 import { useSummaryList } from "@finance/features/finance/api/queries";
 import { useRebuildSummary } from "@finance/features/finance/api/mutations";
+import { todayWib } from "@ykp/engine/client";
 import { RefreshCw } from "lucide-react";
 
 export default function SummaryPage() {
-  const today = new Date().toISOString().slice(0, 10);
+  // Use WIB (Asia/Jakarta) calendar date — DB rows are dated by WIB.
+  // new Date().toISOString() gives UTC, which at WIB 00:00-06:59 is the
+  // previous UTC-less day and excludes the most recent DB rows.
+  const today = todayWib();
   const params = React.useMemo(() => new URLSearchParams({ date_from: today, date_to: today, limit: "60" }), [today]);
   const { data = [], isLoading } = useSummaryList(params);
   const rebuild = useRebuildSummary();

@@ -53,6 +53,13 @@ function isSensitivePath(pathname: string): boolean {
 }
 
 function buildCsp(): string {
+  // Allow the YKP Hub portal to embed this app in an iframe (preview).
+  // CORS_ORIGIN is the Hub origin. If unset, frame-ancestors stays 'none'.
+  const hubOrigins = (process.env.CORS_ORIGIN ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const frameAncestors = hubOrigins.length ? `frame-ancestors 'self' ${hubOrigins.join(" ")}` : "frame-ancestors 'none'";
   return [
     "default-src 'self'",
     // Next.js 14 hydrates via inline scripts that get blocked by strict CSP.
@@ -62,7 +69,7 @@ function buildCsp(): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "connect-src 'self' https:",
-    "frame-ancestors 'none'",
+    frameAncestors,
   ].join("; ");
 }
 

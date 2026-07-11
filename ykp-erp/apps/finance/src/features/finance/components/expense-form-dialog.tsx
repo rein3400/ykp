@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@ykp/ui";
 import { Plus } from "lucide-react";
+import { todayWib } from "@ykp/engine/client";
 import { useCreateExpense } from "../api/mutations";
 import { useOutlets, useExpenseCategories, usePaymentMethods } from "../api/queries";
 
@@ -35,7 +36,7 @@ export function ExpenseFormDialog() {
   const create = useCreateExpense();
 
   const [form, setForm] = React.useState({
-    date: new Date().toISOString().slice(0, 10),
+    date: todayWib(),
     outlet_id: "",
     category_id: "",
     payment_method_id: "",
