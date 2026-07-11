@@ -43,4 +43,4 @@ COPY --from=builder /repo/node_modules ./node_modules
 COPY --from=builder /repo/apps/hermez/next.config.mjs ./
 COPY --from=builder /repo/packages ./packages
 EXPOSE 3004
-CMD ["sh", "-c", "PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]# last verified 1783744219
+CMD ["sh", "-c", "PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
