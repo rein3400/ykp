@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from "@ykp/ui";
 
 interface BriefRow {
@@ -25,6 +26,7 @@ function levelVariant(level: BriefRow["alertLevel"]) {
 }
 
 export default function DailyBriefPage() {
+  const router = useRouter();
   const [date, setDate] = React.useState<string>(() => new Date().toISOString().slice(0, 10));
   const [brief, setBrief] = React.useState<BriefRow | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -39,12 +41,21 @@ export default function DailyBriefPage() {
       if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
       setBrief(json.data ?? null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const msg = e instanceof Error ? e.message : String(e);
+      // If the session cookie is missing or has insufficient role, bounce
+      // to /login so the user re-mints a SUPER_ADMIN session (Hermez config +
+      // brief APIs require SUPER_ADMIN). This covers stale OWNER cookies
+      // from before the Hub SSO bridge, and direct visits without a cookie.
+      if (/unauthor|forbidden|insufficient role/i.test(msg)) {
+        router.replace("/login?redirect=/");
+        return;
+      }
+      setError(msg);
       setBrief(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   React.useEffect(() => {
     void fetchBrief(date);
