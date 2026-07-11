@@ -87,14 +87,27 @@ export function findApp(id: AppId | null): AppDef | undefined {
 export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["finance", "hr", "hermez"]);
 
 /**
+ * Per-app SSO role override. Some apps require a higher role than the Hub
+ * session to access key APIs. Notably Hermez's config + brief APIs require
+ * SUPER_ADMIN — if a Hub OWNER opens Hermez, minting a ykp_session with
+ * role=OWNER yields 403 "insufficient role" on those APIs. So Hermez SSO
+ * always mints SUPER_ADMIN regardless of Hub role. Finance/HR accept the
+ * Hub session role (defaulting to OWNER) since their APIs gate on OWNER+.
+ */
+export const SSO_ROLE: Partial<Record<AppId, string>> = {
+  hermez: "SUPER_ADMIN",
+};
+
+/**
  * Build the URL to open an app from Hub so the user lands authenticated.
  * - Role-picker apps (finance/hr/hermez): hit /api/auth/login?role=&redirect=/
- *   which mints the ykp_session cookie then 302s to "/". Pass the Hub session
- *   role so the ERP app grants the same access level.
+ *   which mints the ykp_session cookie then 302s to "/". Use SSO_ROLE override
+ *   if present, otherwise the Hub session role (so the ERP app grants the same
+ *   access level). Hermez always gets SUPER_ADMIN (config/brief require it).
  * - hr-v1: no SSO (real credentials) → bare root, user logs in manually.
  */
 export function ssoUrl(app: AppDef, role: string): string {
   if (!ROLE_SSO_APPS.has(app.id)) return app.url;
-  const r = encodeURIComponent(role || "OWNER");
+  const r = encodeURIComponent(SSO_ROLE[app.id] ?? role ?? "OWNER");
   return `${app.url}/api/auth/login?role=${r}&redirect=/`;
 }
