@@ -29,6 +29,7 @@ const APPS = [
     loginType: "role-select", // role picker, no password
     auth: { user: "owner", pw: "owner123", role: "OWNER" },
     cookieNames: ["ykp_session"],
+    ssoRole: "OWNER", // Hub→ERP SSO bridge: GET /api/auth/login?role=OWNER&redirect=/
     dbRoutes: [
       { path: "/", label: "dashboard root" },
       { path: "/petty-cash", label: "petty cash list (DB)" },
@@ -48,6 +49,7 @@ const APPS = [
     loginType: "role-select",
     auth: { user: "owner", pw: "owner123", role: "SUPER_ADMIN" },
     cookieNames: ["ykp_session"],
+    ssoRole: "SUPER_ADMIN", // Hub→ERP SSO bridge (Hermez API needs SUPER_ADMIN)
     dbRoutes: [
       { path: "/", label: "brief root (read-only)" },
       { path: "/alerts", label: "hermez alerts log" },
@@ -66,6 +68,7 @@ const APPS = [
     loginType: "role-select",
     auth: { user: "owner", pw: "owner123", role: "OWNER" },
     cookieNames: ["ykp_session"],
+    ssoRole: "OWNER", // Hub→ERP SSO bridge
     dbRoutes: [
       { path: "/", label: "dashboard root" },
       { path: "/attendance", label: "attendance (DB)" },
@@ -207,10 +210,17 @@ async function probeRoute(page, app, route, log) {
   try {
     const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
     status = resp?.status() ?? 0;
+    // Finance/HR UI pages are client components that fetch via TanStack Query
+    // AFTER hydration. Wait for the API fetch to settle so the screenshot
+    // captures populated data, not the "Memuat..."/"Rp 0" initial state.
+    if (!route.path.startsWith("/api/")) {
+      await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+      await page.waitForTimeout(1500);
+    }
     size = (await page.content()).length;
     // capture visible text snippet for DB evidence
-    const text = await page.evaluate(() => document?.body?.innerText?.slice(0, 400) ?? "");
-    bodySnippet = text.replace(/\s+/g, " ").slice(0, 300);
+    const text = await page.evaluate(() => document?.body?.innerText?.slice(0, 600) ?? "");
+    bodySnippet = text.replace(/\s+/g, " ").slice(0, 400);
   } catch (e) {
     err = String(e).slice(0, 200);
   }
@@ -264,6 +274,34 @@ async function runApp(browser, app) {
   // 4. final after screenshot
   await page.screenshot({ path: path.join(SHOTS, app.name, "99-after-all.png"), fullPage: true }).catch(() => {});
 
+  // 5. SSO bridge test (role-picker apps only: finance/hr/hermez).
+  //    Simulate Hub opening the app: fresh context (no cookie) → hit
+  //    /api/auth/login?role=<hubRole>&redirect=/ → should set ykp_session
+  //    cookie + 302 to "/". Verifies the Hub→ERP auto-login flow works.
+  let ssoBridge = null;
+  if (app.ssoRole) {
+    try {
+      const ssoCtx = await browser.newContext({ viewport: { width: 1366, height: 900 }, ignoreHTTPSErrors: true });
+      const ssoPage = await ssoCtx.newPage();
+      const ssoUrl = `${app.base}/api/auth/login?role=${encodeURIComponent(app.ssoRole)}&redirect=/`;
+      log.push({ step: "sso-start", url: ssoUrl, ts: ts() });
+      await ssoPage.goto(ssoUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await ssoPage.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+      await ssoPage.waitForTimeout(1000);
+      const landed = ssoPage.url();
+      const cookies = await ssoCtx.cookies();
+      const sessionCookie = cookies.find((c) => c.name === "ykp_session");
+      const bodyText = (await ssoPage.evaluate(() => document?.body?.innerText?.slice(0, 300) ?? "")).replace(/\s+/g, " ").slice(0, 200);
+      await ssoPage.screenshot({ path: path.join(SHOTS, app.name, "04-sso-bridge.png"), fullPage: true }).catch(() => {});
+      ssoBridge = { url: ssoUrl, landedUrl: landed, hasSessionCookie: !!sessionCookie, bodySnippet: bodyText, ok: !!sessionCookie && landed.replace(/\/$/, "") === app.base.replace(/\/$/, "") };
+      log.push({ step: "sso-result", ...ssoBridge, ts: ts() });
+      await ssoCtx.close();
+    } catch (e) {
+      ssoBridge = { error: String(e).slice(0, 200) };
+      log.push({ step: "sso-error", error: String(e).slice(0, 200), ts: ts() });
+    }
+  }
+
   log.push({ step: "app-end", name: app.name, ts: ts() });
 
   await ctx.close();
@@ -274,6 +312,7 @@ async function runApp(browser, app) {
     rootFinalUrl,
     loginResult,
     routes,
+    ssoBridge,
     log,
   };
 }
@@ -294,6 +333,7 @@ async function main() {
       report.apps.push(r);
       console.log(`  root: ${r.rootStatus} → ${r.rootFinalUrl}`);
       console.log(`  login: ${JSON.stringify(r.loginResult)}`);
+      if (r.ssoBridge) console.log(`  sso: ${JSON.stringify(r.ssoBridge)}`);
       for (const rt of r.routes) {
         console.log(`  ${rt.status} ${rt.ms}ms ${rt.path} — ${rt.label}${rt.error ? " ERR=" + rt.error : ""}`);
       }
