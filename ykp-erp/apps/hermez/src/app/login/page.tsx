@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = React.useState("OWNER");
+  const [role, setRole] = React.useState("SUPER_ADMIN");
   const [busy, setBusy] = React.useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -26,8 +26,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-lg border p-6">
-        <h1 className="text-xl font-bold">YKP Finance — Pilot Login</h1>
-        <p className="text-sm text-muted-foreground">Demo only. Choose a role to mint a session cookie.</p>
+        <h1 className="text-xl font-bold">YKP Hermez — Pilot Login</h1>
+        <p className="text-sm text-muted-foreground">Demo only. Pilih role untuk masuk (default SUPER_ADMIN).</p>
         <label className="block space-y-1 text-sm">
           <span>Role</span>
           <select
@@ -35,10 +35,10 @@ export default function LoginPage() {
             onChange={(e) => setRole(e.target.value)}
             className="w-full rounded-md border bg-background px-3 py-2"
           >
-            <option value="OWNER">OWNER (full access)</option>
+            <option value="SUPER_ADMIN">SUPER_ADMIN (full access)</option>
+            <option value="OWNER">OWNER</option>
             <option value="FINANCE_ADMIN">FINANCE_ADMIN</option>
             <option value="HR_ADMIN">HR_ADMIN</option>
-            <option value="SUPER_ADMIN">SUPER_ADMIN</option>
             <option value="VIEWER">VIEWER</option>
           </select>
         </label>

@@ -15,6 +15,9 @@ const NAV = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const current = NAV.find((n) =>
+    n.href === "/" ? pathname === "/" : pathname?.startsWith(n.href)
+  );
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="hidden w-60 shrink-0 border-r bg-sidebar px-4 py-6 md:block">
@@ -46,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
       <div className="flex w-full flex-col">
         <header className="flex h-14 items-center justify-between border-b px-6">
-          <p className="text-sm text-muted-foreground">Owner: super-admin dashboard</p>
+          <p className="text-sm text-muted-foreground">{current?.label ?? "Dashboard"}</p>
           <ThemeToggle />
         </header>
         <main className="flex-1 p-6">{children}</main>
