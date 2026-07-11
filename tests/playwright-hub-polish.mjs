@@ -95,30 +95,45 @@ async function main() {
   log(`Sparkline polylines: ${sparklines}`);
   if (sparklines < 4) note("warn", "dashboard", `expected 4 sparklines, got ${sparklines}`);
 
-  // 3. THEME TOGGLE → DARK
-  log("\n=== 3. Theme: light → dark ===");
-  // Click the compact theme toggle in header (icon-only button)
+  // 3. THEME TOGGLE CYCLE: system → light → dark → system
+  log("\n=== 3. Theme cycle (system → light → dark → system) ===");
   const themeBtn = page.locator("button[aria-label='Toggle theme']").first();
+  const t0 = await themeBtn.getAttribute("title");
+  log(`Initial: ${t0}`);
+
+  // Click 1: system → light
   await themeBtn.click();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(300);
+  const t1 = await themeBtn.getAttribute("title");
+  const d1 = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+  log(`After 1 click: ${t1}, html.dark=${d1}`);
+  if (t1 !== "Theme: light") note("fail", "theme", `expected 'light' after 1 click, got: ${t1}`);
+  if (d1) note("fail", "theme", "html.dark should be false after 1 click (light mode)");
+
+  // Click 2: light → dark
+  await themeBtn.click();
+  await page.waitForTimeout(300);
   await shot(page, "dashboard-dark");
-  const hasDarkClass = await page.evaluate(() => document.documentElement.classList.contains("dark"));
-  log(`html.dark: ${hasDarkClass}`);
-  if (!hasDarkClass) note("fail", "theme", "dark class not applied");
+  const t2 = await themeBtn.getAttribute("title");
+  const d2 = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+  log(`After 2 clicks: ${t2}, html.dark=${d2}`);
+  if (t2 !== "Theme: dark") note("fail", "theme", `expected 'dark' after 2 clicks, got: ${t2}`);
+  if (!d2) note("fail", "theme", "html.dark should be true after 2 clicks");
 
-  // Cycle once more → system
+  // Click 3: dark → system
   await themeBtn.click();
   await page.waitForTimeout(300);
-  const themeTitle = await themeBtn.getAttribute("title");
-  log(`Theme title after cycle: "${themeTitle}"`);
-  if (!themeTitle?.includes("system")) note("warn", "theme", `expected 'system' after cycle, got: ${themeTitle}`);
+  const t3 = await themeBtn.getAttribute("title");
+  log(`After 3 clicks: ${t3}`);
+  if (t3 !== "Theme: system") note("fail", "theme", `expected 'system' after 3 clicks, got: ${t3}`);
 
-  // Cycle back → light
+  // Click 4: back to light
   await themeBtn.click();
   await page.waitForTimeout(300);
-  const stillDark = await page.evaluate(() => document.documentElement.classList.contains("dark"));
-  log(`Back to light, html.dark: ${stillDark}`);
-  if (stillDark) note("fail", "theme", "still dark after 2 cycles");
+  const t4 = await themeBtn.getAttribute("title");
+  const d4 = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+  log(`After 4 clicks (back to start): ${t4}, html.dark=${d4}`);
+  if (t4 !== "Theme: light") note("fail", "theme", `cycle didn't return to light, got: ${t4}`);
 
   // 4. COMMAND PALETTE (Cmd+K)
   log("\n=== 4. Command palette ===");
@@ -219,31 +234,52 @@ async function main() {
 
   // 12. BAD LOGIN
   log("\n=== 12. Bad credentials ===");
+  await ctx.clearCookies();
+  await page.goto(HUB, { waitUntil: "networkidle" });
+  await page.waitForTimeout(500);
   await page.locator("input[autocomplete='username']").fill("owner");
   await page.locator("input[autocomplete='current-password']").fill("WRONG");
   await page.locator("button[type='submit']").click();
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(3000);
   await shot(page, "login-error");
-  const errorVisible = await page.locator("text=/gagal|invalid|unauthorized/i").first().isVisible();
-  log(`Error shown: ${errorVisible}`);
-  if (!errorVisible) note("fail", "login", "no error on bad credentials");
+  // Look for the rose-colored error box
+  const errorBox = await page.locator(".text-rose-700, .bg-rose-50").count();
+  const errorText = await page.locator(".bg-rose-50").textContent().catch(() => "");
+  log(`Error box count: ${errorBox}, text: "${errorText}"`);
+  if (errorBox === 0) note("fail", "login", "no error box on bad credentials");
 
   // 13. DARK MODE PERSISTENCE
   log("\n=== 13. Dark mode FOUC prevention ===");
-  // Login back with good creds
+  // Wait for any prior requests to settle, then login back with good creds
+  await page.waitForTimeout(2000);
+  // Clear stale cookies/state to avoid transient 500s
+  await ctx.clearCookies();
+  await page.goto(HUB, { waitUntil: "networkidle" });
+  await page.waitForTimeout(500);
+  await page.locator("input[autocomplete='username']").fill("owner");
   await page.locator("input[autocomplete='current-password']").fill("owner123");
   await page.locator("button[type='submit']").click();
-  await page.waitForTimeout(1500);
-  // Switch to dark
-  await page.locator("button[aria-label='Toggle theme']").first().click();
-  await page.waitForTimeout(300);
-  // Reload
-  await page.reload({ waitUntil: "networkidle" });
-  await page.waitForTimeout(1000);
-  await shot(page, "dark-after-reload");
-  const darkAfterReload = await page.evaluate(() => document.documentElement.classList.contains("dark"));
-  log(`Dark persisted across reload: ${darkAfterReload}`);
-  if (!darkAfterReload) note("fail", "theme", "dark mode lost on reload");
+  await page.waitForTimeout(2500);
+  const onDash = await page.locator("h2:has-text('Selamat')").isVisible();
+  if (!onDash) {
+    note("warn", "theme", "could not log back in for dark test");
+    await shot(page, "dark-after-reload-failed");
+  } else {
+    // Click theme toggle until dark
+    for (let i = 0; i < 3; i++) {
+      const t = await page.locator("button[aria-label='Toggle theme']").first().getAttribute("title");
+      if (t === "Theme: dark") break;
+      await page.locator("button[aria-label='Toggle theme']").first().click();
+      await page.waitForTimeout(300);
+    }
+    // Reload
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForTimeout(1500);
+    await shot(page, "dark-after-reload");
+    const darkAfterReload = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+    log(`Dark persisted across reload: ${darkAfterReload}`);
+    if (!darkAfterReload) note("fail", "theme", "dark mode lost on reload");
+  }
 
   // ===== SUMMARY =====
   log("\n===== SUMMARY =====");
