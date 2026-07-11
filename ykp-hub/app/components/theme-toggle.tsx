@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function ThemeToggle({ compact = false }: Props) {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, cycle } = useTheme();
   const opts = [
     { v: "light" as const, icon: SunIcon, label: "Light" },
     { v: "dark" as const, icon: MoonIcon, label: "Dark" },
@@ -17,7 +17,7 @@ export function ThemeToggle({ compact = false }: Props) {
     const Cur = theme === "light" ? SunIcon : theme === "dark" ? MoonIcon : ComputerIcon;
     return (
       <button
-        onClick={() => setTheme(opts[(opts.findIndex(o => o.v === theme) + 1) % 3].v)}
+        onClick={cycle}
         className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-ring dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
         title={`Theme: ${theme}`}
         aria-label="Toggle theme"
