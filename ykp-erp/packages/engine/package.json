@@ -10,6 +10,54 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./telegram": {
+      "import": "./dist/telegram.js",
+      "types": "./dist/telegram.d.ts"
+    },
+    "./hermez-brief": {
+      "import": "./dist/hermez-brief.js",
+      "types": "./dist/hermez-brief.d.ts"
+    },
+    "./cron": {
+      "import": "./dist/cron.js",
+      "types": "./dist/cron.d.ts"
+    },
+    "./attendance": {
+      "import": "./dist/attendance.js",
+      "types": "./dist/attendance.d.ts"
+    },
+    "./fin-summary": {
+      "import": "./dist/fin-summary.js",
+      "types": "./dist/fin-summary.d.ts"
+    },
+    "./hr-summary": {
+      "import": "./dist/hr-summary.js",
+      "types": "./dist/hr-summary.d.ts"
+    },
+    "./moka-importer": {
+      "import": "./dist/moka-importer.js",
+      "types": "./dist/moka-importer.d.ts"
+    },
+    "./approval": {
+      "import": "./dist/approval.js",
+      "types": "./dist/approval.d.ts"
+    },
+    "./audit": {
+      "import": "./dist/audit.js",
+      "types": "./dist/audit.d.ts"
+    },
+    "./payroll": {
+      "import": "./dist/payroll.js",
+      "types": "./dist/payroll.d.ts"
+    },
+    "./lookup": {
+      "import": "./dist/lookup.js",
+      "types": "./dist/lookup.d.ts"
     }
   },
   "scripts": {

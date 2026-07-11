@@ -2,18 +2,18 @@
 FROM node:22-slim AS deps
 WORKDIR /repo
 COPY package.json package-lock.json* ./
-COPY packages ./packages
 COPY apps/hermez/package.json ./apps/hermez/
-COPY apps/hermez/tsconfig.json ./apps/hermez/
-COPY apps/hermez/next.config.mjs ./apps/hermez/
 RUN npm install --legacy-peer-deps --no-audit
 
 FROM node:22-slim AS builder
 WORKDIR /repo
 COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/apps/hermez ./apps/hermez
-COPY --from=deps /repo/packages ./packages
-COPY . .
+COPY packages ./packages
+COPY apps/hermez ./apps/hermez
+COPY --from=deps /repo/apps/hermez/package.json ./apps/hermez/package.json
+COPY tsconfig.json package.json package-lock.json* ./
+# Re-run npm install in builder stage to set up workspace symlinks
+RUN npm install --legacy-peer-deps --no-audit
 WORKDIR /repo/apps/hermez
 # Build-time env to satisfy schema/db init during page data collection
 ENV YKP_DATABASE_URL=postgresql://placeholder/db
@@ -21,12 +21,6 @@ ENV YKP_MASTER_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HR_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_FINANCE_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HERMEZ_DATABASE_URL=postgresql://placeholder/db
-# Build all workspace packages (e.g. @ykp/ui) before next build so the
-# dist/ folders exist for resolution. Clear stale tsbuildinfo first.
-WORKDIR /repo
-RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true
-RUN npm run build --workspaces --if-present
-WORKDIR /repo/apps/hermez
 RUN npx next build
 
 FROM node:22-slim AS runner
@@ -38,4 +32,4 @@ COPY --from=builder /repo/node_modules ./node_modules
 COPY --from=builder /repo/apps/hermez/next.config.mjs ./
 COPY --from=builder /repo/packages ./packages
 EXPOSE 3004
-CMD ["sh", "-c", "PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
+CMD ["sh", "-c", "PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]# last verified 1783744219

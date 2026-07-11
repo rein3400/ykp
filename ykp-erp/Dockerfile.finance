@@ -2,18 +2,17 @@
 FROM node:22-slim AS deps
 WORKDIR /repo
 COPY package.json package-lock.json* ./
-COPY packages ./packages
 COPY apps/finance/package.json ./apps/finance/
-COPY apps/finance/tsconfig.json ./apps/finance/
-COPY apps/finance/next.config.mjs ./apps/finance/
 RUN npm install --legacy-peer-deps --no-audit
 
 FROM node:22-slim AS builder
 WORKDIR /repo
 COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/apps/finance ./apps/finance
-COPY --from=deps /repo/packages ./packages
-COPY . .
+COPY packages ./packages
+COPY apps/finance ./apps/finance
+COPY --from=deps /repo/apps/finance/package.json ./apps/finance/package.json
+COPY tsconfig.json package.json package-lock.json* ./
+RUN npm install --legacy-peer-deps --no-audit
 WORKDIR /repo/apps/finance
 # Build-time env to satisfy schema/db init during page data collection
 ENV YKP_DATABASE_URL=postgresql://placeholder/db
@@ -21,12 +20,6 @@ ENV YKP_MASTER_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HR_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_FINANCE_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HERMEZ_DATABASE_URL=postgresql://placeholder/db
-# Build all workspace packages (e.g. @ykp/ui) before next build so the
-# dist/ folders exist for resolution. Clear stale tsbuildinfo first.
-WORKDIR /repo
-RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true
-RUN npm run build --workspaces --if-present
-WORKDIR /repo/apps/finance
 RUN npx next build
 
 FROM node:22-slim AS runner
