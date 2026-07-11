@@ -28,13 +28,15 @@ export function useShortcuts(handlers: ShortcutHandlers) {
         return;
       }
 
-      // Skip the rest when typing
-      if (editable) return;
-
+      // Escape: always handled (so palette can close even when typing in its search box)
       if (e.key === "Escape") {
         handlers.onEscape?.();
         return;
       }
+
+      // Skip the rest when typing
+      if (editable) return;
+
       if (e.key === "ArrowLeft") {
         handlers.onBack?.();
         return;
