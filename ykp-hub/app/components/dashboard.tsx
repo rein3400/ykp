@@ -15,7 +15,7 @@ interface Props {
   health: Health | null;
   history: Record<string, number[]>;
   loading: boolean;
-  onOpen: (id: AppDef["id"]) => void;
+  onPreview: (id: AppDef["id"]) => void;
   onOpenPalette: () => void;
   onRefresh: () => void;
   onLogout: () => void;
@@ -34,7 +34,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export function Dashboard(props: Props) {
-  const { session, health, history, loading, onOpen, onOpenPalette, onRefresh, onLogout } = props;
+  const { session, health, history, loading, onPreview, onOpenPalette, onRefresh, onLogout } = props;
 
   // greeting
   const greeting = useMemo(() => {
@@ -123,7 +123,7 @@ export function Dashboard(props: Props) {
                 key={app.id}
                 app={app}
                 result={r}
-                onOpen={onOpen}
+                onPreview={onPreview}
                 lastAccessedAt={lastAccess[app.id] ?? null}
               />
             );
@@ -134,7 +134,7 @@ export function Dashboard(props: Props) {
           apps={props.apps}
           results={health?.results ?? []}
           history={history}
-          onOpen={onOpen}
+          onOpen={onPreview}
           onRefresh={onRefresh}
           loading={loading}
         />

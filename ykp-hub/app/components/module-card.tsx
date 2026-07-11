@@ -1,17 +1,17 @@
 "use client";
 import type { AppDef } from "./apps";
 import type { HealthResult } from "../hooks/use-health";
-import { BoltIcon, DatabaseIcon, ChevronRightIcon, LockIcon, ActivityIcon } from "./icons";
+import { BoltIcon, DatabaseIcon, ChevronRightIcon, LockIcon, ActivityIcon, ExternalLinkIcon, EyeIcon } from "./icons";
 import { StatusBadge, fmtCount, pingColor } from "./status-primitives";
 
 interface Props {
   app: AppDef;
   result?: HealthResult;
-  onOpen: (id: AppDef["id"]) => void;
+  onPreview: (id: AppDef["id"]) => void;
   lastAccessedAt?: string | null;
 }
 
-export function ModuleCard({ app, result, onOpen, lastAccessedAt }: Props) {
+export function ModuleCard({ app, result, onPreview, lastAccessedAt }: Props) {
   const state: "up" | "down" | "warn" | "probing" =
     !result ? "probing" :
     !result.reachable ? "down" :
@@ -21,13 +21,10 @@ export function ModuleCard({ app, result, onOpen, lastAccessedAt }: Props) {
   const disabled = state === "down";
 
   return (
-    <button
-      onClick={() => onOpen(app.id)}
-      disabled={disabled}
-      className={`group relative text-left rounded-2xl bg-white dark:bg-slate-800/80 ring-1 ring-slate-200 dark:ring-slate-700 shadow-sm card-hover focus-ring overflow-hidden ${
-        disabled ? "opacity-60 cursor-not-allowed" : ""
+    <div
+      className={`group relative rounded-2xl bg-white dark:bg-slate-800/80 ring-1 ring-slate-200 dark:ring-slate-700 shadow-sm card-hover overflow-hidden ${
+        disabled ? "opacity-60" : ""
       }`}
-      aria-label={`Open ${app.name}`}
     >
       {/* accent stripe */}
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${tone.gradient}`} />
@@ -62,24 +59,43 @@ export function ModuleCard({ app, result, onOpen, lastAccessedAt }: Props) {
           />
         </div>
 
-        <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
-          <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[60%]">
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 space-y-2">
+          <div className="font-mono text-[10px] text-slate-400 dark:text-slate-500 truncate">
             {app.url.replace("https://", "")}
-          </span>
-          <span className={`inline-flex items-center gap-1 text-xs font-semibold ${tone.text} opacity-80 group-hover:opacity-100 group-hover:translate-x-0.5 transition`}>
+          </div>
+          <div className="flex items-center gap-2">
             {disabled ? (
-              <>
+              <div className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-500">
                 <LockIcon className="h-3.5 w-3.5" /> Locked
-              </>
+              </div>
             ) : (
-              <>
-                Open <ChevronRightIcon className="h-3.5 w-3.5" />
-              </>
+              <a
+                href={app.url}
+                target="_blank"
+                rel="noreferrer"
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r ${tone.gradient} px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition focus-ring`}
+                aria-label={`Buka ${app.name} di tab baru`}
+              >
+                <ExternalLinkIcon className="h-3.5 w-3.5" />
+                Buka
+                <ChevronRightIcon className="h-3 w-3" />
+              </a>
             )}
-          </span>
+            <button
+              type="button"
+              onClick={() => onPreview(app.id)}
+              disabled={disabled}
+              className={`inline-flex items-center justify-center gap-1 rounded-lg border ${tone.ring} bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold ${tone.text} hover:bg-slate-50 dark:hover:bg-slate-700 focus-ring disabled:opacity-50 disabled:cursor-not-allowed transition`}
+              aria-label={`Preview ${app.name} di hub`}
+              title="Preview di hub (iframe)"
+            >
+              <EyeIcon className="h-3.5 w-3.5" />
+              Preview
+            </button>
+          </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 

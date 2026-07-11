@@ -67,6 +67,17 @@ export default function HubDashboard() {
     }
   });
 
+  /** Open a module in iframe preview (advanced — most apps block via CSP). */
+  const previewModule = useCallback((id: AppId) => {
+    try {
+      const raw = localStorage.getItem(HUB_LAST_ACCESS_KEY);
+      const map = raw ? JSON.parse(raw) : {};
+      map[id] = new Date().toISOString();
+      localStorage.setItem(HUB_LAST_ACCESS_KEY, JSON.stringify(map));
+    } catch {}
+    setActiveModule(id);
+  }, []);
+
   async function login(username: string, password: string): Promise<void> {
     const r = await fetch("/api/auth/login", {
       method: "POST",
@@ -106,7 +117,7 @@ export default function HubDashboard() {
         history={history}
         loading={loading}
         apps={APPS}
-        onOpen={openModule}
+        onPreview={previewModule}
         onOpenPalette={() => setPaletteOpen(true)}
         onRefresh={refresh}
         onLogout={logout}
@@ -117,7 +128,7 @@ export default function HubDashboard() {
         apps={APPS}
         results={health?.results ?? []}
         onSelect={(id) => {
-          openModule(id);
+          previewModule(id);
           setPaletteOpen(false);
         }}
       />
