@@ -22,8 +22,9 @@ ENV YKP_HR_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_FINANCE_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HERMEZ_DATABASE_URL=postgresql://placeholder/db
 # Build all workspace packages (e.g. @ykp/ui) before next build so the
-# dist/ folders exist for resolution.
+# dist/ folders exist for resolution. Clear stale tsbuildinfo first.
 WORKDIR /repo
+RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true
 RUN npm run build --workspaces --if-present
 WORKDIR /repo/apps/hr
 RUN npx next build
