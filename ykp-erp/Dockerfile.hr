@@ -13,6 +13,16 @@ COPY apps/hr ./apps/hr
 COPY --from=deps /repo/apps/hr/package.json ./apps/hr/package.json
 COPY tsconfig.json package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps --no-audit
+# Build workspace packages in dependency order so dist/ folders exist
+# when next build resolves @ykp/* (dist/ is gitignored, so absent in repo).
+# config (leaf) -> engine/auth (depend on config) -> ui (depends on format).
+# Clear stale tsbuildinfo first to force a fresh tsc compile.
+WORKDIR /repo
+RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true
+RUN npm run build --workspace @ykp/config --if-present \
+ && npm run build --workspace @ykp/engine --if-present \
+ && npm run build --workspace @ykp/auth --if-present \
+ && npm run build --workspace @ykp/ui --if-present
 WORKDIR /repo/apps/hr
 # Build-time env to satisfy schema/db init during page data collection
 ENV YKP_DATABASE_URL=postgresql://placeholder/db

@@ -19,6 +19,19 @@ function safeRedirect(target: string | null): string {
   return target;
 }
 
+/**
+ * Resolve the public origin from forwarded headers. Behind Railway's proxy,
+ * req.url origin is the internal bind address (https://0.0.0.0:8080), so a
+ * bare Response.redirect would point the browser at an invalid host. Use
+ * x-forwarded-host/proto (set by Railway) to reconstruct the public URL.
+ */
+function publicOrigin(req: Request): string {
+  const xfHost = req.headers.get("x-forwarded-host");
+  const xfProto = req.headers.get("x-forwarded-proto");
+  if (xfHost) return `${xfProto ?? "https"}://${xfHost}`;
+  return new URL(req.url).origin;
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const roleParam = url.searchParams.get("role") ?? "OWNER";
@@ -30,7 +43,7 @@ export async function GET(req: Request) {
     name: "Demo Owner",
     role,
   });
-  return Response.redirect(new URL(redirect, url.origin), 302);
+  return Response.redirect(new URL(redirect, publicOrigin(req)), 302);
 }
 
 export async function POST(req: Request) {
