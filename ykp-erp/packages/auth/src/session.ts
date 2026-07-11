@@ -107,8 +107,13 @@ export async function getSession(): Promise<SessionReadResult> {
 
 /**
  * Persist a session. Server-side only — the browser is not allowed to
- * mint or write session cookies. Uses httpOnly, strict SameSite, and
- * secure in production.
+ * mint or write session cookies. Uses httpOnly + secure in production.
+ *
+ * SameSite is "none" (with secure) so the cookie is sent when the ERP app
+ * is embedded in the YKP Hub portal's cross-origin iframe (Preview). The
+ * pilot auth is a demo role-picker with no credential verification, so the
+ * CSRF protection that SameSite=strict would provide is not meaningful here;
+ * a proper SSO/Clerk flow should restore strict SameSite when wired in.
  */
 export async function setSession(user: SessionUser): Promise<void> {
   if (typeof window !== "undefined") {
@@ -118,7 +123,7 @@ export async function setSession(user: SessionUser): Promise<void> {
   const value = signSession(user);
   cookies().set(SESSION_COOKIE_NAME, value, {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "none",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_COOKIE_MAX_AGE,
