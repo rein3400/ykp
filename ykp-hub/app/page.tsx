@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { APPS, type AppId } from "./components/apps";
+import { APPS, ssoUrl, type AppId } from "./components/apps";
 import { LoginForm } from "./components/login-form";
 import { Dashboard } from "./components/dashboard";
 import { ModuleView } from "./components/module-view";
@@ -49,8 +49,16 @@ export default function HubDashboard() {
       map[id] = new Date().toISOString();
       localStorage.setItem(HUB_LAST_ACCESS_KEY, JSON.stringify(map));
     } catch {}
-    setActiveModule(id);
-  }, []);
+    // Cross-origin iframes can't reliably receive the ERP app's session
+    // cookie in modern browsers (third-party cookie blocking), so the
+    // "Preview" action opens the app in a new tab via the SSO bridge
+    // (auto-login) instead of an embedded iframe. The cookie is set in a
+    // top-level navigation, which browsers always allow.
+    const app = APPS.find((a) => a.id === id);
+    if (app) {
+      window.open(ssoUrl(app, session?.role ?? "OWNER"), "_blank", "noopener,noreferrer");
+    }
+  }, [session]);
 
   const closeModule = useCallback(() => setActiveModule(null), []);
 
