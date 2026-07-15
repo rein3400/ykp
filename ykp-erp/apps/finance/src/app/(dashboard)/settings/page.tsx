@@ -55,18 +55,11 @@ export default function SettingsPage() {
       </Tabs>
 
       <Card>
-        <CardHeader><CardTitle>Threshold Config (stub)</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Threshold Config</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label>Outlet Expense Limit (IDR)</Label>
-              <Input type="number" defaultValue={5_000_000} />
-            </div>
-            <div className="grid gap-2">
-              <Label>Petty Cash Auto-Approve (IDR)</Label>
-              <Input type="number" defaultValue={500_000} />
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Threshold configuration moved to Hermez → Config
+          </p>
         </CardContent>
       </Card>
 

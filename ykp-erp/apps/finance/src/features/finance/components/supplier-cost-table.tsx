@@ -16,9 +16,10 @@ export interface SupplierCostTableProps {
   showOnlyUnpaid?: boolean;
   onEdit?: (row: SupplierCost) => void;
   onPay?: (row: SupplierCost) => void;
+  onDelete?: (row: SupplierCost) => void;
 }
 
-export function SupplierCostTable({ params, showOnlyUnpaid, onEdit, onPay }: SupplierCostTableProps) {
+export function SupplierCostTable({ params, showOnlyUnpaid, onEdit, onPay, onDelete }: SupplierCostTableProps) {
   const list = useSupplierList(params);
   const unpaid = useUnpaidList();
   const data = (showOnlyUnpaid ? (unpaid.data ?? []) : (list.data ?? [])) as SupplierCost[];
@@ -58,13 +59,25 @@ export function SupplierCostTable({ params, showOnlyUnpaid, onEdit, onPay }: Sup
               <CheckCircle className="mr-1 h-4 w-4" /> Bayar
             </Button>
           ) : null}
+          {onDelete ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:text-red-700"
+              onClick={() => {
+                if (window.confirm("Hapus supplier cost ini?")) onDelete(row.original);
+              }}
+            >
+              Hapus
+            </Button>
+          ) : null}
           <Button variant="ghost" size="icon" title="Upload nota">
             <Upload className="h-4 w-4" />
           </Button>
         </div>
       ),
     },
-  ], [onEdit, onPay]);
+  ], [onEdit, onPay, onDelete]);
 
   return <DataTable columns={columns} data={rows as SupplierCost[]} searchPlaceholder="Cari supplier..." emptyMessage="Belum ada supplier cost." />;
 }

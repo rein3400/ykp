@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   DataTable,
@@ -19,13 +20,41 @@ import { formatIdr } from "@ykp/ui";
 import { useCreateEmployee, useEmployees } from "@hr/features/api/queries";
 import type { EmployeeRow } from "@hr/features/api/types";
 
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+  });
+  const body = (await res.json().catch(() => null)) as
+    | { data: T }
+    | { error: { message: string } }
+    | null;
+  if (!body) throw new Error("Empty response");
+  if ("error" in body) throw new Error(body.error.message);
+  return body.data;
+}
+
 /**
  * Employees client island. Roster + create-employee dialog + CSV import.
  */
 export function EmployeesTableClient(): JSX.Element {
   const { data, isLoading } = useEmployees();
   const create = useCreateEmployee();
+  const qc = useQueryClient();
   const rows = data?.employees ?? [];
+
+  const handleDeactivate = React.useCallback(async (employeeId: string) => {
+    if (!window.confirm(`Nonaktifkan karyawan ${employeeId}?`)) return;
+    try {
+      await apiFetch(`/api/hr/employees/${encodeURIComponent(employeeId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "inactive" }),
+      });
+      void qc.invalidateQueries({ queryKey: ["hr", "employees"] });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal menonaktifkan");
+    }
+  }, [qc]);
 
   const columns = React.useMemo<ColumnDef<EmployeeRow>[]>(
     () => [
@@ -49,8 +78,29 @@ export function EmployeesTableClient(): JSX.Element {
             <Badge className="bg-muted text-muted-foreground">{row.original.status}</Badge>
           ),
       },
+      {
+        id: "actions",
+        header: "Aksi",
+        cell: ({ row }) => {
+          const active = row.original.status === "active";
+          return (
+            <div className="flex items-center gap-2">
+              {active && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-amber-600 hover:text-amber-700"
+                  onClick={() => handleDeactivate(row.original.employeeId)}
+                >
+                  Nonaktifkan
+                </Button>
+              )}
+            </div>
+          );
+        },
+      },
     ],
-    [],
+    [handleDeactivate],
   );
 
   return (

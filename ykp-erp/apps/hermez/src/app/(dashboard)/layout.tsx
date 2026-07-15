@@ -6,11 +6,13 @@ import { ThemeToggle } from "@ykp/ui";
 import { cn } from "@ykp/ui";
 
 const NAV = [
-  { href: "/", label: "Brief" },
-  { href: "/alerts", label: "Alerts" },
-  { href: "/config", label: "Config" },
-  { href: "/run", label: "Run Console" },
-  { href: "/telegram-test", label: "Telegram Test" },
+  { href: "/", label: "Ringkasan Harian" },
+  { href: "/alerts", label: "Peringatan" },
+  { href: "/actions", label: "Actions" },
+  { href: "/warehouse", label: "Warehouse" },
+  { href: "/config", label: "Konfigurasi" },
+  { href: "/run", label: "Jalankan" },
+  { href: "/telegram-test", label: "Tes Telegram" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

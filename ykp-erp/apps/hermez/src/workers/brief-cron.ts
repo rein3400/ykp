@@ -44,6 +44,14 @@ async function main() {
     const chatId = process.env.OWNER_CHAT_ID ?? process.env.TELEGRAM_OWNER_CHAT_ID;
     if (token && chatId && !result.brief.sentToOwner) {
       const tg = await sendTelegramMessage(token, chatId, result.brief.briefText);
+      await hermezDb.insert(hermezAuditLog).values({
+        actor: "cron",
+        action: "telegram.send",
+        entity: "hermez_daily_brief",
+        entityId: result.brief.briefId,
+        after: { ok: tg.ok, messageId: tg.ok ? tg.messageId : null, error: tg.ok ? null : tg.error },
+        reason: `cron-${job.data.triggeredBy}`,
+      });
       if (tg.ok) {
         await hermezDb
           .update(hermezDailyBrief)
@@ -80,6 +88,14 @@ async function main() {
     if (!token || !chatId) return;
 
     const tg = await sendTelegramMessage(token, chatId, brief.briefText);
+    await hermezDb.insert(hermezAuditLog).values({
+      actor: "cron",
+      action: "telegram.send",
+      entity: "hermez_daily_brief",
+      entityId: briefId,
+      after: { ok: tg.ok, messageId: tg.ok ? tg.messageId : null, error: tg.ok ? null : tg.error },
+      reason: `retry-${job.data.triggeredBy}`,
+    });
     if (tg.ok) {
       await hermezDb
         .update(hermezDailyBrief)

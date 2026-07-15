@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@ykp/ui";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Badge } from "@ykp/ui";
 
 interface ConfigRow {
   configId: string;
@@ -11,14 +11,53 @@ interface ConfigRow {
   updatedBy: string | null;
 }
 
-const DEFAULT_KEYS = [
-  "late_staff_warning_ratio",
-  "late_staff_critical_ratio",
-  "cash_diff_warning",
-  "cash_diff_critical",
-  "petty_cash_anomaly_multiplier",
-  "high_expense_multiplier",
-];
+interface LabelEntry {
+  label: string;
+  unit: string;
+  description: string;
+  severity: "warning" | "critical";
+}
+
+const LABEL_MAP: Record<string, LabelEntry> = {
+  late_staff_warning_ratio: {
+    label: "Rasio Staf Terlambat (Warning)",
+    unit: "%",
+    description: "Persentase staf terlambat yang memicu warning",
+    severity: "warning",
+  },
+  late_staff_critical_ratio: {
+    label: "Rasio Staf Terlambat (Critical)",
+    unit: "%",
+    description: "Persentase staf terlambat yang memicu critical",
+    severity: "critical",
+  },
+  cash_diff_warning: {
+    label: "Selisih Kas (Warning)",
+    unit: "IDR",
+    description: "Batas selisih kas yang memicu warning",
+    severity: "warning",
+  },
+  cash_diff_critical: {
+    label: "Selisih Kas (Critical)",
+    unit: "IDR",
+    description: "Batas selisih kas yang memicu critical",
+    severity: "critical",
+  },
+  petty_cash_anomaly_multiplier: {
+    label: "Anomali Kas Kecil",
+    unit: "x",
+    description: "Multiplier rata-rata untuk deteksi anomali petty cash",
+    severity: "warning",
+  },
+  high_expense_multiplier: {
+    label: "Pengeluaran Tinggi",
+    unit: "x",
+    description: "Multiplier rata-rata untuk deteksi expense tidak wajar",
+    severity: "warning",
+  },
+};
+
+const DEFAULT_KEYS = Object.keys(LABEL_MAP);
 
 export default function ConfigPage() {
   const [rows, setRows] = React.useState<ConfigRow[]>([]);
@@ -91,32 +130,60 @@ export default function ConfigPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Keys</CardTitle>
+          <CardTitle className="text-base">Threshold Parameters</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           {loading ? (
             <p className="text-sm text-muted-foreground">Memuat config...</p>
           ) : (
-            allKeys.map((key) => (
-              <div
-                key={key}
-                className="grid grid-cols-1 items-center gap-2 md:grid-cols-[260px,1fr,120px]"
-              >
-                <code className="rounded bg-muted/40 px-2 py-1 text-xs">{key}</code>
-                <Input
-                  value={draft[key] ?? ""}
-                  onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
-                  placeholder="value"
-                />
-                <Button
-                  size="sm"
-                  onClick={() => save(key)}
-                  disabled={saving === key}
+            allKeys.map((key) => {
+              const meta = LABEL_MAP[key];
+              const displayLabel = meta?.label ?? key;
+              const displayUnit = meta?.unit ?? "";
+              const displayDesc = meta?.description ?? "";
+              const severity = meta?.severity ?? "warning";
+
+              return (
+                <div
+                  key={key}
+                  className="rounded-lg border p-4 space-y-3"
                 >
-                  {saving === key ? "Menyimpan..." : "Simpan"}
-                </Button>
-              </div>
-            ))
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{displayLabel}</span>
+                        <Badge variant={severity === "critical" ? "destructive" : "warning"}>
+                          {severity}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{displayDesc}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        value={draft[key] ?? ""}
+                        onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+                        placeholder="value"
+                        className="pr-12"
+                      />
+                      {displayUnit ? (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          {displayUnit}
+                        </span>
+                      ) : null}
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => save(key)}
+                      disabled={saving === key}
+                    >
+                      {saving === key ? "Menyimpan..." : "Simpan"}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
           )}
         </CardContent>
       </Card>

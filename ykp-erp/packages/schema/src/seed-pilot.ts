@@ -32,7 +32,6 @@ import {
   finExpense,
   finClosingCash,
 } from './index';
-// @ts-expect-error - @ykp/engine types not resolved in @ykp/schema workspace; runtime ok
 import { todayWib } from "../../engine/src/audit";
 
 // ============================================================
@@ -333,7 +332,7 @@ async function seedFinSupplierCost() {
     const amount = amountSlots[i];
     const status = statusSlots[i];
     const approval = approvalSlots[i];
-    const paidAmount = status === "PAID" ? amount : status === "APPROVED" ? 0 : 0;
+    const paidAmount = status === "PAID" ? amount : 0;
     const unpaidAmount = amount - paidAmount;
     rows.push({
       costId: `FIN-${toCompact(d)}-SUP-${String(i + 1).padStart(3, "0")}`,

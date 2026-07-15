@@ -12,7 +12,10 @@ const insertSchema = z.object({
   leave_type: z.enum(['ANNUAL_LEAVE', 'SICK', 'PERMISSION', 'UNPAID_LEAVE', 'EMERGENCY', 'MATERNITY', 'OTHER']),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  reason: z.string().default('')
+  reason: z.string().default(''),
+  // Revisi item 12 — doctor letter / attachment for SICK leave
+  attachment_url: z.string().default(''),
+  doctor_letter_url: z.string().default('')
 });
 
 function daysBetween(a: string, b: string): number {
@@ -41,10 +44,16 @@ export const POST = handler(async (req) => {
     return missingRef(e instanceof Error ? e.message : 'Missing ref');
   }
 
+  // SICK leave should include doctor letter when available (revisi item 12)
+  if (parsed.data.leave_type === 'SICK' && !parsed.data.doctor_letter_url && !parsed.data.attachment_url) {
+    // Soft warning only — still accept, but flag in notes for manager review
+  }
+
   const days = daysBetween(parsed.data.start_date, parsed.data.end_date);
   const leaveId = await nextSequentialId('leaves', 'leave_id', 'LV');
   const emp = await findRow(TABS.employees, 'employee_id', parsed.data.employee_id);
   const now = nowTimestampWib();
+  const attachment = parsed.data.doctor_letter_url || parsed.data.attachment_url || '';
 
   const row: Record<string, string> = {
     leave_id: leaveId,
@@ -55,13 +64,16 @@ export const POST = handler(async (req) => {
     end_date: parsed.data.end_date,
     total_days: String(days),
     reason: parsed.data.reason,
-    attachment_url: '',
+    attachment_url: attachment,
+    doctor_letter_url: parsed.data.doctor_letter_url || attachment,
     submitted_at: now,
     approval_status: 'PENDING',
     approved_by: '',
     approved_at: '',
     rejection_reason: '',
-    notes: '',
+    notes: parsed.data.leave_type === 'SICK' && !attachment
+      ? 'SICK leave without doctor letter — manager review required'
+      : '',
     created_at: now
   };
 

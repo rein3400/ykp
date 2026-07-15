@@ -28,11 +28,24 @@ export const COMMAND_PERMISSIONS: Record<string, readonly string[]> = {
   '/help': [ROLES.OWNER, ROLES.MANAGER, ROLES.FINANCE, ROLES.HR, ROLES.STAFF, ROLES.TRADER]
 };
 
-export const SILVER_BULLET_WINDOWS = {
-  'AM_SB': { label: 'Asian Silver Bullet', start: '20:00', end: '22:00' },
-  'LDN_SB': { label: 'London Silver Bullet', start: '03:00', end: '05:00' },
-  'NY_SB': { label: 'New York Silver Bullet', start: '10:00', end: '12:00' }
+/**
+ * Kill Zone + Silver Bullet windows in Asia/Jakarta (WIB = UTC+7, no DST).
+ * Derived from ICT_TRADING_STRATEGY.md §6 (UTC Kill Zones):
+ *   London KZ 02:00–05:00 UTC → 09:00–12:00 WIB
+ *   NY KZ     07:00–10:00 UTC → 14:00–17:00 WIB
+ * Silver Bullet sub-windows (1H ICT SB) nested inside KZ for setup labeling.
+ */
+export const KILL_ZONE_WINDOWS = {
+  LDN_KZ: { label: 'London Kill Zone', start: '09:00', end: '12:00' },
+  NY_KZ: { label: 'New York Kill Zone', start: '14:00', end: '17:00' },
+  LDN_SB: { label: 'London Silver Bullet', start: '10:00', end: '11:00' },
+  NY_SB: { label: 'New York Silver Bullet', start: '15:00', end: '16:00' },
+  // Asian range reference only — not a trade window under strict mode
+  AM_SB: { label: 'Asia reference (no entry)', start: '20:00', end: '22:00', tradeable: false as const }
 } as const;
+
+/** @deprecated use KILL_ZONE_WINDOWS — kept alias for older imports */
+export const SILVER_BULLET_WINDOWS = KILL_ZONE_WINDOWS;
 
 export const SIGNALS = {
   HTF_BIAS_BULL: 'HTF_BIAS_BULL',
@@ -47,29 +60,71 @@ export const SIGNALS = {
   IFVG_BEAR: 'IFVG_BEAR',
   SMT_BULL: 'SMT_BULL',
   SMT_BEAR: 'SMT_BEAR',
-  SILVER_BULLET_TIME: 'SILVER_BULLET_TIME'
+  SILVER_BULLET_TIME: 'SILVER_BULLET_TIME',
+  // Optional structure labels from chart (not required for entry)
+  PD_PREMIUM: 'PD_PREMIUM',
+  PD_DISCOUNT: 'PD_DISCOUNT',
+  PD_ARRAY_OB: 'PD_ARRAY_OB',
+  PD_ARRAY_BREAKER: 'PD_ARRAY_BREAKER',
+  PD_ARRAY_FVG: 'PD_ARRAY_FVG'
 } as const;
 
-export type Signal = typeof SIGNALS[keyof typeof SIGNALS];
+export type Signal = (typeof SIGNALS)[keyof typeof SIGNALS];
 
 // HERMES — Knowledge base categories (24 from brief)
 export const KNOWLEDGE_CATEGORIES = [
-  'ICT Foundation', 'Market Structure', 'Liquidity', 'PD Array', 'FVG', 'IFVG', 'MSS', 'BOS',
-  'Order Block', 'Breaker', 'Mitigation', 'Turtle Soup', 'Silver Bullet', 'Judas Swing',
-  'SMT', 'DOL', 'MDO', 'TDO', 'Kill Zone', 'News', 'Risk Management', 'Psychology',
-  'Funding Rules', 'Journal', 'SOP Sri ICT', 'Strategy Improvement'
+  'ICT Foundation',
+  'Market Structure',
+  'Liquidity',
+  'PD Array',
+  'FVG',
+  'IFVG',
+  'MSS',
+  'BOS',
+  'Order Block',
+  'Breaker',
+  'Mitigation',
+  'Turtle Soup',
+  'Silver Bullet',
+  'Judas Swing',
+  'SMT',
+  'DOL',
+  'MDO',
+  'TDO',
+  'Kill Zone',
+  'News',
+  'Risk Management',
+  'Psychology',
+  'Funding Rules',
+  'Journal',
+  'SOP Sri ICT',
+  'Strategy Improvement'
 ] as const;
-export type KnowledgeCategory = typeof KNOWLEDGE_CATEGORIES[number];
+export type KnowledgeCategory = (typeof KNOWLEDGE_CATEGORIES)[number];
 
-// Scoring rubric weights — single source of truth (sum=100)
+/**
+ * Scoring rubric — ICT_TRADING_STRATEGY.md §4 (sum = 100).
+ * Hard gates (Sweep/MSS/IFVG/News/Session) reject BEFORE scoring;
+ * these weights grade quality of a setup that already passed gates.
+ */
 export const SCORING_WEIGHTS = {
-  biasAlign: 20,
+  htfAlign: 25,
   sweep: 15,
-  mss: 20,
-  ifvg: 20,
+  mss: 15,
+  ifvg: 15,
+  rr: 15,
   session: 10,
-  newsClear: 10,
-  smt: 5
+  newsClear: 5
+} as const;
+
+/** Risk hard limits — ICT_TRADING_STRATEGY.md §8 */
+export const RISK_LIMITS = {
+  MIN_RR: 3,
+  MAX_RISK_PCT_PER_TRADE: 2,
+  MAX_DAILY_LOSS_PCT: 5,
+  MAX_OPEN_TRADES: 3,
+  /** Score ≥ this may use full 1–2% risk; below uses reduced risk. */
+  FULL_RISK_SCORE: 90
 } as const;
 
 // 5 HERMES agents — taskType maps to ai-router

@@ -1,4 +1,5 @@
 import { sendTelegramMessage } from "@ykp/engine/telegram";
+import { createHermezDb, hermezAuditLog } from "@ykp/schema";
 import { requireSuperAdmin, fail, ok, mapAuthError } from "../../_helpers";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,6 @@ export async function POST(req: Request) {
   } catch (err) {
     return mapAuthError(err);
   }
-  void user;
 
   let body: TestPayload;
   try {
@@ -45,6 +45,15 @@ export async function POST(req: Request) {
 
   try {
     const result = await sendTelegramMessage(token, chatId, message);
+    const db = createHermezDb();
+    await db.insert(hermezAuditLog).values({
+      actor: user.email,
+      action: "telegram.test",
+      entity: "telegram",
+      entityId: "test",
+      after: { ok: result.ok, messageId: result.ok ? result.messageId : null, error: result.ok ? null : result.error },
+      reason: "Manual test send",
+    });
     if (result.ok) {
       return ok({ sent: true, messageId: result.messageId });
     }

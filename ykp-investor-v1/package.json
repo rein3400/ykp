@@ -1,0 +1,36 @@
+{
+  "name": "ykp-investor-v1",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3006",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3006} -H 0.0.0.0",
+    "lint": "oxlint",
+    "sheets:bootstrap": "tsx --env-file-if-exists=.env scripts/bootstrap-sheets.ts",
+    "sheets:smoke": "tsx --env-file-if-exists=.env scripts/sheets-smoke.ts",
+    "sheets:seed-user": "tsx --env-file-if-exists=.env scripts/seed-user.ts",
+    "sheets:mega-seed": "tsx --env-file-if-exists=.env scripts/mega-seed.ts",
+    "sheets:fix-users": "tsx --env-file-if-exists=.env scripts/fix-users-header.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0",
+    "next": "16.2.10",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "sonner": "^1.7.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5"
+  }
+}

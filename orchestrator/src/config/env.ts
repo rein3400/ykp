@@ -73,8 +73,10 @@ const envSchema = z.object({
   SCORE_THRESHOLD: z.coerce.number().int().min(0).max(100).default(80),
   SESSION_STRICT: flagBool.default(true),
   RISK_ACCOUNT_USD: z.coerce.number().min(0).default(10000),
-  RISK_PCT_PER_TRADE: z.coerce.number().min(0.01).max(10).default(0.5),
-  RR_TARGET: z.coerce.number().min(1).max(20).default(2),
+  // Strategy default 1% per trade (cap 2% for A+ setups enforced in risk-manager)
+  RISK_PCT_PER_TRADE: z.coerce.number().min(0.01).max(10).default(1),
+  // ICT min RR 1:3 (ICT_TRADING_STRATEGY.md §4 / §8)
+  RR_TARGET: z.coerce.number().min(1).max(20).default(3),
 
   // Phase 2
   APPROVAL_TTL_MIN: z.coerce.number().int().min(1).default(15),

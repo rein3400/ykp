@@ -15,9 +15,10 @@ export interface ExpenseTableProps {
   params: URLSearchParams;
   onApprove?: (row: Expense) => void;
   onEdit?: (row: Expense) => void;
+  onDelete?: (row: Expense) => void;
 }
 
-export function ExpenseTable({ params, onApprove, onEdit }: ExpenseTableProps) {
+export function ExpenseTable({ params, onApprove, onEdit, onDelete }: ExpenseTableProps) {
   const { data = [], isLoading } = useExpenseList(params);
   const rows = data as Expense[];
 
@@ -51,11 +52,23 @@ export function ExpenseTable({ params, onApprove, onEdit }: ExpenseTableProps) {
             {onApprove && row.original.approvalStatus === "PENDING" && (
               <Button variant="outline" size="sm" onClick={() => onApprove(row.original)}>Approve</Button>
             )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700"
+                onClick={() => {
+                  if (window.confirm("Hapus expense ini?")) onDelete(row.original);
+                }}
+              >
+                Hapus
+              </Button>
+            )}
           </div>
         ),
       },
     ],
-    [onApprove, onEdit],
+    [onApprove, onEdit, onDelete],
   );
 
   if (isLoading) return <div className="text-muted-foreground">Memuat expense...</div>;

@@ -31,6 +31,9 @@ export const POST = handler(async (req) => {
   const updated = {
     ...found.row,
     payment_status: 'PAID',
+    locked_status: 'LOCKED',
+    locked_at: nowTimestampWib(),
+    locked_by: session.userId,
     payment_date: todayWib(),
     payment_reference: parsed.data.payment_reference,
     updated_at: nowTimestampWib()

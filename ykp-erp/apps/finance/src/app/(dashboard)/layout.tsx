@@ -18,13 +18,13 @@ import { cn } from "@ykp/ui";
 
 const NAV = [
   { href: "/", label: "Ringkasan", icon: LayoutDashboard },
-  { href: "/pos", label: "POS Revenue", icon: Receipt },
-  { href: "/suppliers", label: "Costing Supplier", icon: Truck },
-  { href: "/petty-cash", label: "Petty Cash", icon: Coins },
-  { href: "/expenses", label: "Expense Log", icon: Wallet },
-  { href: "/summary", label: "Summary", icon: TrendingUp },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/pos", label: "Pendapatan POS", icon: Receipt },
+  { href: "/suppliers", label: "Pembelian Supplier", icon: Truck },
+  { href: "/petty-cash", label: "Kas Kecil", icon: Coins },
+  { href: "/expenses", label: "Pengeluaran", icon: Wallet },
+  { href: "/summary", label: "Laporan Harian", icon: TrendingUp },
+  { href: "/analytics", label: "Analitik", icon: BarChart3 },
+  { href: "/settings", label: "Pengaturan", icon: Settings },
 ] as const;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

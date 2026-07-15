@@ -1,5 +1,6 @@
 import { readTab, TABS } from '@/db/sheets';
 import { formatIdr } from '@/lib/format';
+import { getSession } from '@/lib/session';
 import Link from 'next/link';
 import { PayrollTable } from '@/features/hr/components/payroll-table';
 
@@ -25,6 +26,8 @@ interface Payroll {
 }
 
 export default async function PayrollPage() {
+  const session = await getSession();
+  const userRole = session?.role ?? '';
   const payrolls = await readTab<Payroll>(TABS.payroll);
   const byPeriod = new Map<string, Payroll[]>();
   for (const p of payrolls) {
@@ -59,7 +62,7 @@ export default async function PayrollPage() {
               <h2 className='font-semibold'>Periode {p}</h2>
               <div className='text-sm'>Total Net: <span className='font-semibold'>{formatIdr(totalNet)}</span></div>
             </div>
-            <PayrollTable data={rows} />
+            <PayrollTable data={rows} userRole={userRole} />
           </div>
         );
       })}

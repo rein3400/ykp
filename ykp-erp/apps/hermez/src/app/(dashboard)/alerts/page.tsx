@@ -18,6 +18,8 @@ import {
   Input,
 } from "@ykp/ui";
 
+type EnvironmentTag = "DEMO" | "TESTING" | "PRODUCTION";
+
 interface AlertRow {
   alertId: string;
   date: string;
@@ -31,6 +33,20 @@ interface AlertRow {
   actionTaken: string;
   createdAt: string;
   resolvedAt: string | null;
+  environment?: EnvironmentTag | string;
+}
+
+function envBadgeClass(env: string): string {
+  switch (env) {
+    case "DEMO":
+      return "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300";
+    case "TESTING":
+      return "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+    case "PRODUCTION":
+      return "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+    default:
+      return "border-muted-foreground/30 bg-muted text-muted-foreground";
+  }
 }
 
 export default function AlertsPage() {
@@ -43,6 +59,7 @@ export default function AlertsPage() {
     status: "",
     alertType: "",
     outlet: "",
+    environment: "",
   });
   const [active, setActive] = React.useState<AlertRow | null>(null);
   const [actionTaken, setActionTaken] = React.useState("");
@@ -108,7 +125,7 @@ export default function AlertsPage() {
         <CardHeader>
           <CardTitle className="text-base">Filter</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <CardContent className="grid grid-cols-2 gap-3 md:grid-cols-6">
           <Input
             type="date"
             value={filter.date}
@@ -133,6 +150,16 @@ export default function AlertsPage() {
             <option value="open">Open</option>
             <option value="ack">Acknowledged</option>
             <option value="resolved">Resolved</option>
+          </select>
+          <select
+            value={filter.environment}
+            onChange={(e) => setFilter((f) => ({ ...f, environment: e.target.value }))}
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+          >
+            <option value="">Semua env</option>
+            <option value="DEMO">DEMO</option>
+            <option value="TESTING">TESTING</option>
+            <option value="PRODUCTION">PRODUCTION</option>
           </select>
           <Input
             value={filter.alertType}
@@ -167,20 +194,26 @@ export default function AlertsPage() {
                   <th className="px-4 py-3">Severity</th>
                   <th className="px-4 py-3">Message</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Env</th>
                   <th className="px-4 py-3">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">
+                    <td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">
                       Memuat...
                     </td>
                   </tr>
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">
-                      Tidak ada alert untuk filter saat ini.
+                    <td colSpan={8} className="px-4 py-10 text-center">
+                      <p className="text-sm font-medium text-foreground">
+                        Tidak ada peringatan untuk filter saat ini.
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Semua sistem normal.
+                      </p>
                     </td>
                   </tr>
                 ) : (
@@ -202,6 +235,13 @@ export default function AlertsPage() {
                         <Badge variant="outline" className="capitalize">
                           {a.status}
                         </Badge>
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${envBadgeClass(a.environment ?? "PRODUCTION")}`}
+                        >
+                          {a.environment ?? "PRODUCTION"}
+                        </span>
                       </td>
                       <td className="px-4 py-3 align-top">
                         <Dialog>

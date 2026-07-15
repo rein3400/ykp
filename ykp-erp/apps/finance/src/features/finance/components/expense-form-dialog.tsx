@@ -45,6 +45,20 @@ export function ExpenseFormDialog() {
     notes: "",
   });
 
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [success, setSuccess] = React.useState("");
+
+  const validate = (): boolean => {
+    const e: Record<string, string> = {};
+    if (!form.date) e.date = "Tanggal wajib diisi";
+    if (!form.outlet_id) e.outlet_id = "Outlet wajib dipilih";
+    if (!form.category_id) e.category_id = "Kategori wajib dipilih";
+    if (!form.payment_method_id) e.payment_method_id = "Metode pembayaran wajib dipilih";
+    if (!form.amount || form.amount <= 0) e.amount = "Jumlah harus lebih dari 0";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const canSubmit =
     !!form.date &&
     !!form.outlet_id &&
@@ -55,8 +69,28 @@ export function ExpenseFormDialog() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    setSuccess("");
+    if (!validate()) return;
     if (!canSubmit) return;
-    create.mutate(form, { onSuccess: () => setOpen(false) });
+    create.mutate(form, {
+      onSuccess: () => {
+        setSuccess("Expense berhasil disimpan");
+        setForm({
+          date: todayWib(),
+          outlet_id: "",
+          category_id: "",
+          payment_method_id: "",
+          description: "",
+          amount: 0,
+          notes: "",
+        });
+        setTimeout(() => setOpen(false), 1200);
+      },
+      onError: (err) => {
+        setErrors({ _form: err instanceof Error ? err.message : "Gagal menyimpan" });
+      },
+    });
   };
 
   return (
@@ -72,6 +106,16 @@ export function ExpenseFormDialog() {
           <DialogTitle>Tambah Expense</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="grid gap-4 py-4">
+          {success && (
+            <div className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+              {success}
+            </div>
+          )}
+          {errors._form && (
+            <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {errors._form}
+            </div>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="exp-date">Tanggal</Label>
             <Input
@@ -81,6 +125,7 @@ export function ExpenseFormDialog() {
               onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
               required
             />
+            {errors.date && <span className="text-xs text-red-600">{errors.date}</span>}
           </div>
 
           <div className="grid gap-2">
@@ -100,6 +145,7 @@ export function ExpenseFormDialog() {
                 ))}
               </SelectContent>
             </Select>
+            {errors.outlet_id && <span className="text-xs text-red-600">{errors.outlet_id}</span>}
           </div>
 
           <div className="grid gap-2">
@@ -122,6 +168,7 @@ export function ExpenseFormDialog() {
                 ))}
               </SelectContent>
             </Select>
+            {errors.category_id && <span className="text-xs text-red-600">{errors.category_id}</span>}
           </div>
 
           <div className="grid gap-2">
@@ -145,6 +192,9 @@ export function ExpenseFormDialog() {
                 ))}
               </SelectContent>
             </Select>
+            {errors.payment_method_id && (
+              <span className="text-xs text-red-600">{errors.payment_method_id}</span>
+            )}
           </div>
 
           <div className="grid gap-2">
@@ -158,6 +208,7 @@ export function ExpenseFormDialog() {
               placeholder="0"
               required
             />
+            {errors.amount && <span className="text-xs text-red-600">{errors.amount}</span>}
           </div>
 
           <div className="grid gap-2">

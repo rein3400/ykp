@@ -1,0 +1,827 @@
+LIST REVISI YKP ERP — FINANCE, HR, HERMEZ, SECURITY, DAN UX
+
+PENILAIAN UMUM
+
+Fondasi sistem sudah sesuai dan arahnya tidak melenceng dari brief.
+
+Developer sudah berhasil membangun struktur utama:
+- HR Production
+- Finance
+- Hermez AI
+- ERP launcher/system monitor
+- Telegram test
+- Threshold configuration
+- Alert log
+
+Penilaian:
+- Kesesuaian struktur dan UI: sekitar 65–70%
+- Kesiapan dipakai production: belum selesai
+
+Sebagian besar halaman masih kosong, beberapa fungsi inti belum terlihat, dan belum ada bukti pengujian dengan data YKP sebenarnya.
+
+Operational belum terlihat pada screenshot sehingga belum bisa divalidasi.
+
+
+YANG SUDAH SESUAI DENGAN BRIEF
+
+1. FINANCE
+
+Sudah ada:
+- POS Revenue
+- Costing Supplier
+- Petty Cash
+- Expense Log
+- Summary
+- Analytics
+- Settings
+- Import CSV
+- Export
+- Add transaction
+- Paid/unpaid supplier
+- Running balance petty cash
+- Approval petty cash
+- Threshold configuration
+- Telegram test
+
+Struktur menunya sudah dekat dengan brief Finance V1.
+
+
+2. HR
+
+Sudah ada:
+- Attendance
+- Payroll
+- HR Rules
+- Employees
+- Daily Summary
+- Import CSV
+- Export
+- Generate payroll
+- Rule per outlet dan shift
+- Tolerance keterlambatan
+- Overtime multiplier
+- Mandatory checkout
+
+Ini sudah menjadi fondasi HR yang benar.
+
+
+3. HERMEZ
+
+Sudah ada:
+- Daily Brief
+- Alert Log
+- Threshold Config
+- Run Console
+- Telegram Test
+- Severity alert
+- Status alert
+- Manual regenerate brief
+
+Secara arsitektur sudah benar: Hermez berdiri di atas Finance dan HR, bukan menjadi tempat input transaksi.
+
+
+4. ERP LAUNCHER
+
+Sudah bagus karena menampilkan:
+- Status setiap modul
+- Latency
+- Production/Pilot
+- Tombol buka aplikasi
+- Health monitoring
+
+Ini sudah terasa seperti YKP Central Command Center.
+
+
+LIST REVISI PRIORITAS UNTUK DEVELOPER
+
+
+A. PRIORITAS 0 — WAJIB SEBELUM PILOT
+
+1. UJI DENGAN DATA ASLI, BUKAN HANYA EMPTY STATE
+
+Saat ini hampir semua halaman masih menunjukkan:
+- Rp0
+- Belum ada transaksi
+- Belum ada karyawan
+- Belum ada payroll
+- Belum ada attendance
+
+Mohon masukkan data testing minimum:
+
+HR:
+- 10 karyawan
+- 2 outlet
+- 3 jenis shift
+- 7–14 hari data absensi
+- Contoh telat
+- Contoh lembur
+- Contoh izin
+- Contoh bonus dan potongan
+- 1 simulasi payroll
+
+Finance:
+- 30 hari export Moka
+- 10 supplier
+- 20 invoice supplier
+- 20 transaksi petty cash
+- 20 expense
+- Contoh paid, partial, unpaid, dan overdue
+
+Tujuan:
+Agar semua KPI, tabel, filter, summary, alert, dan Hermez dapat diuji dengan alur sebenarnya.
+
+
+B. REVISI FINANCE
+
+2. LENGKAPI HALAMAN RINGKASAN FINANCE
+
+Halaman Ringkasan minimal harus menampilkan:
+- Net Sales
+- Total Expense
+- Supplier Purchase
+- Petty Cash Out
+- Outstanding Supplier
+- Group Cash Position
+- Estimated Cash Surplus
+- Transaction Count
+- AOV
+- Refund
+- Void
+- Top Supplier
+- Top Expense Category
+
+Filter wajib:
+- Brand
+- Outlet
+- Tanggal
+- Bulan
+- Payment method
+
+
+3. JANGAN SALAH MENGHITUNG PROFIT
+
+Pembelian supplier tidak selalu langsung menjadi HPP karena barang bisa masih menjadi stok.
+
+Petty cash juga mungkin dipakai untuk membayar expense atau supplier sehingga berpotensi tercatat dua kali.
+
+Jangan memakai formula sederhana:
+
+Net Sales
+- Supplier Cost
+- Petty Cash
+- Expense
+= Net Profit
+
+Karena bisa terjadi double counting.
+
+Untuk V1:
+
+Net Sales
+- Expense yang benar-benar terklasifikasi
+= Estimated Operating Result
+
+Jika belum ada inventory dan actual COGS, ubah label:
+
+Net Profit
+
+menjadi:
+
+Estimated Operating Result
+atau
+Estimated Cash Surplus
+
+Net Profit baru boleh dipakai setelah ada:
+
+Opening Inventory
++ Purchase
+- Closing Inventory
+= Actual COGS
+
+
+4. HUBUNGKAN TRANSAKSI AGAR TIDAK TERCATAT DUA KALI
+
+Tambahkan field:
+- source_module
+- source_transaction_id
+- payment_source
+- linked_expense_id
+- linked_supplier_invoice_id
+- linked_petty_cash_id
+
+Contoh:
+- Supplier dibayar melalui petty cash.
+- Data tetap ada di Costing Supplier.
+- Petty cash mencatat keluar uang.
+- Expense summary tidak menghitung keduanya sebagai dua biaya berbeda.
+
+
+5. POS REVENUE PERLU SETTLEMENT VALIDATION
+
+Tambahkan validasi:
+- Gross Sales
+- Discount
+- Refund
+- Void
+- Tax
+- Service Charge
+- Net Sales
+- Cash
+- QRIS
+- Card
+- Transfer
+- Marketplace
+- Total Settlement
+- Settlement Difference
+
+Sistem harus memeriksa:
+
+Total payment method = settlement POS
+
+Jika tidak cocok, buat alert.
+
+
+6. COSTING SUPPLIER PERLU ATTACHMENT DAN APPROVAL
+
+Tambahkan atau pastikan berfungsi:
+- Invoice number
+- Invoice photo/file
+- Receipt/payment proof
+- Due date
+- Paid amount
+- Remaining amount
+- Partial payment
+- Approval status
+- Approved by
+- Payment date
+- Payment reference
+
+
+7. PETTY CASH HARUS DIHITUNG PER AKUN
+
+Running balance jangan dihitung secara global.
+
+Perhitungan wajib berdasarkan:
+- Brand
+- Outlet
+- Petty cash account
+- Tanggal transaksi
+
+Tambahkan:
+- Opening Balance
+- Top-up
+- Cash Out
+- Running Balance
+- Physical Cash
+- Cash Difference
+- Closing Status
+
+
+8. EXPENSE LOG MASIH TERLALU KOSONG
+
+Expense perlu tabel dan filter:
+- Date
+- Brand
+- Outlet
+- Category
+- Description
+- Amount
+- Payment Method
+- Receipt
+- Approval
+- Created By
+- Status
+
+Tambahkan filter:
+- Periode
+- Brand
+- Outlet
+- Kategori
+- Payment method
+- Approval status
+
+
+9. ANALYTICS MASIH TERLALU SEDERHANA
+
+Sekarang baru terlihat:
+- Revenue
+- Net Profit
+- Expense
+- Revenue Trend
+- Profit Trend
+
+Tambahkan:
+- Filter brand/outlet/periode
+- Expense trend
+- Supplier trend
+- Payment method breakdown
+- Cost ratio
+- AOV trend
+- Refund/void trend
+- Outstanding supplier aging
+- Brand contribution
+- Outlet comparison
+
+
+10. THRESHOLD CONFIG MASIH BERSTATUS STUB
+
+Di halaman Settings tertulis:
+
+Threshold Config (stub)
+
+Artinya belum selesai.
+
+Threshold harus benar-benar:
+- Tersimpan di database
+- Dipakai rules engine
+- Dapat diedit sesuai permission
+- Memiliki satuan
+- Memiliki penjelasan
+- Bisa berbeda per brand/outlet
+- Memiliki audit perubahan
+
+Contoh struktur:
+
+Key: cash_difference_warning
+Label: Peringatan Selisih Kas
+Value: 50000
+Unit: IDR
+Scope: Outlet
+Brand: Funkydak
+Outlet: Demangan
+Severity: HIGH
+
+
+C. REVISI HR
+
+11. TAMBAHKAN SHIFT & ROSTER
+
+Wajib ada:
+- Roster harian/mingguan
+- Assign staff ke shift
+- Copy roster minggu sebelumnya
+- Shift swap
+- Approval shift swap
+- Shift kosong
+- Bentrok jadwal
+- Staff pengganti
+
+
+12. TAMBAHKAN IZIN, SAKIT, DAN CUTI
+
+Belum terlihat modul:
+- Pengajuan izin
+- Sakit
+- Cuti
+- Unpaid leave
+- Upload surat dokter
+- Approval manager
+- Approval HR
+- Integrasi ke attendance
+- Integrasi ke payroll
+
+
+13. TAMBAHKAN ADJUSTMENT PAYROLL
+
+Belum terlihat halaman untuk:
+- Bonus
+- Penalty
+- Lembur
+- Tunjangan
+- Kasbon
+- Reimbursement
+- Potongan lain
+
+Setiap adjustment wajib memiliki:
+- employee
+- periode
+- jumlah
+- alasan
+- bukti
+- approval
+- created_by
+- approved_by
+
+
+14. PAYROLL PERLU KOMPONEN LEBIH DETAIL
+
+Tambahkan detail:
+- Basic salary
+- Attendance days
+- Absent days
+- Late minutes
+- Attendance deduction
+- Overtime
+- Bonus
+- Allowance
+- Penalty
+- Cash advance deduction
+- BPJS
+- Tax
+- Other deduction
+- Gross salary
+- Net salary
+
+
+15. TAMBAHKAN PAYROLL LOCK
+
+Workflow:
+
+Draft
+→ Calculated
+→ Review
+→ Approved
+→ Ready to Pay
+→ Paid
+→ Locked
+
+Payroll yang sudah locked tidak boleh diedit.
+
+Untuk mengubah harus:
+
+Reopen Payroll
+→ Alasan wajib
+→ Approval super admin/owner
+→ Audit log
+
+
+16. TAMBAHKAN SLIP GAJI
+
+Wajib ada:
+- Generate slip PDF
+- Download slip
+- Employee hanya melihat slip sendiri
+- HR/owner sesuai permission
+- Status pembayaran
+- Tanggal pembayaran
+
+Slip gaji tidak boleh dikirim ke grup Telegram umum.
+
+
+17. MASTER EMPLOYEE MASIH TERLALU SEDIKIT
+
+Tabel sekarang baru terlihat:
+- ID
+- Nama
+- Role
+- Departemen
+- Outlet
+- Gaji pokok
+- Status
+
+Tambahkan halaman detail karyawan:
+- Employee code
+- Nomor HP
+- Email
+- Telegram ID
+- Brand
+- Outlet
+- Supervisor
+- Join date
+- Contract type
+- Salary type
+- Bank account
+- Emergency contact
+- Status
+- Riwayat perpindahan outlet
+
+Gaji dan rekening jangan ditampilkan ke semua role.
+
+
+18. ATTENDANCE PERLU CORRECTION FLOW
+
+Tambahkan:
+- Filter tanggal
+- Filter outlet
+- Filter shift
+- Check-in location
+- Check-out location
+- Late minutes
+- Early leave
+- Overtime
+- Incomplete attendance
+- Correction request
+- Correction reason
+- Approval supervisor
+
+Jika GPS/radius digunakan:
+- Latitude
+- Longitude
+- Radius outlet
+- Foto check-in
+- Fallback jika GPS error
+
+
+19. HR DAILY SUMMARY PERLU DILENGKAPI
+
+Sekarang summary baru menunjukkan:
+- total
+- hadir
+- telat
+- absen
+- issue
+
+Tambahkan:
+- Scheduled Staff
+- Incomplete Attendance
+- Leave/Sick
+- Total Late Minutes
+- Overtime Hours
+- Shift Shortage
+- Payroll Issue Count
+- Major HR Issue
+- Recommended Action
+
+
+D. REVISI HERMEZ
+
+20. HAPUS DUMMY ALERT DARI PRODUCTION
+
+Alert contoh bagus untuk demo, tetapi jangan bercampur dengan production.
+
+Tambahkan penanda environment:
+- DEMO
+- TESTING
+- PRODUCTION
+
+Production hanya boleh membaca data production.
+
+
+21. DAILY BRIEF HARUS MEMBACA SUMMARY ASLI
+
+Hermez harus membaca:
+- hr_daily_summary
+- fin_daily_summary
+
+Nanti ditambah:
+- ops_daily_summary
+- mkt_daily_summary
+
+Daily Brief minimal memuat:
+- Waktu summary dibuat
+- Data source
+- Kondisi Finance
+- Kondisi HR
+- Alert penting
+- Recommended action
+- PIC
+- Deadline
+- Status pengiriman Telegram
+
+
+22. TAMBAHKAN ACTION TRACKER
+
+Saat ini baru ada Alert Log.
+
+Perlu halaman:
+Action Tracker
+
+Kolom:
+- action_id
+- source_alert_id
+- title
+- brand
+- outlet
+- assigned_to
+- priority
+- due_date
+- status
+- action_taken
+- created_at
+- completed_at
+
+Status:
+- OPEN
+- IN_PROGRESS
+- WAITING_APPROVAL
+- DONE
+- CANCELLED
+- OVERDUE
+
+Alert tanpa action hanya menjadi notifikasi, belum menjadi sistem manajemen.
+
+
+23. TAMBAHKAN SYSTEM AUDIT LOG
+
+Perlu mencatat:
+- Login
+- Import data
+- Generate payroll
+- Edit transaction
+- Delete transaction
+- Approval
+- Threshold change
+- Brief generation
+- Telegram delivery
+- Error
+
+
+24. THRESHOLD CONFIG DIBUAT LEBIH MUDAH DIPAHAMI
+
+Key seperti:
+- late_staff_warning_ratio
+- cash_diff_critical
+
+masih terlalu teknis untuk owner/admin.
+
+Tampilkan:
+- Nama aturan
+- Penjelasan
+- Nilai
+- Satuan
+- Severity
+- Brand
+- Outlet
+- Aktif/nonaktif
+- Terakhir diubah
+- Diubah oleh
+
+
+25. TELEGRAM PERLU DELIVERY LOG
+
+Telegram Test sudah bagus.
+
+Tambahkan:
+- Sent
+- Failed
+- Retry
+- Message ID
+- Recipient/channel
+- Sent at
+- Error message
+
+
+E. ROLE, SECURITY, DAN AUDIT
+
+26. TAMBAHKAN USER & ROLE MANAGEMENT
+
+Minimal:
+- Owner
+- Super Admin
+- Finance Admin
+- HR Admin
+- Brand Manager
+- Outlet Manager
+- Supervisor
+- Staff
+- Viewer
+
+Wajib dites:
+- Staff tidak bisa melihat payroll
+- Manager tidak bisa melihat brand lain
+- HR tidak bisa mengubah Finance
+- Finance tidak bisa mengubah attendance
+- Employee hanya melihat data sendiri
+
+
+27. SEMUA PERUBAHAN PENTING WAJIB PUNYA AUDIT LOG
+
+Wajib log:
+- before_value
+- after_value
+- changed_by
+- changed_at
+- reason
+- approved_by
+
+Khusus:
+- gaji pokok
+- rekening karyawan
+- supplier payment
+- petty cash
+- payroll
+- expense
+- threshold
+- delete data
+
+
+28. PISAHKAN TESTING, PILOT, DAN PRODUCTION DENGAN JELAS
+
+Di launcher terlihat:
+- HR Production
+- HR Pilot
+
+Ini bagus, tetapi harus diberi pembeda kuat:
+
+TESTING — warna kuning
+PILOT — warna biru
+PRODUCTION — warna hijau
+
+Jangan sampai user salah input ke Pilot.
+
+Database dan storage juga harus terpisah.
+
+
+F. REVISI UX
+
+29. KONSISTEN BAHASA
+
+Saat ini bercampur:
+- Ringkasan
+- POS Revenue
+- Costing Supplier
+- Expense Log
+- Summary
+- Analytics
+- Settings
+
+Pilih satu gaya.
+
+Saran:
+- Ringkasan
+- Pendapatan POS
+- Pembelian Supplier
+- Kas Kecil
+- Pengeluaran
+- Laporan Harian
+- Analitik
+- Pengaturan
+
+Istilah database tetap boleh memakai bahasa Inggris.
+
+
+30. LENGKAPI EMPTY STATE
+
+Jangan hanya menampilkan:
+
+Belum ada data
+
+Ubah menjadi:
+
+Belum ada transaksi POS.
+Import CSV Moka atau tambah transaksi manual untuk memulai.
+[Import CSV] [Tambah Transaksi]
+
+
+31. TAMBAHKAN FEEDBACK SISTEM
+
+Semua form harus memiliki:
+- loading
+- success message
+- error message
+- validation
+- confirmation delete
+- autosave status
+- retry
+
+
+ACCEPTANCE TEST SEBELUM DISEBUT SELESAI
+
+FINANCE
+
+1. Import Moka CSV.
+2. Total revenue cocok dengan file Moka.
+3. Input invoice supplier partial payment.
+4. Input petty cash.
+5. Input expense.
+6. Tidak terjadi double counting.
+7. Generate finance summary.
+8. Trigger cash difference alert.
+9. Alert muncul di Hermez.
+10. Telegram menerima alert.
+
+
+HR
+
+1. Import 10 karyawan.
+2. Buat roster.
+3. Check-in tepat waktu.
+4. Check-in telat.
+5. Pengajuan koreksi.
+6. Pengajuan izin.
+7. Input overtime dan bonus.
+8. Generate payroll.
+9. Cocokkan manual untuk 5 karyawan.
+10. Approve dan lock payroll.
+11. Generate slip gaji.
+12. HR summary masuk ke Hermez.
+
+
+SECURITY
+
+1. Login sebagai owner.
+2. Login sebagai manager.
+3. Login sebagai staff.
+4. Staff tidak dapat melihat data gaji.
+5. Manager tidak dapat melihat brand lain.
+6. Semua perubahan tercatat di audit log.
+
+
+KESIMPULAN
+
+Developer sudah membangun kerangka yang benar dan cukup bagus untuk tahap awal.
+
+Sistem tidak perlu dirombak dari nol.
+
+Yang harus dilakukan sekarang:
+1. Melengkapi modul inti yang masih hilang.
+2. Memasukkan data testing asli.
+3. Memastikan formula tidak salah atau double counting.
+4. Menjalankan approval dan role permission.
+5. Menghubungkan summary ke Hermez.
+6. Melakukan pilot 7–14 hari.
+
+Status saat ini lebih tepat disebut:
+
+Functional Skeleton / Alpha Version
+
+Belum production-ready sesuai Definition of Done dari brief.

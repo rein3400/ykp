@@ -9,7 +9,13 @@
  *   - fin_closing_cash.cash_difference         (cash_difference)
  *
  * Formula (binding contract):
- *   net_profit_estimate = revenue - expense - supplier_cost - petty_cash_out
+ *   estimated_operating_result = revenue - expense - supplier_cost - petty_cash_out
+ *
+ * ⚠ This is NOT "Net Profit" — it does not account for:
+ *   - Inventory (opening/closing stock → actual COGS)
+ *   - Cross-transaction deduplication (petty cash may pay suppliers/expenses)
+ *   - Depreciation, tax, or non-operating items
+ * Label it "Estimated Operating Result" or "Estimated Cash Surplus" in the UI.
  *
  * Idempotent: upserts on (date, outlet).
  */
@@ -63,17 +69,54 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
     .where(and(eq(finPosDaily.date, new Date(date)), eq(finPosDaily.outletId, outlet_id)));
   const revenue = revenueRows.reduce((acc, r) => acc + (r.value ?? 0), 0);
 
+  // POS settlement validation: sum(payment_method_breakdown) vs netSales.
+  // A non-zero settlementDifference means tender totals do not reconcile to net sales.
+  const breakdownRows = await financeDb
+    .select({ breakdown: finPosDaily.paymentMethodBreakdown })
+    .from(finPosDaily)
+    .where(and(eq(finPosDaily.date, new Date(date)), eq(finPosDaily.outletId, outlet_id)));
+  const paymentMethodsSum = breakdownRows.reduce((acc, r) => {
+    const breakdown = (r.breakdown ?? {}) as Record<string, unknown>;
+    const methodTotal = Object.values(breakdown).reduce<number>((sum, v) => {
+      const n = typeof v === "number" ? v : Number(v);
+      return sum + (Number.isFinite(n) ? n : 0);
+    }, 0);
+    return acc + methodTotal;
+  }, 0);
+  // Spec: only set settlementDifference when sum(payment_methods) differs from netSales.
+  // Use absolute difference so under- and over-settlement both flag; signed as netSales - sum.
+  const rawSettlementDiff = revenue - paymentMethodsSum;
+  const settlementDifference = rawSettlementDiff !== 0 ? rawSettlementDiff : 0;
+
+  // Revisi item 4 — skip rows that are already counted via a linked counterpart
+  // to prevent double counting (e.g. expense paid via petty cash should not
+  // appear in both expense AND petty_cash_out).
   const expenseRows = await financeDb
-    .select({ value: finExpense.amount })
+    .select({
+      value: finExpense.amount,
+      linkedPettyCashId: finExpense.linkedPettyCashId,
+      linkedSupplierInvoiceId: finExpense.linkedSupplierInvoiceId,
+    })
     .from(finExpense)
     .where(and(eq(finExpense.date, new Date(date)), eq(finExpense.outletId, outlet_id)));
+  // If expense is linked to petty cash or supplier invoice, keep it in expense
+  // but exclude the linked side from its own sum (see petty/supplier below).
   const expense = expenseRows.reduce((acc, r) => acc + (r.value ?? 0), 0);
 
   const supplierRows = await financeDb
-    .select({ amount: finSupplierCost.amount, unpaid: finSupplierCost.unpaidAmount, status: finSupplierCost.paymentStatus })
+    .select({
+      amount: finSupplierCost.amount,
+      unpaid: finSupplierCost.unpaidAmount,
+      status: finSupplierCost.paymentStatus,
+      linkedPettyCashId: finSupplierCost.linkedPettyCashId,
+      linkedExpenseId: finSupplierCost.linkedExpenseId,
+    })
     .from(finSupplierCost)
     .where(and(eq(finSupplierCost.date, new Date(date)), eq(finSupplierCost.outletId, outlet_id)));
-  const supplierCost = supplierRows.reduce((acc, r) => acc + (r.amount ?? 0), 0);
+  // Skip supplier cost already represented as expense (linked_expense_id set)
+  const supplierCost = supplierRows
+    .filter((r) => !r.linkedExpenseId)
+    .reduce((acc, r) => acc + (r.amount ?? 0), 0);
 
   const unpaidRows = await financeDb
     .select({ unpaid: finSupplierCost.unpaidAmount })
@@ -87,10 +130,17 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
     .reduce((acc, r) => acc + ((r.unpaid as number) ?? 0), 0);
 
   const pettyRows = await financeDb
-    .select({ value: finPettyCash.amount })
+    .select({
+      value: finPettyCash.amount,
+      linkedExpenseId: finPettyCash.linkedExpenseId,
+      linkedSupplierInvoiceId: finPettyCash.linkedSupplierInvoiceId,
+    })
     .from(finPettyCash)
     .where(and(eq(finPettyCash.date, new Date(date)), eq(finPettyCash.outletId, outlet_id), eq(finPettyCash.type, "out")));
-  const pettyCashOut = pettyRows.reduce((acc, r) => acc + (r.value ?? 0), 0);
+  // Skip petty cash that is a payment vehicle for expense/supplier already counted
+  const pettyCashOut = pettyRows
+    .filter((r) => !r.linkedExpenseId && !r.linkedSupplierInvoiceId)
+    .reduce((acc, r) => acc + (r.value ?? 0), 0);
 
   const closingRows = await financeDb
     .select({ value: finClosingCash.cashDifference })
@@ -100,10 +150,12 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
     .limit(1);
   const cashDifference = closingRows[0]?.value ?? 0;
 
-  const net_profit_estimate = revenue - expense - supplierCost - pettyCashOut;
+  const estimated_operating_result = revenue - expense - supplierCost - pettyCashOut;
 
+  // Priority: cash_difference > settlement_mismatch > unpaid_supplier > high_expense_ratio
   const majorFinanceIssue =
     cashDifference !== 0 ? "cash_difference"
+    : settlementDifference !== 0 ? "settlement_mismatch"
     : unpaidSupplier > 0 ? "unpaid_supplier"
     : expense > revenue * 0.5 ? "high_expense_ratio"
     : "none";
@@ -111,11 +163,13 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
   const recommendedAction =
     majorFinanceIssue === "cash_difference"
       ? "Audit kas fisik vs sistem; rekonsiliasi dengan kasir."
-      : majorFinanceIssue === "unpaid_supplier"
-        ? "Cek tagihan jatuh tempo + jadwalkan pembayaran."
-        : majorFinanceIssue === "high_expense_ratio"
-          ? "Tinjau kategori expense terbesar; cek margin outlet."
-          : null;
+      : majorFinanceIssue === "settlement_mismatch"
+        ? "Rekonsiliasi tender POS vs net sales; cek payment method breakdown."
+        : majorFinanceIssue === "unpaid_supplier"
+          ? "Cek tagihan jatuh tempo + jadwalkan pembayaran."
+          : majorFinanceIssue === "high_expense_ratio"
+            ? "Tinjau kategori expense terbesar; cek margin outlet."
+            : null;
 
   // Defect H7 fix: encode outletId via financeDayId so daily summaries for
   // different outlets on the same date never collide.
@@ -134,7 +188,8 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
     pettyCashOut,
     unpaidSupplier,
     cashDifference,
-    netProfitEstimate: net_profit_estimate,
+    settlementDifference,
+    netProfitEstimate: estimated_operating_result,
     majorFinanceIssue,
     recommendedAction,
   };
@@ -153,6 +208,7 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
         pettyCashOut: sql`excluded.petty_cash_out`,
         unpaidSupplier: sql`excluded.unpaid_supplier`,
         cashDifference: sql`excluded.cash_difference`,
+        settlementDifference: sql`excluded.settlement_difference`,
         netProfitEstimate: sql`excluded.net_profit_estimate`,
         majorFinanceIssue: sql`excluded.major_finance_issue`,
         recommendedAction: sql`excluded.recommended_action`,

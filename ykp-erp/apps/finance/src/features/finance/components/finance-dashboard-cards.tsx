@@ -73,14 +73,14 @@ export function FinanceDashboardCards() {
       <KpiCard title="Consolidated Revenue" value={formatIdr(consolidated.revenue)} icon={<TrendingUp className="h-5 w-5" />} />
       <KpiCard title="Consolidated Expenses" value={formatIdr(consolidated.expense)} icon={<TrendingDown className="h-5 w-5" />} />
       <KpiCard
-        title="Consolidated Net Profit"
+        title="Est. Operating Result"
         value={formatIdr(net)}
         icon={<Wallet className="h-5 w-5" />}
         delta={positive ? 1 : -1}
         deltaSuffix=""
         hideArrow
       />
-      <KpiCard title="Group Cash Position" value={formatIdr(consolidated.revenue - consolidated.expense)} icon={<PiggyBank className="h-5 w-5" />} />
+      <KpiCard title="Est. Cash Surplus" value={formatIdr(consolidated.revenue - consolidated.expense)} icon={<PiggyBank className="h-5 w-5" />} />
       <KpiCard title="Accounts Payable" value={formatIdr(consolidated.unpaidSupplier)} icon={<CreditCard className="h-5 w-5" />} />
       <KpiCard title="Cash Inflow" value={formatIdr(consolidated.revenue)} icon={<Banknote className="h-5 w-5" />} />
       <KpiCard title="Cash Outflow" value={formatIdr(consolidated.expense + consolidated.supplierCost + consolidated.pettyCashOut)} icon={<ArrowRightLeft className="h-5 w-5" />} />

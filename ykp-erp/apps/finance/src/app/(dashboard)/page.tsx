@@ -26,27 +26,45 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle>Revenue Trend</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>Trend revenue 7 hari akan dirender di sini setelah endpoint analytics terhubung.</p>
-            <p className="text-muted-foreground">Belum ada data chart.</p>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Chart revenue 7 hari akan tersedia setelah data POS masuk. Import CSV Moka atau catat
+              transaksi manual untuk melihat tren.
+            </p>
+            <a
+              href="/pos"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Buka POS Revenue
+            </a>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Expense Donut</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>Distribusi expense per kategori akan dirender di sini.</p>
-            <p className="text-muted-foreground">Belum ada data chart.</p>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Distribusi expense per kategori akan muncul setelah data pengeluaran dicatat. Tambah
+              expense untuk melihat breakdown.
+            </p>
+            <a
+              href="/expenses"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Buka Expense Log
+            </a>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Supplier Top 10</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>Ranking 10 supplier terbesar per periode akan dirender di sini.</p>
-            <p className="text-muted-foreground">Belum ada data chart.</p>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Ranking supplier akan tersedia setelah fitur procurement aktif. Pantau halaman ini
+              untuk update selanjutnya.
+            </p>
           </CardContent>
         </Card>
       </div>

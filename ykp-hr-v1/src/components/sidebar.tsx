@@ -11,7 +11,8 @@ const ITEMS = [
   { label: 'Izin / Cuti', href: '/hr/leaves', roles: ['owner', 'super_admin', 'hr_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'employee'] },
   { label: 'Payroll', href: '/hr/payroll', roles: ['owner', 'super_admin', 'hr_admin', 'finance_admin', 'brand_manager', 'outlet_manager', 'employee'] },
   { label: 'Bonus & Potongan', href: '/hr/adjustments', roles: ['owner', 'super_admin', 'hr_admin', 'outlet_manager', 'supervisor'] },
-  { label: 'Summary Harian', href: '/hr/summary', roles: ['owner', 'super_admin', 'hr_admin', 'brand_manager', 'outlet_manager', 'hermez'] }
+  { label: 'Summary Harian', href: '/hr/summary', roles: ['owner', 'super_admin', 'hr_admin', 'brand_manager', 'outlet_manager', 'hermez'] },
+  { label: 'User & Role', href: '/hr/users', roles: ['owner', 'super_admin', 'hr_admin'] }
 ];
 
 const ROLE_LABELS: Record<string, string> = {

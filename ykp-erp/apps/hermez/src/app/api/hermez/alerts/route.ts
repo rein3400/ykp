@@ -29,6 +29,7 @@ export async function GET(req: Request) {
   const status = url.searchParams.get("status");
   const alertType = url.searchParams.get("alert_type");
   const outletId = url.searchParams.get("outlet_id");
+  const environment = url.searchParams.get("environment");
 
   const db = createHermezDb();
 
@@ -50,6 +51,13 @@ export async function GET(req: Request) {
       );
     }
     if (outletId) filters.push(eq(hermezAlertLog.outlet, outletId));
+    if (
+      environment === "DEMO" ||
+      environment === "TESTING" ||
+      environment === "PRODUCTION"
+    ) {
+      filters.push(eq(hermezAlertLog.environment, environment));
+    }
 
     const rows = await db
       .select()
@@ -71,6 +79,7 @@ export async function GET(req: Request) {
       assignedTo: r.assignedTo,
       createdAt: toIsoString(r.createdAt),
       resolvedAt: toIsoString(r.resolvedAt),
+      environment: r.environment ?? "PRODUCTION",
     }));
 
     return ok({ items, total: items.length });

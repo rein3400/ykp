@@ -1,0 +1,2271 @@
+DEVELOPER BRIEF — YKP ERP WAREHOUSE & INVENTORY CONTROL MODULE V1
+
+============================================================
+1. PROJECT CONTEXT
+============================================================
+
+YKP sedang membangun ERP internal untuk beberapa brand F&B:
+- Funkydak
+- Sekarpizza
+- Suburbuns
+- Laju Kopi
+- Uncle Masala
+
+YKP sebelumnya sudah memiliki spreadsheet kontrol bahan baku yang mencakup:
+- Master item
+- Penerimaan barang
+- Kartu stok
+- Bon pemakaian dapur
+- Waste / kerusakan
+- Stock opname
+- Dashboard mingguan
+
+Spreadsheet lama tetap digunakan sebagai referensi SOP dan struktur awal, tetapi sistem baru harus ditingkatkan menjadi modul ERP yang mampu:
+
+1. Menentukan bahan baku yang harus dibeli.
+2. Menghitung kapan bahan harus dibeli.
+3. Menghitung jumlah pembelian yang disarankan.
+4. Mendeteksi low stock, stockout risk, overstock, dan near expiry.
+5. Membandingkan stok tercatat, stok teoritis, dan stok fisik.
+6. Mendeteksi selisih stok yang belum terjelaskan.
+7. Mencatat receiving, issue, transfer, waste, dan stock opname.
+8. Mengirim alert Telegram yang hanya berisi tindakan penting.
+9. Membuat action item dengan PIC dan deadline.
+10. Menyediakan warehouse_daily_summary untuk Orchestration Layer dan Hermez AI.
+
+Nama modul:
+YKP Warehouse & Inventory Control
+
+
+============================================================
+2. TUJUAN MODULE
+============================================================
+
+Warehouse Module harus menjadi pusat kontrol persediaan YKP, baik untuk:
+- Gudang pusat
+- Gudang outlet
+- Kitchen storage
+- Bar storage
+- Chiller / freezer
+- Dry storage
+- Transfer antaroutlet
+- Transfer gudang ke outlet
+- Pemakaian dapur
+- Waste
+- Stock opname
+- Purchase recommendation
+
+Tujuan bisnis:
+- Mencegah kehabisan bahan baku.
+- Mengurangi pembelian berlebihan.
+- Mengurangi expired stock.
+- Mengurangi kebocoran bahan baku.
+- Mengetahui nilai stok.
+- Mengetahui bahan yang hilang atau belum terjelaskan.
+- Mengurangi pembelian mendadak.
+- Menghubungkan kebutuhan gudang dengan Finance dan Operational.
+- Memberikan brief otomatis kepada owner dan purchasing.
+
+
+============================================================
+3. PRINSIP DASAR SISTEM
+============================================================
+
+3.1 Jangan langsung menyebut barang “hilang”
+
+Sistem harus menggunakan istilah:
+
+UNEXPLAINED STOCK VARIANCE
+atau
+SELISIH STOK BELUM TERJELASKAN
+
+Status “LOST / HILANG” hanya boleh diberikan setelah:
+- recount dilakukan,
+- transaksi diperiksa,
+- waste diperiksa,
+- transfer diperiksa,
+- receiving diperiksa,
+- dan hasil investigasi disetujui supervisor/manager.
+
+3.2 Kartu stok tidak boleh dihitung manual
+
+Stock ledger harus terbentuk otomatis dari transaksi:
+- penerimaan,
+- pemakaian,
+- transfer masuk,
+- transfer keluar,
+- waste,
+- retur,
+- stock adjustment,
+- produksi internal.
+
+3.3 Transaksi lama tidak boleh dihapus
+
+Jika ada kesalahan:
+- buat reversal,
+- atau buat adjustment,
+- simpan alasan,
+- simpan user,
+- simpan approval,
+- simpan timestamp.
+
+3.4 Hermez bukan mesin hitung stok
+
+Perhitungan dasar harus dilakukan oleh database/rules engine.
+
+Hermez bertugas:
+- menjelaskan masalah,
+- menentukan prioritas,
+- menyusun rekomendasi,
+- membuat Telegram brief,
+- membuat action item,
+- melakukan escalation.
+
+3.5 Semua modul harus memakai master data yang sama
+
+Warehouse wajib memakai:
+- master_brand
+- master_outlet
+- master_employee
+- master_supplier
+- master_item
+- master_location
+- master_unit_conversion
+
+Jangan membuat nama brand, outlet, supplier, atau item secara bebas di setiap form.
+
+3.6 Semua transaksi wajib memiliki jejak audit
+
+Setiap record penting minimal menyimpan:
+- created_by
+- created_at
+- updated_by
+- updated_at
+- approved_by
+- approved_at
+- status
+- source_reference
+- environment
+
+
+============================================================
+4. ARSITEKTUR MODULE
+============================================================
+
+Alur sistem:
+
+Warehouse Web App
+→ Stock Movement Ledger
+→ Inventory Calculation Engine
+→ Reorder & Variance Rules Engine
+→ Warehouse Summary & Alert Tables
+→ Orchestration Layer
+→ Hermez AI
+→ Telegram Brief / Action Tracker / Escalation
+
+Integrasi:
+
+HR Module
+→ menyediakan PIC, shift, role, outlet, approval authority
+
+Finance Module
+→ menerima purchase value, supplier invoice reference, inventory value, waste value
+
+Operational Module
+→ mengirim waste, QC reject, production usage, stock issue, closing result
+
+POS / Moka
+→ menyediakan sales data untuk theoretical usage pada V1.5
+
+Hermez
+→ membaca summary dan exception, bukan seluruh raw ledger
+
+
+============================================================
+5. SCOPE WAREHOUSE MODULE V1
+============================================================
+
+Warehouse Module V1 terdiri dari:
+
+1. Warehouse Overview
+2. Master Item
+3. Master Location
+4. Master Supplier
+5. Purchase Recommendation
+6. Purchase Request
+7. Receiving
+8. Stock Issue / Bon Pemakaian
+9. Transfer Stock
+10. Stock Ledger
+11. Waste & Adjustment
+12. Stock Opname
+13. Expiry Monitoring
+14. Alerts & Action Tracker
+15. Warehouse Daily Summary
+16. Telegram Reporting
+17. Threshold & Configuration
+18. Audit Log
+
+
+============================================================
+6. TAHAP IMPLEMENTASI
+============================================================
+
+V1 — Kontrol Dasar:
+- Master item
+- Receiving
+- Stock issue
+- Transfer
+- Waste
+- Stock opname
+- Book stock
+- Reorder point
+- Suggested purchase
+- Low-stock Telegram alert
+- Variance Telegram alert
+- Expiry alert
+- Pilot bahan kritikal
+
+V1.5 — Recipe & POS:
+- Recipe / BOM
+- Menu sales
+- Theoretical usage
+- Yield
+- Portion variance
+- Theoretical stock
+- Recipe variance
+
+V2 — Planning:
+- Forecasting
+- Supplier schedule
+- Purchase budgeting
+- Transfer recommendation
+- Expiry optimization
+- Price trend
+- Supplier recommendation
+- Central warehouse allocation
+
+Fokus brief ini:
+WAREHOUSE MODULE V1
+
+
+============================================================
+7. TIGA JENIS STOK
+============================================================
+
+7.1 Book Stock
+
+Stok berdasarkan transaksi yang tercatat.
+
+Formula:
+
+Book Stock =
+Opening Stock
++ Receiving
++ Transfer In
++ Return In
++ Production In
+- Stock Issue
+- Transfer Out
+- Waste
+- Return Out
+- Production Out
+± Approved Adjustment
+
+7.2 Theoretical Stock
+
+Masuk V1.5.
+
+Formula:
+
+Theoretical Stock =
+Opening Stock
++ Receiving
++ Transfer In
+- Theoretical Usage berdasarkan POS × Recipe
+- Approved Waste
+- Transfer Out
+
+7.3 Physical Stock
+
+Jumlah stok hasil hitung/timbang aktual saat stock opname.
+
+Perbandingan:
+
+Physical Stock vs Book Stock
+= potensi transaksi belum tercatat / salah input
+
+Physical Stock vs Theoretical Stock
+= potensi overportion, yield issue, waste tidak tercatat, recipe tidak akurat, atau kehilangan
+
+V1 wajib mendukung:
+- Book Stock
+- Physical Stock
+- Variance vs Book
+
+V1.5 menambahkan:
+- Theoretical Stock
+- Variance vs Theoretical
+
+
+============================================================
+8. MASTER DATA
+============================================================
+
+8.1 master_item
+
+Kolom:
+- item_id
+- item_code
+- item_name
+- brand_id
+- category_id
+- item_type
+- base_unit
+- purchase_unit
+- conversion_factor
+- pack_size
+- minimum_order_quantity
+- preferred_supplier_id
+- backup_supplier_id
+- latest_purchase_price
+- average_purchase_price
+- minimum_stock
+- safety_stock
+- maximum_stock
+- reorder_point
+- average_daily_usage
+- supplier_lead_time_days
+- supplier_order_day
+- supplier_delivery_day
+- expiry_days
+- criticality
+- tolerance_variance_percentage
+- tolerance_variance_value
+- recipe_linked_status
+- active_status
+- created_at
+- updated_at
+- created_by
+- updated_by
+
+Item type:
+- RAW_MATERIAL
+- PACKAGING
+- FINISHED_GOOD
+- SEMI_FINISHED
+- CLEANING_SUPPLY
+- EQUIPMENT_CONSUMABLE
+- OTHER
+
+Criticality:
+- LOW
+- MEDIUM
+- HIGH
+- CRITICAL
+
+8.2 master_location
+
+Kolom:
+- location_id
+- location_code
+- location_name
+- brand_id
+- outlet_id
+- location_type
+- parent_location_id
+- address
+- active_status
+
+Location type:
+- CENTRAL_WAREHOUSE
+- OUTLET_WAREHOUSE
+- KITCHEN
+- BAR
+- CHILLER
+- FREEZER
+- DRY_STORAGE
+- OTHER
+
+8.3 master_supplier
+
+Kolom:
+- supplier_id
+- supplier_code
+- supplier_name
+- item_category
+- phone
+- email
+- address
+- bank_name
+- bank_account
+- account_holder
+- lead_time_days
+- minimum_order_value
+- preferred_delivery_day
+- active_status
+
+8.4 master_unit_conversion
+
+Kolom:
+- conversion_id
+- item_id
+- from_unit
+- to_unit
+- conversion_factor
+- active_status
+
+Contoh:
+- 1 carton = 10 kg
+- 1 kg = 1000 gram
+- 1 box = 24 pcs
+
+8.5 master_item_category
+
+Kolom:
+- category_id
+- category_name
+- parent_category_id
+- active_status
+
+8.6 master_inventory_threshold
+
+Kolom:
+- threshold_id
+- brand_id
+- outlet_id
+- location_id
+- item_id
+- threshold_type
+- warning_value
+- high_value
+- critical_value
+- unit
+- active_status
+- updated_by
+- updated_at
+
+
+============================================================
+9. WAREHOUSE OVERVIEW
+============================================================
+
+Tujuan:
+Memberikan gambaran cepat kondisi stok.
+
+KPI wajib:
+- Total Inventory Value
+- Critical Low Stock Count
+- Stockout Risk Count
+- Purchase Recommendation Count
+- Estimated Purchase Value
+- Overstock Count
+- Near Expiry Count
+- Pending Receiving
+- Pending Transfer
+- Waste Value
+- Unexplained Variance Count
+- Unexplained Variance Value
+- Open Action Count
+
+Filter:
+- Brand
+- Outlet
+- Location
+- Item category
+- Date
+- Supplier
+- Priority
+- Status
+
+Output:
+- Item paling kritis
+- Item dengan days of cover paling rendah
+- Item dengan variance tertinggi
+- Item dengan waste tertinggi
+- Item near expiry
+- Supplier dengan pending receiving
+- Purchase recommendation hari ini
+- Open issue dan overdue action
+
+
+============================================================
+10. PURCHASE RECOMMENDATION
+============================================================
+
+Tujuan:
+Menentukan bahan baku yang harus dibeli.
+
+10.1 Reorder Point
+
+Formula:
+
+Reorder Point =
+Average Daily Usage × Supplier Lead Time
++ Safety Stock
+
+10.2 Available Stock
+
+Formula:
+
+Available Stock =
+Book Stock
+- Reserved Quantity
++ Confirmed Incoming Transfer
++ Confirmed Incoming PO
+
+Catatan:
+Incoming yang belum confirmed tidak boleh dianggap stok tersedia.
+
+10.3 Days of Cover
+
+Formula:
+
+Days of Cover =
+Available Stock / Average Daily Usage
+
+Jika average_daily_usage = 0:
+- tampilkan N/A,
+- jangan membagi dengan nol,
+- minta review master usage.
+
+10.4 Suggested Purchase Quantity
+
+Formula:
+
+Suggested Purchase =
+Maximum Stock
+- Available Stock
+- Confirmed Incoming PO
++ Reserved Quantity
+
+Hasil harus dibulatkan sesuai:
+- Pack Size
+- Minimum Order Quantity
+- Supplier Minimum Order
+
+10.5 Priority
+
+CRITICAL:
+- Days of Cover < Lead Time
+- atau Available Stock <= 0
+- atau projected stockout sebelum pengiriman supplier
+
+HIGH:
+- Available Stock <= Reorder Point
+
+MEDIUM:
+- Available Stock mendekati Reorder Point
+
+LOW:
+- Normal / monitoring
+
+Table:
+warehouse_purchase_recommendation
+
+Kolom:
+- recommendation_id
+- date
+- item_id
+- item_name
+- brand_id
+- outlet_id
+- location_id
+- available_stock
+- average_daily_usage
+- days_of_cover
+- reorder_point
+- maximum_stock
+- incoming_po_qty
+- reserved_qty
+- suggested_purchase_qty
+- rounded_purchase_qty
+- purchase_unit
+- supplier_id
+- supplier_name
+- estimated_unit_price
+- estimated_purchase_value
+- required_by_date
+- priority
+- reason
+- recommendation_status
+- created_at
+- approved_by
+- approved_at
+
+Recommendation status:
+- NEW
+- REVIEWED
+- APPROVED
+- PURCHASE_REQUEST_CREATED
+- IGNORED
+- CANCELLED
+
+
+============================================================
+11. PURCHASE REQUEST
+============================================================
+
+Tujuan:
+Mengubah recommendation menjadi permintaan pembelian.
+
+Table:
+warehouse_purchase_request
+
+Kolom:
+- purchase_request_id
+- request_number
+- date
+- brand_id
+- outlet_id
+- location_id
+- requested_by
+- required_by_date
+- priority
+- estimated_total_value
+- status
+- approved_by
+- approved_at
+- purchasing_pic
+- notes
+- created_at
+- updated_at
+
+Detail table:
+warehouse_purchase_request_item
+
+Kolom:
+- request_item_id
+- purchase_request_id
+- item_id
+- requested_qty
+- purchase_unit
+- estimated_unit_price
+- estimated_total
+- preferred_supplier_id
+- reason
+- source_recommendation_id
+
+Status:
+- DRAFT
+- SUBMITTED
+- APPROVED
+- REJECTED
+- ORDERED
+- PARTIAL
+- RECEIVED
+- CANCELLED
+
+Catatan:
+Purchase Request bukan pembayaran.
+Finance tetap mengelola invoice, payable, dan payment.
+
+
+============================================================
+12. RECEIVING / PENERIMAAN BARANG
+============================================================
+
+Tujuan:
+Mencatat barang yang diterima dari supplier atau gudang lain.
+
+Table:
+warehouse_receiving
+
+Kolom:
+- receiving_id
+- receiving_number
+- date
+- receiving_time
+- source_type
+- supplier_id
+- source_location_id
+- destination_location_id
+- purchase_order_id
+- invoice_number
+- delivery_note_number
+- received_by
+- verified_by
+- receiving_status
+- photo_url
+- notes
+- created_at
+- approved_at
+
+Source type:
+- SUPPLIER
+- CENTRAL_WAREHOUSE
+- OTHER_OUTLET
+- RETURN
+
+Receiving status:
+- DRAFT
+- RECEIVED
+- PARTIAL
+- DISCREPANCY
+- REJECTED
+- APPROVED
+
+Detail:
+warehouse_receiving_item
+
+Kolom:
+- receiving_item_id
+- receiving_id
+- item_id
+- batch_number
+- expiry_date
+- qty_ordered
+- qty_delivered
+- qty_accepted
+- qty_rejected
+- unit
+- unit_price
+- total_value
+- rejection_reason
+- condition_status
+- temperature_value
+- photo_url
+- notes
+
+Condition status:
+- GOOD
+- DAMAGED
+- EXPIRED
+- TEMPERATURE_ISSUE
+- WRONG_ITEM
+- WRONG_QTY
+- OTHER
+
+Workflow:
+Receiving approved
+→ membuat stock movement RECEIPT
+→ memperbarui Book Stock
+→ memperbarui purchase request / PO status
+→ mengirim invoice reference ke Finance
+→ membuat alert jika ada discrepancy
+
+
+============================================================
+13. STOCK ISSUE / BON PEMAKAIAN
+============================================================
+
+Tujuan:
+Mencatat bahan yang keluar dari gudang ke kitchen/bar/department.
+
+Table:
+warehouse_stock_issue
+
+Kolom:
+- issue_id
+- issue_number
+- date
+- shift_id
+- brand_id
+- outlet_id
+- source_location_id
+- destination_location_id
+- issue_type
+- requested_by
+- issued_by
+- received_by
+- approval_status
+- notes
+- created_at
+- approved_at
+
+Issue type:
+- SHIFT_ISSUE
+- PRODUCTION_BATCH
+- MANUAL_USAGE
+- DEPARTMENT_REQUEST
+- OTHER
+
+Detail:
+warehouse_stock_issue_item
+
+Kolom:
+- issue_item_id
+- issue_id
+- item_id
+- requested_qty
+- issued_qty
+- unit
+- batch_reference
+- purpose
+- notes
+
+Workflow:
+Approved stock issue
+→ membuat stock movement ISSUE
+→ mengurangi stock lokasi sumber
+→ menambah stock lokasi tujuan jika destination merupakan lokasi stok
+→ link ke Operational jika terkait produksi
+
+Metode yang disarankan:
+- Issue per shift
+- Issue per batch produksi
+- Theoretical usage dari POS masuk V1.5
+
+
+============================================================
+14. TRANSFER STOCK
+============================================================
+
+Tujuan:
+Mencatat perpindahan stok antar lokasi.
+
+Jenis:
+- Gudang pusat ke outlet
+- Outlet ke outlet
+- Gudang outlet ke kitchen
+- Kitchen return ke gudang
+- Outlet return ke gudang pusat
+
+Table:
+warehouse_transfer
+
+Kolom:
+- transfer_id
+- transfer_number
+- date
+- source_location_id
+- destination_location_id
+- requested_by
+- approved_by
+- dispatched_by
+- received_by
+- dispatch_time
+- received_time
+- status
+- notes
+- created_at
+- updated_at
+
+Detail:
+warehouse_transfer_item
+
+Kolom:
+- transfer_item_id
+- transfer_id
+- item_id
+- requested_qty
+- dispatched_qty
+- received_qty
+- unit
+- discrepancy_qty
+- discrepancy_reason
+- photo_url
+
+Status:
+- DRAFT
+- REQUESTED
+- APPROVED
+- DISPATCHED
+- PARTIAL_RECEIVED
+- RECEIVED
+- DISCREPANCY
+- CANCELLED
+
+Rule:
+- Transfer Out hanya mengurangi stok setelah DISPATCHED.
+- Transfer In hanya menambah stok setelah RECEIVED.
+- Selisih dispatched vs received harus membuat alert.
+
+
+============================================================
+15. STOCK LEDGER
+============================================================
+
+Table:
+warehouse_stock_movement
+
+Kolom:
+- movement_id
+- movement_number
+- movement_datetime
+- item_id
+- brand_id
+- outlet_id
+- location_id
+- movement_type
+- direction
+- quantity
+- base_unit
+- unit_cost
+- total_value
+- reference_type
+- reference_id
+- source_location_id
+- destination_location_id
+- stock_before
+- stock_after
+- created_by
+- approved_by
+- notes
+- environment
+- created_at
+
+Movement type:
+- OPENING_BALANCE
+- RECEIPT
+- ISSUE
+- TRANSFER_IN
+- TRANSFER_OUT
+- WASTE
+- RETURN_IN
+- RETURN_OUT
+- COUNT_ADJUSTMENT
+- REVERSAL
+- PRODUCTION_IN
+- PRODUCTION_OUT
+
+Direction:
+- IN
+- OUT
+- ADJUSTMENT
+
+Rule:
+- Ledger immutable.
+- Tidak ada hard delete.
+- Semua reversal harus merujuk movement awal.
+- Stock_after harus konsisten.
+- Duplicate reference harus ditolak.
+
+
+============================================================
+16. WASTE & ADJUSTMENT
+============================================================
+
+16.1 Waste
+
+Table:
+warehouse_waste
+
+Kolom:
+- waste_id
+- waste_number
+- date
+- time
+- brand_id
+- outlet_id
+- location_id
+- shift_id
+- item_id
+- menu_id
+- batch_reference
+- qty
+- unit
+- estimated_unit_cost
+- estimated_total_value
+- waste_type
+- reason
+- root_cause
+- photo_url
+- reported_by
+- witness_by
+- approval_status
+- approved_by
+- related_order_id
+- related_incident_id
+- preventive_action
+- created_at
+
+Waste type:
+- EXPIRED
+- SPOILED
+- OVERPRODUCTION
+- WRONG_ORDER
+- QC_REJECT
+- SPILL
+- PORTION_ERROR
+- STORAGE_ERROR
+- SUPPLIER_REJECT
+- OTHER
+
+Workflow:
+Approved waste
+→ membuat stock movement WASTE
+→ mengurangi stock
+→ mengirim waste value ke Operational dan Finance summary
+→ membuat alert jika melewati threshold
+
+16.2 Adjustment
+
+Table:
+warehouse_stock_adjustment
+
+Kolom:
+- adjustment_id
+- date
+- item_id
+- location_id
+- adjustment_type
+- qty_difference
+- unit
+- reason
+- reference_count_id
+- requested_by
+- approved_by
+- approval_status
+- created_at
+
+Adjustment type:
+- COUNT_CORRECTION
+- UNIT_CONVERSION_FIX
+- OPENING_BALANCE_FIX
+- SYSTEM_ERROR_FIX
+- OTHER
+
+Adjustment wajib approval.
+
+
+============================================================
+17. STOCK OPNAME
+============================================================
+
+Tujuan:
+Membandingkan Book Stock dengan Physical Stock.
+
+Table:
+warehouse_stock_count
+
+Kolom:
+- count_id
+- count_number
+- count_date
+- count_type
+- brand_id
+- outlet_id
+- location_id
+- status
+- counted_by
+- verified_by
+- approved_by
+- created_at
+- completed_at
+
+Count type:
+- DAILY_CRITICAL
+- WEEKLY
+- MONTHLY
+- SPOT_CHECK
+- RECOUNT
+
+Detail:
+warehouse_stock_count_item
+
+Kolom:
+- count_item_id
+- count_id
+- item_id
+- book_stock
+- theoretical_stock
+- physical_stock
+- base_unit
+- variance_vs_book_qty
+- variance_vs_book_percentage
+- variance_vs_book_value
+- variance_vs_theoretical_qty
+- tolerance_percentage
+- tolerance_value
+- severity
+- recount_required
+- recount_result
+- root_cause
+- investigation_status
+- assigned_to
+- due_date
+- approval_status
+- notes
+
+Investigation status:
+- NOT_REQUIRED
+- OPEN
+- RECOUNT_REQUIRED
+- INVESTIGATING
+- EXPLAINED
+- CONFIRMED_LOSS
+- RESOLVED
+
+Severity:
+- NORMAL
+- WARNING
+- HIGH
+- CRITICAL
+
+Rule:
+Alert mempertimbangkan:
+- variance percentage
+- variance monetary value
+- item criticality
+- frequency of recurrence
+
+Tidak boleh hanya berdasarkan persen.
+
+
+============================================================
+18. EXPIRY MONITORING
+============================================================
+
+Table:
+warehouse_batch_stock
+
+Kolom:
+- batch_stock_id
+- item_id
+- location_id
+- batch_number
+- expiry_date
+- received_date
+- current_qty
+- unit
+- unit_cost
+- status
+- created_at
+- updated_at
+
+Status:
+- ACTIVE
+- NEAR_EXPIRY
+- EXPIRED
+- DEPLETED
+- QUARANTINED
+
+Rule contoh:
+- Expired <= 3 hari = HIGH untuk bahan cepat rusak
+- Expired <= 7 hari = WARNING
+- Projected excess stock sebelum expiry = transfer/promo recommendation
+
+Sistem harus mendukung:
+FEFO — First Expired, First Out
+
+
+============================================================
+19. ALERT RULES
+============================================================
+
+Alert types:
+- LOW_STOCK
+- STOCKOUT_RISK
+- OVERSTOCK
+- PURCHASE_REQUIRED
+- RECEIVING_DISCREPANCY
+- TRANSFER_DISCREPANCY
+- WASTE_OVER_LIMIT
+- STOCK_VARIANCE
+- NEAR_EXPIRY
+- EXPIRED_STOCK
+- MISSING_RECEIPT
+- UNAPPROVED_ADJUSTMENT
+- RECOUNT_OVERDUE
+- ACTION_OVERDUE
+
+Severity:
+- INFO
+- LOW
+- MEDIUM
+- HIGH
+- CRITICAL
+
+Contoh rules:
+
+LOW_STOCK:
+Available Stock <= Reorder Point
+
+STOCKOUT_RISK:
+Days of Cover < Supplier Lead Time
+
+CRITICAL STOCKOUT:
+Available Stock <= 0
+
+RECEIVING DISCREPANCY:
+Qty accepted < Qty ordered
+atau item/condition tidak sesuai
+
+TRANSFER DISCREPANCY:
+Received Qty != Dispatched Qty
+
+WASTE OVER LIMIT:
+Waste Value > threshold per item/outlet/hari
+
+STOCK VARIANCE:
+Variance percentage > tolerance percentage
+atau variance value > tolerance value
+
+NEAR EXPIRY:
+Expiry date <= configured warning days
+
+EXPIRED STOCK:
+Expiry date < current date dan qty > 0
+
+RECOUNT OVERDUE:
+Recount belum selesai melewati due_date
+
+ACTION OVERDUE:
+Action status belum DONE dan due_date terlewati
+
+Alert table:
+warehouse_alert_log
+
+Kolom:
+- alert_id
+- alert_datetime
+- alert_type
+- severity
+- brand_id
+- outlet_id
+- location_id
+- item_id
+- reference_type
+- reference_id
+- title
+- message
+- status
+- assigned_to
+- due_date
+- action_required
+- telegram_status
+- created_at
+- resolved_at
+- resolved_by
+
+Status:
+- OPEN
+- ACKNOWLEDGED
+- IN_PROGRESS
+- WAITING_APPROVAL
+- RESOLVED
+- CLOSED
+- IGNORED
+
+
+============================================================
+20. ACTION TRACKER
+============================================================
+
+Setiap alert HIGH/CRITICAL sebaiknya otomatis membuat action.
+
+Table:
+warehouse_action_tracker
+
+Kolom:
+- action_id
+- source_alert_id
+- title
+- description
+- brand_id
+- outlet_id
+- location_id
+- item_id
+- priority
+- assigned_to
+- assigned_role
+- due_date
+- status
+- action_taken
+- attachment_url
+- approved_by
+- created_at
+- updated_at
+- completed_at
+
+Status:
+- OPEN
+- IN_PROGRESS
+- WAITING_APPROVAL
+- DONE
+- CANCELLED
+- OVERDUE
+
+Contoh:
+- Recount stok ayam sebelum pukul 09.00
+- Konfirmasi PO minyak sebelum pukul 10.00
+- Klaim receiving discrepancy ke supplier hari ini
+- Transfer whipping cream ke outlet lain sebelum expiry
+
+
+============================================================
+21. WAREHOUSE DAILY SUMMARY
+============================================================
+
+Hermez tidak boleh membaca semua raw ledger terlebih dahulu.
+
+Buat table:
+warehouse_daily_summary
+
+Kolom:
+- summary_id
+- date
+- brand_id
+- brand_name
+- outlet_id
+- outlet_name
+- location_id
+- total_inventory_value
+- critical_low_stock_count
+- stockout_risk_count
+- purchase_recommendation_count
+- estimated_purchase_value
+- pending_purchase_request_count
+- pending_receiving_count
+- receiving_discrepancy_count
+- pending_transfer_count
+- transfer_discrepancy_count
+- waste_item_count
+- waste_value
+- variance_item_count
+- unexplained_variance_value
+- near_expiry_item_count
+- expired_item_count
+- open_action_count
+- overdue_action_count
+- major_warehouse_issue
+- recommended_action
+- generated_at
+
+Contoh:
+
+Funkydak — 14 Juli 2026
+
+Total Inventory Value: Rp42.500.000
+Critical Low Stock: 3 item
+Stockout Risk: 2 item
+Recommended Purchase: Rp3.850.000
+Waste Value: Rp275.000
+Unexplained Variance: Rp234.000
+Near Expiry: 4 item
+Open Actions: 5
+
+Major Issue:
+Ayam fillet berisiko habis sebelum supplier datang dan daging sapi memiliki variance tinggi.
+
+Recommended Action:
+Konfirmasi PO ayam sebelum pukul 10.00 dan lakukan recount daging sapi sebelum pukul 09.00.
+
+
+============================================================
+22. WORKFLOW HERMEZ
+============================================================
+
+22.1 Tugas Inventory Engine
+
+Inventory engine menghitung:
+- Book Stock
+- Available Stock
+- Reorder Point
+- Days of Cover
+- Suggested Purchase
+- Waste Value
+- Variance
+- Expiry Risk
+- Receiving Discrepancy
+- Transfer Discrepancy
+
+22.2 Tugas Rules Engine
+
+Rules engine:
+- membandingkan hasil dengan threshold,
+- membuat alert,
+- menentukan severity,
+- membuat action awal,
+- menentukan PIC berdasarkan role/outlet.
+
+22.3 Tugas Hermez
+
+Hermez:
+- membaca warehouse_daily_summary,
+- membaca alert HIGH/CRITICAL,
+- membuka detail reference jika dibutuhkan,
+- menjelaskan masalah dalam bahasa mudah,
+- mengurutkan prioritas,
+- membuat Telegram brief,
+- membuat rekomendasi,
+- membuat escalation jika action tidak selesai.
+
+22.4 Hermez tidak boleh:
+
+- Mengubah stock ledger langsung.
+- Mengapprove adjustment.
+- Menandai barang hilang tanpa investigasi.
+- Membuat PO final tanpa approval manusia.
+- Menghapus transaksi.
+- Mengubah threshold tanpa permission.
+
+
+============================================================
+23. TELEGRAM REPORTING
+============================================================
+
+Telegram hanya mengirim alert yang memerlukan tindakan.
+
+Jangan kirim setiap perubahan stok.
+
+23.1 Daily Warehouse Brief
+
+Contoh:
+
+YKP WAREHOUSE DAILY BRIEF
+Funkydak — 14 Juli 2026, 07:00 WIB
+
+CRITICAL:
+1. Ayam Fillet
+   Stok tersedia: 18 kg
+   Pemakaian: 11 kg/hari
+   Days of Cover: 1,6 hari
+   Lead Time: 2 hari
+   Saran Beli: 30 kg
+   Estimasi: Rp1.650.000
+
+HIGH:
+2. Daging Sapi
+   Book Stock: 12,5 kg
+   Physical Stock: 10,8 kg
+   Variance: -1,7 kg
+   Estimasi nilai: Rp306.000
+   Status: Recount Required
+
+NEAR EXPIRY:
+3. Whipping Cream
+   Qty: 8 pack
+   Expired: 3 hari
+   Projected excess: 5 pack
+
+ACTION:
+- Purchasing konfirmasi PO ayam sebelum 10.00.
+- Outlet Manager recount daging sapi sebelum 09.00.
+- Transfer whipping cream ke outlet lain hari ini.
+
+23.2 Purchase Alert
+
+Isi:
+- Item
+- Stok tersedia
+- Average usage
+- Days of cover
+- Lead time
+- Suggested purchase
+- Estimated value
+- Supplier
+- Required by date
+- PIC
+
+23.3 Stock Variance Alert
+
+Isi:
+- Item
+- Book stock
+- Physical stock
+- Variance qty
+- Variance %
+- Variance value
+- Tolerance
+- Initial findings
+- Required action
+- PIC
+- Deadline
+
+23.4 Expiry Alert
+
+Isi:
+- Item
+- Batch
+- Qty
+- Expiry date
+- Average usage
+- Projected excess
+- Recommended transfer/promo/disposal
+
+23.5 Receiving Discrepancy Alert
+
+Isi:
+- PO / receiving number
+- Supplier
+- Item
+- Qty ordered
+- Qty accepted
+- Difference
+- Condition
+- Claim action
+- PIC
+
+23.6 Telegram Delivery Log
+
+Table:
+telegram_delivery_log
+
+Kolom:
+- delivery_id
+- source_module
+- source_reference_id
+- message_type
+- recipient
+- message_id
+- status
+- retry_count
+- sent_at
+- error_message
+- created_at
+
+Status:
+- QUEUED
+- SENT
+- FAILED
+- RETRYING
+- CANCELLED
+
+
+============================================================
+24. INTEGRATION WITH FINANCE
+============================================================
+
+Warehouse mengirim ke Finance:
+- purchase request approved
+- purchase value
+- receiving data
+- supplier invoice reference
+- inventory value
+- waste value
+- stock adjustment value
+
+Finance mengelola:
+- supplier invoice
+- accounts payable
+- payment
+- cashflow
+- budget
+- approval pembayaran
+
+Wajib mencegah double counting.
+
+Tambahkan referensi:
+- source_module
+- source_transaction_id
+- linked_purchase_request_id
+- linked_receiving_id
+- linked_supplier_invoice_id
+- linked_payment_id
+
+Receiving tidak otomatis dianggap expense.
+
+Pembelian stok baru menjadi:
+- Inventory asset,
+- atau COGS setelah mekanisme penggunaan/inventory accounting diterapkan.
+
+Untuk V1, jangan menampilkan “Net Profit final” berdasarkan purchase saja.
+
+
+============================================================
+25. INTEGRATION WITH OPERATIONAL
+============================================================
+
+Operational mengirim:
+- production usage
+- waste
+- QC reject
+- stock shortage
+- opening/closing issue
+- incident
+
+Warehouse mengirim:
+- stock availability
+- stockout risk
+- transfer status
+- expiry warning
+- item unavailable
+- approved waste quantity
+- stock issue confirmation
+
+Wajib gunakan reference ID agar waste tidak tercatat dua kali.
+
+
+============================================================
+26. INTEGRATION WITH HR
+============================================================
+
+HR menyediakan:
+- employee_id
+- role
+- outlet
+- shift
+- manager
+- approval authority
+- active/inactive status
+
+Warehouse menggunakan data ini untuk:
+- siapa boleh menerima barang,
+- siapa boleh mengeluarkan stok,
+- siapa boleh approve waste,
+- siapa boleh approve adjustment,
+- siapa menjadi PIC action.
+
+
+============================================================
+27. ROLE & PERMISSION
+============================================================
+
+Minimal role:
+- Owner
+- Super Admin
+- Warehouse Admin
+- Purchasing
+- Finance Admin
+- Brand Manager
+- Outlet Manager
+- Supervisor
+- Kitchen Lead
+- Staff
+- Viewer
+
+Owner:
+- Lihat semua brand/outlet
+- Lihat summary
+- Lihat purchase recommendation
+- Lihat critical alert
+- Approve transaksi di atas limit
+
+Super Admin:
+- Manage system
+- Manage threshold
+- Reopen count
+- Reversal
+- Manage user
+- Audit log
+
+Warehouse Admin:
+- Manage item/location
+- Receiving
+- Issue
+- Transfer
+- Stock count
+- Adjustment request
+- Report
+
+Purchasing:
+- Review purchase recommendation
+- Buat purchase request
+- Update ordered status
+- Assign supplier
+- Tidak boleh mengubah physical count
+
+Finance Admin:
+- Lihat receiving dan purchase reference
+- Link invoice
+- Update payment reference
+- Tidak boleh mengubah stock ledger
+
+Brand Manager:
+- Lihat brand sendiri
+- Approve transfer/waste/adjustment sesuai limit
+- Lihat variance dan action
+
+Outlet Manager / Supervisor:
+- Receiving outlet
+- Approve issue
+- Approve waste
+- Stock count
+- Recount
+- Resolve action
+
+Kitchen Lead:
+- Request stock issue
+- Confirm receipt
+- Input waste
+- Tidak bisa adjustment
+
+Staff:
+- Input sesuai task
+- Tidak bisa approve
+- Tidak bisa delete
+- Tidak bisa lihat seluruh nilai inventory jika tidak perlu
+
+Viewer:
+- Read only sesuai scope
+
+
+============================================================
+28. APPROVAL RULES
+============================================================
+
+Wajib approval:
+- Purchase request
+- Receiving discrepancy
+- Waste di atas threshold
+- Stock adjustment
+- Confirmed loss
+- Transfer stock tertentu
+- Reopen stock count
+- Reversal movement
+- Threshold change
+- Master item price change
+- Unit conversion change
+
+Approval status:
+- DRAFT
+- PENDING
+- APPROVED
+- REJECTED
+- ESCALATED
+- CANCELLED
+
+Semua approval menyimpan:
+- requested_by
+- approved_by
+- approved_at
+- reason
+- before_value
+- after_value
+
+
+============================================================
+29. ENVIRONMENT SEPARATION
+============================================================
+
+Pisahkan:
+- TESTING
+- PILOT
+- PRODUCTION
+
+Database dan storage harus terpisah.
+
+Tampilan:
+- TESTING: kuning
+- PILOT: biru
+- PRODUCTION: hijau
+
+Production tidak boleh membaca data dummy.
+
+Semua record memiliki:
+- environment
+
+
+============================================================
+30. SECURITY & AUDIT
+============================================================
+
+Wajib:
+- API key disimpan di environment variable.
+- Password menggunakan hashing.
+- Testing dan production terpisah.
+- Foto dan dokumen disimpan di private storage.
+- Access dibatasi berdasarkan role, brand, outlet, dan location.
+- Tidak ada hard delete.
+- Semua reversal tercatat.
+- Semua adjustment wajib approval.
+- Semua perubahan master item dan conversion tercatat.
+- Backup database harian.
+- Export data hanya untuk role tertentu.
+- Telegram tidak menampilkan data sensitif supplier/bank.
+- Semua error dicatat.
+
+Audit table:
+system_audit_log
+
+Kolom:
+- audit_id
+- module
+- action
+- record_type
+- record_id
+- before_value
+- after_value
+- reason
+- user_id
+- approval_user_id
+- environment
+- ip_address
+- created_at
+
+
+============================================================
+31. USER EXPERIENCE
+============================================================
+
+Aplikasi harus:
+- Mobile friendly
+- Tablet friendly
+- Desktop friendly
+- Cepat untuk input outlet
+- Memiliki search item
+- Memiliki barcode/QR-ready structure
+- Memiliki autosave jika relevan
+- Memiliki loading state
+- Memiliki success message
+- Memiliki error message
+- Memiliki validation
+- Memiliki confirmation sebelum reversal
+- Memiliki empty state yang menjelaskan langkah berikutnya
+- Memiliki filter brand/outlet/location/date
+- Memiliki export CSV/PDF
+- Memiliki photo preview
+- Memiliki status warna konsisten
+
+Contoh empty state:
+
+Belum ada purchase recommendation.
+Pastikan master item, average usage, lead time, dan stock opening sudah terisi.
+
+
+============================================================
+32. MIGRATION FROM EXISTING SPREADSHEET
+============================================================
+
+Spreadsheet lama tidak dibuang.
+
+Developer perlu melakukan mapping:
+
+Master_Item
+→ master_item
+
+F1 Penerimaan Barang
+→ warehouse_receiving + warehouse_receiving_item
+
+F2 Kartu Stok
+→ warehouse_stock_movement
+
+F3 Bon Pemakaian Dapur
+→ warehouse_stock_issue + warehouse_stock_issue_item
+
+F4 Waste/Kerusakan
+→ warehouse_waste
+
+F5 Stock Opname
+→ warehouse_stock_count + warehouse_stock_count_item
+
+Dashboard Mingguan
+→ warehouse_daily_summary + Warehouse Overview
+
+Audit spreadsheet:
+- Periksa unit
+- Periksa kode item
+- Periksa duplicate item
+- Periksa harga
+- Periksa minimum stock
+- Periksa tolerance
+- Periksa formula hardcoded
+- Periksa saldo awal
+- Periksa data kosong
+
+Jangan langsung import semua data sebelum master item bersih.
+
+
+============================================================
+33. DATA PACK YANG HARUS DISIAPKAN OWNER
+============================================================
+
+Folder:
+YKP ERP Warehouse — Data Pack
+
+Isi:
+
+1. Spreadsheet lama kontrol bahan baku.
+2. Master brand dan outlet.
+3. Daftar lokasi penyimpanan.
+4. Master item.
+5. Unit pembelian dan unit dasar.
+6. Conversion factor.
+7. Supplier utama dan backup.
+8. Harga beli terakhir.
+9. Minimum stock.
+10. Safety stock.
+11. Maximum stock.
+12. Lead time supplier.
+13. Jadwal order/delivery supplier.
+14. Pack size dan MOQ.
+15. Data receiving 30 hari jika tersedia.
+16. Data stock issue/pemakaian 30 hari.
+17. Data waste 30 hari.
+18. Data stock opname.
+19. Foto contoh item/batch/nota.
+20. Daftar role dan approval limit.
+
+Pilot awal:
+- 10–20 bahan paling mahal,
+- paling cepat habis,
+- paling rawan hilang,
+- atau paling kritikal untuk operasional.
+
+
+============================================================
+34. BUILD TASK DEVELOPER
+============================================================
+
+34.1 Audit
+
+Developer cek:
+- Struktur spreadsheet lama
+- Formula
+- Data quality
+- Unit
+- Duplicate item
+- Saldo awal
+- Workflow nyata outlet
+- Role
+- Approval
+- Telegram bot
+- Integration point Finance/Operational/HR
+
+Output:
+- Audit note
+- Data mapping
+- Technical architecture
+- Risk list
+- Migration plan
+
+34.2 Setup
+
+Buat:
+- YKP Warehouse App Testing
+- YKP Warehouse App Pilot
+- YKP Warehouse App Production
+
+Database:
+- YKP_WAREHOUSE_DATABASE
+- YKP_MASTER_DATABASE
+- Private object storage
+
+34.3 Build Core
+
+Bangun:
+- Master item
+- Master location
+- Purchase recommendation
+- Purchase request
+- Receiving
+- Stock issue
+- Transfer
+- Ledger
+- Waste
+- Stock count
+- Expiry monitoring
+- Alert
+- Action tracker
+- Summary
+- Telegram
+
+34.4 Integration
+
+Minimum:
+- HR role/PIC
+- Finance supplier/invoice reference
+- Operational waste/stock issue
+- Hermez summary
+- Telegram alert
+
+34.5 Testing
+
+Test minimal:
+- Import master item
+- Unit conversion
+- Opening balance
+- Receiving full
+- Receiving discrepancy
+- Stock issue
+- Transfer dispatch
+- Transfer receipt
+- Transfer discrepancy
+- Waste
+- Stock count
+- Recount
+- Adjustment
+- Reversal
+- Low stock rule
+- Days of cover
+- Suggested purchase
+- Expiry alert
+- Variance alert
+- Action creation
+- Telegram delivery
+- Role restriction
+- Audit log
+
+
+============================================================
+35. TIMELINE WAREHOUSE V1
+============================================================
+
+Week 1 — Audit & Master Data
+- Audit spreadsheet lama
+- Bersihkan master item
+- Setup location
+- Setup supplier
+- Setup unit conversion
+- Setup threshold
+- Buat database testing
+
+Week 2 — Stock Movement Core
+- Opening balance
+- Receiving
+- Stock issue
+- Transfer
+- Stock ledger
+- Basic role
+
+Week 3 — Waste & Stock Count
+- Waste
+- Adjustment
+- Stock opname
+- Recount
+- Variance calculation
+- Audit log
+
+Week 4 — Purchase Recommendation
+- Average usage
+- Reorder point
+- Days of cover
+- Suggested purchase
+- Purchase request
+- Priority rules
+
+Week 5 — Alert, Summary, Telegram
+- warehouse_daily_summary
+- Alert engine
+- Action tracker
+- Telegram daily brief
+- Delivery log
+- Hermez integration basic
+
+Week 6 — Pilot
+- Pilot 10–20 item
+- Pilot 1 outlet
+- Test 7–14 hari
+- Fix bug
+- Training admin/supervisor
+- Validation stock
+
+Timeline dapat berubah tergantung kualitas data dan kompleksitas integrasi.
+
+
+============================================================
+36. PILOT RECOMMENDATION
+============================================================
+
+Pilot:
+- 1 brand
+- 1 outlet
+- 1 gudang/location utama
+- 10–20 bahan kritikal
+- 5–10 user
+- Minimal 7–14 hari
+
+Item pilot sebaiknya:
+- mahal,
+- cepat rusak,
+- cepat habis,
+- sering selisih,
+- penting untuk menu utama.
+
+Contoh:
+- ayam fillet
+- daging sapi
+- salmon
+- keju
+- minyak goreng
+- whipping cream
+- saus utama
+- packaging mahal
+
+
+============================================================
+37. ACCEPTANCE TEST
+============================================================
+
+A. MASTER DATA
+
+1. Import item berhasil.
+2. Unit conversion benar.
+3. Supplier dan lead time terbaca.
+4. Filter brand/outlet/location berjalan.
+
+B. RECEIVING
+
+1. Receiving penuh menambah stok.
+2. Receiving partial menambah sesuai qty accepted.
+3. Discrepancy menghasilkan alert.
+4. Batch dan expiry tersimpan.
+5. Reference invoice masuk ke Finance.
+
+C. STOCK ISSUE
+
+1. Issue mengurangi stok sumber.
+2. Qty tidak boleh melebihi stok tanpa permission.
+3. Approval berjalan.
+4. Reference ke shift/batch tersimpan.
+
+D. TRANSFER
+
+1. Dispatch mengurangi stok sumber.
+2. Receive menambah stok tujuan.
+3. Selisih membuat alert.
+4. Transfer tidak boleh selesai sebelum penerima konfirmasi.
+
+E. WASTE
+
+1. Waste approved mengurangi stok.
+2. Foto tersimpan.
+3. Value terhitung.
+4. Waste di atas limit membuat alert.
+
+F. STOCK OPNAME
+
+1. Book stock tampil.
+2. Physical stock bisa diinput.
+3. Variance qty, %, dan value terhitung.
+4. Recount berjalan.
+5. Confirmed loss hanya setelah approval.
+
+G. PURCHASE RECOMMENDATION
+
+1. Reorder point benar.
+2. Days of cover benar.
+3. Suggested purchase benar.
+4. Pembulatan pack size benar.
+5. Incoming PO tidak dihitung dua kali.
+6. Purchase request bisa dibuat.
+
+H. HERMEZ & TELEGRAM
+
+1. warehouse_daily_summary terbentuk.
+2. Alert HIGH/CRITICAL masuk Hermez.
+3. Telegram terkirim.
+4. Delivery log tercatat.
+5. Action tracker otomatis dibuat.
+6. Overdue action dieskalasi.
+
+I. SECURITY
+
+1. Staff tidak bisa adjustment.
+2. Finance tidak bisa mengubah stock ledger.
+3. Manager tidak bisa melihat brand lain.
+4. Tidak ada hard delete.
+5. Audit log mencatat perubahan.
+
+
+============================================================
+38. DEFINITION OF DONE WAREHOUSE V1
+============================================================
+
+Warehouse Module V1 dianggap selesai jika:
+
+- App Testing, Pilot, dan Production tersedia.
+- Master item, location, supplier, dan unit conversion tersedia.
+- Data dummy tidak masuk production.
+- Opening balance dapat dimigrasikan.
+- Receiving berjalan.
+- Stock issue berjalan.
+- Transfer berjalan.
+- Stock ledger otomatis berjalan.
+- Waste berjalan.
+- Stock adjustment berjalan dengan approval.
+- Stock opname berjalan.
+- Recount berjalan.
+- Variance qty, %, dan value terhitung.
+- Expiry monitoring berjalan.
+- Reorder point berjalan.
+- Days of cover berjalan.
+- Suggested purchase berjalan.
+- Purchase request berjalan.
+- Alert berjalan.
+- Action tracker berjalan.
+- warehouse_daily_summary tersedia.
+- Telegram daily brief berjalan.
+- Delivery log tersedia.
+- Hermez membaca summary dan alert.
+- Role permission berjalan.
+- Audit log tersedia.
+- Pilot 10–20 item berjalan minimal 7 hari.
+- Saldo stock ledger cocok dengan physical count dalam toleransi.
+- Admin gudang dan supervisor dapat menggunakan sistem.
+
+
+============================================================
+39. OUT OF SCOPE V1
+============================================================
+
+Belum termasuk:
+- Full recipe/BOM automation
+- Full POS theoretical usage
+- Advanced food yield calculation
+- Predictive forecasting AI
+- Automatic supplier ordering
+- Automatic PO sending
+- Bank/payment integration
+- IoT weighing scale
+- Barcode hardware wajib
+- RFID
+- Temperature sensor
+- Full mobile native app
+- Full central warehouse allocation optimization
+- Advanced accounting inventory valuation
+- FIFO costing accounting lengkap
+- LIFO/weighted accounting configuration lengkap
+- Autonomous loss accusation
+- Full multi-outlet rollout tanpa pilot
+
+
+============================================================
+40. RISIKO DAN MITIGASI
+============================================================
+
+Risiko 1:
+Unit tidak konsisten.
+
+Mitigasi:
+Gunakan base unit dan conversion table.
+
+Risiko 2:
+Staff lupa input issue/waste.
+
+Mitigasi:
+Buat workflow sederhana, reminder, dan closing validation.
+
+Risiko 3:
+Stock ledger tidak sama dengan fisik.
+
+Mitigasi:
+Pilot item kritikal, recount, audit reference.
+
+Risiko 4:
+Purchase recommendation salah.
+
+Mitigasi:
+Review average usage, lead time, safety stock, pack size.
+
+Risiko 5:
+Double counting Finance/Operational.
+
+Mitigasi:
+Gunakan source_module dan reference ID.
+
+Risiko 6:
+Terlalu banyak Telegram alert.
+
+Mitigasi:
+Hanya kirim HIGH/CRITICAL dan daily digest.
+
+Risiko 7:
+Sistem langsung menuduh kehilangan.
+
+Mitigasi:
+Gunakan unexplained variance sampai investigasi selesai.
+
+Risiko 8:
+Scope terlalu besar.
+
+Mitigasi:
+V1 fokus 10–20 item dan 1 outlet pilot.
+
+
+============================================================
+41. ONE-LINER DEVELOPER
+============================================================
+
+Warehouse & Inventory Control Module V1 adalah web app untuk mengelola master bahan, receiving, stock issue, transfer, ledger, waste, stock opname, expiry, reorder point, purchase recommendation, stock variance, alert Telegram, action tracker, serta warehouse_daily_summary yang siap dibaca Orchestration Layer dan Hermez AI.
+
+
+============================================================
+42. PESAN SINGKAT KE DEVELOPER
+============================================================
+
+Mas, kita akan menambah modul YKP Warehouse & Inventory Control. Spreadsheet kontrol bahan baku lama dipakai sebagai fondasi, tetapi jangan hanya dipindahkan menjadi form digital. Sistem harus memakai stock movement ledger otomatis, master unit conversion, lokasi stok, receiving, issue, transfer, waste, stock opname, reorder point, days of cover, suggested purchase, expiry monitoring, variance alert, action tracker, dan warehouse_daily_summary.
+
+Hermez tidak menghitung stok dari raw data. Inventory engine yang menghitung, rules engine yang membuat alert, lalu Hermez menjelaskan prioritas dan mengirim Telegram brief. Gunakan istilah “unexplained stock variance” sebelum sebuah selisih dipastikan sebagai kehilangan. Pilot dulu 10–20 bahan kritikal di 1 outlet selama 7–14 hari. V1 belum perlu full recipe × POS, forecasting advanced, atau automatic supplier ordering.

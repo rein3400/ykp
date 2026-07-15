@@ -71,7 +71,25 @@ export default function PosPage() {
           <CardTitle>Daftar Transaksi POS</CardTitle>
         </CardHeader>
         <CardContent>
-          <PosTable params={params} />
+          {rows.length === 0 ? (
+            <div className="flex flex-col items-center gap-4 py-12 text-center">
+              <p className="text-sm text-muted-foreground max-w-md">
+                Belum ada transaksi POS. Import CSV Moka atau tambah transaksi manual untuk memulai.
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    Import CSV
+                    <input type="file" accept=".csv,text/csv" className="hidden" onChange={onUpload} />
+                  </label>
+                </Button>
+                <PosFormDialog />
+              </div>
+            </div>
+          ) : (
+            <PosTable params={params} />
+          )}
         </CardContent>
       </Card>
     </div>

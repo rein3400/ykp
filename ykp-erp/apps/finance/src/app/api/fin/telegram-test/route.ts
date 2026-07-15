@@ -13,6 +13,8 @@
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
 import { handler, ok, fail } from "@finance/lib/server/http";
+import { getFinanceDb } from "@finance/lib/server/db";
+import { logFinanceAudit } from "@finance/lib/server/audit";
 import { sendTelegramMessage } from "@ykp/engine/telegram";
 import { z } from "zod";
 
@@ -34,6 +36,15 @@ export const POST = handler(async (req: Request) => {
 
   try {
     const result = await sendTelegramMessage(token, chatId, parsed.data.message);
+    const financeDb = getFinanceDb();
+    await logFinanceAudit(financeDb, {
+      actor: user.id,
+      action: "telegram:test",
+      entity: "telegram",
+      entityId: "test",
+      after: { ok: result.ok, messageId: result.ok ? result.messageId : null, error: result.ok ? null : result.error },
+      reason: "Manual test send",
+    });
     if (!result.ok) {
       // Defect 10b: never leak provider error body / token info to caller.
       // Log the detail server-side for ops triage.

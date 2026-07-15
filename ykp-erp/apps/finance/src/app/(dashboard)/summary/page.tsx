@@ -56,7 +56,7 @@ export default function SummaryPage() {
                     <th className="px-2 py-2">Supplier</th>
                     <th className="px-2 py-2">Petty Out</th>
                     <th className="px-2 py-2">Unpaid</th>
-                    <th className="px-2 py-2">Net</th>
+                    <th className="px-2 py-2">Est. Op. Result</th>
                     <th className="px-2 py-2">Issue</th>
                   </tr>
                 </thead>

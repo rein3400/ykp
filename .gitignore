@@ -91,3 +91,6 @@ indicators/**/*.json
 # Backup demo is intentionally excluded from source control; it is a stale
 # snapshot kept only for local reference and is 3.2 GB.
 .backup_ykp-demo_2026-07-03/
+
+.vercel
+.env*

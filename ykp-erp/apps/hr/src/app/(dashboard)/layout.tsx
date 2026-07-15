@@ -15,12 +15,12 @@ interface NavItem {
 }
 
 const NAV: ReadonlyArray<NavItem> = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/attendance", label: "Attendance", icon: Clock },
-  { href: "/payroll", label: "Payroll", icon: Wallet },
-  { href: "/rules", label: "Rules", icon: Settings },
-  { href: "/employees", label: "Employees", icon: Users },
-  { href: "/summary", label: "Summary", icon: BarChart3 },
+  { href: "/", label: "Ringkasan", icon: LayoutDashboard },
+  { href: "/attendance", label: "Absensi", icon: Clock },
+  { href: "/payroll", label: "Penggajian", icon: Wallet },
+  { href: "/rules", label: "Aturan", icon: Settings },
+  { href: "/employees", label: "Karyawan", icon: Users },
+  { href: "/summary", label: "Laporan Harian", icon: BarChart3 },
 ];
 
 /**

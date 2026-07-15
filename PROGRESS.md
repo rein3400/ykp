@@ -1,205 +1,173 @@
 # YKP HERMEZ AI COMMAND CENTER — Progress
 
 > Single source of truth untuk semua track. Update tiap ada perubahan.
-> Last update: 2026-07-07
-
-## Status sekarang
-
-| Track | Status | Lokasi |
-|---|---|---|
-| A — ICT Trading Orchestrator | deprioritized | `orchestrator/` |
-| B-OLD — ykp-erp (HR+Finance+Hermez, Postgres) | **parked** | `ykp-erp/` |
-| B-NEW — HR V1 (Google Sheets, brief V1) | **siap setup + pilot** | `ykp-hr-v1/` |
-| Infra — Cloudflare Tunnel, MT5 bridge, prod secrets | selesai untuk orchestrator | `orchestrator/`, `mt5-bridge-service/` |
+> Last update: 2026-07-15
 
 ---
 
-## Track A — ICT Trading Orchestrator (deprioritized)
+## ✅ Completed
 
-Tidak disentuh dalam eksekusi terakhir. Fokus user pindah ke Track B per brief baru.
-Existing state: orchestrator jalan paper-trade, dashboard ada, MT5 mock dipakai.
+### Warehouse Inventory Control V1 (2026-07-15)
+- ✅ Upgrade `ykp-warehouse-v1` ke full brief `YKP_ERP_Warehouse_Inventory_Developer_Brief_V1.txt`
+- ✅ 6 phase: Master Data → Ledger → Receiving/Issue/Waste/Adjustment → Transfer/Opname → Purchase Engine/Expiry → Alerts/Actions/Summary/Telegram
+- ✅ Schema: 37 Sheets tabs (dari 14); master_item 32 kolom; location/unit_conversion/category/threshold
+- ✅ Engine: `stock-ledger.ts` (immutable 12 movement types), `inventory-engine.ts` (reorder/days_of_cover/suggested/priority), `rules-engine.ts` (14 alert types), `approval.ts`, `telegram.ts`
+- ✅ RBAC 11 roles (dari 5); audit expanded (module/record_type/approval_user_id/environment)
+- ✅ 18 API routes + 18 pages (overview, master×6, transaksi×7, purchase×2, alert/action/summary/dashboard)
+- ✅ Auto ledger post: receiving APPROVED → RECEIPT; issue → ISSUE; transfer DISPATCHED/RECEIVED → TRANSFER_OUT/IN; waste/adjustment → WASTE/COUNT_ADJUSTMENT
+- ✅ HIGH/CRITICAL alert → auto action tracker; "unexplained stock variance" terminology
+- ✅ Tests: vitest 40/40 (inventory-engine 16 + rules-engine 24); `tsc --noEmit` clean
+- ⏸️ Belum: GCP service account + spreadsheet ID → `npm run sheets:bootstrap`; deploy Railway; pilot 10–20 item 1 outlet
 
----
+### Bug Fixes
+- ✅ CSP hydration blocker (3 ykp-erp apps) — added `'unsafe-inline'` to script-src
+- ✅ Tambah Expense no onClick (finance) — created ExpenseFormDialog
+- ✅ Sheets API range fix (ykp-hr-v1) — `quoteTab()` helper
+- ✅ Edge runtime crypto (hr-v1) — Web Crypto API in middleware
+- ✅ Owner RBAC wildcard (hr-v1) — `if (role === 'owner') return true`
+- ✅ Role case normalization (hr-v1) — `.toLowerCase()` in session
+- ✅ DB SSL config (Supabase pooler self-signed) — conditional `rejectUnauthorized: false`
 
-## Track B-OLD — ykp-erp (parked)
+### Deployment
+- ✅ All 4 apps deployed to Railway
+- ✅ ykp-hr-v1 fully live (pilot ready)
+- ✅ ykp-erp-hr/finance/hermez all 200 OK
 
-Path: `D:\Users\stefa\Project\YKP HERMEZ AI COMMAND CENTER\ykp-erp\`
+### Database
+- ✅ Supabase DB schema migrated (4 schemas: master, hr, finance, hermez)
+- ✅ Mock data seeded: 5 brands, 15 outlets, 50 employees, 20 suppliers, 1,355 attendance, 450 POS, 450 expenses, 237 supplier_costs, 450 petty_cash, 500 daily summaries, 50 payroll, 90 alerts, 30 daily briefs, 350 audit log
+- **Total: ~5,000 records**
 
-### Deliverables
-- Monorepo: `apps/hr`, `apps/finance`, `apps/hermez`, `packages/{schema,engine,auth,ui,config,format}`
-- 4-DB Postgres: ykp_master, ykp_hr, ykp_finance, ykp_hermez (separate, cross-DB FK validated in app)
-- Engine: payroll, attendance, hr-summary, fin-summary, moka-importer, approval, hermez-brief, triggers, telegram, cron, audit, id-gen, lookup
-- Auth: signed JWS HS256 24h strict SameSite + RBAC matrix 9-role
-- Currency integer IDR, Asia/Jakarta, integer stable IDs (BR-001, OL-001, EMP-NNNNN, etc)
-- Hermez no-write-back (read summary only, write only hermez_daily_brief + hermez_alert_log + hermez_config)
-
-### Verify result terakhir (re-verify v4, 2026-07-07)
-- H (HR): **PASS**
-- F (Finance): **FAIL** — 5 CRITICAL (POS/expense/supplier/closing-cash/petty-cash seq allocation global-per-date not per-outlet)
-- Z (Hermez): **FAIL** — sentToOwner reset on regen, hermezAlertId format deviate
-- Security: **FAIL** — residual
-- Integration: **FAIL** — residual
-- Total: 14 CRITICAL/HIGH, 63 MEDIUM/LOW
-
-### Kenapa di-park
-- Stuck di fix loop (67 → 31 → 9 → 14 CRITICAL/HIGH, tidak converge)
-- Brief V1 baru minta scope lebih ringan (HR only, spreadsheet OK)
-- User pilih dual track: ykp-erp lanjut dokumentasi saja, tidak ada fix loop lagi
-
-### Dokumen
-- `ykp-erp/YKP_ERP_V1_FINAL.md` — final state, known residuals, upgrade path
-- `ykp-erp/PROGRESS.md` — execution progress (existing)
-
-### Upgrade path ke V2
-- HR lane PASS bisa di-reuse sebagai Postgres HR DB target
-- Migrasi ykp-hr-v1 (Sheets) → ykp-erp HR Postgres setelah pilot stabil
-- Finance + Hermez lanes tunggu brief V1 masing-masing
+### Sheets
+- ✅ Bootstrap 17 tabs + seed (5 brands, 9 roles, 7 leave types, 10 outlets, 9 shifts, 8 employees, 1 user)
 
 ---
 
-## Track B-NEW — HR V1 (Google Sheets)
+## 🟡 In Progress
 
-Path: `D:\Users\stefa\Project\YKP HERMEZ AI COMMAND CENTER\ykp-hr-v1\`
-
-### Brief
-`YKP_ERP_HR_Developer_Brief_V1.txt` — clone existing HR app, swap DB ke YKP, V1 boleh spreadsheet, pilot 5-10 karyawan 7 hari.
-
-### Stack
-- Next.js 16 + TS strict + Tailwind
-- TanStack Query (client state)
-- googleapis (Sheets API, service-account JWT auth, no Clerk)
-- Vitest (engine unit tests)
-
-### DB: Google Sheets
-- 17 tabs (master + transactional + summary + users + audit)
-- Service account JSON key, share spreadsheet as Editor
-- FK validation di app layer (`src/lib/repo.ts`)
-- ID generation sequential per prefix
-
-### Yang sudah dibangun
-
-**Scaffold:**
-- `package.json`, `tsconfig.json`, `next.config.ts`, `tailwind.config.ts`, `postcss.config.js`, `vitest.config.ts`, `middleware.ts`
-- `.env.example`, `.gitignore`, `README.md`, `docs/GOOGLE-SHEETS-SETUP.md`, `PILOT-CHECKLIST.md`, `PROGRESS.md`
-
-**Lib (`src/lib/`):**
-- `format.ts` — formatIdr, formatDateWib, formatTimeWib, todayWib, nowTimestampWib (Asia/Jakarta)
-- `rbac.ts` — 9-role matrix (owner, super_admin, hr_admin, finance_admin, brand_manager, outlet_manager, supervisor, employee, viewer) + scopeFilter
-- `session.ts` — signed JWS HS256 cookie, 24h, sameSite strict, httpOnly, secure prod
-- `audit.ts` — logAudit ke audit_log tab (idempotent, never break main op)
-- `http.ts` — JSON envelope ok/list/badRequest/missingRef/forbidden/unauthorized/conflict/notFound/serverError + handler wrapper (5xx never leak stack)
-- `repo.ts` — assertBrand/assertOutlet/assertEmployee/assertShift + nextSequentialId + error classes
-- `ratelimit.ts` — in-memory per (user|ip) limiter
-
-**DB (`src/db/`):**
-- `sheets.ts` — googleapis JWT client + TAB/TAB_HEADERS + readTab/appendRows/updateRow/findRow
-
-**Engine (`src/features/hr/lib/`):**
-- `payroll.ts` — computePayroll (Gross = Basic + OT + Bonus + Allowance; Net = Gross − AttDed − Penalty − CashAdvance − BPJS − Tax − Other), pro-ration join date mid-period, overtime 1.5x, attendance deduction
-- `summary.ts` — buildSummary (alert level green/yellow/red), buildSummaryText (brief §7 format)
-
-**Sections (9 per brief §6, `src/app/hr/`):**
-1. `/hr` — Overview: KPI cards + 7-day summary (tot_staff, present, late, absent, incomplete, shift shortage, payroll issues)
-2. `/hr/employees` — Master Karyawan: list + form + CSV import/export
-3. `/hr/attendance` — Absensi: form + clock-in/out + history + status auto (PRESENT/LATE/ABSENT/LEAVE/SICK/INCOMPLETE/MANUAL_CORRECTION)
-4. `/hr/roster` — Shift & Roster: assign + today view
-5. `/hr/lateness` — Keterlambatan: rekap read-only (auto populate dari attendance)
-6. `/hr/leaves` — Izin/Cuti: form + approval (PENDING/APPROVED/REJECTED)
-7. `/hr/payroll` — Payroll: generate + approve + mark paid + payslip text download
-8. `/hr/adjustments` — Bonus/Potongan/Lembur/Kasbon: form + approval
-9. `/hr/summary` — HR Daily Summary: regenerate + alert level + brief text
-
-**API routes (`src/app/api/hr/`):**
-- `POST /api/auth/login`, `POST /api/auth/logout`
-- `GET/POST /api/hr/employees`, `POST /api/hr/employees/import` (5MB + 5000 row limit, FK per row), `GET /api/hr/employees/export`
-- `GET/POST /api/hr/attendance`, `POST /api/hr/attendance/clock-in`, `POST /api/hr/attendance/clock-out`
-- `GET/POST /api/hr/roster`
-- `GET/POST /api/hr/leaves`, `POST /api/hr/leaves/approve`
-- `GET/POST /api/hr/adjustments`, `POST /api/hr/adjustments/approve`
-- `POST /api/hr/payroll/generate`, `POST /api/hr/payroll/approve`, `POST /api/hr/payroll/mark-paid`
-- `GET /api/hr/payslip/[id]` (text download, owner/HR/finance/self only)
-- `POST /api/hr/summary/regenerate`, `GET /api/hr/summary` (Hermez-facing, no session)
-
-**Scripts (`scripts/`):**
-- `bootstrap-sheets.ts` — idempotent create tabs + seed brands/roles/leave_types/lateness_rules
-- `seed-user.ts` — default owner/owner123 (CHANGE before pilot)
-- `sheets-smoke.ts` — write+read roundtrip
-
-**Tests (vitest):**
-- `payroll.test.ts` — 4 tests: full month monthly, mid-period pro-ration, attendance deduction, overtime 1.5x
-- `summary.test.ts` — 3 tests: green baseline, yellow on late>2, red on shift shortage
-- **Result: 7/7 PASS** ✓
-
-**Install + verify terakhir:**
-- `npm install` — 195 packages, 11 vulnerabilities (8 mod, 1 high, 2 critical di Next.js 16 — `npm audit fix --force` recommended)
-- `npx vitest run` — Test Files 2 passed, Tests 7 passed, Duration 1.73s
-
-### Sisa sebelum pilot (perlu owner)
-
-1. **Google Cloud service account** — IAM → service account → JSON key → share spreadsheet as Editor
-2. **Isi `.env`:**
-   - `GOOGLE_SERVICE_ACCOUNT_EMAIL=<svc email>`
-   - `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="<JSON private_key dengan \\n literal>"`
-   - `YKP_HR_SPREADSHEET_ID=<id dari URL spreadsheet>`
-   - `SESSION_SECRET=<64 hex>`
-3. **Owner data pack** (brief §14): brand, outlet pilot (lat/long/radius), 5-10 karyawan (CSV), shift rules per outlet, payroll rules, lateness rules
-4. **Run:**
-   ```
-   npm install                                # sudah done
-   npx vitest run                             # 7/7 PASS
-   npm run sheets:bootstrap                   # create tabs + seed
-   npm run sheets:smoke                       # verify roundtrip
-   npm run sheets:seed-user                   # create owner
-   # GANTI password owner default
-   npm run dev                                # http://localhost:3002
-   ```
-5. **Smoke manual** per `PILOT-CHECKLIST.md` (brief §13.5)
-6. **7-day pilot** dengan 5-10 karyawan
-
-### V1 limitations (V1.1 follow-up)
-- Shift swap request belum ada form (edit manual)
-- Payroll manual adjustment belum ada UI (re-generate = reset)
-- Slip gaji text only (PDF perlu lib)
-- Password sha256 (upgrade ke scrypt/bcrypt)
-- Payroll lock setelah PAID belum enforced
-- Lat/long radius check belum (mock di notes)
-- Telegram attendance bot belum (optional V1)
-
-### Upgrade path V2
-- Migrate HR data → ykp-erp Postgres HR DB (lane H PASS)
-- Connect ykp-erp Hermez lane Z ke HR Postgres
-- Tambah Finance lane dari brief V1 terpisah (kalau ada)
+### Phase 4 — Approval UI
+- 11 missing approval buttons (leaves/adjustments/payroll approve/mark-paid)
 
 ---
 
-## Track Infra — sudah selesai (untuk orchestrator)
+## ⏸️ Blocked
 
-- B1 prod secrets generated
-- B2 Windows tooling provisioned
-- B3 MT5 bridge service installed
-- B5 prod containers deployed
-- B6 PROGRESS.md written
-- C1-C4 (Cloudflare Tunnel webhook, MT5 real account, rotate secrets, E2E smoke) — pending, Track A untouched
-- B4 Cloudflare Tunnel service — pending
+### Login UI for ykp-erp apps
+- ykp-erp/{finance,hermez,hr} have no login form
+- Test via Playwright with session cookie works
+- User-facing testing requires login UI
 
----
-
-## Apa yang harus dilakukan selanjutnya (urutan)
-
-1. **Owner setup Google Cloud + spreadsheet + .env** untuk ykp-hr-v1
-2. **Owner sediakan data pack** (brief §14)
-3. **`npm run sheets:bootstrap` + smoke + seed user + ganti password**
-4. **`npm run dev` → smoke manual PILOT-CHECKLIST**
-5. **7-day pilot 5-10 karyawan**
-6. **Verifikasi DoD** (brief §16)
-7. (Optional V2) Migrate ke Postgres
+### Phase 5-6
+- Sidebar logout button (hr-v1)
+- HR Overview filters
+- Employee edit/deactivate row actions
 
 ---
 
-## File referensi
+## 📋 Open Tasks
 
-- `YKP_ERP_HR_Developer_Brief_V1.txt` — brief V1 (driver)
-- `ykp-hr-v1/README.md` — quickstart
-- `ykp-hr-v1/PILOT-CHECKLIST.md` — step-by-step pilot guide
-- `ykp-hr-v1/docs/GOOGLE-SHEETS-SETUP.md` — GCP setup
-- `ykp-erp/YKP_ERP_V1_FINAL.md` — old track parked state
+| # | Task | Priority | Status |
+|---|---|---|---|
+| 1 | Phase 4: Wire approval UI | High | Pending |
+| 2 | Phase 5: Logout + Emp actions | Med | Pending |
+| 3 | Phase 6: HR Overview filters | Med | Pending |
+| 4 | Login UI for ykp-erp | Med | Pending (design choice) |
+| 5 | PDF payslip | Low | Deferred (Phase 7) |
+| 6 | GPS/Telegram/QR | Low | Deferred (Phase 7) |
+
+---
+
+## 🌐 Live URLs (all verified)
+
+- ykp-erp-finance-production.up.railway.app (Postgres-backed, 200 OK)
+- ykp-erp-hermez-production.up.railway.app (Postgres-backed, 200 OK)
+- ykp-erp-hr-production.up.railway.app (Postgres-backed, 200 OK)
+- ykp-hr-v1-standalone-production.up.railway.app (Google Sheets pilot, 200 OK)
+
+---
+
+## 📊 DB Counts at 2026-07-10
+
+| Entity | Count |
+|---|---|
+| Brands | 5 |
+| Outlets | 15 |
+| Employees | 50 |
+| Attendance records | 1,355 |
+| POS transactions | 450 |
+| Expenses | 450 |
+| Petty cash | 450 |
+| Alerts | 90 |
+| Audit log | 350 |
+| **Total** | **~5,000** |
+
+---
+
+## 🐛 Known Issues
+
+1. **hr-v1 /hr/payroll generate dialog** — `Run` button text mismatch (test bug, not app)
+2. **hr-v1 /hr/leaves** — employee dropdown empty (no employee loader wired)
+3. **hr-v1 /hr/adjustments** — same dropdown issue
+4. **ykp-erp** — rate limit 429 under parallel test load (raised to 60/30)
+5. **Build cache** — GitHub auto-deploy not always picking up new commits immediately
+
+---
+
+## 📝 Notes
+
+- Trial plan: 2 projects per workspace (Railway)
+- Supabase free tier has 500MB DB + 1GB egress
+- Build cache = manual `railway up` still needed sometimes
+- Sandbox pooler uses self-signed cert (handled via `rejectUnauthorized: false` for dev)
+
+---
+
+## 🎯 Next Session
+
+1. **Phase 4**: Wire 4 missing approval UI buttons (leaves, adjustments, payroll approve, payroll mark-paid) — pure code work
+2. **Phase 5**: Sidebar logout button + employee row actions (edit/deactivate)
+3. **Phase 6**: HR Overview filters (brand/outlet/period)
+4. **Login UI**: Decide if we need a login form for ykp-erp apps (or rely on cookie injection for testing)
+5. **Phase 7** (deferred): PDF payslip, GPS, Telegram, QR, photo upload
+
+---
+
+## 📜 History
+
+### 2026-07-15 (lanjutan — penuhi detail 3 brief)
+- Warehouse dashboard Excel 7 KPI 1:1 + temuan/rencana aksi + Aturan Emas; opening-balance API
+- Hermez wire warehouse summary/alerts (`/api/hermez/warehouse-summary`, `/warehouse-alerts`, page `/warehouse`)
+- Revisi residual: finance cross-link fields (source_module/linked_*) + fin-summary double-count skip
+- HR residual: roster swap+conflict, attendance correction+GPS fields, leave doctor_letter, adjustment attachment, employee full detail, User & Role UI (`/hr/users`)
+- tsc clean warehouse + hr-v1 + erp schema/engine/hermez; warehouse tests 40/40
+
+### 2026-07-15
+- Warehouse Inventory Control V1 full upgrade from brief V1 (18 modul, ~15 tabel, 2271 baris)
+- `ykp-warehouse-v1`: 37 tabs, 5 engine libs, 18 API + 18 pages, RBAC 11 roles, 40 unit tests green
+- Stock ledger auto-immutable; purchase recommendation engine; FEFO batch expiry; telegram delivery log
+- Gap closed: ~25% → ~full V1 code surface (DoD §38 code-complete; pilot/data pack still owner-side)
+
+### 2026-07-14
+- ERP revisi 5-wave: 31 item dari `YKP_ERP_List_Revisi_Developer.txt` via 14-agent workflow
+- Warehouse+Investor V1 scaffold (Next.js + Sheets, ports 3005/3006, mock mode)
+
+### 2026-07-10
+- Mock data seeder: fixed all enum casing issues (attendance_status, approval_status, payment_status, etc.)
+- Added ON CONFLICT (alert_id) DO NOTHING to alerts insert
+- Seeded ~5,000 records across 19 tables
+- Verified DB connection from Railway apps works (master-data 200, employees 200)
+
+### 2026-07-09
+- Fixed hr-v1 502 proxy via Web Crypto middleware
+- Fixed owner RBAC wildcard + role case normalization
+- Bootstrap Sheets: 17 tabs + 8 employees + 10 outlets
+
+### 2026-07-08
+- Migrated to Railway monorepo project `ykp-erp-monorepo`
+- 4 Dockerfiles (finance/hermez/hr/hr-v1) with proper multi-stage builds
+- Fixed CSP hydration blocker
+- Created ExpenseFormDialog
+
+### 2026-07-07
+- ykp-erp marked as parked (per CLAUDE.md)
+- ykp-hr-v1 pilot scope defined

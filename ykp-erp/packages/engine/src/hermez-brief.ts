@@ -43,6 +43,18 @@ import type { TriggerDecision } from './triggers';
 
 type AnyDb = PostgresJsDatabase<Record<string, unknown>>;
 
+/**
+ * Resolve the deployment environment tag.
+ * Priority: YKP_ENVIRONMENT > NODE_ENV (mapped) > "PRODUCTION".
+ */
+function resolveEnvironment(): string {
+  const env = process.env.YKP_ENVIRONMENT ?? process.env.NODE_ENV ?? "";
+  const upper = env.toUpperCase();
+  if (upper === "DEMO" || upper === "TESTING" || upper === "PRODUCTION") return upper;
+  if (upper === "DEVELOPMENT") return "DEMO";
+  return "PRODUCTION";
+}
+
 export interface HermezBriefInput {
   hermezDb: AnyDb;
   hrDb: AnyDb;
@@ -227,6 +239,7 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
       assignedTo: null,
       createdAt: new Date(),
       resolvedAt: null,
+      environment: resolveEnvironment(),
     };
 
     // dedupe by (date, outlet, type) — upsert overwrites the same row.
@@ -240,6 +253,7 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
           severity: sql`excluded.severity`,
           sourceApp: sql`excluded.source_app`,
           brand: sql`excluded.brand`,
+          environment: sql`excluded.environment`,
         },
       });
 
@@ -348,6 +362,7 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
     alertLevel,
     sentToOwner: false,
     sentAt: null,
+    environment: resolveEnvironment(),
   };
 
   await hermezDb

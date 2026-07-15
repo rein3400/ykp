@@ -28,6 +28,8 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
   const employeeId = initial?.employee_id ?? '';
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     full_name: initial?.full_name ?? '',
     nickname: initial?.nickname ?? '',
@@ -47,12 +49,39 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
     account_holder: initial?.account_holder ?? ''
   });
 
-  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof typeof form, v: string) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    setFieldErrors((e) => {
+      if (!e[k]) return e;
+      const next = { ...e };
+      delete next[k];
+      return next;
+    });
+  };
+
+  function validate(): boolean {
+    const e: Record<string, string> = {};
+    if (!form.full_name.trim()) e.full_name = 'Nama lengkap wajib diisi';
+    if (!form.brand_id) e.brand_id = 'Brand wajib dipilih';
+    if (!form.outlet_id.trim()) e.outlet_id = 'Outlet ID wajib diisi';
+    if (!form.basic_salary || Number(form.basic_salary) < 0) e.basic_salary = 'Gaji pokok wajib diisi';
+    if (!form.join_date) e.join_date = 'Tanggal masuk wajib diisi';
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      e.email = 'Format email tidak valid';
+    }
+    setFieldErrors(e);
+    return Object.keys(e).length === 0;
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError('');
+    setSuccess('');
+    if (!validate()) {
+      setSaving(false);
+      return;
+    }
     try {
       const url = mode === 'edit' ? `/api/hr/employees/${employeeId}` : '/api/hr/employees';
       const method = mode === 'edit' ? 'PUT' : 'POST';
@@ -65,8 +94,11 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
         const j = await res.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? 'Gagal menyimpan');
       }
-      router.push('/hr/employees');
-      router.refresh();
+      setSuccess(mode === 'edit' ? 'Karyawan berhasil diupdate' : 'Karyawan berhasil disimpan');
+      setTimeout(() => {
+        router.push('/hr/employees');
+        router.refresh();
+      }, 800);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menyimpan');
     } finally {
@@ -76,6 +108,11 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
 
   return (
     <form onSubmit={submit} className='grid gap-3'>
+      {success && (
+        <div className='rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700'>
+          {success}
+        </div>
+      )}
       {mode === 'edit' && employeeId && (
         <div className='rounded-md border border-border bg-slate-50 px-3 py-2 text-sm'>
           <span className='text-muted-foreground'>Editing: </span>
@@ -86,6 +123,7 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
         <label className='text-sm'>
           Nama Lengkap *
           <input className='input mt-1 w-full' required value={form.full_name} onChange={(e) => set('full_name', e.target.value)} />
+          {fieldErrors.full_name && <span className='mt-1 block text-xs text-red-600'>{fieldErrors.full_name}</span>}
         </label>
         <label className='text-sm'>
           Nama Panggilan
@@ -124,10 +162,12 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
             <option value='BR-004'>Laju Kopi</option>
             <option value='BR-005'>Uncle Masala</option>
           </select>
+          {fieldErrors.brand_id && <span className='mt-1 block text-xs text-red-600'>{fieldErrors.brand_id}</span>}
         </label>
         <label className='text-sm'>
           Outlet ID *
           <input className='input mt-1 w-full' placeholder='OL-001' value={form.outlet_id} onChange={(e) => set('outlet_id', e.target.value)} required />
+          {fieldErrors.outlet_id && <span className='mt-1 block text-xs text-red-600'>{fieldErrors.outlet_id}</span>}
         </label>
       </div>
       <div className='grid grid-cols-2 gap-3'>
@@ -138,12 +178,14 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
         <label className='text-sm'>
           Email
           <input className='input mt-1 w-full' type='email' value={form.email} onChange={(e) => set('email', e.target.value)} />
+          {fieldErrors.email && <span className='mt-1 block text-xs text-red-600'>{fieldErrors.email}</span>}
         </label>
       </div>
       <div className='grid grid-cols-3 gap-3'>
         <label className='text-sm'>
           Gaji Pokok (Rp) *
           <input className='input mt-1 w-full' type='number' min='0' required value={form.basic_salary} onChange={(e) => set('basic_salary', e.target.value)} />
+          {fieldErrors.basic_salary && <span className='mt-1 block text-xs text-red-600'>{fieldErrors.basic_salary}</span>}
         </label>
         <label className='text-sm'>
           Tipe Gaji
@@ -166,6 +208,7 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
       <label className='text-sm'>
         Tanggal Masuk *
         <input className='input mt-1 w-full' type='date' required value={form.join_date} onChange={(e) => set('join_date', e.target.value)} />
+        {fieldErrors.join_date && <span className='mt-1 block text-xs text-red-600'>{fieldErrors.join_date}</span>}
       </label>
       <div className='grid grid-cols-3 gap-3'>
         <label className='text-sm'>

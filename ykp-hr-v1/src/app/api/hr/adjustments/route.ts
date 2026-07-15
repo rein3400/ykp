@@ -13,7 +13,11 @@ const insertSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   amount: z.coerce.number().min(0),
   reason: z.string().default(''),
-  payroll_period: z.string().regex(/^\d{4}-\d{2}$/)
+  payroll_period: z.string().regex(/^\d{4}-\d{2}$/),
+  // Revisi item 13 — bukti/attachment wajib untuk REIMBURSEMENT & recommended for others
+  attachment_url: z.string().default(''),
+  quantity: z.coerce.number().min(0).default(1),
+  unit: z.string().default('')
 });
 
 export const GET = handler(async () => {
@@ -36,6 +40,11 @@ export const POST = handler(async (req) => {
     return missingRef(e instanceof Error ? e.message : 'Missing ref');
   }
 
+  // REIMBURSEMENT should have proof attachment (revisi item 13)
+  if (parsed.data.adjustment_type === 'REIMBURSEMENT' && !parsed.data.attachment_url) {
+    return badRequest('REIMBURSEMENT requires attachment_url (bukti)');
+  }
+
   const id = await nextSequentialId('adjustments', 'adjustment_id', 'ADJ');
   const emp = await findRow(TABS.employees, 'employee_id', parsed.data.employee_id);
   const now = nowTimestampWib();
@@ -48,11 +57,11 @@ export const POST = handler(async (req) => {
     adjustment_type: parsed.data.adjustment_type,
     category: parsed.data.adjustment_type,
     amount: String(parsed.data.amount),
-    quantity: '1',
-    unit: '',
+    quantity: String(parsed.data.quantity ?? 1),
+    unit: parsed.data.unit || '',
     reason: parsed.data.reason,
     reference_id: '',
-    attachment_url: '',
+    attachment_url: parsed.data.attachment_url || '',
     approval_status: 'PENDING',
     approved_by: '',
     payroll_period: parsed.data.payroll_period,

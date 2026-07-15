@@ -68,12 +68,23 @@ export const POST = handler(async (req) => {
       if (!outletEmpIds.has(l.employee_id)) return false;
       return l.start_date <= date && l.end_date >= date;
     }).length;
-    const incomplete = outletAtt.filter((a) => !a.actual_check_out).length;
+    // Only PRESENT/LATE staff can have incomplete checkout; ABSENT staff never check out.
+    const incomplete = outletAtt.filter(
+      (a) => (a.attendance_status === 'PRESENT' || a.attendance_status === 'LATE') && !a.actual_check_out
+    ).length;
     const totalLateMinutes = outletAtt.reduce((s, a) => s + Number(a.late_minutes || 0), 0);
+    // overtime_hours = sum(overtime_minutes) / 60
     const overtimeHours = Math.round(outletAtt.reduce((s, a) => s + Number(a.overtime_minutes || 0), 0) / 60);
-    const shiftShortage = todayRoster.filter((r) => !r.shift_id).length;
+    // shift_shortage = scheduled staff minus actual present staff (floor at 0)
+    const scheduledStaff = todayRoster.length;
+    const shiftShortage = Math.max(0, scheduledStaff - present);
+    // payroll rows with issues for the YYYY-MM period of this date
+    const period = date.slice(0, 7);
     const payrollIssues = payrolls.filter(
-      (p) => p.outlet_id === o.outlet_id && p.approval_status === 'PENDING'
+      (p) =>
+        p.outlet_id === o.outlet_id &&
+        p.payroll_period === period &&
+        (p.approval_status === 'PENDING' || p.approval_status === 'REJECTED' || p.approval_status === 'ISSUE')
     ).length;
 
     const input: SummaryInput = {
@@ -83,7 +94,7 @@ export const POST = handler(async (req) => {
       outlet_id: o.outlet_id,
       outlet_name: o.outlet_name,
       total_staff: outletEmployees.length,
-      scheduled_staff: todayRoster.length,
+      scheduled_staff: scheduledStaff,
       staff_present: present,
       staff_late: late,
       staff_absent: absent,
@@ -95,6 +106,25 @@ export const POST = handler(async (req) => {
       payroll_issue_count: payrollIssues
     };
     const result = buildSummary(input, now);
+
+    // Percentage thresholds for major_hr_issue (relative to scheduled, fallback total_staff).
+    // late > 20% → "late_spike"; absent > 10% → "high_absenteeism".
+    const denom = Math.max(scheduledStaff, outletEmployees.length, 1);
+    const majorCodes: string[] = [];
+    const actionCodes: string[] = [];
+    if (late / denom > 0.2) {
+      majorCodes.push('late_spike');
+      actionCodes.push('Brief SPV on lateness; review shift start times');
+    }
+    if (absent / denom > 0.1) {
+      majorCodes.push('high_absenteeism');
+      actionCodes.push('Confirm absences with SPV; check leave coverage');
+    }
+    // Preserve non-rate red signals from buildSummary when no percentage trigger fired.
+    const majorHrIssue =
+      majorCodes.length > 0 ? majorCodes.join('; ') : result.major_hr_issue;
+    const recommendedAction =
+      actionCodes.length > 0 ? actionCodes.join('; ') : result.recommended_action;
 
     // Map to sheet columns
     const row: Record<string, string> = {
@@ -115,8 +145,8 @@ export const POST = handler(async (req) => {
       overtime_hours: String(result.overtime_hours),
       shift_shortage: String(result.shift_shortage),
       payroll_issue_count: String(result.payroll_issue_count),
-      major_hr_issue: result.major_hr_issue,
-      recommended_action: result.recommended_action,
+      major_hr_issue: majorHrIssue,
+      recommended_action: recommendedAction,
       created_at: result.created_at
     };
 
