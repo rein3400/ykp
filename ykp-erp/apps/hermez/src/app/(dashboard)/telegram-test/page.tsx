@@ -34,7 +34,7 @@ export default function TelegramTestPage() {
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Telegram Test</h2>
         <p className="text-sm text-muted-foreground">
-          Kirim pesan test ke owner chat via engine.sendTelegramMessage.
+          Kirim pesan test ke group Telegram (OWNER_CHAT_ID) via engine.sendTelegramMessage.
         </p>
       </div>
 

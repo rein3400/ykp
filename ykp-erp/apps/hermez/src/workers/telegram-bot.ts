@@ -2,8 +2,8 @@
  * Hermez Telegram outbound sender.
  *
  * Hermez does not need a persistent bot listener; it only sends briefs
- * and alerts to OWNER_CHAT_ID. This worker simply ensures environment
- * variables are loaded and a test message can be sent manually.
+ * and alerts to OWNER_CHAT_ID (group chat preferred). This worker simply
+ * ensures environment variables are loaded and a test message can be sent.
  *
  * Token priority:
  *   HERMEZ_TELEGRAM_BOT_TOKEN > TELEGRAM_BOT_TOKEN
