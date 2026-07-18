@@ -81,6 +81,16 @@ export function hermezAlertId(dateStr: string, seq: number): string {
   return `HZAL-${d}-${String(seq).padStart(3, "0")}`;
 }
 
+/**
+ * Generate a stable receipt ID.
+ * Format: RCP-YYYYMMDD-OL-NNNN
+ */
+export function receiptId(date: string, outletId: string, seq: number): string {
+  const d = date.replace(/-/g, "");
+  const seqStr = seq.toString().padStart(4, "0");
+  return `RCP-${d}-${outletId}-${seqStr}`;
+}
+
 /** UUID v4 fallback for surrogate keys (e.g. when sequence not available). */
 export function uuid(): string {
   // Prefer the cryptographically secure webcrypto uuid; fall back to
