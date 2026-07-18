@@ -1,9 +1,15 @@
 // Migrate all four databases sequentially with pg_advisory_xact_lock.
 // Uses the shared runner in @ykp/schema so logic is single-source.
-// Spawned via execFile (no shell) to avoid command-injection surface.
+// Spawned without a shell to avoid command-injection surface; Node's --import
+// loader resolves tsx through the normal module graph.
 import { spawn } from "node:child_process";
+import process from "node:process";
 
-const child = spawn("npx", ["tsx", "packages/schema/src/migrate.ts"], {
+const child = spawn(process.execPath, [
+  "--import",
+  "tsx",
+  "packages/schema/src/migrate.ts",
+], {
   stdio: "inherit",
   cwd: process.cwd(),
   env: process.env,

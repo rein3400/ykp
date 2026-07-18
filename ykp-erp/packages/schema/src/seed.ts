@@ -31,7 +31,7 @@ import {
   finPettyCashAccount,
   users,
 } from './master';
-import { finOpeningBalance, finPosDaily, finSupplierCost, finPettyCash, finExpense } from './finance';
+import { finOpeningBalance, finPosReceipts, finSupplierCost, finPettyCash, finExpense } from './finance';
 import { hrAttendance, hrPayroll, hrPayrollLine } from './hr';
 import { hermezConfig } from './hermez';
 
@@ -367,11 +367,11 @@ async function seedHrAttendance(db: ReturnType<typeof createHrDb>) {
 }
 
 /**
- * 2. POS Daily — 30 days x 2 outlets (OL-001, OL-002) = 60 rows.
- *    Realistic daily variation: 2-15 juta gross, some refund days, varied payment mix.
+ * 2. POS Receipts — legacy daily seed data migrated to individual receipt rows.
+ *    30 days x 2 outlets (OL-001, OL-002) = 60 legacy receipts.
  */
-async function seedFinPosDaily(db: ReturnType<typeof createFinanceDb>) {
-  console.log("[seed] finance: pos_daily (30d x 2 outlets)");
+async function seedFinPosReceipts(db: ReturnType<typeof createFinanceDb>) {
+  console.log("[seed] finance: pos_receipts (30d x 2 outlets)");
   const days = dateRange("2026-06-13", 30);
   const posOutlets = OUTLETS.filter((o) => o.outletId === "OL-001" || o.outletId === "OL-002");
   const rows: Array<Record<string, unknown>> = [];
@@ -381,7 +381,6 @@ async function seedFinPosDaily(db: ReturnType<typeof createFinanceDb>) {
     for (const o of posOutlets) {
       const idx = seq;
       const brand = BRAND_BY_OUTLET[o.outletId];
-      // Base revenue varies by outlet: OL-001 (Funkydak) higher volume
       const baseMin = o.outletId === "OL-001" ? 4_000_000 : 2_500_000;
       const baseMax = o.outletId === "OL-001" ? 15_000_000 : 10_000_000;
       const grossSales = rand(baseMin, baseMax, idx * 13);
@@ -389,26 +388,27 @@ async function seedFinPosDaily(db: ReturnType<typeof createFinanceDb>) {
       const discount = Math.round(gross * 0.03);
       const tax = Math.round(gross * 0.1);
       const serviceCharge = Math.round(gross * 0.05);
-      // Weekend boost: Fri-Sat (day-of-week from 2026-06-13 = Saturday)
       const dow = (new Date(d + "T00:00:00.000Z")).getUTCDay();
       const weekendMultiplier = (dow === 5 || dow === 6) ? 1.3 : 1.0;
       const adjustedGross = Math.round(gross * weekendMultiplier / 5000) * 5000;
-      // Refund on 2 random-ish days
       const isRefundDay = idx % 15 === 0;
       const refund = isRefundDay ? -rand(50_000, 200_000, idx * 7) : 0;
       const netSales = adjustedGross - discount + refund;
       const transactionCount = rand(30, 180, idx * 11);
-      const aov = Math.round(netSales / Math.max(transactionCount, 1));
       const cashier = pick(EMPLOYEES.filter((e) => e.outletId === o.outletId), idx).fullName;
       const shift = o.outletId === "OL-002" ? "afternoon" : "morning";
+      const receiptSeq = String(seq).padStart(4, "0");
+      const receiptNumber = `LEGACY-${toCompact(d)}-${o.outletId}-${receiptSeq}`;
 
       rows.push({
-        posId: `FIN-${toCompact(d)}-${o.outletId}-${String(seq).padStart(3, "0")}`,
+        receiptId: `RCP-${toCompact(d)}-${o.outletId}-${receiptSeq}`,
         date: ddAsDate(d),
         brandId: brand.brandId,
         brandName: brand.brandName,
         outletId: o.outletId,
         outletName: o.outletName,
+        receiptNumber,
+        transactionTime: null,
         grossSales: adjustedGross,
         netSales,
         discount,
@@ -416,7 +416,9 @@ async function seedFinPosDaily(db: ReturnType<typeof createFinanceDb>) {
         void: 0,
         tax,
         serviceCharge,
-        paymentMethodBreakdown: {
+        paymentMethodId: "PM_CASH",
+        paymentAmount: netSales,
+        paymentBreakdown: {
           PM_CASH: Math.round(adjustedGross * 0.35),
           PM_QRIS: Math.round(adjustedGross * 0.30),
           PM_DEBIT: Math.round(adjustedGross * 0.15),
@@ -424,22 +426,24 @@ async function seedFinPosDaily(db: ReturnType<typeof createFinanceDb>) {
           PM_TRANSFER: Math.round(adjustedGross * 0.05),
         },
         transactionCount,
-        aov,
         cashier,
         shift,
         source: "moka",
         sourceRef: `MOKA-${toCompact(d)}-${o.outletId}`,
+        notes: isRefundDay ? "Refund pelanggan" : null,
+        photoUrl: null,
+        photoPath: null,
+        verifiedBy: null,
+        verifiedAt: null,
         recordedAt: new Date(`${d}T22:00:00+07:00`),
         recordedBy: "U-FIN-ADMIN",
-        verifiedBy: "U-FIN-ADMIN",
-        notes: isRefundDay ? "Refund pelanggan" : null,
       });
       seq += 1;
     }
   }
 
   for (const r of rows) {
-    await db.insert(finPosDaily).values(r as never).onConflictDoNothing();
+    await db.insert(finPosReceipts).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }
@@ -915,7 +919,7 @@ async function main() {
 
   // Transactional seed data (idempotent, dev-only)
   await seedHrAttendance(createHrDb());
-  await seedFinPosDaily(createFinanceDb());
+  await seedFinPosReceipts(createFinanceDb());
   await seedFinSupplierCost(createFinanceDb());
   await seedFinExpense(createFinanceDb());
   await seedFinPettyCash(createFinanceDb());

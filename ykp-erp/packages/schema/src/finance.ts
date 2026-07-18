@@ -44,7 +44,11 @@ export const financeApprovalStatusEnum = finance.enum("finance_approval_status",
 ]);
 
 // ============================================================
-// fin_pos_daily
+// fin_pos_daily (DEPRECATED)
+// Kept for backwards-compatible type exports only. The physical
+// table is dropped by the finance_v2_receipts migration and replaced
+// by fin_pos_daily_view, which aggregates fin_pos_receipts back to
+// the old daily shape.
 // UNIQUE (date, outlet_id)
 // ============================================================
 
@@ -82,6 +86,89 @@ export const finPosDaily = finance.table(
     dateOutletUnique: unique("fin_pos_daily_date_outlet_unique").on(t.date, t.outletId),
   }),
 );
+
+// ============================================================
+// fin_pos_receipts (source of truth)
+// Individual receipt records; daily aggregates now live in the
+// fin_pos_daily_view below.
+// UNIQUE (date, outlet_id, receipt_number)
+// ============================================================
+
+export const finPosReceipts = finance.table(
+  "fin_pos_receipts",
+  {
+    receiptId: text("receipt_id").primaryKey(),
+    date: date("date", { mode: "date" }).notNull(),
+    brandId: text("brand_id").notNull(),
+    brandName: text("brand_name").notNull(),
+    outletId: text("outlet_id").notNull(),
+    outletName: text("outlet_name").notNull(),
+    receiptNumber: text("receipt_number").notNull(),
+    transactionTime: text("transaction_time"),
+    grossSales: integer("gross_sales").notNull().default(0),
+    discount: integer("discount").notNull().default(0),
+    refund: integer("refund").notNull().default(0),
+    void: integer("void").notNull().default(0),
+    tax: integer("tax").notNull().default(0),
+    serviceCharge: integer("service_charge").notNull().default(0),
+    netSales: integer("net_sales").notNull().default(0),
+    paymentMethodId: text("payment_method_id"),
+    paymentAmount: integer("payment_amount").notNull().default(0),
+    paymentBreakdown: jsonb("payment_breakdown").notNull().default({}),
+    transactionCount: integer("transaction_count").notNull().default(1),
+    cashier: text("cashier"),
+    shift: text("shift"),
+    source: posSourceEnum("source").notNull().default("manual"),
+    sourceRef: text("source_ref"),
+    notes: text("notes"),
+    photoUrl: text("photo_url"),
+    photoPath: text("photo_path"),
+    verifiedBy: text("verified_by"),
+    verifiedAt: timestamp("verified_at", { mode: "date" }),
+    recordedBy: text("recorded_by"),
+    recordedAt: timestamp("recorded_at", { mode: "date" }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (t) => ({
+    dateOutletReceiptUnique: unique("fin_pos_receipts_date_outlet_receipt_unique").on(t.date, t.outletId, t.receiptNumber),
+  }),
+);
+
+// ============================================================
+// fin_pos_daily_view (aggregate over fin_pos_receipts)
+// Reproduces the column shape of the old fin_pos_daily table so
+// downstream readers can switch without schema type changes.
+// Created by the finance_v2_receipts migration as a raw SQL view.
+// ============================================================
+
+export const finPosDailyView = finance.view("fin_pos_daily_view", {
+  posId: text("pos_id"),
+  date: date("date", { mode: "date" }),
+  brandId: text("brand_id"),
+  brandName: text("brand_name"),
+  outletId: text("outlet_id"),
+  outletName: text("outlet_name"),
+  grossSales: integer("gross_sales"),
+  netSales: integer("net_sales"),
+  discount: integer("discount"),
+  refund: integer("refund"),
+  void: integer("void"),
+  tax: integer("tax"),
+  serviceCharge: integer("service_charge"),
+  paymentMethodBreakdown: jsonb("payment_method_breakdown"),
+  transactionCount: integer("transaction_count"),
+  aov: integer("aov"),
+  cashier: text("cashier"),
+  shift: text("shift"),
+  source: text("source"),
+  sourceRef: text("source_ref"),
+  notes: text("notes"),
+  recordedAt: timestamp("recorded_at", { mode: "date" }),
+  recordedBy: text("recorded_by"),
+  createdAt: timestamp("created_at", { mode: "date" }),
+  updatedAt: timestamp("updated_at", { mode: "date" }),
+}).existing();
 
 // ============================================================
 // fin_supplier_cost
@@ -276,6 +363,8 @@ export const finDailySummary = finance.table(
 
 export type FinPosDaily = typeof finPosDaily.$inferSelect;
 export type NewFinPosDaily = typeof finPosDaily.$inferInsert;
+export type FinPosReceipt = typeof finPosReceipts.$inferSelect;
+export type NewFinPosReceipt = typeof finPosReceipts.$inferInsert;
 export type FinSupplierCost = typeof finSupplierCost.$inferSelect;
 export type NewFinSupplierCost = typeof finSupplierCost.$inferInsert;
 export type FinPettyCash = typeof finPettyCash.$inferSelect;

@@ -57,10 +57,11 @@ export function initDbClients(): { db: Db; sql: Sql } {
   if (!_db) {
     const url = requireUrl();
     const isPooler = url.includes(".pooler.supabase.com");
+    const isLocal = url.includes("localhost") || url.includes("127.0.0.1");
     _sql = postgres(url, {
       max: 10,
       prepare: false,
-      ssl: isPooler ? { rejectUnauthorized: false } : "require",
+      ssl: isPooler ? { rejectUnauthorized: false } : (isLocal ? false : "require"),
     });
     _db = drizzle(_sql, { schema: fullSchema as never });
   }

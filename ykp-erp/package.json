@@ -14,7 +14,7 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "db:generate": "drizzle-kit generate --config=packages/schema/drizzle.config.ts",
+    "db:generate": "cd packages/schema && npx drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
     "db:seed:pilot": "node scripts/seed-pilot.mjs",

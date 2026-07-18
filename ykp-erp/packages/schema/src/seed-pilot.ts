@@ -26,7 +26,7 @@ import {
   masterSql,
   hrAttendance,
   hrPayroll,
-  finPosDaily,
+  finPosReceipts,
   finSupplierCost,
   finPettyCash,
   finExpense,
@@ -218,8 +218,8 @@ async function seedHrAttendance() {
 //    -150000 refund (Hari ke-3 for all three).
 // ============================================================
 
-async function seedFinPosDaily() {
-  console.log("[seed-pilot] fin_pos_daily: 7d x 3 outlets");
+async function seedFinPosReceipts() {
+  console.log("[seed-pilot] fin_pos_receipts: 7d x 3 outlets");
   const days = last7DaysWib();
   const rows = [];
   let seq = 1;
@@ -228,28 +228,28 @@ async function seedFinPosDaily() {
     for (const o of OUTLETS) {
       const idx = seq;
       const grossSales = rand(1_500_000, 3_500_000, idx * 7);
-      // Round to nearest 5k so numbers look human, not random.
       const gross = Math.round(grossSales / 5000) * 5000;
-      const discount = Math.round(gross * 0.03); // 3% promo/discount
-      const tax = Math.round(gross * 0.1); // PB1 10%
-      const serviceCharge = Math.round(gross * 0.05); // 5% service
-      const isRefundDay = d === days[2]; // 3rd day in window (Wed-ish)
+      const discount = Math.round(gross * 0.03);
+      const tax = Math.round(gross * 0.1);
+      const serviceCharge = Math.round(gross * 0.05);
+      const isRefundDay = d === days[2];
       const refund = isRefundDay ? -150_000 : 0;
       const netSales = gross - discount + refund;
       const transactionCount = rand(40, 140, idx * 11);
-      const aov = Math.round(netSales / Math.max(transactionCount, 1));
       const cashier = pick(EMPLOYEES.filter((e) => e.outletId === o.outletId), idx).fullName;
       const shift = o.outletId === "OL-002" ? "afternoon" : "morning";
-
       const brand = BRANDS_BY_OUTLET[o.outletId];
-      const posId = `FIN-${toCompact(d)}-${o.outletId}-${String(seq).padStart(3, "0")}`;
+      const receiptSeq = String(seq).padStart(4, "0");
+      const receiptNumber = `LEGACY-${toCompact(d)}-${o.outletId}-${receiptSeq}`;
       rows.push({
-        posId,
+        receiptId: `RCP-${toCompact(d)}-${o.outletId}-${receiptSeq}`,
         date: ddAsDate(d),
         brandId: brand.brandId,
         brandName: brand.brandName,
         outletId: o.outletId,
         outletName: o.outletName,
+        receiptNumber,
+        transactionTime: null,
         grossSales: gross,
         netSales,
         discount,
@@ -257,7 +257,9 @@ async function seedFinPosDaily() {
         void: 0,
         tax,
         serviceCharge,
-        paymentMethodBreakdown: {
+        paymentMethodId: "PM_CASH",
+        paymentAmount: netSales,
+        paymentBreakdown: {
           PM_CASH: Math.round(gross * 0.35),
           PM_QRIS: Math.round(gross * 0.25),
           PM_DEBIT: Math.round(gross * 0.2),
@@ -265,22 +267,24 @@ async function seedFinPosDaily() {
           PM_TRANSFER: Math.round(gross * 0.05),
         },
         transactionCount,
-        aov,
         cashier,
         shift,
         source: "moka" as const,
         sourceRef: `MOKA-${toCompact(d)}-${o.outletId}`,
+        notes: isRefundDay ? "Refund salah order" : null,
+        photoUrl: null,
+        photoPath: null,
+        verifiedBy: null,
+        verifiedAt: null,
         recordedAt: new Date(`${d}T22:00:00+07:00`),
         recordedBy: "U-FIN-ADMIN",
-        verifiedBy: "U-FIN-ADMIN",
-        notes: isRefundDay ? "Refund salah order" : null,
       });
       seq += 1;
     }
   }
 
   for (const r of rows) {
-    await getFinanceDb().insert(finPosDaily).values(r as never).onConflictDoNothing();
+    await getFinanceDb().insert(finPosReceipts).values(r as never).onConflictDoNothing();
   }
   return rows.length;
 }
@@ -688,7 +692,7 @@ async function main() {
 
   console.log("[seed-pilot] starting");
   const attendanceCount = await seedHrAttendance();
-  const posCount = await seedFinPosDaily();
+  const posCount = await seedFinPosReceipts();
   const supplierCount = await seedFinSupplierCost();
   const pettyCount = await seedFinPettyCash();
   const expenseCount = await seedFinExpense();
