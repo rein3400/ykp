@@ -1,5 +1,5 @@
 /**
- * POS Revenue page — CRUD tabel + Moka CSV import + inline new transaction form.
+ * POS Revenue page — daily aggregate list + individual receipt form + Moka CSV import.
  */
 "use client";
 
@@ -8,7 +8,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle, ExportButton, KpiCard
 import { usePosList } from "@finance/features/finance/api/queries";
 import { useExportCsv, useExportPdf, useImportPos } from "@finance/features/finance/api/mutations";
 import { PosTable } from "@finance/features/finance/components/pos-table";
-import { PosFormDialog } from "@finance/features/finance/components/pos-form-dialog";
+import { PosReceiptFormDialog } from "@finance/features/finance/components/pos-receipt-form";
 import { Upload } from "lucide-react";
 import { todayWib } from "@ykp/engine/client";
 import type { PosDaily } from "@finance/features/finance/api/types";
@@ -18,24 +18,38 @@ export default function PosPage() {
   const today = todayWib();
   const monthStartStr = `${today.slice(0, 7)}-01`;
 
-  const params = React.useMemo(() => new URLSearchParams({ date_from: monthStartStr, date_to: today }), [monthStartStr, today]);
+  const params = React.useMemo(
+    () => new URLSearchParams({ date_from: monthStartStr, date_to: today }),
+    [monthStartStr, today],
+  );
   const { data = [] } = usePosList(params);
   const rows = data as PosDaily[];
 
   const exportPdf = useExportPdf();
   const exportCsv = useExportCsv();
   const importPos = useImportPos();
+  const [importMsg, setImportMsg] = React.useState<string | null>(null);
 
   const totalRevenue = rows.reduce((acc, r) => acc + (r.netSales ?? 0), 0);
-  const paidInvoices = rows.filter((r) => r.aov > 0).length;
-  const aov = rows.length ? Math.round(totalRevenue / Math.max(rows.reduce((acc, r) => acc + r.transactionCount, 0), 1)) : 0;
+  const paidInvoices = rows.filter((r) => (r.aov ?? 0) > 0).length;
+  const aov = rows.length
+    ? Math.round(totalRevenue / Math.max(rows.reduce((acc, r) => acc + (r.transactionCount ?? 0), 0), 1))
+    : 0;
 
   const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const fd = new FormData();
     fd.append("file", file);
-    importPos.mutate(fd);
+    setImportMsg(null);
+    importPos.mutate(fd, {
+      onSuccess: (res) => {
+        setImportMsg(`Import OK: ${res.rows_imported} struk`);
+      },
+      onError: (err) => {
+        setImportMsg(err instanceof Error ? err.message : "Import gagal");
+      },
+    });
     e.target.value = "";
   };
 
@@ -53,12 +67,30 @@ export default function PosPage() {
           </Button>
           <ExportButton
             label="Export"
-            onExportPdf={async () => { await exportPdf.mutateAsync({ report: "pos_daily", date_from: monthStartStr, date_to: today, filters: {} }); }}
-            onExportCsv={async () => { await exportCsv.mutateAsync({ report: "pos_daily", date_from: monthStartStr, date_to: today, filters: {} }); }}
+            onExportPdf={async () => {
+              await exportPdf.mutateAsync({
+                report: "pos_daily",
+                date_from: monthStartStr,
+                date_to: today,
+                filters: {},
+              });
+            }}
+            onExportCsv={async () => {
+              await exportCsv.mutateAsync({
+                report: "pos_daily",
+                date_from: monthStartStr,
+                date_to: today,
+                filters: {},
+              });
+            }}
           />
-          <PosFormDialog />
+          <PosReceiptFormDialog />
         </div>
       </div>
+
+      {importMsg && (
+        <p className="text-sm text-muted-foreground">{importMsg}</p>
+      )}
 
       <div className="grid gap-4 md:grid-cols-3">
         <KpiCard title="Total Revenue" value={formatIdr(totalRevenue)} />
@@ -68,13 +100,13 @@ export default function PosPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Transaksi POS</CardTitle>
+          <CardTitle>Daftar Transaksi POS (harian)</CardTitle>
         </CardHeader>
         <CardContent>
           {rows.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12 text-center">
-              <p className="text-sm text-muted-foreground max-w-md">
-                Belum ada transaksi POS. Import CSV Moka atau tambah transaksi manual untuk memulai.
+              <p className="max-w-md text-sm text-muted-foreground">
+                Belum ada transaksi POS. Import CSV Moka atau tambah struk individual untuk memulai.
               </p>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" asChild>
@@ -84,7 +116,7 @@ export default function PosPage() {
                     <input type="file" accept=".csv,text/csv" className="hidden" onChange={onUpload} />
                   </label>
                 </Button>
-                <PosFormDialog />
+                <PosReceiptFormDialog />
               </div>
             </div>
           ) : (
