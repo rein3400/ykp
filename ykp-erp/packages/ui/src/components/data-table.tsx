@@ -44,6 +44,36 @@ export interface DataTableProps<TData, TValue = unknown> {
  * pagination controls. Column definitions are passed by the consumer so
  * this component stays data-agnostic.
  */
+/**
+ * Default global filter: stringify every original-row value and match
+ * case-insensitively. Covers number columns and nested plain objects that
+ * TanStack's default (string-column-only) filter would skip.
+ */
+function defaultGlobalFilterFn<TData>(
+  row: { original: TData },
+  _columnId: string,
+  filterValue: unknown,
+): boolean {
+  const q = String(filterValue ?? "")
+    .trim()
+    .toLowerCase();
+  if (!q) return true;
+  const original = row.original as Record<string, unknown>;
+  for (const value of Object.values(original ?? {})) {
+    if (value == null) continue;
+    if (typeof value === "object") {
+      try {
+        if (JSON.stringify(value).toLowerCase().includes(q)) return true;
+      } catch {
+        /* ignore circular */
+      }
+      continue;
+    }
+    if (String(value).toLowerCase().includes(q)) return true;
+  }
+  return false;
+}
+
 export function DataTable<TData, TValue = unknown>({
   columns,
   data,
@@ -66,6 +96,7 @@ export function DataTable<TData, TValue = unknown>({
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setVisibility,
+    globalFilterFn: defaultGlobalFilterFn,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -78,9 +109,19 @@ export function DataTable<TData, TValue = unknown>({
       <div className="flex items-center gap-2">
         <Input
           value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
+          onChange={(e) => {
+            // Prefer DOM value so browser automation (WebBridge fill) that
+            // sets input.value without React synthetic events still filters.
+            setGlobalFilter(e.currentTarget.value);
+            table.setPageIndex(0);
+          }}
+          onInput={(e) => {
+            setGlobalFilter((e.target as HTMLInputElement).value);
+            table.setPageIndex(0);
+          }}
           placeholder={searchPlaceholder}
           className="max-w-xs"
+          aria-label={searchPlaceholder}
         />
         <div className="ml-auto flex items-center gap-2">{toolbar}</div>
       </div>
