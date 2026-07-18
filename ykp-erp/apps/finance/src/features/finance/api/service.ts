@@ -7,12 +7,16 @@
 import type { CreatePosReceiptBody, PosDaily, PosReceipt } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // FormData must not carry application/json — browser sets multipart boundary.
+  const isFormData = typeof FormData !== "undefined" && init?.body instanceof FormData;
   const res = await fetch(path, {
     ...init,
-    headers: {
-      "content-type": "application/json",
-      ...(init?.headers ?? {}),
-    },
+    headers: isFormData
+      ? { ...(init?.headers ?? {}) }
+      : {
+          "content-type": "application/json",
+          ...(init?.headers ?? {}),
+        },
   });
   const text = await res.text();
   let body: unknown;
