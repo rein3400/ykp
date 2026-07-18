@@ -43,22 +43,26 @@ export default function LoginPage() {
           <div>
             <label className='mb-1 block text-xs font-medium'>Username</label>
             <input
-              type='text'
+              name="username"
+              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className='w-full rounded border border-border px-3 py-2 text-sm'
+              className="w-full rounded border border-border px-3 py-2 text-sm"
               required
               autoFocus
+              autoComplete="username"
             />
           </div>
           <div>
-            <label className='mb-1 block text-xs font-medium'>Password</label>
+            <label className="mb-1 block text-xs font-medium">Password</label>
             <input
-              type='password'
+              name="password"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className='w-full rounded border border-border px-3 py-2 text-sm'
+              className="w-full rounded border border-border px-3 py-2 text-sm"
               required
+              autoComplete="current-password"
             />
           </div>
           {err && <p className='text-xs text-destructive'>{err}</p>}

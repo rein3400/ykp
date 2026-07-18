@@ -45,20 +45,22 @@ export default function LoginPage() {
         <div>
           <label className='mb-1 block text-xs font-medium text-slate-600'>Username</label>
           <input
-            className='w-full rounded border border-slate-300 px-3 py-2 text-sm'
+            name="username"
+            className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            autoComplete='username'
+            autoComplete="username"
           />
         </div>
         <div>
-          <label className='mb-1 block text-xs font-medium text-slate-600'>Password</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">Password</label>
           <input
-            type='password'
-            className='w-full rounded border border-slate-300 px-3 py-2 text-sm'
+            name="password"
+            type="password"
+            className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete='current-password'
+            autoComplete="current-password"
           />
         </div>
         <button

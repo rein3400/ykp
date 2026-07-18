@@ -35,13 +35,28 @@ export function LoginForm() {
 
   return (
     <form onSubmit={submit} className='space-y-3'>
-      <label className='block text-sm'>
+      <label className="block text-sm">
         Username
-        <input className='input mt-1 w-full' value={u} onChange={(e) => setU(e.target.value)} required />
+        <input
+          name="username"
+          className="input mt-1 w-full"
+          value={u}
+          onChange={(e) => setU(e.target.value)}
+          required
+          autoComplete="username"
+        />
       </label>
-      <label className='block text-sm'>
+      <label className="block text-sm">
         Password
-        <input className='input mt-1 w-full' type='password' value={p} onChange={(e) => setP(e.target.value)} required />
+        <input
+          name="password"
+          className="input mt-1 w-full"
+          type="password"
+          value={p}
+          onChange={(e) => setP(e.target.value)}
+          required
+          autoComplete="current-password"
+        />
       </label>
       {err && <div className='text-sm text-red-600'>{err}</div>}
       <button type='submit' disabled={busy} className='btn-primary w-full'>
