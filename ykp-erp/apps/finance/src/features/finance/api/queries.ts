@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { finService } from './service';
 import type {
   PosDaily,
+  PosReceipt,
   SupplierCost,
   PettyCash,
   Expense,
@@ -73,6 +74,14 @@ export function usePosList(params: URLSearchParams) {
   return useQuery<PosDaily[]>({
     queryKey: ["fin", "pos", params.toString()],
     queryFn: () => finService.listPos(params) as Promise<PosDaily[]>,
+    staleTime: STALE,
+  });
+}
+
+export function usePosReceipts(params: URLSearchParams) {
+  return useQuery<PosReceipt[]>({
+    queryKey: ["fin", "pos-receipts", params.toString()],
+    queryFn: () => finService.listReceipts(params),
     staleTime: STALE,
   });
 }

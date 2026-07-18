@@ -53,6 +53,70 @@ export interface CreatePosBody {
   notes?: string;
 }
 
+/** Individual POS receipt (fin_pos_receipts) — camelCase as returned by API. */
+export interface PosReceipt {
+  receiptId: string;
+  date: string;
+  brandId: string;
+  brandName: string;
+  outletId: string;
+  outletName: string;
+  receiptNumber: string;
+  transactionTime?: string;
+  grossSales: number;
+  netSales: number;
+  discount: number;
+  refund: number;
+  void: number;
+  tax: number;
+  serviceCharge: number;
+  paymentMethodId: string;
+  paymentAmount: number;
+  paymentBreakdown: Record<string, number>;
+  transactionCount: number;
+  cashier?: string;
+  shift?: string;
+  source: "moka" | "manual" | "import" | "receipt";
+  sourceRef?: string;
+  notes?: string;
+  photoUrl?: string;
+  photoPath?: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  recordedBy?: string;
+  recordedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Create payload for POST /api/fin/pos/receipts (snake_case, matches Zod schema). */
+export interface CreatePosReceiptBody {
+  date: string;
+  brand_id: string;
+  brand_name: string;
+  outlet_id: string;
+  outlet_name: string;
+  receipt_number: string;
+  transaction_time?: string;
+  gross_sales: number;
+  discount?: number;
+  refund?: number;
+  void_amount?: number;
+  tax?: number;
+  service_charge?: number;
+  payment_method_id: string;
+  payment_amount: number;
+  payment_breakdown?: Record<string, number>;
+  transaction_count?: number;
+  cashier?: string;
+  shift?: string;
+  source?: "moka" | "manual" | "import" | "receipt";
+  source_ref?: string;
+  notes?: string;
+  photo_url?: string;
+  photo_path?: string;
+}
+
 export interface CreateSupplierCostBody {
   date: string;
   outlet_id: string;

@@ -4,7 +4,7 @@
  * touch this layer — never raw fetch — so error handling stays uniform.
  */
 
-import type { PosDaily } from './types';
+import type { CreatePosReceiptBody, PosDaily, PosReceipt } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -29,12 +29,33 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const finService = {
-  // POS
+  // POS (daily view — kept for Task 12 cleanup)
   listPos: (params?: URLSearchParams) => request<PosDaily[]>(`/api/fin/pos${params ? `?${params}` : ""}`),
   createPos: (body: unknown) => request<unknown>("/api/fin/pos", { method: "POST", body: JSON.stringify(body) }),
   patchPos: (id: string, body: unknown) => request<unknown>(`/api/fin/pos/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
   importPos: (formData: FormData) =>
     request<{ rows_imported: number; rows: { pos_id: string }[]; errors: { row: number; reason: string }[] }>("/api/fin/pos/import", {
+      method: "POST",
+      body: formData,
+      headers: {},
+    }),
+
+  // POS receipts (individual)
+  listReceipts: (params: URLSearchParams) =>
+    request<PosReceipt[]>(`/api/fin/pos/receipts?${params.toString()}`),
+  createReceipt: (body: CreatePosReceiptBody) =>
+    request<PosReceipt>("/api/fin/pos/receipts", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  getReceipt: (id: string) =>
+    request<PosReceipt>(`/api/fin/pos/receipts/${id}`),
+  verifyReceipt: (id: string) =>
+    request<PosReceipt>(`/api/fin/pos/receipts/${id}/verify`, { method: "POST" }),
+  deleteReceipt: (id: string) =>
+    request<{ receipt_id: string }>(`/api/fin/pos/receipts/${id}`, { method: "DELETE" }),
+  uploadPhoto: (formData: FormData) =>
+    request<{ publicUrl: string; path: string }>("/api/fin/pos/upload", {
       method: "POST",
       body: formData,
       headers: {},

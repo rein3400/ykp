@@ -7,12 +7,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { finService } from './service';
 import type {
   CreatePosBody,
+  CreatePosReceiptBody,
   CreateSupplierCostBody,
   CreatePettyCashBody,
   CreateExpenseBody,
   CreateClosingBody,
   ApproveBody,
   ApprovePaymentBody,
+  PosReceipt,
 } from './types';
 
 function useFinMutation<TBody, TRes>(path: string[], mutFn: (b: TBody) => Promise<TRes>, invalid: string[][]) {
@@ -45,8 +47,50 @@ export function useImportPos() {
     mutationFn: (fd) => finService.importPos(fd),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["fin", "pos"] });
+      qc.invalidateQueries({ queryKey: ["fin", "pos-receipts"] });
       qc.invalidateQueries({ queryKey: ["fin", "summary"] });
     },
+  });
+}
+
+export function useCreatePosReceipt() {
+  const qc = useQueryClient();
+  return useMutation<PosReceipt, Error, CreatePosReceiptBody>({
+    mutationFn: (body) => finService.createReceipt(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fin", "pos-receipts"] });
+      qc.invalidateQueries({ queryKey: ["fin", "pos"] });
+      qc.invalidateQueries({ queryKey: ["fin", "summary"] });
+    },
+  });
+}
+
+export function useVerifyPosReceipt() {
+  const qc = useQueryClient();
+  return useMutation<PosReceipt, Error, string>({
+    mutationFn: (id) => finService.verifyReceipt(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fin", "pos-receipts"] });
+      qc.invalidateQueries({ queryKey: ["fin", "pos"] });
+    },
+  });
+}
+
+export function useDeletePosReceipt() {
+  const qc = useQueryClient();
+  return useMutation<{ receipt_id: string }, Error, string>({
+    mutationFn: (id) => finService.deleteReceipt(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fin", "pos-receipts"] });
+      qc.invalidateQueries({ queryKey: ["fin", "pos"] });
+      qc.invalidateQueries({ queryKey: ["fin", "summary"] });
+    },
+  });
+}
+
+export function useUploadPosPhoto() {
+  return useMutation<{ publicUrl: string; path: string }, Error, FormData>({
+    mutationFn: (fd) => finService.uploadPhoto(fd),
   });
 }
 
