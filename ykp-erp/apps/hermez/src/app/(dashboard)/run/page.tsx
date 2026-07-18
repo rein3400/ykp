@@ -8,6 +8,13 @@ interface RunResult {
   date: string;
   alert_count: number;
   level: "green" | "yellow" | "red";
+  telegram?: {
+    attempted: boolean;
+    sent: boolean;
+    skipped?: string;
+    messageId?: number;
+    error?: string;
+  };
 }
 
 export default function RunConsolePage() {
@@ -83,6 +90,16 @@ export default function RunConsolePage() {
               <p>
                 <strong>level:</strong> {result.level}
               </p>
+              {result.telegram ? (
+                <p>
+                  <strong>telegram:</strong>{" "}
+                  {result.telegram.sent
+                    ? `Terkirim${result.telegram.messageId != null ? ` (message_id: ${result.telegram.messageId})` : ""}`
+                    : result.telegram.skipped
+                      ? `skip (${result.telegram.skipped})`
+                      : `gagal${result.telegram.error ? `: ${result.telegram.error}` : ""}`}
+                </p>
+              ) : null}
             </div>
           ) : null}
         </CardContent>

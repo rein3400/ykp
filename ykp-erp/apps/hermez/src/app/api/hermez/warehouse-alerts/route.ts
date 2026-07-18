@@ -1,6 +1,9 @@
 /**
  * Hermez read-only proxy for warehouse alerts (HIGH/CRITICAL).
  * Env: WAREHOUSE_ALERTS_URL (default http://localhost:3005/api/warehouse/alerts)
+ *
+ * Dynamic `process.env[key]` access so Next.js does not inline the build-time
+ * (unset) value into the bundle — see warehouse-summary/route.ts for details.
  */
 import { NextResponse } from "next/server";
 
@@ -10,8 +13,9 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const severity = url.searchParams.get("severity") ?? "";
   const status = url.searchParams.get("status") ?? "OPEN";
+  const env = process.env as Record<string, string | undefined>;
   const base =
-    process.env.WAREHOUSE_ALERTS_URL ??
+    env.WAREHOUSE_ALERTS_URL ??
     "http://localhost:3005/api/warehouse/alerts";
 
   try {

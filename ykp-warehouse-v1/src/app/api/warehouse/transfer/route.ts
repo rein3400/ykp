@@ -13,6 +13,7 @@ import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } fro
 import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
 import { evalTransferDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
+import { dispatchAlertTelegram } from '@/lib/telegram';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -240,7 +241,7 @@ export const PUT = handler(async (req: NextRequest) => {
         const alert = evalTransferDiscrepancy(dispatched, qty, it.item_id, body.transfer_id, it.item_id);
         if (alert) {
           const alertId = nextSequentialIdSync('ALR');
-          await appendRows(TABS.alertLog, [{
+          const alertRow: Record<string, string> = {
             alert_id: alertId, alert_datetime: now, alert_type: alert.alertType,
             severity: alert.severity, brand_id: '', outlet_id: '',
             location_id: header.destination_location_id, item_id: it.item_id,
@@ -249,7 +250,18 @@ export const PUT = handler(async (req: NextRequest) => {
             assigned_to: '', due_date: formatDateWib(new Date()),
             action_required: alert.actionRequired, telegram_status: 'QUEUED',
             created_at: now, resolved_at: '', resolved_by: ''
-          }]).catch(() => null);
+          };
+          const startRow = await appendRows(TABS.alertLog, [alertRow]).catch(() => -1);
+          await dispatchAlertTelegram({
+            alertId,
+            severity: alert.severity,
+            alertType: alert.alertType,
+            title: alert.title,
+            message: alert.message,
+            actionRequired: alert.actionRequired,
+            startRow,
+            alertRow,
+          }).catch(() => null);
         }
       }
     }

@@ -1,0 +1,45 @@
+# Daily Hermez brief generate + Telegram send (no Redis required).
+# Hits POST /api/hermez/run with x-cron-secret at 15:00 UTC = 22:00 WIB.
+name: Hermez Daily Brief
+
+on:
+  schedule:
+    # 15:00 UTC = 22:00 WIB
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Optional YYYY-MM-DD (defaults to today WIB on server)"
+        required: false
+
+jobs:
+  run-brief:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger Hermez brief + telegram send
+        env:
+          HERMEZ_URL: ${{ secrets.HERMEZ_URL }}
+          CRON_SECRET: ${{ secrets.HERMEZ_CRON_SECRET }}
+          DATE: ${{ github.event.inputs.date }}
+        run: |
+          set -euo pipefail
+          URL="${HERMEZ_URL:-https://ykp-erp-hermez-production.up.railway.app}"
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "HERMEZ_CRON_SECRET secret is not set" >&2
+            exit 1
+          fi
+          BODY="{}"
+          if [ -n "${DATE:-}" ]; then
+            BODY=$(printf '{"date":"%s"}' "$DATE")
+          fi
+          echo "POST $URL/api/hermez/run body=$BODY"
+          RESP=$(curl -sS -w "\n%{http_code}" -X POST "$URL/api/hermez/run" \
+            -H "content-type: application/json" \
+            -H "x-cron-secret: $CRON_SECRET" \
+            -d "$BODY")
+          CODE=$(echo "$RESP" | tail -n1)
+          BODY_OUT=$(echo "$RESP" | sed '$d')
+          echo "HTTP $CODE"
+          echo "$BODY_OUT"
+          test "$CODE" = "200"

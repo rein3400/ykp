@@ -14,6 +14,7 @@ import { nextSequentialIdSync, MissingRefError, assertItem, assertSupplier, asse
 import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
 import { evalReceivingDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
+import { dispatchAlertTelegram } from '@/lib/telegram';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -192,7 +193,17 @@ export const POST = handler(async (req: NextRequest) => {
           resolved_at: '',
           resolved_by: ''
         };
-        await appendRows(TABS.alertLog, [alertRow]).catch(() => null);
+        const startRow = await appendRows(TABS.alertLog, [alertRow]).catch(() => -1);
+        await dispatchAlertTelegram({
+          alertId,
+          severity: alert.severity,
+          alertType: alert.alertType,
+          title: alert.title,
+          message: alert.message,
+          actionRequired: alert.actionRequired,
+          startRow,
+          alertRow,
+        }).catch(() => null);
 
         // Auto-create action for HIGH/CRITICAL
         if (shouldCreateAction(alert.severity)) {

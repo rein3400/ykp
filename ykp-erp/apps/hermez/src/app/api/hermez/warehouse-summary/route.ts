@@ -4,6 +4,11 @@
  *
  * Env: WAREHOUSE_SUMMARY_URL (e.g. http://localhost:3005/api/warehouse/summary)
  * Falls back to empty data if warehouse is unreachable — Hermez must not 5xx.
+ *
+ * NOTE: env is read via dynamic `process.env[key]` so Next.js does not inline
+ * the build-time value (which is unset in the Docker build stage). Without this,
+ * the literal localhost fallback would be baked into the bundle and the
+ * runtime Railway env would never take effect.
  */
 import { NextResponse } from "next/server";
 
@@ -12,9 +17,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const date = url.searchParams.get("date") ?? "";
+  const env = process.env as Record<string, string | undefined>;
   const base =
-    process.env.WAREHOUSE_SUMMARY_URL ??
-    process.env.NEXT_PUBLIC_WAREHOUSE_URL ??
+    env.WAREHOUSE_SUMMARY_URL ??
+    env.NEXT_PUBLIC_WAREHOUSE_URL ??
     "http://localhost:3005/api/warehouse/summary";
 
   try {

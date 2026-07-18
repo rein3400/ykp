@@ -11,6 +11,7 @@ import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
 import { evalNearExpiry, evalExpiredStock, shouldCreateAction } from '@/lib/rules-engine';
+import { dispatchAlertTelegram } from '@/lib/telegram';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -88,7 +89,7 @@ export const POST = handler(async (req: NextRequest) => {
     if (!alert) alert = evalNearExpiry(daysUntil, 7, qty, body.item_id, body.batch_number, body.item_id);
     if (alert) {
       const alertId = nextSequentialIdSync('ALR');
-      await appendRows(TABS.alertLog, [{
+      const alertRow: Record<string, string> = {
         alert_id: alertId, alert_datetime: now, alert_type: alert.alertType,
         severity: alert.severity, brand_id: '', outlet_id: '',
         location_id: body.location_id, item_id: body.item_id,
@@ -96,7 +97,18 @@ export const POST = handler(async (req: NextRequest) => {
         title: alert.title, message: alert.message, status: 'OPEN',
         assigned_to: '', due_date: today, action_required: alert.actionRequired,
         telegram_status: 'QUEUED', created_at: now, resolved_at: '', resolved_by: ''
-      }]).catch(() => null);
+      };
+      const startRow = await appendRows(TABS.alertLog, [alertRow]).catch(() => -1);
+      await dispatchAlertTelegram({
+        alertId,
+        severity: alert.severity,
+        alertType: alert.alertType,
+        title: alert.title,
+        message: alert.message,
+        actionRequired: alert.actionRequired,
+        startRow,
+        alertRow,
+      }).catch(() => null);
     }
   }
 

@@ -6,7 +6,7 @@
  * Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
  * If not configured, messages are queued with status FAILED (no crash).
  */
-import { appendRows, readTab, TABS } from '@/db/sheets';
+import { appendRows, readTab, updateRow, TABS } from '@/db/sheets';
 import { nowTimestampWib, formatDateWib } from './format';
 import { nextSequentialIdSync } from './repo';
 
@@ -18,13 +18,18 @@ export interface TelegramMessage {
   text: string;
 }
 
-export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: string; status: string }> {
+export async function sendTelegram(
+  msg: TelegramMessage,
+): Promise<{ deliveryId: string; status: string; error?: string; messageId?: string }> {
   const deliveryId = nextSequentialIdSync('TDL');
   const now = nowTimestampWib();
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = msg.recipient || process.env.TELEGRAM_CHAT_ID;
+  // Strip BOM / whitespace — Vercel env set via Windows PowerShell pipe can inject U+FEFF.
+  const clean = (v: string | undefined) => (v ?? '').replace(/^﻿/, '').trim();
+  const token = clean(process.env.TELEGRAM_BOT_TOKEN);
+  const chatId = clean(msg.recipient) || clean(process.env.TELEGRAM_CHAT_ID);
 
   if (!token || !chatId) {
+    const error = `TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured (token=${token ? 'set' : 'unset'}, chat=${chatId ? 'set' : 'unset'})`;
     await appendRows(TABS.telegramDeliveryLog, [{
       delivery_id: deliveryId,
       source_module: msg.sourceModule,
@@ -35,10 +40,10 @@ export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: 
       status: 'FAILED',
       retry_count: '0',
       sent_at: '',
-      error_message: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured',
+      error_message: error,
       created_at: now
     }]).catch(() => null);
-    return { deliveryId, status: 'FAILED' };
+    return { deliveryId, status: 'FAILED', error };
   }
 
   try {
@@ -50,21 +55,23 @@ export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: 
     const data = await res.json();
     if (!data.ok) throw new Error(data.description || 'Telegram API error');
 
+    const messageId = String(data.result?.message_id ?? '');
     await appendRows(TABS.telegramDeliveryLog, [{
       delivery_id: deliveryId,
       source_module: msg.sourceModule,
       source_reference_id: msg.sourceReferenceId,
       message_type: msg.messageType,
       recipient: chatId,
-      message_id: String(data.result?.message_id ?? ''),
+      message_id: messageId,
       status: 'SENT',
       retry_count: '0',
       sent_at: now,
       error_message: '',
       created_at: now
     }]).catch(() => null);
-    return { deliveryId, status: 'SENT' };
+    return { deliveryId, status: 'SENT', messageId };
   } catch (e) {
+    const error = e instanceof Error ? e.message : 'Unknown error';
     await appendRows(TABS.telegramDeliveryLog, [{
       delivery_id: deliveryId,
       source_module: msg.sourceModule,
@@ -75,10 +82,10 @@ export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: 
       status: 'FAILED',
       retry_count: '0',
       sent_at: '',
-      error_message: e instanceof Error ? e.message : 'Unknown error',
+      error_message: error,
       created_at: now
     }]).catch(() => null);
-    return { deliveryId, status: 'FAILED' };
+    return { deliveryId, status: 'FAILED', error };
   }
 }
 
@@ -125,4 +132,63 @@ function formatRp(n: string): string {
   const v = Number(n || 0);
   if (!v) return 'Rp 0';
   return `Rp ${new Intl.NumberFormat('id-ID').format(v)}`;
+}
+
+/**
+ * After an alert_log row is appended with telegram_status=QUEUED, send HIGH/CRITICAL
+ * alerts to Telegram and update the same row to SENT/FAILED.
+ * Best-effort: never throws to the caller.
+ */
+export async function dispatchAlertTelegram(opts: {
+  alertId: string;
+  severity: string;
+  alertType: string;
+  title: string;
+  message: string;
+  actionRequired?: string;
+  /** 1-based sheet row of the alert_log entry (from appendRows). */
+  startRow: number | null | undefined;
+  /** Full alert row so updateRow can rewrite all columns. */
+  alertRow: Record<string, string>;
+}): Promise<'SENT' | 'FAILED' | 'SKIPPED'> {
+  const sev = (opts.severity || '').toUpperCase();
+  if (sev !== 'HIGH' && sev !== 'CRITICAL') return 'SKIPPED';
+  if (!opts.startRow || opts.startRow < 2) return 'SKIPPED';
+
+  try {
+    const result = await sendTelegram({
+      sourceModule: 'warehouse_alert',
+      sourceReferenceId: opts.alertId,
+      messageType: opts.alertType || 'ALERT',
+      recipient: process.env.TELEGRAM_CHAT_ID || '',
+      text: [
+        `<b>[${sev}] ${escapeHtml(opts.title)}</b>`,
+        escapeHtml(opts.message),
+        opts.actionRequired ? `Action: ${escapeHtml(opts.actionRequired)}` : '',
+        `Alert: ${opts.alertId}`,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    });
+    const status = result.status === 'SENT' ? 'SENT' : 'FAILED';
+    await updateRow(TABS.alertLog, opts.startRow, {
+      ...opts.alertRow,
+      telegram_status: status,
+    }).catch(() => null);
+    return status;
+  } catch {
+    await updateRow(TABS.alertLog, opts.startRow, {
+      ...opts.alertRow,
+      telegram_status: 'FAILED',
+    }).catch(() => null);
+    return 'FAILED';
+  }
+}
+
+function escapeHtml(s: string): string {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
