@@ -1,7 +1,6 @@
 import { readTab, TABS } from '@/db/sheets';
 import { formatIdr } from '@/lib/format';
-import { DataTable } from '@/components/data-table';
-import { StatusBadge } from '@/components/status-badge';
+import { LatenessClient } from '@/features/hr/components/lateness-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +26,7 @@ export default async function LatenessPage() {
     <div className='space-y-4'>
       <div>
         <h1 className='text-2xl font-bold'>Keterlambatan</h1>
-        <p className='text-sm text-muted-foreground'>Rekap telat otomatis dari absensi.</p>
+        <p className='text-sm text-muted-foreground'>Rekap telat otomatis dari absensi + approval denda.</p>
       </div>
 
       <div className='grid gap-4 sm:grid-cols-3'>
@@ -45,23 +44,7 @@ export default async function LatenessPage() {
         </div>
       </div>
 
-      <div className='card'>
-        <h2 className='mb-3 font-semibold'>Daftar Keterlambatan</h2>
-        <DataTable
-          data={rows}
-          rowKey={(r) => r.lateness_id}
-          empty='Belum ada baris keterlambatan. Generate via absensi LATE atau dari summary.'
-          columns={[
-            { key: 'date', header: 'Tanggal', render: (r) => <span className='font-mono text-xs'>{r.date}</span> },
-            { key: 'employee', header: 'Karyawan', render: (r) => r.employee_name || r.employee_id },
-            { key: 'late', header: 'Telat (m)', align: 'right', render: (r) => r.late_minutes || '0' },
-            { key: 'tol', header: 'Toleransi (m)', align: 'right', render: (r) => r.tolerance_minutes || '0' },
-            { key: 'pay', header: 'Payable (m)', align: 'right', render: (r) => r.payable_late_minutes || '0' },
-            { key: 'pen', header: 'Denda', align: 'right', render: (r) => formatIdr(r.penalty_amount || '0') },
-            { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.approval_status || 'PENDING'} /> }
-          ]}
-        />
-      </div>
+      <LatenessClient initial={rows} />
     </div>
   );
 }

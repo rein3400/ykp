@@ -15,9 +15,7 @@ import { bookStock } from '@/lib/stock-ledger';
 import { computeRecommendation } from '@/lib/inventory-engine';
 
 export const GET = handler(async () => {
-  const s = await getSession();
-  if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'purchase_recommendation')) return unauthorized('Forbidden');
+  // Public read — middleware allows GET without auth (Hermez integration)
   const rows = await readTab<Record<string, string>>(TABS.purchaseRecommendation);
   return list(rows);
 });

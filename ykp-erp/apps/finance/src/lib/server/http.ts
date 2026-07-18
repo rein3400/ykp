@@ -13,7 +13,9 @@ export type ApiErrorCode =
   | "forbidden"
   | "not_found"
   | "conflict"
+  | "gone"
   | "approval_required"
+  | "storage_error"
   | "internal_error";
 
 export interface ApiError {
@@ -30,7 +32,9 @@ const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   forbidden: 403,
   not_found: 404,
   conflict: 409,
+  gone: 410,
   approval_required: 422,
+  storage_error: 502,
   internal_error: 500,
 };
 

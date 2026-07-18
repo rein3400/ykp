@@ -43,6 +43,8 @@ export function ExpenseFormDialog() {
     description: "",
     amount: 0,
     notes: "",
+    source_module: "",
+    source_transaction_id: "",
   });
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -84,6 +86,8 @@ export function ExpenseFormDialog() {
           description: "",
           amount: 0,
           notes: "",
+          source_module: "",
+          source_transaction_id: "",
         });
         setTimeout(() => setOpen(false), 1200);
       },
@@ -229,6 +233,27 @@ export function ExpenseFormDialog() {
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
               placeholder="Catatan internal"
             />
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="exp-source-mod">Source module (opsional)</Label>
+              <Input
+                id="exp-source-mod"
+                value={form.source_module}
+                onChange={(e) => setForm((f) => ({ ...f, source_module: e.target.value }))}
+                placeholder="warehouse / ops / manual"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="exp-source-tx">Source transaction id</Label>
+              <Input
+                id="exp-source-tx"
+                value={form.source_transaction_id}
+                onChange={(e) => setForm((f) => ({ ...f, source_transaction_id: e.target.value }))}
+                placeholder="WST-001 / PR-003"
+              />
+            </div>
           </div>
 
           <Button type="submit" disabled={!canSubmit}>

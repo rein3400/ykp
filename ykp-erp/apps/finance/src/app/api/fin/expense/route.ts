@@ -100,6 +100,12 @@ export const POST = handler(async (req: Request) => {
       approvedBy: null,
       notes: data.notes ?? null,
       source: "manual",
+      sourceModule: data.source_module ?? null,
+      sourceTransactionId: data.source_transaction_id ?? null,
+      paymentSource: data.payment_source ?? null,
+      linkedSupplierInvoiceId: data.linked_expense_id ?? data.linked_supplier_invoice_id ?? null,
+      linkedPettyCashId: data.linked_petty_cash_id ?? null,
+      linkedPaymentId: data.linked_payment_id ?? null,
       recordedBy: user.id,
     })
     .returning();

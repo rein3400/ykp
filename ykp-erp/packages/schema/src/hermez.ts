@@ -30,6 +30,10 @@ export const alertTypeEnum = hermez.enum("hermez_alert_type", [
   "high_expense",
   "schema_mismatch",
   "data_missing",
+  // Operational V1 feeds
+  "ops_incident_spike",
+  "ops_waste_high",
+  "ops_over_sla",
 ]);
 
 export const alertSeverityEnum = hermez.enum("hermez_alert_severity", [

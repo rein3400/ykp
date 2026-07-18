@@ -5,10 +5,13 @@
 import { NextResponse } from "next/server";
 
 const APPS = [
-  { id: "finance", name: "Finance", url: "https://ykp-erp-finance-production.up.railway.app", countUrl: null },
-  { id: "hr", name: "HR Production", url: "https://ykp-erp-hr-production.up.railway.app", countUrl: null },
-  { id: "hermez", name: "Hermez AI", url: "https://ykp-erp-hermez-production.up.railway.app", countUrl: null },
-  { id: "hr-v1", name: "HR Pilot", url: "https://ykp-hr-v1-standalone-production.up.railway.app", countUrl: "https://ykp-hr-v1-standalone-production.up.railway.app/api/hr/summary/count" }
+  { id: "finance", name: "Finance", url: "https://ykp-erp-finance-production.up.railway.app", countUrl: null as string | null },
+  { id: "hr", name: "HR Production", url: "https://ykp-erp-hr-production.up.railway.app", countUrl: null as string | null },
+  { id: "hermez", name: "Hermez AI", url: "https://ykp-erp-hermez-production.up.railway.app", countUrl: null as string | null },
+  { id: "hr-v1", name: "HR Pilot", url: "https://ykp-hr-v1-standalone-production.up.railway.app", countUrl: "https://ykp-hr-v1-standalone-production.up.railway.app/api/hr/summary/count" },
+  { id: "warehouse", name: "Warehouse", url: process.env.NEXT_PUBLIC_WAREHOUSE_URL ?? "https://ykp-warehouse-v1.vercel.app", countUrl: null as string | null },
+  { id: "investor", name: "Investor", url: process.env.NEXT_PUBLIC_INVESTOR_URL ?? "https://ykp-investor-v1.vercel.app", countUrl: null as string | null },
+  { id: "ops", name: "Operational", url: process.env.NEXT_PUBLIC_OPS_URL ?? "https://ykp-ops-v1.vercel.app", countUrl: null as string | null },
 ];
 
 async function probe(url: string, timeoutMs = 8000): Promise<{ status: number | null; ms: number; error?: string }> {

@@ -1,7 +1,7 @@
 import type { ComponentType, SVGProps } from "react";
 import { FinanceIcon, HrIcon, HermezIcon, SheetsIcon } from "./icons";
 
-export type AppId = "finance" | "hr" | "hermez" | "hr-v1";
+export type AppId = "finance" | "hr" | "hermez" | "hr-v1" | "warehouse" | "investor" | "ops";
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -23,7 +23,7 @@ export const APPS: AppDef[] = [
   {
     id: "finance",
     name: "Finance",
-    desc: "POS, expenses, petty cash, payroll",
+    desc: "POS, expenses, petty cash, supplier",
     url: "https://ykp-erp-finance-production.up.railway.app",
     tone: {
       gradient: "from-blue-500 to-blue-700",
@@ -71,6 +71,45 @@ export const APPS: AppDef[] = [
       soft: "bg-orange-50 dark:bg-orange-900/30"
     },
     icon: SheetsIcon
+  },
+  {
+    id: "warehouse",
+    name: "Warehouse",
+    desc: "Stock, receiving, waste, purchase alerts",
+    url: process.env.NEXT_PUBLIC_WAREHOUSE_URL ?? "https://ykp-warehouse-v1.vercel.app",
+    tone: {
+      gradient: "from-indigo-500 to-indigo-700",
+      text: "text-indigo-600 dark:text-indigo-400",
+      ring: "ring-indigo-200 dark:ring-indigo-800",
+      soft: "bg-indigo-50 dark:bg-indigo-900/30"
+    },
+    icon: SheetsIcon
+  },
+  {
+    id: "investor",
+    name: "Investor",
+    desc: "Capital, dividends, shareholding, returns",
+    url: process.env.NEXT_PUBLIC_INVESTOR_URL ?? "https://ykp-investor-v1.vercel.app",
+    tone: {
+      gradient: "from-rose-500 to-rose-700",
+      text: "text-rose-600 dark:text-rose-400",
+      ring: "ring-rose-200 dark:ring-rose-800",
+      soft: "bg-rose-50 dark:bg-rose-900/30"
+    },
+    icon: FinanceIcon
+  },
+  {
+    id: "ops",
+    name: "Operational",
+    desc: "Opening checklist, KDS, QC, incidents, closing",
+    url: process.env.NEXT_PUBLIC_OPS_URL ?? "https://ykp-ops-v1.vercel.app",
+    tone: {
+      gradient: "from-cyan-500 to-cyan-700",
+      text: "text-cyan-600 dark:text-cyan-400",
+      ring: "ring-cyan-200 dark:ring-cyan-800",
+      soft: "bg-cyan-50 dark:bg-cyan-900/30"
+    },
+    icon: HrIcon
   }
 ];
 
@@ -78,34 +117,13 @@ export function findApp(id: AppId | null): AppDef | undefined {
   return APPS.find((a) => a.id === id);
 }
 
-/**
- * Apps whose login is a demo role-picker (POST /api/auth/login {role}).
- * These accept a GET SSO bridge: /api/auth/login?role=X&redirect=/ → cookie → 302.
- * hr-v1 has real username/password auth (Google Sheets users tab), so it
- * cannot be auto-logged-in from Hub — the user logs in manually there.
- */
+/** Apps that accept GET /api/auth/login?role=&redirect= SSO. */
 export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["finance", "hr", "hermez"]);
 
-/**
- * Per-app SSO role override. Some apps require a higher role than the Hub
- * session to access key APIs. Notably Hermez's config + brief APIs require
- * SUPER_ADMIN — if a Hub OWNER opens Hermez, minting a ykp_session with
- * role=OWNER yields 403 "insufficient role" on those APIs. So Hermez SSO
- * always mints SUPER_ADMIN regardless of Hub role. Finance/HR accept the
- * Hub session role (defaulting to OWNER) since their APIs gate on OWNER+.
- */
 export const SSO_ROLE: Partial<Record<AppId, string>> = {
   hermez: "SUPER_ADMIN",
 };
 
-/**
- * Build the URL to open an app from Hub so the user lands authenticated.
- * - Role-picker apps (finance/hr/hermez): hit /api/auth/login?role=&redirect=/
- *   which mints the ykp_session cookie then 302s to "/". Use SSO_ROLE override
- *   if present, otherwise the Hub session role (so the ERP app grants the same
- *   access level). Hermez always gets SUPER_ADMIN (config/brief require it).
- * - hr-v1: no SSO (real credentials) → bare root, user logs in manually.
- */
 export function ssoUrl(app: AppDef, role: string): string {
   if (!ROLE_SSO_APPS.has(app.id)) return app.url;
   const r = encodeURIComponent(SSO_ROLE[app.id] ?? role ?? "OWNER");

@@ -36,5 +36,10 @@ export const POST = handler(async (req: NextRequest) => {
   };
   await appendRows(TABS.capital, [row]);
   await logAudit({ actorUserId: s.userId, actorRole: s.role, action: 'create', entity: 'capital', entityId: id, afterValue: JSON.stringify(row) }).catch(() => null);
+  // Best-effort: refresh daily summary + alerts after capital mutation.
+  try {
+    const { regenerateInvestorSummary } = await import('@/lib/investor-summary');
+    await regenerateInvestorSummary();
+  } catch { /* non-blocking */ }
   return ok(row, 201);
 });

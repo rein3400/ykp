@@ -44,10 +44,10 @@ export default function AttendancePage(): JSX.Element {
           </p>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild>
-              <a href="/hr/employees">Import CSV (Employees)</a>
+              <a href="/employees">Import CSV (Employees)</a>
             </Button>
             <Button size="sm" asChild>
-              <a href="/hr/attendance">Refresh</a>
+              <a href="/attendance">Refresh</a>
             </Button>
           </div>
         </div>

@@ -12,7 +12,11 @@ import { can, Role } from '@/lib/rbac';
 import { formatTimeWib, nowTimestampWib, todayWib } from '@/lib/format';
 import { z } from 'zod';
 
-const schema = z.object({ employee_id: z.string().min(1) });
+const schema = z.object({
+  employee_id: z.string().min(1),
+  latitude: z.union([z.number(), z.string()]).optional(),
+  longitude: z.union([z.number(), z.string()]).optional(),
+});
 
 /** Compute late minutes given scheduled vs actual (WIB HH:mm), minus tolerance. */
 function computeLateMinutes(scheduled: string, actual: string, tolerance: number): number {
@@ -21,6 +25,18 @@ function computeLateMinutes(scheduled: string, actual: string, tolerance: number
   const [ah, am] = actual.split(':').map(Number);
   const gross = Math.max(0, ah * 60 + am - (sh * 60 + sm));
   return Math.max(0, gross - tolerance);
+}
+
+/** Haversine distance in meters. */
+function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
 }
 
 export const POST = handler(async (req) => {
@@ -45,6 +61,39 @@ export const POST = handler(async (req) => {
   const emp = await findRow(TABS.employees, 'employee_id', parsed.data.employee_id);
   const employee = emp?.row;
   const outletId = employee?.outlet_id ?? '';
+
+  // GPS radius validation (optional coords; if provided, enforce outlet radius).
+  let checkInLocation = '';
+  let latStr = '';
+  let lonStr = '';
+  let radiusStr = '';
+  if (parsed.data.latitude != null && parsed.data.longitude != null) {
+    const lat = Number(parsed.data.latitude);
+    const lon = Number(parsed.data.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return badRequest('latitude/longitude invalid');
+    }
+    latStr = String(lat);
+    lonStr = String(lon);
+    if (outletId) {
+      const outlet = await findRow(TABS.outlets, 'outlet_id', outletId);
+      const oLat = Number(outlet?.row.latitude ?? NaN);
+      const oLon = Number(outlet?.row.longitude ?? NaN);
+      const radius = Number(outlet?.row.attendance_radius_m ?? 0);
+      radiusStr = radius ? String(radius) : '';
+      if (Number.isFinite(oLat) && Number.isFinite(oLon) && radius > 0) {
+        const dist = distanceMeters(lat, lon, oLat, oLon);
+        checkInLocation = dist <= radius ? 'INSIDE_RADIUS' : 'OUTSIDE_RADIUS';
+        if (dist > radius) {
+          return badRequest(
+            `Clock-in di luar radius outlet (${Math.round(dist)}m > ${radius}m). Ajukan koreksi manual.`
+          );
+        }
+      } else {
+        checkInLocation = 'NO_OUTLET_GEO';
+      }
+    }
+  }
 
   // Resolve today's shift from roster (brief §6.3: deteksi telat vs shift).
   const rosters = await readTab<{ date: string; employee_id: string; shift_id: string }>(TABS.roster);
@@ -85,11 +134,11 @@ export const POST = handler(async (req) => {
     actual_check_in: timeNow,
     scheduled_check_out: scheduledOut,
     actual_check_out: '',
-    check_in_location: '',
+    check_in_location: checkInLocation,
     check_out_location: '',
-    latitude: '',
-    longitude: '',
-    attendance_radius_m: '',
+    latitude: latStr,
+    longitude: lonStr,
+    attendance_radius_m: radiusStr,
     check_in_photo_url: '',
     check_out_photo_url: '',
     attendance_status: status,

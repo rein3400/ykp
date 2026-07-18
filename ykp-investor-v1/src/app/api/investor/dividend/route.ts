@@ -34,5 +34,9 @@ export const POST = handler(async (req: NextRequest) => {
   };
   await appendRows(TABS.dividend, [row]);
   await logAudit({ actorUserId: s.userId, actorRole: s.role, action: 'create', entity: 'dividend', entityId: id, afterValue: JSON.stringify(row) }).catch(() => null);
+  try {
+    const { regenerateInvestorSummary } = await import('@/lib/investor-summary');
+    await regenerateInvestorSummary();
+  } catch { /* non-blocking */ }
   return ok(row, 201);
 });

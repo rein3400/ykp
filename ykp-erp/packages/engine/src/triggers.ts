@@ -255,3 +255,59 @@ export function dataMissingTrigger(
     message: `Data laporan belum lengkap untuk: ${missing.join(", ")}. Input HR/Finance hari ini perlu dilengkapi.`,
   };
 }
+
+/** Operational V1 summary triggers (ops_daily_summary). */
+
+export interface OpsIncidentConfig {
+  highCountThreshold: number;
+}
+
+export function opsIncidentSpikeTrigger(
+  summary: { highSeverityIncident: number; incidentCount: number },
+  config: OpsIncidentConfig = { highCountThreshold: 1 },
+): TriggerDecision {
+  if (summary.highSeverityIncident >= config.highCountThreshold) {
+    return {
+      fire: true,
+      severity: summary.highSeverityIncident >= 3 ? "critical" : "warning",
+      message: `${summary.highSeverityIncident} incident HIGH/CRITICAL (total ${summary.incidentCount}). Cek PIC outlet & action tracker.`,
+    };
+  }
+  return { fire: false, severity: "warning", message: "" };
+}
+
+export interface OpsWasteConfig {
+  valueThreshold: number;
+}
+
+export function opsWasteHighTrigger(
+  summary: { wasteValue: number },
+  config: OpsWasteConfig = { valueThreshold: 200_000 },
+): TriggerDecision {
+  if (summary.wasteValue >= config.valueThreshold) {
+    return {
+      fire: true,
+      severity: summary.wasteValue >= config.valueThreshold * 2 ? "critical" : "warning",
+      message: `Waste value ${formatIdr(summary.wasteValue)} melebihi threshold. Audit portion & storage.`,
+    };
+  }
+  return { fire: false, severity: "warning", message: "" };
+}
+
+export interface OpsSlaConfig {
+  overSlaThreshold: number;
+}
+
+export function opsOverSlaTrigger(
+  summary: { ordersOverSla: number; criticalDelayCount: number },
+  config: OpsSlaConfig = { overSlaThreshold: 3 },
+): TriggerDecision {
+  if (summary.ordersOverSla >= config.overSlaThreshold || summary.criticalDelayCount > 0) {
+    return {
+      fire: true,
+      severity: summary.criticalDelayCount > 0 ? "critical" : "warning",
+      message: `${summary.ordersOverSla} order over SLA, ${summary.criticalDelayCount} critical delay. Cek staffing kitchen.`,
+    };
+  }
+  return { fire: false, severity: "warning", message: "" };
+}

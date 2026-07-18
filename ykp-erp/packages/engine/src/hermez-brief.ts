@@ -36,6 +36,9 @@ import {
   highExpenseTrigger,
   schemaMismatchTrigger,
   dataMissingTrigger,
+  opsIncidentSpikeTrigger,
+  opsWasteHighTrigger,
+  opsOverSlaTrigger,
   DEFAULT_TRIGGER_CONFIG,
   type TriggerConfig,
 } from './triggers';
@@ -342,6 +345,59 @@ export async function generateBriefForDate(input: HermezBriefInput): Promise<Her
 
   const schemaDecision = schemaMismatchTrigger({ schemaErrors }, triggerConfig.schema);
   await maybeFire("schema_mismatch", schemaDecision, undefined, undefined);
+
+  // 3b. Operational V1 summary (optional HTTP feed). Fail-soft — never block brief.
+  try {
+    const opsBase =
+      (process.env as Record<string, string | undefined>).OPS_SUMMARY_URL ??
+      (process.env as Record<string, string | undefined>).NEXT_PUBLIC_OPS_URL ??
+      "http://localhost:3007/api/ops/summary";
+    const opsRes = await fetch(`${opsBase}?date=${encodeURIComponent(date)}`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(5000),
+      cache: "no-store",
+    });
+    if (opsRes.ok) {
+      const body = (await opsRes.json()) as {
+        data?: { items?: Array<Record<string, string>> };
+        items?: Array<Record<string, string>>;
+      };
+      const items = body.data?.items ?? body.items ?? [];
+      for (const row of items) {
+        const outlet = row.outlet_name || row.outlet_id || "";
+        const brand = row.brand_name || row.brand_id || "";
+        await maybeFire(
+          "ops_incident_spike",
+          opsIncidentSpikeTrigger({
+            highSeverityIncident: Number(row.high_severity_incident || 0),
+            incidentCount: Number(row.incident_count || 0),
+          }),
+          outlet,
+          brand,
+          "ops",
+        );
+        await maybeFire(
+          "ops_waste_high",
+          opsWasteHighTrigger({ wasteValue: Number(row.waste_value || 0) }),
+          outlet,
+          brand,
+          "ops",
+        );
+        await maybeFire(
+          "ops_over_sla",
+          opsOverSlaTrigger({
+            ordersOverSla: Number(row.orders_over_sla || 0),
+            criticalDelayCount: Number(row.critical_delay_count || 0),
+          }),
+          outlet,
+          brand,
+          "ops",
+        );
+      }
+    }
+  } catch {
+    // Operational feed optional; brief still generates from HR/Finance.
+  }
 
   // 4. Compose brief text
   const briefText = composeBriefText({
