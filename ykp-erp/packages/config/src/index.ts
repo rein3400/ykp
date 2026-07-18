@@ -51,5 +51,8 @@ export const ID_PREFIXES = {
   hermezAlert: "HZAL",
 } as const;
 
+/** Supabase Storage bucket for POS receipt photo uploads. */
+export const BUCKET_POS_RECEIPTS = "pos-receipts";
+
 /** Re-export the package version for diagnostics. */
 export const CONFIG_VERSION = "0.1.0";

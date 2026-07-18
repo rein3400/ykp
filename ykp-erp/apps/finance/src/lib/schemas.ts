@@ -45,6 +45,43 @@ export const FinPosPatchSchema = FinPosCreateSchema.partial().extend({
   verified_by: z.string().optional(),
 });
 
+/** Individual POS receipt create payload (fin_pos_receipts). */
+export const FinPosReceiptCreateSchema = z.object({
+  date: dateString,
+  brand_id: z.string().min(1),
+  brand_name: z.string().min(1),
+  outlet_id: z.string().min(1),
+  outlet_name: z.string().min(1),
+  receipt_number: z.string().min(1),
+  transaction_time: z.string().optional(),
+  gross_sales: z.number().int().min(0),
+  discount: z.number().int().min(0).optional(),
+  refund: z.number().int().min(0).optional(),
+  void_amount: z.number().int().min(0).optional(),
+  tax: z.number().int().min(0).optional(),
+  service_charge: z.number().int().min(0).optional(),
+  payment_method_id: z.string().min(1),
+  payment_amount: z.number().int().min(0),
+  payment_breakdown: z.record(z.string(), z.number().int()).optional(),
+  transaction_count: z.number().int().min(1).optional(),
+  cashier: z.string().optional(),
+  shift: z.string().optional(),
+  source: z.enum(["moka", "manual", "import", "receipt"]).optional(),
+  source_ref: z.string().optional(),
+  notes: z.string().optional(),
+  photo_url: z.string().optional(),
+  photo_path: z.string().optional(),
+});
+
+export const FinPosReceiptQuerySchema = z.object({
+  date: dateString.optional(),
+  date_from: dateString.optional(),
+  date_to: dateString.optional(),
+  outlet_id: z.string().optional(),
+  brand_id: z.string().optional(),
+  limit: z.coerce.number().int().positive().max(500).optional().default(100),
+});
+
 // ----- Supplier costing --------------------------------------------------
 export const FinSupplierQuerySchema = z.object({
   date_from: dateString.optional(),
@@ -141,6 +178,14 @@ export const FinExpenseCreateSchema = z.object({
   payment_method_id: z.string().min(1),
   attachment_url: z.string().url().optional(),
   notes: z.string().optional(),
+  // Revisi item 4 — optional cross-transaction linking
+  source_module: z.string().optional(),
+  source_transaction_id: z.string().optional(),
+  payment_source: z.string().optional(),
+  linked_expense_id: z.string().optional(),
+  linked_supplier_invoice_id: z.string().optional(),
+  linked_petty_cash_id: z.string().optional(),
+  linked_payment_id: z.string().optional(),
 });
 
 export const FinExpensePatchSchema = z.object({
