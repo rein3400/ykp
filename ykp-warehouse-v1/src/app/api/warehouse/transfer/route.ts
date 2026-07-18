@@ -14,6 +14,7 @@ import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
 import { evalTransferDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
+import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -40,6 +41,7 @@ export const POST = handler(async (req: NextRequest) => {
   const body = (await req.json().catch(() => ({}))) as {
     source_location_id?: string; destination_location_id?: string;
     notes?: string;
+    evidence_urls?: unknown;
     items?: Array<{
       item_id: string; requested_qty: number; unit: string;
     }>;
@@ -100,13 +102,20 @@ export const POST = handler(async (req: NextRequest) => {
   }
   await appendRows(TABS.transferItem, detailRows);
 
+  const evidenceFiles = parseEvidenceUrls(body.evidence_urls);
+  if (evidenceFiles.length) {
+    await appendEvidenceRows('transfer', transferId, evidenceFiles, s.userId).catch(
+      (e) => console.error('[transfer] evidence append failed:', e),
+    );
+  }
+
   await logAudit({
     module: 'warehouse', action: 'create', recordType: 'transfer',
     recordId: transferId, afterValue: JSON.stringify({ header, items: detailRows }),
     userId: s.userId
   }).catch(() => null);
 
-  return ok({ header, items: detailRows }, 201);
+  return ok({ header, items: detailRows, evidence: evidenceFiles }, 201);
 });
 
 /**

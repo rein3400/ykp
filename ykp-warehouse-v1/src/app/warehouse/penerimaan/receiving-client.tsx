@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
+import { EvidenceGallery } from '@/components/evidence-gallery';
 
 export default function ReceivingClient({
   headers, items, suppliers, locations
@@ -23,11 +25,14 @@ export default function ReceivingClient({
   }>>([{ item_id: '', batch_number: '', expiry_date: '', qty_ordered: '', qty_delivered: '', qty_accepted: '', unit: 'kg', unit_price: '', condition_status: 'GOOD', temperature_value: '', notes: '' }]);
   const [list, setList] = useState(headers);
   const [err, setErr] = useState<string | null>(null);
+  const [evidence, setEvidence] = useState<EvidenceFile[]>([]);
 
   async function create() {
     setErr(null);
     const body = {
       ...form,
+      evidence_urls: evidence,
+      photo_url: evidence[0]?.url ?? '',
       items: lineItems.map((it) => ({
         item_id: it.item_id,
         batch_number: it.batch_number,
@@ -46,6 +51,7 @@ export default function ReceivingClient({
     const j = await r.json();
     if (!r.ok) { setErr(j.error?.message ?? 'Gagal'); return; }
     setList([j.data.header, ...list]);
+    setEvidence([]);
     setShowForm(false);
   }
 
@@ -104,6 +110,12 @@ export default function ReceivingClient({
             </div>
           ))}
           <button onClick={addLine} className='text-[10px] text-primary underline'>+ Tambah Item</button>
+          <EvidenceUpload
+            transactionType="receiving"
+            value={evidence}
+            onChange={setEvidence}
+            label="Bukti Foto/Video Receiving"
+          />
           {err && <p className='text-xs text-destructive'>{err}</p>}
           <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan Receiving</button>
         </div>
@@ -116,6 +128,7 @@ export default function ReceivingClient({
               <th className='px-2 py-1 text-left'>Source</th><th className='px-2 py-1 text-left'>Supplier</th>
               <th className='px-2 py-1 text-left'>Lokasi</th><th className='px-2 py-1 text-left'>Status</th>
               <th className='px-2 py-1 text-left'>PO/Invoice</th>
+              <th className='px-2 py-1 text-left'>Bukti</th>
             </tr>
           </thead>
           <tbody>
@@ -128,6 +141,13 @@ export default function ReceivingClient({
                 <td className='px-2 py-1'>{locations.find((l) => l.location_id === h.destination_location_id)?.location_name ?? '-'}</td>
                 <td className='px-2 py-1'><span className={`rounded px-1 text-[10px] font-medium ${h.receiving_status === 'RECEIVED' ? 'bg-green-100 text-green-800' : h.receiving_status === 'DISCREPANCY' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>{h.receiving_status}</span></td>
                 <td className='px-2 py-1 text-[10px]'>{h.purchase_order_id || '-'} / {h.invoice_number || '-'}</td>
+                <td className='px-2 py-1'>
+                  {h.photo_url ? (
+                    <EvidenceGallery files={[{ url: h.photo_url, path: h.photo_url, media_type: 'image' }]} />
+                  ) : (
+                    <span className='text-[10px] text-muted-foreground'>-</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

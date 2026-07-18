@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
 
 export default function TransferClient({
   headers, items, locations
@@ -13,17 +14,20 @@ export default function TransferClient({
   const [lineItems, setLineItems] = useState([{ item_id: '', requested_qty: '', unit: 'kg' }]);
   const [list, setList] = useState(headers);
   const [err, setErr] = useState<string | null>(null);
+  const [evidence, setEvidence] = useState<EvidenceFile[]>([]);
 
   async function create() {
     setErr(null);
     const body = {
       ...form,
+      evidence_urls: evidence,
       items: lineItems.map((it) => ({ item_id: it.item_id, requested_qty: Number(it.requested_qty || 0), unit: it.unit }))
     };
     const r = await fetch('/api/warehouse/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json();
     if (!r.ok) { setErr(j.error?.message ?? 'Gagal'); return; }
     setList([j.data.header, ...list]);
+    setEvidence([]);
     setShowForm(false);
   }
 
@@ -67,6 +71,12 @@ export default function TransferClient({
             </div>
           ))}
           <button onClick={() => setLineItems([...lineItems, { item_id: '', requested_qty: '', unit: 'kg' }])} className='text-[10px] text-primary underline'>+ Item</button>
+          <EvidenceUpload
+            transactionType="transfer"
+            value={evidence}
+            onChange={setEvidence}
+            label="Bukti Foto/Video Transfer"
+          />
           <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Request Transfer</button>
         </div>
       )}

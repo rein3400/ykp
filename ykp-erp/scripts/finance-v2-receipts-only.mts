@@ -1,27 +1,17 @@
-#!/usr/bin/env node
-
-import { migrate } from "drizzle-orm/postgres-js/migrator";
+/**
+ * One-shot: run only finance_v2_receipts (table + legacy migrate + view).
+ * Skips drizzle-kit migrations that fail on already-existing enums in prod.
+ *
+ * Usage (with Railway env):
+ *   railway run --service ykp-erp-finance --environment production -- \
+ *     npx tsx scripts/finance-v2-receipts-only.mts
+ */
 import { sql } from "drizzle-orm";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
-import { initDbClients, sql as rawSql } from './db/clients';
-import type { Db } from './db/clients';
+import { initDbClients, sql as rawSql } from "../packages/schema/src/db/clients.ts";
+import type { Db } from "../packages/schema/src/db/clients.ts";
 
 const ADVISORY_LOCK_ID = 74213721;
 
-// Single migrations folder contains all four domain schemas (master, hr,
-// finance, hermez) after the schema-qualified refactor.
-
-function migrationsFolder(): string {
-  // FileURLToPath + dirname is more portable than `new URL(...).pathname`
-  // on Windows paths with spaces (e.g. `YKP HERMEZ AI COMMAND CENTER`).
-  const here = dirname(fileURLToPath(import.meta.url));
-  return join(here, "..", "migrations");
-}
-
-// finance_v2_receipts: promote individual receipts to source of truth,
-// migrate legacy fin_pos_daily rows into receipts, drop the old table,
-// and recreate a daily aggregate view that preserves the old column shape.
 async function financeV2Receipts(db: Db) {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS finance.fin_pos_receipts (
@@ -144,44 +134,34 @@ async function financeV2Receipts(db: Db) {
   `);
 }
 
-async function main(): Promise<void> {
-  const startedAt = Date.now();
-  console.log("[migrate] starting (single DB, schema-per-domain: master/hr/finance/hermez)");
-
+async function main() {
   if (!process.env.YKP_DATABASE_URL) {
-    console.error("[migrate] YKP_DATABASE_URL not set — aborting");
+    console.error("[finance-v2] YKP_DATABASE_URL not set");
     process.exit(1);
   }
-
   initDbClients();
   const s = rawSql();
   await s`SELECT pg_advisory_xact_lock(${ADVISORY_LOCK_ID})`;
-  console.log(`[migrate] acquired advisory lock ${ADVISORY_LOCK_ID}`);
-
+  console.log(`[finance-v2] lock ${ADVISORY_LOCK_ID} acquired`);
   const { db } = initDbClients();
-  const folder = migrationsFolder();
-  await migrate(db, { migrationsFolder: folder });
-  console.log(`[migrate] applied migrations from ${folder}`);
-
   await financeV2Receipts(db);
-  console.log("[migrate] finance_v2_receipts step completed");
-
+  console.log("[finance-v2] receipts table + view ready");
+  // verify
+  const tables = await s`
+    SELECT table_name FROM information_schema.tables
+    WHERE table_schema='finance' AND table_name IN ('fin_pos_receipts','fin_pos_daily')
+    ORDER BY table_name
+  `;
+  const views = await s`
+    SELECT table_name FROM information_schema.views
+    WHERE table_schema='finance' AND table_name='fin_pos_daily_view'
+  `;
+  console.log("[finance-v2] tables:", tables);
+  console.log("[finance-v2] views:", views);
   await s.end();
-  console.log(`[migrate] completed in ${Date.now() - startedAt}ms`);
 }
 
-// Only auto-execute when invoked as a CLI script, not when imported as a module.
-// Prevents side effects during Next.js build / module bundling.
-const isMain = import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith("migrate") ||
-  process.argv[1]?.endsWith("migrate.ts") ||
-  process.argv[1]?.endsWith("migrate.mjs") ||
-  process.argv[1]?.endsWith("migrate.js");
-if (isMain) {
-  main().catch((err: unknown) => {
-    console.error("[migrate] failed:", err);
-    process.exit(1);
-  });
-}
-
-export default main;
+main().catch((e) => {
+  console.error("[finance-v2] failed:", e);
+  process.exit(1);
+});

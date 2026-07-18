@@ -15,6 +15,7 @@ import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
 import { evalReceivingDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
+import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -45,6 +46,7 @@ export const POST = handler(async (req: NextRequest) => {
     destination_location_id?: string; purchase_order_id?: string;
     invoice_number?: string; delivery_note_number?: string;
     received_by?: string; verified_by?: string; photo_url?: string; notes?: string;
+    evidence_urls?: unknown;
     items?: Array<{
       item_id: string; batch_number?: string; expiry_date?: string;
       qty_ordered: number; qty_delivered: number; qty_accepted: number;
@@ -235,11 +237,29 @@ export const POST = handler(async (req: NextRequest) => {
     }
   }
 
+  const evidenceFiles = parseEvidenceUrls(body.evidence_urls);
+  if (evidenceFiles.length) {
+    await appendEvidenceRows('receiving', receivingId, evidenceFiles, s.userId).catch(
+      (e) => console.error('[receiving] evidence append failed:', e),
+    );
+    // Keep first photo on header for quick list display
+    if (!header.photo_url && evidenceFiles[0]) {
+      header.photo_url = evidenceFiles[0].url;
+      const found = await findRow(TABS.receiving, 'receiving_id', receivingId);
+      if (found) {
+        await updateRow(TABS.receiving, found.rowNumber, {
+          ...found.row,
+          photo_url: evidenceFiles[0].url,
+        }).catch(() => null);
+      }
+    }
+  }
+
   await logAudit({
     module: 'warehouse', action: 'create', recordType: 'receiving',
     recordId: receivingId, afterValue: JSON.stringify({ header, items: detailRows }),
     userId: s.userId
   }).catch(() => null);
 
-  return ok({ header, items: detailRows }, 201);
+  return ok({ header, items: detailRows, evidence: evidenceFiles }, 201);
 });

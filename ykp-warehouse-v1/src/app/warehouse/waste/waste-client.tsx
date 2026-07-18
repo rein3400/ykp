@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
+import { EvidenceGallery } from '@/components/evidence-gallery';
 
 export default function WasteClient({
   rows, items, outlets
@@ -12,12 +14,15 @@ export default function WasteClient({
   const [form, setForm] = useState({ outlet_id: '', item_id: '', qty: '', unit: 'kg', reason: '', photo_url: '', pic: '', witness_signature: '' });
   const [list, setList] = useState(rows);
   const [err, setErr] = useState<string | null>(null);
+  const [evidence, setEvidence] = useState<EvidenceFile[]>([]);
   const selectedItem = items.find((i) => i.item_id === form.item_id);
 
   async function create() {
     setErr(null);
     const body = {
       ...form,
+      photo_url: form.photo_url || evidence[0]?.url || '',
+      evidence_urls: evidence,
       item_name: selectedItem?.item_name ?? '',
       unit: form.unit || selectedItem?.unit || 'kg',
       buy_price: selectedItem?.buy_price ?? '0'
@@ -25,7 +30,9 @@ export default function WasteClient({
     const r = await fetch('/api/warehouse/waste', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json();
     if (!r.ok) { setErr(j.error?.message ?? 'Gagal'); return; }
-    setList([j.data, ...list]);
+    const row = j.data?.waste_id ? j.data : (j.data ?? {});
+    setList([row, ...list]);
+    setEvidence([]);
     setShowForm(false);
   }
 
@@ -50,8 +57,16 @@ export default function WasteClient({
             <input placeholder='Alasan' value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='PIC' value={form.pic} onChange={(e) => setForm({ ...form, pic: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='TTD Saksi' value={form.witness_signature} onChange={(e) => setForm({ ...form, witness_signature: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='URL Foto (wajib)' value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-          </div>
+            </div>
+          <EvidenceUpload
+            transactionType="waste"
+            value={evidence}
+            onChange={(files) => {
+              setEvidence(files);
+              if (files[0]?.url) setForm((f) => ({ ...f, photo_url: files[0].url }));
+            }}
+            label="Bukti Foto Waste (wajib)"
+          />
           {err && <p className='text-xs text-destructive'>{err}</p>}
           <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>
         </div>
@@ -68,14 +83,18 @@ export default function WasteClient({
           </thead>
           <tbody>
             {list.map((r) => (
-              <tr key={r.waste_id} className={`border-t border-border ${r.has_photo !== 'Y' ? 'bg-destructive/5' : ''}`}>
+              <tr key={r.waste_id} className={`border-t border-border ${!r.photo_url ? 'bg-destructive/5' : ''}`}>
                 <td className='px-2 py-1'>{r.date}</td>
-                <td className='px-2 py-1'>{r.item_name}</td>
+                <td className='px-2 py-1'>{r.item_name || r.item_id}</td>
                 <td className='px-2 py-1 text-right'>{r.qty} {r.unit}</td>
                 <td className='px-2 py-1'>{r.reason}</td>
-                <td className='px-2 py-1 text-center'>{r.has_photo === 'Y' ? '✓' : '✗'}</td>
-                <td className='px-2 py-1 text-right'>{formatRp(r.estimated_loss)}</td>
-                <td className='px-2 py-1'>{r.pic}</td>
+                <td className='px-2 py-1 text-center'>
+                  {r.photo_url ? (
+                    <EvidenceGallery files={[{ url: r.photo_url, path: r.photo_url, media_type: 'image' }]} />
+                  ) : '✗'}
+                </td>
+                <td className='px-2 py-1 text-right'>{formatRp(r.estimated_total_value || r.estimated_loss)}</td>
+                <td className='px-2 py-1'>{r.reported_by || r.pic}</td>
               </tr>
             ))}
             {list.length === 0 && <tr><td colSpan={7} className='px-2 py-3 text-center text-muted-foreground'>Belum ada waste.</td></tr>}

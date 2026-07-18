@@ -40,6 +40,7 @@ const TAB = {
   telegramDeliveryLog: 'telegram_delivery_log',
   users: 'users',
   auditLog: 'system_audit_log',
+  evidenceLog: 'evidence_log',
   legacyPenerimaan: 'f1_penerimaan',
   legacyKartuStok: 'f2_kartu_stok',
   legacyPemakaian: 'f3_bon_pemakaian',
@@ -128,6 +129,7 @@ function seed(): Record<string, Record<string, string>[]> {
       { user_id: 'USR-001', username: 'owner', password_hash: pw, role: 'owner', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' }
     ],
     [TAB.auditLog]: [],
+    [TAB.evidenceLog]: [],
     // ── Legacy (empty) ──────────────────────────────────────────
     [TAB.legacyPenerimaan]: [],
     [TAB.legacyKartuStok]: [],

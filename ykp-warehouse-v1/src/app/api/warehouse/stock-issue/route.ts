@@ -12,6 +12,7 @@ import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
+import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -42,6 +43,7 @@ export const POST = handler(async (req: NextRequest) => {
     source_location_id?: string; destination_location_id?: string;
     issue_type?: string; requested_by?: string; issued_by?: string;
     received_by?: string; notes?: string;
+    evidence_urls?: unknown;
     items?: Array<{
       item_id: string; requested_qty: number; issued_qty: number;
       unit: string; batch_reference?: string; purpose?: string; notes?: string;
@@ -144,11 +146,18 @@ export const POST = handler(async (req: NextRequest) => {
     }
   }
 
+  const evidenceFiles = parseEvidenceUrls(body.evidence_urls);
+  if (evidenceFiles.length) {
+    await appendEvidenceRows('stock_issue', issueId, evidenceFiles, s.userId).catch(
+      (e) => console.error('[stock_issue] evidence append failed:', e),
+    );
+  }
+
   await logAudit({
     module: 'warehouse', action: 'create', recordType: 'stock_issue',
     recordId: issueId, afterValue: JSON.stringify({ header, items: detailRows }),
     userId: s.userId
   }).catch(() => null);
 
-  return ok({ header, items: detailRows }, 201);
+  return ok({ header, items: detailRows, evidence: evidenceFiles }, 201);
 });

@@ -83,9 +83,10 @@ export const TABS = {
   // ── Output ───────────────────────────────────────────────────
   dailySummary: 'warehouse_daily_summary',
   telegramDeliveryLog: 'telegram_delivery_log',
-  // ── Auth + audit ─────────────────────────────────────────────
+  // ── Auth + audit + evidence ──────────────────────────────────
   users: 'users',
   auditLog: 'system_audit_log',
+  evidenceLog: 'evidence_log',
   // ── Legacy F1-F5 (read migration only) ───────────────────────
   legacyPenerimaan: 'f1_penerimaan',
   legacyKartuStok: 'f2_kartu_stok',
@@ -293,6 +294,12 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'audit_id', 'module', 'action', 'record_type', 'record_id',
     'before_value', 'after_value', 'reason', 'user_id', 'approval_user_id',
     'environment', 'ip_address', 'created_at'
+  ],
+  // Evidence log — photo/video proof for warehouse transactions
+  [TABS.evidenceLog]: [
+    'evidence_id', 'transaction_type', 'transaction_id',
+    'file_url', 'file_path', 'media_type',
+    'recorded_by', 'recorded_at', 'notes'
   ],
   // ── Legacy (read migration only) ─────────────────────────────
   [TABS.legacyPenerimaan]: [

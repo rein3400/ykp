@@ -14,6 +14,7 @@ import { can, type Role } from '@/lib/rbac';
 import { bookStock } from '@/lib/stock-ledger';
 import { evalStockVariance, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
+import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 
 const COUNT_TYPES = ['DAILY_CRITICAL', 'WEEKLY', 'MONTHLY', 'SPOT_CHECK', 'RECOUNT'];
 
@@ -41,6 +42,7 @@ export const POST = handler(async (req: NextRequest) => {
 
   const body = (await req.json().catch(() => ({}))) as {
     count_type?: string; brand_id?: string; outlet_id?: string; location_id?: string;
+    evidence_urls?: unknown;
     items?: Array<{
       item_id: string; physical_stock: number; base_unit?: string;
       theoretical_stock?: number; notes?: string;
@@ -183,11 +185,18 @@ export const POST = handler(async (req: NextRequest) => {
   }
   await appendRows(TABS.stockCountItem, detailRows);
 
+  const evidenceFiles = parseEvidenceUrls(body.evidence_urls);
+  if (evidenceFiles.length) {
+    await appendEvidenceRows('stock_count', countId, evidenceFiles, s.userId).catch(
+      (e) => console.error('[stock_count] evidence append failed:', e),
+    );
+  }
+
   await logAudit({
     module: 'warehouse', action: 'create', recordType: 'stock_count',
     recordId: countId, afterValue: JSON.stringify({ header, items: detailRows }),
     userId: s.userId
   }).catch(() => null);
 
-  return ok({ header, items: detailRows }, 201);
+  return ok({ header, items: detailRows, evidence: evidenceFiles }, 201);
 });
