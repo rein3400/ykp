@@ -21,10 +21,12 @@ export const GET = handler(async (req: NextRequest) => {
   let rows = await readTab<Record<string, string>>(TABS.actionTracker);
   if (status) rows = rows.filter((r) => r.status === status);
 
-  // Auto-mark overdue
+  // Auto-mark overdue — only OPEN (not IN_PROGRESS / WAITING_APPROVAL),
+  // otherwise Start → IN_PROGRESS is immediately flipped back to OVERDUE
+  // and looks like a silent no-op in the UI.
   const today = formatDateWib(new Date());
   for (const r of rows) {
-    if (r.due_date && r.due_date < today && !['DONE', 'CANCELLED', 'OVERDUE'].includes(r.status)) {
+    if (r.due_date && r.due_date < today && r.status === 'OPEN') {
       r.status = 'OVERDUE';
     }
   }

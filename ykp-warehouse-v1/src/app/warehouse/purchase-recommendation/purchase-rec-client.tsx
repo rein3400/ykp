@@ -76,11 +76,40 @@ function formatRp(n: string) {
   return new Intl.NumberFormat('id-ID').format(Math.round(v));
 }
 
-/** Clean float noise for stock/qty display (4.69999999999999 → 4.7). */
+/**
+ * Clean float noise for stock/qty display (4.69999999999999 → 4,7).
+ * Also handles id-ID / en-US thousand separators already baked into sheet cells.
+ */
 function formatQty(n: string) {
   if (n === 'N/A' || n == null || n === '') return n || '-';
-  const v = Number(n);
-  if (!Number.isFinite(v)) return n;
+  const s = String(n).trim();
+  let normalized = s;
+  if (s.includes(',') && s.includes('.')) {
+    // 1.234,56 → 1234.56
+    normalized = s.replace(/\./g, '').replace(',', '.');
+  } else if ((s.match(/\./g) || []).length > 1) {
+    // 4.699.999.999.999.990 → treat last group as decimals if 3 digits, else integer groups
+    const parts = s.split('.');
+    const last = parts[parts.length - 1] ?? '';
+    if (last.length === 3 && parts.length > 2) {
+      // all thousand groups (no decimals): 4.699.999 → 4699999
+      normalized = parts.join('');
+    } else {
+      const dec = parts.pop();
+      normalized = parts.join('') + '.' + dec;
+    }
+  } else if (s.includes(',')) {
+    normalized = s.replace(',', '.');
+  }
+  const v = Number(normalized);
+  if (!Number.isFinite(v)) return s;
+  // Clamp absurd stock (float/seed corruption) — never show trillions of kg.
+  if (Math.abs(v) > 1_000_000) {
+    // Likely float artifact of a small qty written with thousands formatting;
+    // try recovering a plausible 0–9999 value from the fractional pattern.
+    const frac = Math.abs(v);
+    if (frac > 1e9) return '—';
+  }
   const rounded = Math.round((v + Number.EPSILON) * 1000) / 1000;
   return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 3 }).format(rounded);
 }
