@@ -53,10 +53,10 @@ export default function PurchaseRecClient({
                   'bg-gray-200 text-gray-700'
                 }`}>{r.priority}</span></td>
                 <td className='px-2 py-1 font-medium'>{r.item_name}</td>
-                <td className='px-2 py-1 text-right'>{r.available_stock}</td>
-                <td className='px-2 py-1 text-right'>{r.days_of_cover}</td>
-                <td className='px-2 py-1 text-right'>{r.reorder_point}</td>
-                <td className='px-2 py-1 text-right font-medium'>{r.rounded_purchase_qty} {r.purchase_unit}</td>
+                <td className='px-2 py-1 text-right'>{formatQty(r.available_stock)}</td>
+                <td className='px-2 py-1 text-right'>{formatQty(r.days_of_cover)}</td>
+                <td className='px-2 py-1 text-right'>{formatQty(r.reorder_point)}</td>
+                <td className='px-2 py-1 text-right font-medium'>{formatQty(r.rounded_purchase_qty)} {r.purchase_unit}</td>
                 <td className='px-2 py-1 text-right'>{formatRp(r.estimated_purchase_value)}</td>
                 <td className='px-2 py-1'>{r.supplier_name || '-'}</td>
                 <td className='px-2 py-1 text-muted-foreground text-[10px]'>{r.reason}</td>
@@ -73,5 +73,14 @@ export default function PurchaseRecClient({
 function formatRp(n: string) {
   const v = Number(n || 0);
   if (!v) return '-';
-  return new Intl.NumberFormat('id-ID').format(v);
+  return new Intl.NumberFormat('id-ID').format(Math.round(v));
+}
+
+/** Clean float noise for stock/qty display (4.69999999999999 → 4.7). */
+function formatQty(n: string) {
+  if (n === 'N/A' || n == null || n === '') return n || '-';
+  const v = Number(n);
+  if (!Number.isFinite(v)) return n;
+  const rounded = Math.round((v + Number.EPSILON) * 1000) / 1000;
+  return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 3 }).format(rounded);
 }

@@ -29,9 +29,18 @@ export function reorderPoint(p: Pick<ItemStockParams, 'averageDailyUsage' | 'sup
   return p.averageDailyUsage * p.supplierLeadTimeDays + p.safetyStock;
 }
 
+/** Round stock/qty to 3 decimal places to kill binary float noise (e.g. 4.69999999999999). */
+export function roundQty(n: number, places = 3): number {
+  if (!Number.isFinite(n)) return 0;
+  const f = 10 ** places;
+  return Math.round((n + Number.EPSILON) * f) / f;
+}
+
 /** Available Stock = book - reserved + confirmed_incoming_transfer + confirmed_incoming_PO */
 export function availableStock(p: Pick<ItemStockParams, 'bookStock' | 'reservedQty' | 'confirmedIncomingTransfer' | 'confirmedIncomingPO'>): number {
-  return p.bookStock - p.reservedQty + p.confirmedIncomingTransfer + p.confirmedIncomingPO;
+  return roundQty(
+    p.bookStock - p.reservedQty + p.confirmedIncomingTransfer + p.confirmedIncomingPO
+  );
 }
 
 /**
@@ -54,7 +63,7 @@ export function suggestedPurchase(p: ItemStockParams): {
   moq: number;
 } {
   const available = availableStock(p);
-  const raw = Math.max(0, p.maximumStock - available - p.confirmedIncomingPO + p.reservedQty);
+  const raw = roundQty(Math.max(0, p.maximumStock - available - p.confirmedIncomingPO + p.reservedQty));
   const pack = Math.max(1, p.packSize || 1);
   const moq = Math.max(1, p.minimumOrderQuantity || 1);
   const supplierMin = p.supplierMinimumOrder ?? 0;
@@ -68,7 +77,7 @@ export function suggestedPurchase(p: ItemStockParams): {
     rounded = Math.ceil(supplierMin / pack) * pack;
   }
 
-  return { raw, rounded, packSize: pack, moq };
+  return { raw, rounded: roundQty(rounded), packSize: pack, moq };
 }
 
 /**
@@ -144,19 +153,19 @@ export function computeRecommendation(p: ItemStockParams & {
   return {
     itemId: p.itemId,
     itemName: p.itemName,
-    availableStock: available,
-    averageDailyUsage: p.averageDailyUsage,
-    daysOfCover: doc,
-    reorderPoint: rp,
-    maximumStock: p.maximumStock,
-    incomingPoQty: p.confirmedIncomingPO,
-    reservedQty: p.reservedQty,
-    suggestedPurchaseQty: sug.raw,
-    roundedPurchaseQty: sug.rounded,
+    availableStock: roundQty(available),
+    averageDailyUsage: roundQty(p.averageDailyUsage),
+    daysOfCover: doc === null ? null : roundQty(doc, 2),
+    reorderPoint: roundQty(rp),
+    maximumStock: roundQty(p.maximumStock),
+    incomingPoQty: roundQty(p.confirmedIncomingPO),
+    reservedQty: roundQty(p.reservedQty),
+    suggestedPurchaseQty: roundQty(sug.raw),
+    roundedPurchaseQty: roundQty(sug.rounded),
     purchaseUnit: p.purchaseUnit ?? 'unit',
     supplierId: p.supplierId ?? '',
     supplierName: p.supplierName ?? '',
-    estimatedUnitPrice: unitPrice,
+    estimatedUnitPrice: Math.round(unitPrice),
     estimatedPurchaseValue: Math.round(sug.rounded * unitPrice),
     priority: prio,
     reason

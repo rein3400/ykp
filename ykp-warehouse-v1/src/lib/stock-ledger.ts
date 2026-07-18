@@ -143,7 +143,10 @@ export async function bookStock(itemId: string, locationId: string): Promise<num
   const same = all.filter((m) => m.item_id === itemId && m.location_id === locationId);
   if (same.length === 0) return 0;
   const last = same.reduce((a, b) => (a.movement_datetime > b.movement_datetime ? a : b));
-  return Number(last.stock_after || 0);
+  // Round to 3dp so float noise (4.69999999999999) never surfaces in UI.
+  const n = Number(last.stock_after || 0);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round((n + Number.EPSILON) * 1000) / 1000;
 }
 
 /**
