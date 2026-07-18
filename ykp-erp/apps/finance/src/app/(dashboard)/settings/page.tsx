@@ -1,11 +1,22 @@
 /**
  * Settings page — master data viewers + threshold config + Telegram test.
+ *
+ * Tabs are plain buttons + conditional content (no Radix Tabs). Production
+ * deep-tests showed Radix TabsTrigger stuck on Brand under synthetic clicks;
+ * a simple state machine is more reliable for automation and SSR hydration.
  */
 "use client";
 
 import * as React from "react";
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Tabs, TabsList, TabsTrigger, TabsContent } from "@ykp/ui";
-import { useBrands, useExpenseCategories, useOutlets, usePaymentMethods, usePettyCashAccounts, useSuppliers } from "@finance/features/finance/api/queries";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@ykp/ui";
+import {
+  useBrands,
+  useExpenseCategories,
+  useOutlets,
+  usePaymentMethods,
+  usePettyCashAccounts,
+  useSuppliers,
+} from "@finance/features/finance/api/queries";
 import { useTelegramTest } from "@finance/features/finance/api/mutations";
 import { Send } from "lucide-react";
 
@@ -17,6 +28,15 @@ type SettingsTab =
   | "methods"
   | "accounts";
 
+const TABS: { id: SettingsTab; label: string }[] = [
+  { id: "brands", label: "Brand" },
+  { id: "outlets", label: "Outlet" },
+  { id: "suppliers", label: "Supplier" },
+  { id: "categories", label: "Category" },
+  { id: "methods", label: "Payment Method" },
+  { id: "accounts", label: "Petty Cash Account" },
+];
+
 export default function SettingsPage() {
   const brands = useBrands();
   const outlets = useOutlets();
@@ -27,112 +47,128 @@ export default function SettingsPage() {
   const telegram = useTelegramTest();
 
   const [message, setMessage] = React.useState("Test message dari YKP Finance");
-  // Controlled tabs — uncontrolled Radix defaultValue was observed stuck on
-  // Brand in production (clicks update aria briefly then re-render resets).
   const [tab, setTab] = React.useState<SettingsTab>("brands");
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Settings</h2>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as SettingsTab)}>
-        <TabsList>
-          <TabsTrigger value="brands">Brand</TabsTrigger>
-          <TabsTrigger value="outlets">Outlet</TabsTrigger>
-          <TabsTrigger value="suppliers">Supplier</TabsTrigger>
-          <TabsTrigger value="categories">Category</TabsTrigger>
-          <TabsTrigger value="methods">Payment Method</TabsTrigger>
-          <TabsTrigger value="accounts">Petty Cash Account</TabsTrigger>
-        </TabsList>
+      <div
+        role="tablist"
+        aria-label="Master data"
+        className="inline-flex h-10 flex-wrap items-center justify-start gap-1 rounded-md bg-muted p-1 text-muted-foreground"
+      >
+        {TABS.map((t) => {
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              data-state={active ? "active" : "inactive"}
+              onClick={() => setTab(t.id)}
+              className={
+                active
+                  ? "inline-flex items-center justify-center whitespace-nowrap rounded-sm bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm"
+                  : "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium hover:text-foreground"
+              }
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
 
-        <TabsContent value="brands">
-          <Card>
-            <CardHeader>
-              <CardTitle>Master Brand</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MasterTable
-                rows={(brands.data ?? []) as Record<string, unknown>[]}
-                cols={["brandId", "brandName", "brandCode", "status"]}
-                idKey="brandId"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="outlets">
-          <Card>
-            <CardHeader>
-              <CardTitle>Master Outlet</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MasterTable
-                rows={(outlets.data ?? []) as Record<string, unknown>[]}
-                cols={["outletId", "outletName", "brandId", "status"]}
-                idKey="outletId"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="suppliers">
-          <Card>
-            <CardHeader>
-              <CardTitle>Master Supplier</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MasterTable
-                rows={(suppliers.data ?? []) as Record<string, unknown>[]}
-                cols={["supplierId", "supplierName", "category", "status"]}
-                idKey="supplierId"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="categories">
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Category</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MasterTable
-                rows={(categories.data ?? []) as Record<string, unknown>[]}
-                cols={["categoryId", "categoryName", "accountType", "status"]}
-                idKey="categoryId"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="methods">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Method</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MasterTable
-                rows={(paymentMethods.data ?? []) as Record<string, unknown>[]}
-                cols={["methodId", "methodName", "isCash", "status"]}
-                idKey="methodId"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="accounts">
-          <Card>
-            <CardHeader>
-              <CardTitle>Petty Cash Account</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MasterTable
-                rows={(pettyCashAccounts.data ?? []) as Record<string, unknown>[]}
-                cols={["accountId", "accountName", "outletId", "currency", "status"]}
-                idKey="accountId"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {tab === "brands" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Master Brand</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MasterTable
+              rows={(brands.data ?? []) as Record<string, unknown>[]}
+              cols={["brandId", "brandName", "brandCode", "status"]}
+              idKey="brandId"
+            />
+          </CardContent>
+        </Card>
+      )}
+      {tab === "outlets" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Master Outlet</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MasterTable
+              rows={(outlets.data ?? []) as Record<string, unknown>[]}
+              cols={["outletId", "outletName", "brandId", "status"]}
+              idKey="outletId"
+            />
+          </CardContent>
+        </Card>
+      )}
+      {tab === "suppliers" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Master Supplier</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MasterTable
+              rows={(suppliers.data ?? []) as Record<string, unknown>[]}
+              cols={["supplierId", "supplierName", "category", "status"]}
+              idKey="supplierId"
+            />
+          </CardContent>
+        </Card>
+      )}
+      {tab === "categories" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MasterTable
+              rows={(categories.data ?? []) as Record<string, unknown>[]}
+              cols={["categoryId", "categoryName", "accountType", "status"]}
+              idKey="categoryId"
+            />
+          </CardContent>
+        </Card>
+      )}
+      {tab === "methods" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment Method</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MasterTable
+              rows={(paymentMethods.data ?? []) as Record<string, unknown>[]}
+              cols={["methodId", "methodName", "isCash", "status"]}
+              idKey="methodId"
+            />
+          </CardContent>
+        </Card>
+      )}
+      {tab === "accounts" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Petty Cash Account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MasterTable
+              rows={(pettyCashAccounts.data ?? []) as Record<string, unknown>[]}
+              cols={["accountId", "accountName", "outletId", "currency", "status"]}
+              idKey="accountId"
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
-        <CardHeader><CardTitle>Threshold Config</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Threshold Config</CardTitle>
+        </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
             Threshold configuration moved to Hermez → Config
@@ -141,7 +177,9 @@ export default function SettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Telegram Test Send</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Telegram Test Send</CardTitle>
+        </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
             <Input value={message} onChange={(e) => setMessage(e.target.value)} />
@@ -150,7 +188,9 @@ export default function SettingsPage() {
             </Button>
           </div>
           {telegram.data ? (
-            <p className="mt-3 text-sm text-success">Terkirim. message_id={telegram.data.message_id}</p>
+            <p className="mt-3 text-sm text-success">
+              Terkirim. message_id={telegram.data.message_id}
+            </p>
           ) : telegram.isError ? (
             <p className="mt-3 text-sm text-destructive">Gagal: {telegram.error?.message}</p>
           ) : null}
