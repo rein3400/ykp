@@ -61,6 +61,7 @@ export function initDbClients(): { db: Db; sql: Sql } {
     _sql = postgres(url, {
       max: 10,
       prepare: false,
+      // Local Docker Postgres uses plain TCP; require SSL for all non-local hosts.
       ssl: isPooler ? { rejectUnauthorized: false } : (isLocal ? false : "require"),
     });
     _db = drizzle(_sql, { schema: fullSchema as never });

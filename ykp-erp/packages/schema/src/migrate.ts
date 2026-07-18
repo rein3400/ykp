@@ -68,7 +68,7 @@ async function financeV2Receipts(db: Db) {
       ) THEN
         INSERT INTO finance.fin_pos_receipts (
           receipt_id, date, brand_id, brand_name, outlet_id, outlet_name,
-          receipt_number, gross_sales, discount, refund, void, tax, service_charge,
+          receipt_number, transaction_time, gross_sales, discount, refund, void, tax, service_charge,
           net_sales, payment_amount, payment_breakdown, transaction_count, cashier,
           shift, source, source_ref, notes, recorded_by, recorded_at, created_at,
           updated_at
@@ -76,7 +76,8 @@ async function financeV2Receipts(db: Db) {
         SELECT
           'RCP-' || to_char(d.date, 'YYYYMMDD') || '-' || d.outlet_id || '-LEGACY-' || row_number() OVER (PARTITION BY d.date, d.outlet_id ORDER BY d.created_at)::text,
           d.date, d.brand_id, d.brand_name, d.outlet_id, d.outlet_name,
-          'LEGACY-' || to_char(d.date, 'YYYYMMDD') || '-' || d.outlet_id,
+          'LEGACY-' || to_char(d.date, 'YYYYMMDD') || '-' || d.outlet_id || '-' || row_number() OVER (PARTITION BY d.date, d.outlet_id ORDER BY d.created_at)::text,
+          NULL::text,
           d.gross_sales, d.discount, d.refund, d.void, d.tax, d.service_charge,
           d.net_sales,
           COALESCE((SELECT sum(value::integer) FROM jsonb_each_text(d.payment_method_breakdown)), 0),

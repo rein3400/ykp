@@ -1,8 +1,3 @@
-CREATE TYPE "hermez"."hermez_action_priority" AS ENUM('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');--> statement-breakpoint
-CREATE TYPE "hermez"."hermez_action_status" AS ENUM('OPEN', 'IN_PROGRESS', 'WAITING_APPROVAL', 'DONE', 'CANCELLED', 'OVERDUE');--> statement-breakpoint
-ALTER TYPE "hermez"."hermez_alert_type" ADD VALUE 'ops_incident_spike';--> statement-breakpoint
-ALTER TYPE "hermez"."hermez_alert_type" ADD VALUE 'ops_waste_high';--> statement-breakpoint
-ALTER TYPE "hermez"."hermez_alert_type" ADD VALUE 'ops_over_sla';--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "finance"."fin_pos_receipts" (
 	"receipt_id" text PRIMARY KEY NOT NULL,
 	"date" date NOT NULL,
@@ -39,55 +34,43 @@ CREATE TABLE IF NOT EXISTS "finance"."fin_pos_receipts" (
 	CONSTRAINT "fin_pos_receipts_date_outlet_receipt_unique" UNIQUE("date","outlet_id","receipt_number")
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "hermez"."hermez_action_tracker" (
-	"action_id" text PRIMARY KEY NOT NULL,
-	"source_alert_id" text,
-	"title" text NOT NULL,
-	"brand" text,
-	"outlet" text,
-	"assigned_to" text,
-	"priority" "hermez"."hermez_action_priority" DEFAULT 'MEDIUM' NOT NULL,
-	"due_date" date,
-	"status" "hermez"."hermez_action_status" DEFAULT 'OPEN' NOT NULL,
-	"action_taken" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"completed_at" timestamp
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "hermez"."hermez_telegram_log" (
-	"log_id" text PRIMARY KEY NOT NULL,
-	"message_id" text,
-	"recipient" text NOT NULL,
-	"channel" text DEFAULT 'owner' NOT NULL,
-	"status" text NOT NULL,
-	"sent_at" timestamp DEFAULT now() NOT NULL,
-	"error_message" text,
-	"retry_count" integer DEFAULT 0 NOT NULL
-);
---> statement-breakpoint
-ALTER TABLE "finance"."fin_daily_summary" ADD COLUMN "settlement_difference" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
-ALTER TABLE "finance"."fin_expense" ADD COLUMN "source_module" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_expense" ADD COLUMN "source_transaction_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_expense" ADD COLUMN "payment_source" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_expense" ADD COLUMN "linked_supplier_invoice_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_expense" ADD COLUMN "linked_petty_cash_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_expense" ADD COLUMN "linked_payment_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_petty_cash" ADD COLUMN "source_module" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_petty_cash" ADD COLUMN "source_transaction_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_petty_cash" ADD COLUMN "payment_source" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_petty_cash" ADD COLUMN "linked_expense_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_petty_cash" ADD COLUMN "linked_supplier_invoice_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_petty_cash" ADD COLUMN "linked_payment_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_supplier_cost" ADD COLUMN "source_module" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_supplier_cost" ADD COLUMN "source_transaction_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_supplier_cost" ADD COLUMN "payment_source" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_supplier_cost" ADD COLUMN "linked_expense_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_supplier_cost" ADD COLUMN "linked_petty_cash_id" text;--> statement-breakpoint
-ALTER TABLE "finance"."fin_supplier_cost" ADD COLUMN "linked_payment_id" text;--> statement-breakpoint
-ALTER TABLE "hermez"."hermez_alert_log" ADD COLUMN "environment" text DEFAULT 'PRODUCTION' NOT NULL;--> statement-breakpoint
-ALTER TABLE "hermez"."hermez_config" ADD COLUMN "label" text;--> statement-breakpoint
-ALTER TABLE "hermez"."hermez_config" ADD COLUMN "unit" text;--> statement-breakpoint
-ALTER TABLE "hermez"."hermez_config" ADD COLUMN "severity" text DEFAULT 'warning' NOT NULL;--> statement-breakpoint
-ALTER TABLE "hermez"."hermez_config" ADD COLUMN "description" text;--> statement-breakpoint
-ALTER TABLE "hermez"."hermez_config" ADD COLUMN "is_active" boolean DEFAULT true NOT NULL;--> statement-breakpoint
-ALTER TABLE "hermez"."hermez_daily_brief" ADD COLUMN "environment" text DEFAULT 'PRODUCTION' NOT NULL;
+DROP VIEW IF EXISTS "finance"."fin_pos_daily_view";--> statement-breakpoint
+CREATE OR REPLACE VIEW "finance"."fin_pos_daily_view" AS
+SELECT
+  'POS-' || to_char(r."date", 'YYYYMMDD') || '-' || r."outlet_id" AS "pos_id",
+  r."date",
+  r."brand_id",
+  r."brand_name",
+  r."outlet_id",
+  r."outlet_name",
+  COALESCE(SUM(r."gross_sales"), 0) AS "gross_sales",
+  COALESCE(SUM(r."net_sales"), 0) AS "net_sales",
+  COALESCE(SUM(r."discount"), 0) AS "discount",
+  COALESCE(SUM(r."refund"), 0) AS "refund",
+  COALESCE(SUM(r."void"), 0) AS "void",
+  COALESCE(SUM(r."tax"), 0) AS "tax",
+  COALESCE(SUM(r."service_charge"), 0) AS "service_charge",
+  COALESCE(
+    jsonb_object_agg(pm."method_id", pm."total") FILTER (WHERE pm."method_id" IS NOT NULL),
+    '{}'::jsonb
+  ) AS "payment_method_breakdown",
+  COALESCE(SUM(r."transaction_count"), 0) AS "transaction_count",
+  CASE WHEN COALESCE(SUM(r."transaction_count"), 0) > 0
+    THEN ROUND(SUM(r."net_sales")::numeric / SUM(r."transaction_count"))::integer
+    ELSE 0
+  END AS "aov",
+  (SELECT string_agg(DISTINCT cashier, ', ') FROM "finance"."fin_pos_receipts" r2 WHERE r2."date" = r."date" AND r2."outlet_id" = r."outlet_id") AS "cashier",
+  (SELECT string_agg(DISTINCT shift, ', ') FROM "finance"."fin_pos_receipts" r2 WHERE r2."date" = r."date" AND r2."outlet_id" = r."outlet_id") AS "shift",
+  (SELECT mode() WITHIN GROUP (ORDER BY source) FROM "finance"."fin_pos_receipts" r2 WHERE r2."date" = r."date" AND r2."outlet_id" = r."outlet_id")::text AS "source",
+  NULL::text AS "source_ref",
+  (SELECT string_agg(DISTINCT notes, '; ') FROM "finance"."fin_pos_receipts" r2 WHERE r2."date" = r."date" AND r2."outlet_id" = r."outlet_id") AS "notes",
+  MAX(r."recorded_at") AS "recorded_at",
+  MAX(r."recorded_by") AS "recorded_by",
+  MAX(r."created_at") AS "created_at",
+  MAX(r."updated_at") AS "updated_at"
+FROM "finance"."fin_pos_receipts" r
+LEFT JOIN LATERAL (
+  SELECT key AS "method_id", value::integer AS "total"
+  FROM jsonb_each_text(r."payment_breakdown")
+) pm ON true
+GROUP BY r."date", r."brand_id", r."brand_name", r."outlet_id", r."outlet_name";
