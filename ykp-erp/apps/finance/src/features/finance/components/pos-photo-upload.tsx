@@ -14,14 +14,20 @@ export interface PosPhotoUploadProps {
 export function PosPhotoUpload({ outletId, date, value, onChange }: PosPhotoUploadProps) {
   const upload = useUploadPosPhoto();
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
   const onFile = async (file: File) => {
+    setError(null);
     const fd = new FormData();
     fd.append("file", file);
     fd.append("outlet_id", outletId);
     fd.append("date", date);
-    const res = await upload.mutateAsync(fd);
-    onChange({ url: res.publicUrl, path: res.path });
+    try {
+      const res = await upload.mutateAsync(fd);
+      onChange({ url: res.publicUrl, path: res.path });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload gagal");
+    }
   };
 
   return (
@@ -30,7 +36,12 @@ export function PosPhotoUpload({ outletId, date, value, onChange }: PosPhotoUplo
       {value ? (
         <div className="relative w-48">
           <img src={value.url} alt="receipt" className="rounded-md border object-cover" />
-          <button onClick={() => onChange(undefined)} className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white">
+          <button
+            type="button"
+            aria-label="Hapus foto nota"
+            onClick={() => onChange(undefined)}
+            className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white"
+          >
             <X className="h-3 w-3" />
           </button>
         </div>
@@ -39,6 +50,7 @@ export function PosPhotoUpload({ outletId, date, value, onChange }: PosPhotoUplo
           <ImagePlus className="mr-2 h-4 w-4" /> {upload.isPending ? "Uploading..." : "Upload Foto"}
         </Button>
       )}
+      {error && <p className="text-xs text-destructive">{error}</p>}
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
     </div>
   );
