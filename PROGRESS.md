@@ -1,11 +1,57 @@
 # YKP HERMEZ AI COMMAND CENTER — Progress
 
 > Single source of truth untuk semua track. Update tiap ada perubahan.
-> Last update: 2026-07-15
+> Last update: 2026-07-18
 
 ---
 
 ## ✅ Completed
+
+### AI integration in ykp-ops-v1 (2026-07-18)
+
+Implemented all AI features required by `YKP_ERP_Operational_Developer_Brief_V1.txt`:
+- **AI foundation**: `src/lib/ai.ts` OpenAI/Ollama wrapper, env vars, health check.
+- **Incident/Complaint AI**: triage, sentiment, response draft, auto-triage on complaint creation, `PATCH /api/ops/incidents/[id]`, `POST /api/ops/incidents/[id]`, updated UI.
+- **Analytics AI insight**: `POST /api/ops/summary/ai-insight`, AI insight panel in `/ops/analytics`.
+- **Visual QC AI vision**: base64 photo upload, `gpt-4o-mini` second opinion, never overrides human decision, UI shows AI result/confidence/disagreement.
+- **AI Assistant**: new `/ops/ai-assistant` page + `/api/ops/ops/ai-assistant` endpoint for general ops Q&A.
+- Schema updates: `ops_incident` (`ai_triage`, `ai_sentiment`, `ai_response_draft`, `ai_generated_at`), `ops_daily_summary` (`ai_insight`, `ai_insight_generated_at`).
+- Verified: `tsc --noEmit` clean, `npm test` 4/4, `npx next build` green.
+
+
+
+| Track | Status code | Notes |
+|---|---|---|
+| **Operational** | **NEW** `ykp-ops-v1` port 3007 | Sheets+mock, 9 modules + AI (incident triage/draft, analytics insight, vision QC second opinion, AI assistant), `ops_daily_summary`, public GET `/api/ops/summary`, vitest 4/4, tsc clean |
+| **HR** | residual close | Lateness approve UI+API, GPS radius on clock-in, employees edit/deactivate already wired |
+| **Investor** | residual close | `investor-summary.ts` writer + alerts, POST `/api/investor/summary/regenerate`, auto on capital/dividend |
+| **Hub** | residual close | apps list + health probe: warehouse, investor, ops |
+| **Finance** | residual close | Expense cross-link fields (source_module/linked_*) schema+API+form |
+| **Warehouse** | already ~100% code | Purchase-request approve UI + telegram dispatch already present; tsc clean |
+| **Hermez** | multi-source | Ops proxy `/api/hermez/ops-summary`, ops triggers (incident/waste/SLA), alertType enum +3, engine rebuild |
+
+Verification (local):
+- `ykp-ops-v1` tests 4/4, tsc clean
+- `ykp-hr-v1` / `ykp-investor-v1` / `ykp-hub` / `ykp-warehouse-v1` tsc clean
+- `ykp-erp` tsc clean after engine+schema rebuild
+
+Masih owner-side (bukan code): GCP Sheets bootstrap, data pack asli, pilot 7 hari.
+
+### Deploy 2026-07-18
+
+| App | Platform | URL | Status |
+|---|---|---|---|
+| Finance | Railway | https://ykp-erp-finance-production.up.railway.app | SUCCESS / 200 |
+| Hermez | Railway | https://ykp-erp-hermez-production.up.railway.app | SUCCESS / 200 |
+| HR (erp) | Railway | https://ykp-erp-hr-production.up.railway.app | SUCCESS / 307 |
+| Hub | Railway | https://ykp-hub-production.up.railway.app | SUCCESS / 200 |
+| HR-v1 | Railway | https://ykp-hr-v1-standalone-production.up.railway.app | SUCCESS / 307 |
+| HR-v1 | Vercel | https://ykp-hr-v1.vercel.app | READY / 307 |
+| Warehouse | Vercel | https://ykp-warehouse-v1.vercel.app | READY / 307 |
+| Investor | Vercel | https://ykp-investor-v1.vercel.app | READY / 307 |
+| **Ops (NEW)** | Vercel | https://ykp-ops-v1.vercel.app | READY / 307 login; `/api/ops/summary` 200 |
+
+Note: ops first deploy accidentally hit `ykp-hr-v1` Vercel project; restored HR-v1 then created dedicated `ykp-ops-v1` project.
 
 ### Warehouse Inventory Control V1 (2026-07-15)
 - ✅ Upgrade `ykp-warehouse-v1` ke full brief `YKP_ERP_Warehouse_Inventory_Developer_Brief_V1.txt`
@@ -79,10 +125,19 @@
 
 ## 🌐 Live URLs (all verified)
 
-- ykp-erp-finance-production.up.railway.app (Postgres-backed, 200 OK)
-- ykp-erp-hermez-production.up.railway.app (Postgres-backed, 200 OK)
-- ykp-erp-hr-production.up.railway.app (Postgres-backed, 200 OK)
-- ykp-hr-v1-standalone-production.up.railway.app (Google Sheets pilot, 200 OK)
+> Full catalog + redeploy commands: **[`DEPLOYED_LINKS.md`](./DEPLOYED_LINKS.md)** (updated 2026-07-18).
+
+| App | URL |
+|---|---|
+| Hub | https://ykp-hub-production.up.railway.app |
+| Finance | https://ykp-erp-finance-production.up.railway.app |
+| HR (Postgres) | https://ykp-erp-hr-production.up.railway.app |
+| Hermez AI | https://ykp-erp-hermez-production.up.railway.app |
+| HR Pilot Railway | https://ykp-hr-v1-standalone-production.up.railway.app |
+| HR Pilot Vercel | https://ykp-hr-v1.vercel.app |
+| Warehouse | https://ykp-warehouse-v1.vercel.app |
+| Investor | https://ykp-investor-v1.vercel.app |
+| Operational | https://ykp-ops-v1.vercel.app |
 
 ---
 

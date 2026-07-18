@@ -1,0 +1,55 @@
+/**
+ * JSON response helpers. 5xx never leaks stack.
+ */
+import { NextResponse } from 'next/server';
+
+export function ok<T>(data: T, status = 200): NextResponse {
+  return NextResponse.json({ data }, { status });
+}
+
+export function list<T>(items: T[], total?: number): NextResponse {
+  return NextResponse.json({ data: { items, total_items: total ?? items.length } });
+}
+
+export function fail(code: string, message: string, status: number): NextResponse {
+  return NextResponse.json({ error: { code, message } }, { status });
+}
+
+export function unauthorized(message = 'Unauthorized'): NextResponse {
+  return fail('unauthorized', message, 401);
+}
+
+export function forbidden(message = 'Forbidden'): NextResponse {
+  return fail('forbidden', message, 403);
+}
+
+export function badRequest(message: string): NextResponse {
+  return fail('bad_request', message, 400);
+}
+
+export function notFound(message = 'Not found'): NextResponse {
+  return fail('not_found', message, 404);
+}
+
+export function serverError(logId?: string): NextResponse {
+  return fail('internal_error', `Internal server error${logId ? ` (ref ${logId})` : ''}`, 500);
+}
+
+export function handler(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fn: (req: any, ctx: { params: Record<string, string> }) => Promise<NextResponse>
+) {
+  return async (
+    req: Request,
+    ctx: { params?: Promise<Record<string, string>> } = {}
+  ): Promise<NextResponse> => {
+    try {
+      const params = ctx.params ? await ctx.params : {};
+      return await fn(req, { params });
+    } catch (e) {
+      const logId = Date.now().toString(36).toUpperCase();
+      console.error(`[route:${logId}]`, e);
+      return serverError(logId);
+    }
+  };
+}
