@@ -19,9 +19,15 @@ export default async function ReturnsPage() {
   const roi: { investor_id: string; name: string; total_in: number; total_out: number; net: number; dividend: number; roi_pct: string }[] = [];
   for (const inv of investors) {
     const cap = capital.filter((c) => c.investor_id === inv.investor_id);
-    const div = dividend.filter((d) => d.investor_id === inv.investor_id && d.status === 'paid');
-    const totalIn = cap.filter((c) => c.type === 'in').reduce((s, c) => s + Number(c.amount || 0), 0);
-    const totalOut = cap.filter((c) => c.type === 'out').reduce((s, c) => s + Number(c.amount || 0), 0);
+    const div = dividend.filter(
+      (d) => d.investor_id === inv.investor_id && (d.status || '').toLowerCase() === 'paid'
+    );
+    const totalIn = cap
+      .filter((c) => (c.type || '').toLowerCase() === 'in')
+      .reduce((s, c) => s + Number(c.amount || 0), 0);
+    const totalOut = cap
+      .filter((c) => (c.type || '').toLowerCase() === 'out')
+      .reduce((s, c) => s + Number(c.amount || 0), 0);
     const net = totalIn - totalOut;
     const divTotal = div.reduce((s, d) => s + Number(d.amount || 0), 0);
     const roiPct = totalIn > 0 ? ((divTotal / totalIn) * 100).toFixed(1) : '0';
