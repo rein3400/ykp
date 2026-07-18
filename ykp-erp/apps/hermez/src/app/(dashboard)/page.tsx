@@ -39,7 +39,7 @@ export default function DailyBriefPage() {
       const res = await fetch(`/api/hermez/brief?date=${encodeURIComponent(target)}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
-      setBrief(json.data ?? null);
+      setBrief(json.data?.brief ?? null);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       // If the session cookie is missing or has insufficient role, bounce

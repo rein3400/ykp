@@ -63,7 +63,8 @@ export async function GET(req: Request) {
       .select()
       .from(hermezAlertLog)
       .where(filters.length ? and(...filters) : undefined)
-      .orderBy(desc(hermezAlertLog.date), desc(hermezAlertLog.createdAt));
+      .orderBy(desc(hermezAlertLog.date), desc(hermezAlertLog.createdAt))
+      .limit(500);
 
     const items = rows.map((r) => ({
       alertId: r.alertId,

@@ -57,7 +57,7 @@ export default function AlertsPage() {
     date: "",
     severity: "",
     status: "",
-    alertType: "",
+    alert_type: "",
     outlet: "",
     environment: "",
   });
@@ -162,8 +162,8 @@ export default function AlertsPage() {
             <option value="PRODUCTION">PRODUCTION</option>
           </select>
           <Input
-            value={filter.alertType}
-            onChange={(e) => setFilter((f) => ({ ...f, alertType: e.target.value }))}
+            value={filter.alert_type}
+            onChange={(e) => setFilter((f) => ({ ...f, alert_type: e.target.value }))}
             placeholder="alert_type"
           />
           <Input
