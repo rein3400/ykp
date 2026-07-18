@@ -27,6 +27,11 @@ function looksLikeShiftId(v: string): boolean {
   return /^SH-\d+/i.test(v.trim());
 }
 
+function looksLikeTime(v: string): boolean {
+  // 07:00, 7:00, 20:00 — not bare "60" or "30" break minutes
+  return /^\d{1,2}:\d{2}$/.test(v.trim());
+}
+
 /**
  * Resolve a display label for a shift row or bare shift_id.
  */
@@ -43,20 +48,22 @@ export function shiftLabel(shift: ShiftLike | string | null | undefined): string
   const rawName = (shift.shift_name || '').trim();
   const start = (shift.start_time || '').trim();
   const end = (shift.end_time || '').trim();
+  const timeWindow =
+    looksLikeTime(start) && looksLikeTime(end) ? `${start}–${end}` : '';
 
   // Prefer real human name (not brand id, not empty, not just another id)
   if (rawName && !looksLikeBrandId(rawName) && !looksLikeShiftId(rawName)) {
-    return start && end ? `${rawName} (${start}–${end})` : rawName;
+    return timeWindow ? `${rawName} (${timeWindow})` : rawName;
   }
 
   // Known seeded ids
   if (id && KNOWN_SHIFT_NAMES[id]) {
     const name = KNOWN_SHIFT_NAMES[id];
-    return start && end ? `${name} (${start}–${end})` : name;
+    return timeWindow ? `${name} (${timeWindow})` : name;
   }
 
   // Time window alone is better than brand id
-  if (start && end) return `${start}–${end}`;
+  if (timeWindow) return timeWindow;
 
   if (id && !looksLikeBrandId(id)) return id;
   return '—';
