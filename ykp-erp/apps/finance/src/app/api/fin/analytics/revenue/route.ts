@@ -1,7 +1,7 @@
 /**
  * GET /api/fin/analytics/revenue?period=...&brand_id=...&outlet_id=...
  *
- * Aggregates fin_pos_daily into:
+ * Aggregates fin_pos_daily_view into:
  *   { total, by_day: [{date, revenue}], by_payment: [{method, revenue}] }
  *
  * period controls the default date_from window when not supplied:
@@ -14,7 +14,7 @@
 import { and, eq, gte, lte, sql, sum, desc } from "drizzle-orm";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
-import { finPosDaily } from "@ykp/schema";
+import { finPosDailyView } from "@ykp/schema";
 import { getFinanceDb } from "@finance/lib/server/db";
 import { handler, ok, fail } from "@finance/lib/server/http";
 import { todayWib } from "@ykp/engine";
@@ -59,16 +59,16 @@ export const GET = handler(async (req: Request) => {
   const to = date_to ?? win.to;
 
   const db = getFinanceDb();
-  const conds = [gte(finPosDaily.date, new Date(from)), lte(finPosDaily.date, new Date(to))];
-  if (brand_id) conds.push(eq(finPosDaily.brandId, brand_id));
-  if (outlet_id) conds.push(eq(finPosDaily.outletId, outlet_id));
+  const conds = [gte(finPosDailyView.date, new Date(from)), lte(finPosDailyView.date, new Date(to))];
+  if (brand_id) conds.push(eq(finPosDailyView.brandId, brand_id));
+  if (outlet_id) conds.push(eq(finPosDailyView.outletId, outlet_id));
 
 const byDay = await db
-    .select({ date: finPosDaily.date, revenue: sum(finPosDaily.netSales) })
-    .from(finPosDaily)
+    .select({ date: finPosDailyView.date, revenue: sum(finPosDailyView.netSales) })
+    .from(finPosDailyView)
     .where(and(...conds))
-    .groupBy(finPosDaily.date)
-    .orderBy(finPosDaily.date);
+    .groupBy(finPosDailyView.date)
+    .orderBy(finPosDailyView.date);
 
   // Fill zero days in the requested range so the chart is continuous.
   const dayMap = new Map<string, number>();
@@ -87,8 +87,8 @@ const byDay = await db
 
   // Payment method breakdown from jsonb aggregate.
   const rows = await db
-    .select({ breakdown: finPosDaily.paymentMethodBreakdown })
-    .from(finPosDaily)
+    .select({ breakdown: finPosDailyView.paymentMethodBreakdown })
+    .from(finPosDailyView)
     .where(and(...conds));
   const byPaymentMap = new Map<string, number>();
   for (const r of rows) {

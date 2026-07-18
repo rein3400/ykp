@@ -14,7 +14,7 @@ import { type NextRequest } from "next/server";
 import { Role } from "@ykp/config";
 import { requireRole, can } from "@ykp/auth";
 import {
-  finPosDaily,
+  finPosDailyView,
   finSupplierCost,
   finPettyCash,
   finExpense,
@@ -177,20 +177,20 @@ export const POST = handler(async (req: NextRequest) => {
 
   switch (report) {
     case "pos_daily": {
-      const conds = [gte(finPosDaily.date, new Date(date_from)), lte(finPosDaily.date, new Date(date_to))];
-      if (filters_.outlet_id) conds.push(eq(finPosDaily.outletId, filters_.outlet_id));
-      if (filters_.brand_id) conds.push(eq(finPosDaily.brandId, filters_.brand_id));
-      const result = await db.select().from(finPosDaily).where(and(...conds)).orderBy(asc(finPosDaily.date));
+      const conds = [gte(finPosDailyView.date, new Date(date_from)), lte(finPosDailyView.date, new Date(date_to))];
+      if (filters_.outlet_id) conds.push(eq(finPosDailyView.outletId, filters_.outlet_id));
+      if (filters_.brand_id) conds.push(eq(finPosDailyView.brandId, filters_.brand_id));
+      const result = await db.select().from(finPosDailyView).where(and(...conds)).orderBy(asc(finPosDailyView.date));
       headers = ["date", "outlet", "gross", "net", "discount", "refund", "txn", "aov"];
       rows = result.map((r) => [
-        r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date),
-        r.outletName,
-        String(r.grossSales),
-        String(r.netSales),
-        String(r.discount),
-        String(r.refund),
-        String(r.transactionCount),
-        String(r.aov),
+        r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date ?? ""),
+        r.outletName ?? "",
+        String(r.grossSales ?? 0),
+        String(r.netSales ?? 0),
+        String(r.discount ?? 0),
+        String(r.refund ?? 0),
+        String(r.transactionCount ?? 0),
+        String(r.aov ?? 0),
       ]);
       break;
     }

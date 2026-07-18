@@ -7,7 +7,7 @@
 import { and, eq, gte, lte, notInArray, sql, sum } from "drizzle-orm";
 import { Role } from "@ykp/config";
 import { requireRole } from "@ykp/auth";
-import { finPosDaily, finExpense, finSupplierCost, finPettyCash } from "@ykp/schema";
+import { finPosDailyView, finExpense, finSupplierCost, finPettyCash } from "@ykp/schema";
 import { getFinanceDb } from "@finance/lib/server/db";
 import { handler, ok, fail } from "@finance/lib/server/http";
 import { todayWib } from "@ykp/engine";
@@ -37,7 +37,7 @@ function windowFor(period: string): { from: string; to: string } {
   return { from: `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`, to: `${to.getFullYear()}-${pad(to.getMonth() + 1)}-${pad(to.getDate())}` };
 }
 
-async function sumWhere(table: typeof finPosDaily | typeof finExpense | typeof finSupplierCost | typeof finPettyCash, column: typeof finPosDaily.netSales | typeof finExpense.amount | typeof finSupplierCost.amount | typeof finPettyCash.amount, conds: ReturnType<typeof eq>[]) {
+async function sumWhere(table: typeof finPosDailyView | typeof finExpense | typeof finSupplierCost | typeof finPettyCash, column: typeof finPosDailyView.netSales | typeof finExpense.amount | typeof finSupplierCost.amount | typeof finPettyCash.amount, conds: ReturnType<typeof eq>[]) {
   const db = getFinanceDb();
   const rows = await db.select({ v: sum(column) }).from(table).where(conds.length ? and(...conds) : undefined);
   return Number(rows[0]?.v ?? 0);
@@ -57,7 +57,7 @@ export const GET = handler(async (req: Request) => {
   const from = date_from ?? win.from;
   const to = date_to ?? win.to;
 
-  const posConds = [gte(finPosDaily.date, new Date(from)), lte(finPosDaily.date, new Date(to))];
+  const posConds = [gte(finPosDailyView.date, new Date(from)), lte(finPosDailyView.date, new Date(to))];
   // Defect F6: exclude CANCELLED/REJECTED rows from cost sums so voided entries
   // do not inflate deductions.
   const expConds = [
@@ -78,19 +78,19 @@ export const GET = handler(async (req: Request) => {
     notInArray(finPettyCash.approvalStatus, ["CANCELLED", "REJECTED"]),
   ];
   if (brand_id) {
-    posConds.push(eq(finPosDaily.brandId, brand_id));
+    posConds.push(eq(finPosDailyView.brandId, brand_id));
     expConds.push(eq(finExpense.brandId, brand_id));
     supConds.push(eq(finSupplierCost.brandId, brand_id));
     pettyConds.push(eq(finPettyCash.brandId, brand_id));
   }
   if (outlet_id) {
-    posConds.push(eq(finPosDaily.outletId, outlet_id));
+    posConds.push(eq(finPosDailyView.outletId, outlet_id));
     expConds.push(eq(finExpense.outletId, outlet_id));
     supConds.push(eq(finSupplierCost.outletId, outlet_id));
     pettyConds.push(eq(finPettyCash.outletId, outlet_id));
   }
 
-  const revenue = await sumWhere(finPosDaily, finPosDaily.netSales, posConds);
+  const revenue = await sumWhere(finPosDailyView, finPosDailyView.netSales, posConds);
   const expense = await sumWhere(finExpense, finExpense.amount, expConds);
   const supplierCost = await sumWhere(finSupplierCost, finSupplierCost.amount, supConds);
   const pettyCashOut = await sumWhere(finPettyCash, finPettyCash.amount, pettyConds);

@@ -1,88 +1,13 @@
 /**
- * Finance flow smoke test — exercises the in-memory happy path:
- *   supplier cost -> petty cash out -> expense -> closing cash
- *   -> fin_daily_summary rebuild.
+ * Finance flow smoke test — exercises the pure helpers used by finance:
+ *   - parseMokaCsv (now per-receipt, not daily aggregate)
+ *   - IDR math: net_sales, aov, unpaid_amount, expected_cash
+ *   - transitionApproval role + amount tiers
  *
- * We mock the @ykp/schema DB clients with an in-memory store so the
- * route logic can call db.insert / db.select / db.update against a
- * fake surface. The smoke verifies:
- *   - parseMokaCsv aggregates per (date, outlet)
- *   - IDR math: net_sales, aov, unpaid_amount, expected_cash,
- *     cash_difference, running_balance
- *   - generateFinDailySummary produces net = revenue - expense
- *     - supplier_cost - petty_cash_out
- *   - transitionApproval rejects forbidden role + amount tiers
- *
- * No real Postgres connection is opened. Vitest isolated env so the
- * missing YKP_*_DATABASE_URL env vars don't crash the suite.
+ * No real Postgres connection is opened.
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-
-// ---------- Fake DB store ----------------------------------------------------
-interface FinRow {
-  finPosDaily: unknown[];
-  finSupplierCost: unknown[];
-  finPettyCash: unknown[];
-  finExpense: unknown[];
-  finClosingCash: unknown[];
-  finDailySummary: unknown[];
-  finOpeningBalance: unknown[];
-  masterOutlet: unknown[];
-  masterBrand: unknown[];
-  masterSupplier: unknown[];
-}
-
-function makeFakeDb(store: FinRow, table: keyof FinRow) {
-  return {
-    async select(sel?: unknown) {
-      const rows = store[table];
-      void sel;
-      return rows;
-    },
-    async insert(_values?: unknown) {
-      const values = (arguments[1] ?? _values) as Record<string, unknown>;
-      const rows = store[table] as Record<string, unknown>[];
-      rows.push(values);
-      return [values];
-    },
-    async update(_set?: unknown) {
-      void _set;
-      return [{}];
-    },
-  };
-}
-
-vi.mock("@ykp/schema", () => {
-  const store: FinRow = {
-    finPosDaily: [],
-    finSupplierCost: [],
-    finPettyCash: [],
-    finExpense: [],
-    finClosingCash: [],
-    finDailySummary: [],
-    finOpeningBalance: [],
-    masterOutlet: [
-      { outletId: "OL-001", outletName: "Outlet Sudirman", brandId: "BR-001" },
-      { outletId: "OL-002", outletName: "Outlet Senopati", brandId: "BR-001" },
-    ],
-    masterBrand: [{ brandId: "BR-001", brandName: "Brand A" }],
-    masterSupplier: [{ supplierId: "SUP-0001", supplierName: "Supplier Sayur" }],
-  };
-
-  return {
-    initDbClients: () => ({}),
-    getDb: () => makeFakeDb(store, "finPosDaily"),
-    getMasterDb: () => makeFakeDb(store, "masterOutlet"),
-    getFinanceDb: () => makeFakeDb(store, "finPosDaily"),
-    getHermezDb: () => makeFakeDb(store, "finDailySummary"),
-    getHrDb: () => makeFakeDb(store, "finExpense"),
-    masterSql: () => ({}),
-    financeSql: () => ({}),
-    hermezSql: () => ({}),
-    hrSql: () => ({}),
-  };
-});
 
 // ---------- Helpers under test ---------------------------------------------
 import { parseMokaCsv, transitionApproval, financeDayId, todayWib } from "@ykp/engine";
@@ -92,19 +17,20 @@ describe("finance-flow smoke", () => {
     vi.clearAllMocks();
   });
 
-  it("parseMokaCsv aggregates per (date, outlet)", () => {
+  it("parseMokaCsv returns one receipt per CSV line", () => {
     const csv = [
-      "date,brand,outlet,gross_sales,net_sales,discount,refund,void_amount,transaction_count,payment_method",
-      "2026-07-07,Brand A,Outlet Sudirman,Rp 100.000,Rp 90.000,Rp 5.000,Rp 0,Rp 5.000,2,tunai",
-      "2026-07-07,Brand A,Outlet Sudirman,Rp 50.000,Rp 45.000,Rp 0,Rp 5.000,Rp 0,1,qris",
-      "2026-07-07,Brand A,Outlet Senopati,Rp 80.000,Rp 75.000,Rp 0,Rp 0,Rp 5.000,1,tunai",
+      "date,brand,outlet,receipt_number,gross_sales,net_sales,discount,refund,void_amount,transaction_count,payment_method",
+      "2026-07-07,Brand A,Outlet Sudirman,RCPT-001,Rp 100.000,Rp 90.000,Rp 5.000,Rp 0,Rp 5.000,1,tunai",
+      "2026-07-07,Brand A,Outlet Sudirman,RCPT-002,Rp 50.000,Rp 45.000,Rp 0,Rp 5.000,Rp 0,1,qris",
+      "2026-07-07,Brand A,Outlet Senopati,RCPT-003,Rp 80.000,Rp 75.000,Rp 0,Rp 0,Rp 5.000,1,tunai",
     ].join("\n");
     const res = parseMokaCsv(csv);
-    expect(res.rows).toHaveLength(2);
-    const sudirman = res.rows.find((r) => r.outletName === "Outlet Sudirman")!;
-    expect(sudirman.grossSales).toBe(150_000);
-    expect(sudirman.netSales).toBe(135_000);
-    expect(sudirman.transactionCount).toBe(3);
+    expect(res.rows).toHaveLength(3);
+    const sudirman = res.rows.filter((r) => r.outletName === "Outlet Sudirman");
+    expect(sudirman).toHaveLength(2);
+    expect(sudirman.reduce((a, r) => a + r.grossSales, 0)).toBe(150_000);
+    expect(sudirman.reduce((a, r) => a + r.netSales, 0)).toBe(135_000);
+    expect(sudirman[0].receiptNumber).toBe("RCPT-001");
   });
 
   it("financeDayId produces FIN-YYYYMMDD-NNN", () => {

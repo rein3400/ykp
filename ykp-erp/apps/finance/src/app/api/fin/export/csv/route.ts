@@ -14,7 +14,7 @@ import { and, eq, gte, lte, asc } from "drizzle-orm";
 import { Role } from "@ykp/config";
 import { requireRole, can } from "@ykp/auth";
 import {
-  finPosDaily,
+  finPosDailyView,
   finSupplierCost,
   finPettyCash,
   finExpense,
@@ -79,10 +79,10 @@ export const POST = handler(async (req: Request) => {
 
   switch (report) {
     case "pos_daily": {
-      const conds = [gte(finPosDaily.date, new Date(date_from)), lte(finPosDaily.date, new Date(date_to))];
-      if (filters_.outlet_id) conds.push(eq(finPosDaily.outletId, filters_.outlet_id));
-      if (filters_.brand_id) conds.push(eq(finPosDaily.brandId, filters_.brand_id));
-      const result = await db.select().from(finPosDaily).where(and(...conds)).orderBy(asc(finPosDaily.date));
+      const conds = [gte(finPosDailyView.date, new Date(date_from)), lte(finPosDailyView.date, new Date(date_to))];
+      if (filters_.outlet_id) conds.push(eq(finPosDailyView.outletId, filters_.outlet_id));
+      if (filters_.brand_id) conds.push(eq(finPosDailyView.brandId, filters_.brand_id));
+      const result = await db.select().from(finPosDailyView).where(and(...conds)).orderBy(asc(finPosDailyView.date));
       headers = ["pos_id", "date", "brand_id", "outlet_id", "gross_sales", "net_sales", "discount", "refund", "void", "tax", "service_charge", "transaction_count", "aov", "payment_methods", "source", "recorded_by"];
       rows = result.map((r) => [
         r.posId, r.date, r.brandId, r.outletId, r.grossSales, r.netSales, r.discount, r.refund,

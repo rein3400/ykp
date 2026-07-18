@@ -2,7 +2,7 @@
  * @ykp/engine/fin-summary
  *
  * Builds the per-outlet fin_daily_summary row for a date. Reads:
- *   - fin_pos_daily.net_sales                 (revenue)
+ *   - fin_pos_daily_view.net_sales            (revenue, aggregated from receipts)
  *   - fin_expense.amount                       (expense)
  *   - fin_supplier_cost.amount + unpaid_amount (supplier_cost, unpaid_supplier)
  *   - fin_petty_cash.amount WHERE type='out'   (petty_cash_out)
@@ -23,7 +23,7 @@
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { and, eq, lte, sql, desc } from "drizzle-orm";
 import {
-  finPosDaily,
+  finPosDailyView,
   finExpense,
   finSupplierCost,
   finPettyCash,
@@ -64,17 +64,17 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
   }
 
   const revenueRows = await financeDb
-    .select({ value: finPosDaily.netSales })
-    .from(finPosDaily)
-    .where(and(eq(finPosDaily.date, new Date(date)), eq(finPosDaily.outletId, outlet_id)));
+    .select({ value: finPosDailyView.netSales })
+    .from(finPosDailyView)
+    .where(and(eq(finPosDailyView.date, new Date(date)), eq(finPosDailyView.outletId, outlet_id)));
   const revenue = revenueRows.reduce((acc, r) => acc + (r.value ?? 0), 0);
 
   // POS settlement validation: sum(payment_method_breakdown) vs netSales.
   // A non-zero settlementDifference means tender totals do not reconcile to net sales.
   const breakdownRows = await financeDb
-    .select({ breakdown: finPosDaily.paymentMethodBreakdown })
-    .from(finPosDaily)
-    .where(and(eq(finPosDaily.date, new Date(date)), eq(finPosDaily.outletId, outlet_id)));
+    .select({ breakdown: finPosDailyView.paymentMethodBreakdown })
+    .from(finPosDailyView)
+    .where(and(eq(finPosDailyView.date, new Date(date)), eq(finPosDailyView.outletId, outlet_id)));
   const paymentMethodsSum = breakdownRows.reduce((acc, r) => {
     const breakdown = (r.breakdown ?? {}) as Record<string, unknown>;
     const methodTotal = Object.values(breakdown).reduce<number>((sum, v) => {
