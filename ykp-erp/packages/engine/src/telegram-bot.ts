@@ -23,6 +23,9 @@ export interface BotStatus {
   lastError: string | null;
   startedAt: string | null;
   messagesHandled: number;
+  pollCycles: number;
+  updatesSeen: number;
+  lastTgError: string | null;
 }
 
 const state: BotStatus = {
@@ -32,6 +35,9 @@ const state: BotStatus = {
   lastError: null,
   startedAt: null,
   messagesHandled: 0,
+  pollCycles: 0,
+  updatesSeen: 0,
+  lastTgError: null,
 };
 
 export function getBotStatus(): BotStatus {
@@ -337,16 +343,20 @@ export async function startTelegramBot(): Promise<{ started: boolean; reason?: s
 
   void (async () => {
     while (state.running) {
+      state.pollCycles += 1;
       const updates = await tgCall<TgUpdate[]>(token, "getUpdates", {
         offset: state.lastUpdateId + 1,
         timeout: 30,
         allowed_updates: ["message"],
       });
       if (!updates) {
+        state.lastTgError = state.lastError;
         // transient error — back off, keep polling
         await new Promise((r) => setTimeout(r, 3000));
         continue;
       }
+      state.lastTgError = null;
+      state.updatesSeen += updates.length;
       for (const u of updates) {
         state.lastUpdateId = Math.max(state.lastUpdateId, u.update_id);
         if (u.message) {
