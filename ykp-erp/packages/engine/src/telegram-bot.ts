@@ -44,7 +44,7 @@ export function getBotStatus(): BotStatus {
   return { ...state };
 }
 
-interface TgUser { id: number; first_name?: string; username?: string }
+interface TgUser { id: number; first_name?: string; username?: string; is_bot?: boolean }
 interface TgChat { id: number; type: string; title?: string }
 interface TgMessage { message_id: number; from?: TgUser; chat: TgChat; text?: string; date: number }
 interface TgUpdate { update_id: number; message?: TgMessage }
