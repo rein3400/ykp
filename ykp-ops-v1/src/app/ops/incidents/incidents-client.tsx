@@ -1,16 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function IncidentsClient({
-  rows,
+  rows: serverRows,
   outlets,
 }: {
   rows: Record<string, string>[];
   outlets: Record<string, string>[];
 }) {
   const router = useRouter();
+  // In mock mode on serverless, the server-component page and the API route
+  // run in different function instances, so the page's store is empty. The
+  // GET /api/ops/incidents route shares an instance with POST, so it has the
+  // data — fetch it client-side and prefer it over the (empty) server rows.
+  const [rows, setRows] = useState(serverRows);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/ops/incidents', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((j) => {
+        const items = Array.isArray(j?.data) ? j.data : (j?.data?.items ?? j?.data?.incidents ?? []);
+        if (!cancelled && Array.isArray(items) && items.length) setRows(items);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   const [outletId, setOutletId] = useState(outlets[0]?.outlet_id ?? '');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -44,6 +60,15 @@ export function IncidentsClient({
       setDescription('');
       setCustomerName('');
       setChannel('');
+      // Re-fetch from the API instance (which has the data in mock mode) and
+      // also refresh the server component for real-DB mode.
+      fetch('/api/ops/incidents', { credentials: 'include' })
+        .then((r) => r.json())
+        .then((j) => {
+          const items = Array.isArray(j?.data) ? j.data : (j?.data?.items ?? j?.data?.incidents ?? []);
+          if (Array.isArray(items)) setRows(items);
+        })
+        .catch(() => {});
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menghubungi server');

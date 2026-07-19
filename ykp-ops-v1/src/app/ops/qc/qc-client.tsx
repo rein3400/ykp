@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function QcClient({
-  rows,
+  rows: serverRows,
   products,
   outlets,
 }: {
@@ -13,6 +13,19 @@ export function QcClient({
   outlets: Record<string, string>[];
 }) {
   const router = useRouter();
+  // Serverless mock store isn't shared between the page function and the API
+  // route function — fetch the list from the API (same instance as POST).
+  const [rows, setRows] = useState(serverRows);
+  const refetch = () => {
+    fetch('/api/ops/qc', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((j) => {
+        const items = Array.isArray(j?.data) ? j.data : (j?.data?.items ?? j?.data?.qc ?? []);
+        if (Array.isArray(items) && items.length) setRows(items);
+      })
+      .catch(() => {});
+  };
+  useEffect(refetch, []);
   const [outletId, setOutletId] = useState(outlets[0]?.outlet_id ?? '');
   const [productId, setProductId] = useState(products[0]?.product_id ?? '');
   const [score, setScore] = useState('4');
@@ -52,6 +65,7 @@ export function QcClient({
       const j = await res.json().catch(() => ({}));
       if (!res.ok) { setError(j?.error?.message ?? `Gagal menyimpan (HTTP ${res.status})`); return; }
       setPhoto('');
+      refetch();
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menghubungi server');

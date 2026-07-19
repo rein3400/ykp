@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function OpeningClient({
   templates,
   outlets,
   shifts,
-  rows,
+  rows: serverRows,
 }: {
   templates: Record<string, string>[];
   outlets: Record<string, string>[];
@@ -15,6 +15,19 @@ export function OpeningClient({
   rows: Record<string, string>[];
 }) {
   const router = useRouter();
+  // Serverless mock store isn't shared between page and API route instances —
+  // fetch history from the API (same instance as POST).
+  const [rows, setRows] = useState(serverRows);
+  const refetch = () => {
+    fetch('/api/ops/opening', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((j) => {
+        const items = Array.isArray(j?.data) ? j.data : (j?.data?.items ?? j?.data?.opening ?? []);
+        if (Array.isArray(items) && items.length) setRows(items);
+      })
+      .catch(() => {});
+  };
+  useEffect(refetch, []);
   const [outletId, setOutletId] = useState(outlets[0]?.outlet_id ?? '');
   const [shiftId, setShiftId] = useState(shifts[0]?.shift_id ?? '');
   const [loading, setLoading] = useState(false);
@@ -45,6 +58,7 @@ export function OpeningClient({
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) { setError(j?.error?.message ?? `Gagal menyimpan (HTTP ${res.status})`); return; }
+      refetch();
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menghubungi server');
