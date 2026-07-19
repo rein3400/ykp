@@ -52,10 +52,16 @@ export async function setSession(user: SessionUser): Promise<void> {
   const store = await cookies();
   const now = Math.floor(Date.now() / 1000);
   const token = sign({ ...user, iat: now, exp: now + 24 * 3600 });
+  // SameSite=None + Secure is required for the Hub iframe preview: the hub
+  // (different origin) embeds Ops in an iframe, and a Strict/Lax cookie is
+  // not sent on that cross-site subresource request, so the user would hit
+  // /login inside the iframe. None+Secure allows the iframe session while
+  // keeping the cookie HTTPS-only + httpOnly. Top-level SSO navigation also
+  // works (cookie set on a first-party redirect).
   store.set('ykp_ops_session', token, {
     httpOnly: true,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+    secure: true,
     path: '/',
     maxAge: 24 * 3600,
   });

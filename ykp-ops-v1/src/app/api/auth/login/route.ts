@@ -1,7 +1,15 @@
 /**
  * Auth routes for Operational V1.
+ *
+ * GET = Hub portal SSO bridge. Hub opens
+ *   /api/auth/login?role=<hubRole>&redirect=/<path>
+ * We mint the ykp_ops_session cookie (same shape as POST) and 302-redirect
+ * to `redirect` (default "/ops"). `redirect` is constrained to same-origin
+ * absolute paths to avoid open-redirect abuse. The hub role maps onto an
+ * Operational role (owner/manager -> owner, else staff) since the ops RBAC
+ * matrix is keyed on lowercase roles.
  */
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { setSession } from '@/lib/session';
 import { readTab, TABS } from '@/db/sheets';
@@ -9,6 +17,19 @@ import { ok, handler, unauthorized, badRequest } from '@/lib/http';
 
 function hashPassword(pw: string): string {
   return createHash('sha256').update(pw).digest('hex');
+}
+
+function safeRedirect(target: string | null): string {
+  if (!target || !target.startsWith('/') || target.startsWith('//')) return '/ops';
+  return target;
+}
+
+/** Public origin from forwarded headers (Vercel/proxy sets x-forwarded-*). */
+function publicOrigin(req: NextRequest): string {
+  const xfHost = req.headers.get('x-forwarded-host');
+  const xfProto = req.headers.get('x-forwarded-proto');
+  if (xfHost) return `${xfProto ?? 'https'}://${xfHost}`;
+  return req.nextUrl.origin;
 }
 
 export const POST = handler(async (req: NextRequest) => {
@@ -30,6 +51,18 @@ export const POST = handler(async (req: NextRequest) => {
   return ok({ userId: user.user_id, username: user.username, role: user.role });
 });
 
-export const GET = handler(async () => {
-  return ok({ ok: true });
+export const GET = handler(async (req: NextRequest) => {
+  const roleParam = (req.nextUrl.searchParams.get('role') ?? 'OWNER').toLowerCase();
+  // Map hub role onto an Operational role. owner/super_admin/manager -> owner
+  // (full access); anything else -> staff.
+  const role = ['owner', 'super_admin', 'manager', 'brand_manager'].includes(roleParam)
+    ? 'owner'
+    : 'staff';
+  const redirect = safeRedirect(req.nextUrl.searchParams.get('redirect'));
+  await setSession({
+    userId: 'hub-sso',
+    username: 'hub',
+    role,
+  });
+  return NextResponse.redirect(new URL(redirect, publicOrigin(req)), 302);
 });

@@ -13,20 +13,32 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout'];
 
+/** Origins allowed to embed Ops in an iframe (the Hub portal). */
+const HUB_ORIGINS = (process.env.HUB_ORIGINS ?? 'https://ykp-hub-production.up.railway.app')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 function hasSessionCookie(token: string | undefined): boolean {
   if (!token) return false;
   const parts = token.split('.');
   return parts.length === 3 && parts.every((p) => p.length > 0);
 }
 
+function withCsp(res: NextResponse): NextResponse {
+  const ancestors = HUB_ORIGINS.length ? `frame-ancestors 'self' ${HUB_ORIGINS.join(' ')}` : "frame-ancestors 'none'";
+  res.headers.set('Content-Security-Policy', `${ancestors}; frame-src 'self'`);
+  return res;
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return NextResponse.next();
+    return withCsp(NextResponse.next());
   }
   // Hermez-facing public summary
   if (pathname.startsWith('/api/ops/summary') && req.method === 'GET') {
-    return NextResponse.next();
+    return withCsp(NextResponse.next());
   }
 
   const cookie = req.cookies.get('ykp_ops_session')?.value;
@@ -41,7 +53,7 @@ export async function middleware(req: NextRequest) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
-  return NextResponse.next();
+  return withCsp(NextResponse.next());
 }
 
 export const config = {

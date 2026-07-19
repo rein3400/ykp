@@ -97,21 +97,21 @@ export function findApp(id: AppId | null): AppDef | undefined {
 /**
  * Apps whose login is a demo role-picker (POST /api/auth/login {role})
  * with a GET SSO bridge (/api/auth/login?role=X&redirect=/ → cookie → 302).
- * The local YKP family (ykp-*-v1) uses real username/password auth backed
- * by Google Sheets user tabs, so none of them support SSO auto-login —
- * Hub opens the app root and the user logs in there manually.
+ * finance/hr/hermez (ykp-erp) support it, and ops (ykp-ops-v1) now exposes a
+ * GET SSO bridge too. The remaining local YKP family (hr-v1/warehouse/
+ * investor) uses real username/password auth backed by Google Sheets user
+ * tabs, so those open the app root and the user logs in there manually.
  */
-export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>([]);
+export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["finance", "hr", "ops"]);
 
 /**
- * Per-app SSO role override. Empty: no local app mints sessions from a
- * Hub role (see ROLE_SSO_APPS above). Kept for forward compatibility.
+ * Per-app SSO role override. hermez needs SUPER_ADMIN for config/brief APIs.
  */
 export const SSO_ROLE: Partial<Record<AppId, string>> = {};
 
 /**
  * Build the URL to open an app from Hub so the user lands authenticated.
- * All local apps require manual login, so this is simply the app base URL.
+ * Apps in ROLE_SSO_APPS get the SSO bridge URL; others get the app base URL.
  */
 export function ssoUrl(app: AppDef, role: string): string {
   if (!ROLE_SSO_APPS.has(app.id)) return app.url;
