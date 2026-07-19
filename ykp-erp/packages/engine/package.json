@@ -23,6 +23,10 @@
       "import": "./dist/integrations.js",
       "types": "./dist/integrations.d.ts"
     },
+    "./telegram-bot": {
+      "import": "./dist/telegram-bot.js",
+      "types": "./dist/telegram-bot.d.ts"
+    },
     "./hermez-brief": {
       "import": "./dist/hermez-brief.js",
       "types": "./dist/hermez-brief.d.ts"

@@ -13,6 +13,7 @@ const NAV = [
   { href: "/config", label: "Konfigurasi" },
   { href: "/run", label: "Jalankan" },
   { href: "/telegram-test", label: "Tes Telegram" },
+  { href: "/telegram-bot", label: "Bot Telegram" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -42,5 +42,7 @@ COPY --from=builder /repo/apps/hermez/package.json ./
 COPY --from=builder /repo/node_modules ./node_modules
 COPY --from=builder /repo/apps/hermez/next.config.mjs ./
 COPY --from=builder /repo/packages ./packages
+COPY --from=builder /repo/apps/hermez/src/workers ./workers
 EXPOSE 3004
-CMD ["sh", "-c", "PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
+# Web server + telegram dialog bot (no-op when credentials unset).
+CMD ["sh", "-c", "node workers/bot-worker.cjs & PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
