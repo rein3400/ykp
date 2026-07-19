@@ -95,18 +95,37 @@ export async function POST(req: Request): Promise<Response> {
       outletIds.push(...outlets.map((o) => o.outletId));
     }
 
+    // Run in parallel batches (concurrency cap) instead of a sequential loop —
+    // rebuilding N outlets one at a time exceeded the serverless/proxy timeout
+    // when several outlets each did their own multi-query summary. Per-outlet
+    // failures are isolated and reported, not fatal.
+    const CONCURRENCY = 4;
+    const failed: string[] = [];
     let rebuilt = 0;
-    for (const outletId of outletIds) {
-      await generateHrDailySummary({
-        hrDb,
-        masterDb,
-        date: parsed.date,
-        outlet_id: outletId,
-      }).catch(() => null);
-      rebuilt += 1;
+    for (let i = 0; i < outletIds.length; i += CONCURRENCY) {
+      const batch = outletIds.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(
+        batch.map(async (outletId) => {
+          try {
+            await generateHrDailySummary({
+              hrDb,
+              masterDb,
+              date: parsed.date,
+              outlet_id: outletId,
+            });
+            return { outletId, ok: true as const };
+          } catch {
+            return { outletId, ok: false as const };
+          }
+        }),
+      );
+      for (const r of results) {
+        if (r.ok) rebuilt += 1;
+        else failed.push(r.outletId);
+      }
     }
 
-    return jsonOk({ rebuilt });
+    return jsonOk({ rebuilt, failed: failed.length ? failed : undefined });
   } catch (err) {
     return handleError(err);
   }
