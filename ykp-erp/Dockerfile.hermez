@@ -49,4 +49,4 @@ EXPOSE 3004
 # (its manual bot-start is gated by HERMEZ_BOT_WORKER_ENABLED=true, set in the
 # Railway env), so there is no two-consumer conflict. Free-plan friendly:
 # avoids needing a separate Railway service.
-CMD ["sh", "-c", "node workers/bot-worker.cjs & PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
+CMD ["sh", "-c", "node workers/bot-worker.mjs & PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
