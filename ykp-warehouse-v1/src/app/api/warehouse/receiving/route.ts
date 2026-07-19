@@ -16,6 +16,7 @@ import { appendMovement } from '@/lib/stock-ledger';
 import { evalReceivingDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
+import { FraudControlError, assertReceivingVerification, checkReceivingThreeWay } from '@/lib/fraud-controls';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -45,7 +46,7 @@ export const POST = handler(async (req: NextRequest) => {
     source_type?: string; supplier_id?: string; source_location_id?: string;
     destination_location_id?: string; purchase_order_id?: string;
     invoice_number?: string; delivery_note_number?: string;
-    received_by?: string; verified_by?: string; photo_url?: string; notes?: string;
+    received_by?: string; verified_by?: string; photo_attachment_id?: string; photo_url?: string; notes?: string;
     evidence_urls?: unknown;
     items?: Array<{
       item_id: string; batch_number?: string; expiry_date?: string;
@@ -53,10 +54,24 @@ export const POST = handler(async (req: NextRequest) => {
       qty_rejected?: number; unit: string; unit_price: number;
       rejection_reason?: string; condition_status?: string;
       temperature_value?: string; photo_url?: string; notes?: string;
+      scale_weight?: number;
     }>;
   };
 
   if (!body.items || body.items.length === 0) return badRequest('At least one item is required');
+
+  // Hard gate: photo proof (weight/measurement) is mandatory per owner directive.
+  // Accept EITHER an attachments-tab photo (photo_attachment_id) OR evidence
+  // uploads (evidence_urls, supabase storage) — both are photographic proof.
+  const evidenceFromBody = parseEvidenceUrls(body.evidence_urls);
+  if (!body.photo_attachment_id && evidenceFromBody.length === 0 && !body.photo_url) {
+    return badRequest('Foto bukti timbang/penerimaan wajib diunggah sebelum submit');
+  }
+  let photo: { row: Record<string, string>; rowNumber: number } | null = null;
+  if (body.photo_attachment_id) {
+    photo = await findRow(TABS.attachments, 'attachment_id', body.photo_attachment_id);
+    if (!photo) return badRequest(`Foto bukti tidak ditemukan: ${body.photo_attachment_id}`);
+  }
 
   // Validate FKs
   try {
@@ -66,6 +81,23 @@ export const POST = handler(async (req: NextRequest) => {
     if (body.source_location_id) await assertLocation(body.source_location_id);
   } catch (e) {
     if (e instanceof MissingRefError) return badRequest(e.message);
+    throw e;
+  }
+
+  // Fraud control: 3-way check per item (ordered ↔ accepted ↔ scale).
+  // Any variance beyond owner tolerance requires a SECOND person to verify
+  // (TTD 2 orang per F1 SOP). Verifier must differ from receiver.
+  const receivedBy = body.received_by ?? s.userId;
+  const threeWay = body.items.map((it) => ({
+    item: it,
+    check: checkReceivingThreeWay(it.qty_ordered || 0, it.qty_accepted ?? it.qty_delivered ?? 0, it.scale_weight)
+  }));
+  const needsVerification = threeWay.some((t) => t.check.severity !== 'OK');
+  try {
+    if (needsVerification) assertReceivingVerification(receivedBy, body.verified_by);
+    else if (body.verified_by) assertReceivingVerification(receivedBy, body.verified_by);
+  } catch (e) {
+    if (e instanceof FraudControlError) return badRequest(e.message);
     throw e;
   }
 
@@ -90,25 +122,35 @@ export const POST = handler(async (req: NextRequest) => {
     received_by: body.received_by ?? s.userId,
     verified_by: body.verified_by ?? '',
     receiving_status: 'RECEIVED',
-    photo_url: body.photo_url ?? '',
+    photo_url: body.photo_attachment_id ? `/api/warehouse/attachments/${body.photo_attachment_id}/file` : (body.photo_url ?? ''),
     notes: body.notes ?? '',
     created_at: now,
     approved_at: ''
   };
   await appendRows(TABS.receiving, [header]);
 
+  // Link the proof photo to this receiving (uploaded earlier with entity_id='').
+  if (photo) {
+    await updateRow(TABS.attachments, photo.rowNumber, {
+      ...photo.row,
+      entity_type: 'receiving',
+      entity_id: receivingId
+    }).catch(() => null);
+  }
+
   // Create detail items
   const detailRows: Record<string, string>[] = [];
   let hasDiscrepancy = false;
 
-  for (const it of body.items) {
+  for (const t of threeWay) {
+    const it = t.item;
     const itemId = nextSequentialIdSync('RCI');
     const qtyAccepted = it.qty_accepted ?? it.qty_delivered;
     const qtyRejected = it.qty_rejected ?? Math.max(0, (it.qty_delivered || 0) - qtyAccepted);
     const totalValue = String(Math.round(qtyAccepted * (it.unit_price || 0)));
     const condition = it.condition_status ?? 'GOOD';
 
-    if (qtyAccepted < (it.qty_ordered || 0) || condition !== 'GOOD') {
+    if (qtyAccepted < (it.qty_ordered || 0) || condition !== 'GOOD' || t.check.severity !== 'OK') {
       hasDiscrepancy = true;
     }
 
@@ -129,7 +171,9 @@ export const POST = handler(async (req: NextRequest) => {
       condition_status: condition,
       temperature_value: it.temperature_value ?? '',
       photo_url: it.photo_url ?? '',
-      notes: it.notes ?? ''
+      notes: it.notes ?? '',
+      scale_weight: it.scale_weight !== undefined ? String(it.scale_weight) : '',
+      variance_pct: t.check.pctVsOrdered.toFixed(2)
     };
     detailRows.push(detail);
   }
@@ -145,7 +189,8 @@ export const POST = handler(async (req: NextRequest) => {
   }
 
   // Auto-post ledger movements for accepted items
-  for (const it of body.items) {
+  for (const t of threeWay) {
+    const it = t.item;
     const qtyAccepted = it.qty_accepted ?? it.qty_delivered;
     if (qtyAccepted > 0 && body.destination_location_id) {
       await appendMovement({
@@ -165,13 +210,36 @@ export const POST = handler(async (req: NextRequest) => {
       }).catch((e) => console.error('[receiving] ledger post failed:', e));
     }
 
-    // Create alert on discrepancy
-    if (qtyAccepted < (it.qty_ordered || 0) || (it.condition_status && it.condition_status !== 'GOOD')) {
-      const alert = evalReceivingDiscrepancy(
+    // Create alert on discrepancy — severity escalated by owner thresholds:
+    // variance > 2% → HIGH, > 5% → CRITICAL (was flat MEDIUM).
+    if (qtyAccepted < (it.qty_ordered || 0) || (it.condition_status && it.condition_status !== 'GOOD') || t.check.severity !== 'OK') {
+      let alert = evalReceivingDiscrepancy(
         it.qty_ordered || 0, qtyAccepted, it.condition_status ?? 'GOOD',
         it.item_id, receivingId, it.item_id
       );
+      // Fraud control: scale-only disagreement (invoice qty matches, physical
+      // weight doesn't) produces NO candidate from evalReceivingDiscrepancy —
+      // synthesize one or the scale check would be silently dropped.
+      if (!alert && t.check.severity !== 'OK') {
+        alert = {
+          alertType: 'RECEIVING_DISCREPANCY',
+          severity: t.check.severity,
+          title: `Receiving variance: ${it.item_id}`,
+          message: `scale/invoice mismatch — ${t.check.messages.join('; ')}`,
+          actionRequired: 'Re-weigh and claim to supplier today',
+          itemId: it.item_id,
+          referenceType: 'receiving',
+          referenceId: receivingId
+        };
+      }
       if (alert) {
+        // Fraud control: threshold-based severity wins over rules-engine default.
+        if (t.check.severity !== 'OK') {
+          alert.severity = t.check.severity;
+          if (t.check.messages.length > 0 && !alert.message.includes('variance')) {
+            alert.message = `${alert.message}; variance: ${t.check.messages.join('; ')}`;
+          }
+        }
         const alertId = nextSequentialIdSync('ALR');
         const alertRow: Record<string, string> = {
           alert_id: alertId,
@@ -237,7 +305,7 @@ export const POST = handler(async (req: NextRequest) => {
     }
   }
 
-  const evidenceFiles = parseEvidenceUrls(body.evidence_urls);
+  const evidenceFiles = evidenceFromBody;
   if (evidenceFiles.length) {
     await appendEvidenceRows('receiving', receivingId, evidenceFiles, s.userId).catch(
       (e) => console.error('[receiving] evidence append failed:', e),

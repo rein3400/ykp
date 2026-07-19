@@ -160,13 +160,31 @@ export function HrOverviewClient(props: {
         )}
       </div>
 
-      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-        {kpis.map((k) => (
-          <div key={k.label} className='card'>
-            <div className='text-xs text-muted-foreground'>{k.label}</div>
-            <div className='mt-1 text-2xl font-bold'>{k.value}</div>
-          </div>
-        ))}
+      <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7'>
+        {kpis.map((k) => {
+          const toneCls =
+            k.tone === 'green'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+              : k.tone === 'yellow'
+              ? 'border-amber-200 bg-amber-50 text-amber-900'
+              : k.tone === 'red'
+              ? 'border-rose-200 bg-rose-50 text-rose-900'
+              : 'border-slate-200 bg-white text-slate-900';
+          const labelCls =
+            k.tone === 'green'
+              ? 'text-emerald-700'
+              : k.tone === 'yellow'
+              ? 'text-amber-700'
+              : k.tone === 'red'
+              ? 'text-rose-700'
+              : 'text-slate-500';
+          return (
+            <div key={k.label} className={`rounded-lg border p-3 shadow-sm transition-shadow hover:shadow ${toneCls}`}>
+              <div className={`text-[11px] font-medium uppercase tracking-wide ${labelCls}`}>{k.label}</div>
+              <div className='mt-1 text-2xl font-bold tabular-nums'>{k.value}</div>
+            </div>
+          );
+        })}
       </div>
 
       <div className='card'>

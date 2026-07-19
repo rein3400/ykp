@@ -4,7 +4,7 @@
  */
 import { getSheetsClient, getSpreadsheetId, TABS } from '../src/db/sheets';
 import { nowTimestampWib } from '../src/lib/format';
-import { createHash } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 async function main(): Promise<void> {
   const sheets = getSheetsClient();
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
     console.log('users tab already seeded');
     return;
   }
-  const pw = createHash('sha256').update('owner123').digest('hex');
+  const pw = bcrypt.hashSync('owner123', 10);
   const row = [
     'USR-001', 'owner', pw, 'owner', '', '', 'active', nowTimestampWib(), ''
   ];

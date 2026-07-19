@@ -62,15 +62,8 @@ function toDataUrl(content: string, mime: string): string {
   return `data:${mime};base64,${b64}`;
 }
 
-export const POST = handler(async (req: Request) => {
-  const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER]);
-  if (!can(user.role, "report", "export")) return fail("forbidden", "Role cannot export CSV");
-
-  const body = await req.json();
-  const parsed = FinExportRequestSchema.safeParse(body);
-  if (!parsed.success) return fail("validation_error", "Invalid export request", parsed.error.flatten());
-
-  const { report, date_from, date_to, filters } = parsed.data;
+async function buildReportCsv(data: { report: string; date_from: string; date_to: string; filters?: Record<string, string | undefined> }): Promise<{ csv: string; filename: string; rowCount: number; report: string; dateFrom: string; dateTo: string }> {
+  const { report, date_from, date_to, filters } = data;
   const db = getFinanceDb();
   const filters_ = filters ?? {};
 
@@ -164,18 +157,67 @@ export const POST = handler(async (req: Request) => {
   const csv = toCsv(headers, rows);
   const stamp = todayWib().replace(/-/g, "");
   const filename = `ykp-finance-${report}-${date_from}_${date_to}-${stamp}.csv`;
-  const download_url = toDataUrl(csv, "text/csv;charset=utf-8");
+  return { csv, filename, rowCount: rows.length, report, dateFrom: date_from, dateTo: date_to };
+}
+
+export const POST = handler(async (req: Request) => {
+  const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER]);
+  if (!can(user.role, "report", "export")) return fail("forbidden", "Role cannot export CSV");
+
+  const body = await req.json();
+  const parsed = FinExportRequestSchema.safeParse(body);
+  if (!parsed.success) return fail("validation_error", "Invalid export request", parsed.error.flatten());
+
+  const built = await buildReportCsv(parsed.data);
 
   return ok({
-    download_url,
-    filename,
+    download_url: toDataUrl(built.csv, "text/csv;charset=utf-8"),
+    filename: built.filename,
     mime_type: "text/csv;charset=utf-8",
-    byte_size: Buffer.byteLength(csv, "utf8"),
-    row_count: rows.length,
-    report,
-    date_from,
-    date_to,
+    byte_size: Buffer.byteLength(built.csv, "utf8"),
+    row_count: built.rowCount,
+    report: built.report,
+    date_from: built.dateFrom,
+    date_to: built.dateTo,
     generated_by: user.id,
-    inline: csv,
+    inline: built.csv,
+  });
+});
+
+/**
+ * GET /api/fin/export/csv?report=summary&date_from=2026-01-01&date_to=2026-01-31[&outlet_id|brand_id|supplier_id|status]
+ *
+ * Browser-downloadable contract (was 405 per VERIFICATION_REPORT 2026-07-12).
+ * Same schema as POST but via query params; returns the raw CSV file with
+ * Content-Disposition so a plain link or window.open downloads the file.
+ */
+export const GET = handler(async (req: Request) => {
+  const user = await requireRole([Role.FINANCE_ADMIN, Role.SUPER_ADMIN, Role.OWNER, Role.BRAND_MANAGER]);
+  if (!can(user.role, "report", "export")) return fail("forbidden", "Role cannot export CSV");
+
+  const url = new URL(req.url);
+  const q = url.searchParams;
+  const parsed = FinExportRequestSchema.safeParse({
+    report: q.get("report"),
+    date_from: q.get("date_from"),
+    date_to: q.get("date_to"),
+    filters: {
+      outlet_id: q.get("outlet_id") || undefined,
+      brand_id: q.get("brand_id") || undefined,
+      supplier_id: q.get("supplier_id") || undefined,
+      status: q.get("status") || undefined,
+    },
+  });
+  if (!parsed.success) return fail("validation_error", "Invalid export request", parsed.error.flatten());
+
+  const built = await buildReportCsv(parsed.data);
+
+  return new Response(built.csv, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv;charset=utf-8",
+      "Content-Disposition": `attachment; filename="${built.filename}"`,
+      "Cache-Control": "no-store",
+    },
   });
 });

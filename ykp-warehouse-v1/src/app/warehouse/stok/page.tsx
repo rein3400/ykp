@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import LegacyBanner from '@/components/legacy-banner';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,7 @@ export default async function StokPage({ searchParams }: { searchParams: Promise
         <h1 className='text-2xl font-bold'>F2 — Kartu Stok Gudang</h1>
         <p className='text-sm text-muted-foreground'>1 transaksi = 1 baris. Saldo terhitung otomatis. Cocokkan dengan fisik tiap closing.</p>
       </div>
+      <LegacyBanner newFlow='Stock Ledger (immutable movement ledger) — menu Transaksi › Stock Ledger' />
       <form className='flex gap-2 text-xs'>
         <select name='item_id' defaultValue={itemId ?? ''} className='rounded border border-border px-2 py-1'>
           <option value=''>Semua Item</option>

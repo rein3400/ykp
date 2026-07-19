@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/toast';
 
 export function AdjustmentForm({ employees }: { employees: { id: string; name: string }[] }) {
   const router = useRouter();
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
@@ -19,6 +21,14 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.amount || Number(form.amount) <= 0) {
+      setError('Amount wajib diisi lebih dari 0.');
+      return;
+    }
+    if (!form.reason.trim()) {
+      setError('Alasan wajib diisi.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -31,6 +41,7 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? 'Gagal');
       }
+      toast.success('Adjustment ditambahkan', 'Menunggu approval owner.');
       router.refresh();
       setForm({ ...form, amount: '', reason: '' });
     } catch (e) {
@@ -79,8 +90,8 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
         Alasan
         <textarea className='input mt-1 w-full' rows={2} value={form.reason} onChange={(e) => set('reason', e.target.value)} />
       </label>
-      {error && <div className='text-sm text-red-600'>{error}</div>}
-      <button type='submit' disabled={saving} className='btn-primary'>{saving ? '...' : 'Simpan'}</button>
+      {error && <div role='alert' className='rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700'>{error}</div>}
+      <button type='submit' disabled={saving} className='btn-primary'>{saving ? 'Menyimpan…' : 'Simpan'}</button>
     </form>
   );
 }

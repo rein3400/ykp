@@ -12,6 +12,7 @@ import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
+import { FraudControlError, assertNotSelfApproval, assertReason } from '@/lib/fraud-controls';
 
 const ADJUSTMENT_TYPES = ['COUNT_CORRECTION', 'UNIT_CONVERSION_FIX', 'OPENING_BALANCE_FIX', 'SYSTEM_ERROR_FIX', 'OTHER'];
 
@@ -36,6 +37,14 @@ export const POST = handler(async (req: NextRequest) => {
   }
   if (!body.qty_difference) return badRequest('qty_difference is required');
 
+  // Fraud control: reason is mandatory for the audit trail.
+  try {
+    assertReason(body.reason);
+  } catch (e) {
+    if (e instanceof FraudControlError) return badRequest(e.message);
+    throw e;
+  }
+
   try {
     await assertItem(body.item_id);
     await assertLocation(body.location_id);
@@ -46,6 +55,10 @@ export const POST = handler(async (req: NextRequest) => {
 
   const id = nextSequentialIdSync('ADJ');
   const now = nowTimestampWib();
+  // Fraud control: client-supplied approved_by is IGNORED. Adjustments always
+  // start PENDING and only the PUT approve handler (with SoD check) can
+  // approve. Previously `approved_by` in the POST body auto-approved —
+  // a direct stock-manipulation fraud vector.
   const row: Record<string, string> = {
     adjustment_id: id,
     date: formatDateWib(new Date()),
@@ -54,35 +67,14 @@ export const POST = handler(async (req: NextRequest) => {
     adjustment_type: body.adjustment_type,
     qty_difference: body.qty_difference,
     unit: body.unit ?? '',
-    reason: body.reason ?? '',
+    reason: body.reason,
     reference_count_id: body.reference_count_id ?? '',
     requested_by: s.userId,
-    approved_by: body.approved_by ?? '',
-    approval_status: body.approved_by ? 'APPROVED' : 'PENDING',
+    approved_by: '',
+    approval_status: 'PENDING',
     created_at: now
   };
   await appendRows(TABS.adjustment, [row]);
-
-  // If auto-approved, post ledger movement
-  if (row.approval_status === 'APPROVED') {
-    const qtyDiff = Number(body.qty_difference);
-    await appendMovement({
-      movementType: 'COUNT_ADJUSTMENT',
-      direction: 'ADJUSTMENT',
-      quantity: qtyDiff,
-      baseUnit: body.unit ?? '',
-      unitCost: 0,
-      itemId: body.item_id,
-      brandId: '',
-      outletId: '',
-      locationId: body.location_id,
-      referenceType: 'adjustment',
-      referenceId: id,
-      createdBy: s.userId,
-      approvedBy: body.approved_by,
-      notes: `${body.adjustment_type}: ${body.reason || ''}`
-    }).catch((e) => console.error('[adjustment] ledger post failed:', e));
-  }
 
   await logAudit({
     module: 'warehouse', action: 'create', recordType: 'adjustment',
@@ -104,6 +96,15 @@ export const PUT = handler(async (req: NextRequest) => {
   const found = await findRow(TABS.adjustment, 'adjustment_id', body.adjustment_id);
   if (!found) return notFound('Adjustment not found');
   if (found.row.approval_status !== 'PENDING') return badRequest('Adjustment is not in PENDING status');
+
+  // Fraud control: segregation of duties — requester cannot approve own adjustment.
+  try {
+    assertNotSelfApproval(found.row.requested_by, s.userId, 'adjustment');
+    if (!body.approved) assertReason(body.reason, 'rejection reason');
+  } catch (e) {
+    if (e instanceof FraudControlError) return badRequest(e.message);
+    throw e;
+  }
 
   const newStatus = body.approved ? 'APPROVED' : 'REJECTED';
   const updated = {

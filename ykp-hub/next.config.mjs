@@ -5,8 +5,13 @@ const nextConfig = {
       {
         source: "/(.*)",
         headers: [
+          // Portal design: the Hub embeds the other YKP apps — framing stays open.
           { key: "X-Frame-Options", value: "ALLOWALL" },
           { key: "Content-Security-Policy", value: "frame-ancestors *" },
+          // Security hardening (2026-07-18): was missing per verification report.
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
         ],
       },
     ];

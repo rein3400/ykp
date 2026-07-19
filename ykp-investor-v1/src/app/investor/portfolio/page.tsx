@@ -9,10 +9,15 @@ export default async function PortfolioPage() {
   const session = await getSession();
   if (!session) redirect('/login');
 
-  const [investors, shareholding] = await Promise.all([
+  const [investors, shareholdingAll] = await Promise.all([
     readTab<Record<string, string>>(TABS.investors),
     readTab<Record<string, string>>(TABS.shareholding)
   ]);
+
+  // investor role: only own positions (never other investors' shareholding)
+  const shareholding = session.role === 'investor' && session.investorId
+    ? shareholdingAll.filter((s) => s.investor_id === session.investorId)
+    : shareholdingAll;
 
   return (
     <div className='space-y-4'>

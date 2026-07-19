@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
  * 7 KPI mingguan + target/aktual/status + 3 temuan + 3 rencana aksi + Aturan Emas.
  */
 export default function DashboardClient({
-  closing, waste, items, receiving, stockIssue, ledger
+  closing, waste, items, receiving, stockIssue, ledger, posNetSales
 }: {
   closing: Record<string, string>[];
   waste: Record<string, string>[];
@@ -14,6 +14,7 @@ export default function DashboardClient({
   receiving: Record<string, string>[];
   stockIssue: Record<string, string>[];
   ledger: Record<string, string>[];
+  posNetSales: number;
 }) {
   const [findings, setFindings] = useState(['', '', '']);
   const [actions, setActions] = useState(['', '', '']);
@@ -30,9 +31,9 @@ export default function DashboardClient({
     const pcts = weekClosing.map((c) => Number(c.diff_pct || c.variance_vs_book_percentage || 0));
     const avgDiff = pcts.length ? pcts.reduce((a, b) => a + b, 0) / pcts.length : 0;
 
-    // 2. Food cost % — waste+usage value / rough sales proxy (from inventory usage value)
-    // V1 approximation: waste_value / (issue_value + waste_value) * 100 as waste-related cost signal;
-    // Food cost needs POS — show N/A if no issue value.
+    // 2. Food cost % = (issue value + waste value) / POS net sales × 100.
+    // Inventory usage value is the food COST; POS net sales (from finance) is
+    // the denominator. Shows N/A only when there is no usage value at all.
     let issueValue = 0;
     for (const s of weekIssue) {
       const item = items.find((i) => i.item_id === s.item_id);
@@ -45,7 +46,15 @@ export default function DashboardClient({
         issueValue += Number(m.total_value || 0);
       }
     }
-    const foodCostPct = issueValue > 0 ? null : null; // needs POS sales — leave N/A until finance link
+    // waste value feeds the food-cost numerator (issue + waste)
+    let wasteValueForFoodCost = 0;
+    for (const w of weekWaste) {
+      wasteValueForFoodCost += Number(w.estimated_total_value || w.estimated_loss || 0);
+    }
+    const foodCostBase = issueValue + wasteValueForFoodCost;
+    const foodCostPct = foodCostBase > 0 && posNetSales > 0
+      ? (foodCostBase / posNetSales) * 100
+      : null;
 
     // 3. Waste ratio = waste_value / (issue_value + waste_value)
     let wasteValue = 0;

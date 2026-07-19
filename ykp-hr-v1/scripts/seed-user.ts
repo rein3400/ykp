@@ -3,15 +3,12 @@
  *   npm run sheets:seed-user
  * Default: username 'owner' / password 'owner123'
  *
+ * Password is stored as a bcrypt hash.
  * IMPORTANT: rotate this password before production.
  */
 import { appendRows, findRow, TABS } from '../src/db/sheets';
-import { createHash } from 'crypto';
+import bcrypt from 'bcryptjs';
 import { nowTimestampWib } from '../src/lib/format';
-
-function hashPw(p: string): string {
-  return createHash('sha256').update(p).digest('hex');
-}
 
 async function main(): Promise<void> {
   const username = process.env.SEED_USERNAME ?? 'owner';
@@ -27,7 +24,7 @@ async function main(): Promise<void> {
     {
       user_id: 'U-001',
       username,
-      password_hash: hashPw(password),
+      password_hash: bcrypt.hashSync(password, 10),
       role: 'OWNER',
       brand_id: '',
       outlet_id: '',

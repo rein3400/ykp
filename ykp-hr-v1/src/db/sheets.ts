@@ -12,6 +12,7 @@
  * because Sheets has no FK constraints.
  */
 import { google, type sheets_v4 } from 'googleapis';
+import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow } from './mock-store';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
@@ -67,7 +68,9 @@ export const TABS = {
   users: 'users',
   auditLog: 'audit_log',
   // Hermez alert log (brief §11)
-  hermezAlerts: 'hermes_alert_log'
+  hermezAlerts: 'hermes_alert_log',
+  // Telegram delivery log (notification wiring)
+  telegramDeliveryLog: 'telegram_delivery_log'
 } as const;
 
 export type TabName = (typeof TABS)[keyof typeof TABS];
@@ -382,11 +385,25 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'action_taken',
     'created_at',
     'resolved_at'
+  ],
+  [TABS.telegramDeliveryLog]: [
+    'delivery_id',
+    'source_module',
+    'source_reference_id',
+    'message_type',
+    'recipient',
+    'message_id',
+    'status',
+    'retry_count',
+    'sent_at',
+    'error_message',
+    'created_at'
   ]
 };
 
 /** Read a tab as array of objects keyed by header. Empty cells → "". */
 export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
+  if (isMockMode()) return mockReadTab(tab) as T[];
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -410,6 +427,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
 /** Append rows to a tab. Returns the 1-based starting row of the inserted block. */
 export async function appendRows(tab: TabName, rows: Record<string, string>[]): Promise<number> {
   if (rows.length === 0) return -1;
+  if (isMockMode()) return mockAppendRows(tab, rows);
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -460,6 +478,7 @@ export async function updateRow(
   rowNumber: number,
   values: Record<string, string>
 ): Promise<void> {
+  if (isMockMode()) { mockUpdateRow(tab, rowNumber, values); return; }
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -479,6 +498,7 @@ export async function findRow(
   keyCol: string,
   value: string
 ): Promise<{ rowNumber: number; row: Record<string, string> } | null> {
+  if (isMockMode()) return mockFindRow(tab, keyCol, value);
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];

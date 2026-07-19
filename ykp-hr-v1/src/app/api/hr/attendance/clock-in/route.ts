@@ -7,7 +7,7 @@ import { readTab, appendRows, TABS, findRow } from '@/db/sheets';
 import { assertEmployee, nextSequentialId } from '@/lib/repo';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
-import { handler, badRequest, missingRef, conflict, unauthorized, ok } from '@/lib/http';
+import { handler, badRequest, missingRef, unauthorized, ok } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
 import { formatTimeWib, nowTimestampWib, todayWib } from '@/lib/format';
 import { z } from 'zod';
@@ -43,7 +43,9 @@ export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
   if (!can(session.role as Role, 'create', 'attendance')) return unauthorized();
-  const body = await req.json();
+  // Safe parse — req.json() on empty/invalid body throws and surfaces as a
+  // 500 (VERIFICATION_REPORT P2: multi-click 5xx). Treat as bad request.
+  const body = await req.json().catch(() => ({}));
   const parsed = schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.message);
 
@@ -56,7 +58,10 @@ export const POST = handler(async (req) => {
   const today = todayWib();
   const existing = await readTab<{ date: string; employee_id: string; actual_check_in: string }>(TABS.attendance);
   const dup = existing.find((a) => a.date === today && a.employee_id === parsed.data.employee_id);
-  if (dup && dup.actual_check_in) return conflict('Already clocked in today');
+  // Idempotent day lock: a second clock-in today is not an error — return the
+  // existing row with 200 + already:true so multi-click / double-tap is
+  // harmless (was 409 + occasional 5xx under race).
+  if (dup && dup.actual_check_in) return ok({ ...(dup as Record<string, string>), already: true }, 200);
 
   const emp = await findRow(TABS.employees, 'employee_id', parsed.data.employee_id);
   const employee = emp?.row;

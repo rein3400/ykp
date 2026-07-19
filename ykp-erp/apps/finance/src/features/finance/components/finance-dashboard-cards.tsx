@@ -68,27 +68,37 @@ export function FinanceDashboardCards() {
 
   const net = consolidated.netProfitEstimate;
   const positive = net >= 0;
+  const isStale = consolidated.latestDate !== today;
 
   if (isLoading) return <div className="text-muted-foreground">Memuat ringkasan...</div>;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-      <KpiCard title="Consolidated Revenue" value={formatIdr(consolidated.revenue)} icon={<TrendingUp className="h-5 w-5" />} />
-      <KpiCard title="Consolidated Expenses" value={formatIdr(consolidated.expense)} icon={<TrendingDown className="h-5 w-5" />} />
-      <KpiCard
-        title="Est. Operating Result"
-        value={formatIdr(net)}
-        icon={<Wallet className="h-5 w-5" />}
-        delta={positive ? 1 : -1}
-        deltaSuffix=""
-        hideArrow
-      />
-      <KpiCard title="Est. Cash Surplus" value={formatIdr(consolidated.revenue - consolidated.expense)} icon={<PiggyBank className="h-5 w-5" />} />
-      <KpiCard title="Accounts Payable" value={formatIdr(consolidated.unpaidSupplier)} icon={<CreditCard className="h-5 w-5" />} />
-      <KpiCard title="Cash Inflow" value={formatIdr(consolidated.revenue)} icon={<Banknote className="h-5 w-5" />} />
-      <KpiCard title="Cash Outflow" value={formatIdr(consolidated.expense + consolidated.supplierCost + consolidated.pettyCashOut)} icon={<ArrowRightLeft className="h-5 w-5" />} />
-      <KpiCard title="Supplier Top Spend" value={formatIdr(consolidated.supplierCost)} icon={<Users className="h-5 w-5" />} />
-      <KpiCard title="Unit Margin Matrix" value={formatIdr(net)} icon={<Package className="h-5 w-5" />} />
+    <div className="space-y-2">
+      {/* Data-date caption: the cards fall back to the latest day WITH data,
+          so always disclose which day the numbers represent (trust). */}
+      <p className={`text-xs ${isStale ? "text-amber-600" : "text-muted-foreground"}`}>
+        {isStale
+          ? `Belum ada data hari ini — menampilkan data per ${consolidated.latestDate}`
+          : `Data per ${consolidated.latestDate}`}
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+        <KpiCard title="Consolidated Revenue" value={formatIdr(consolidated.revenue)} icon={<TrendingUp className="h-5 w-5" />} />
+        <KpiCard title="Consolidated Expenses" value={formatIdr(consolidated.expense)} icon={<TrendingDown className="h-5 w-5" />} />
+        <KpiCard
+          title="Est. Operating Result"
+          value={formatIdr(net)}
+          icon={<Wallet className="h-5 w-5" />}
+          delta={positive ? 1 : -1}
+          deltaSuffix=""
+          hideArrow
+        />
+        <KpiCard title="Est. Cash Surplus" value={formatIdr(consolidated.revenue - consolidated.expense)} icon={<PiggyBank className="h-5 w-5" />} />
+        <KpiCard title="Accounts Payable" value={formatIdr(consolidated.unpaidSupplier)} icon={<CreditCard className="h-5 w-5" />} />
+        <KpiCard title="Cash Inflow" value={formatIdr(consolidated.revenue)} icon={<Banknote className="h-5 w-5" />} />
+        <KpiCard title="Cash Outflow" value={formatIdr(consolidated.expense + consolidated.supplierCost + consolidated.pettyCashOut)} icon={<ArrowRightLeft className="h-5 w-5" />} />
+        <KpiCard title="Supplier Top Spend" value={formatIdr(consolidated.supplierCost)} icon={<Users className="h-5 w-5" />} />
+        <KpiCard title="Unit Margin Matrix" value={formatIdr(net)} icon={<Package className="h-5 w-5" />} />
+      </div>
     </div>
   );
 }

@@ -7,12 +7,12 @@
  */
 import { appendRows, readTab, TABS } from '../src/db/sheets';
 import { nowTimestampWib, formatDateWib } from '../src/lib/format';
-import { createHash } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const pad = (n: number, w = 3) => String(n).padStart(w, '0');
 const id = (p: string, n: number) => `MEGA-${p}-${pad(n, 4)}`;
-const hashPw = (p: string) => createHash('sha256').update(p).digest('hex');
+const hashPw = (p: string) => bcrypt.hashSync(p, 10);
 
 function dayOffset(daysAgo: number): string {
   const d = new Date();

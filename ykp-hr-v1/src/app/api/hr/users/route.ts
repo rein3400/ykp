@@ -1,7 +1,7 @@
 /**
  * User & Role Management API (revisi item 26).
  * GET list users, POST create, PUT update role/status/scope.
- * Password stored as sha256 hex (same as login).
+ * Password stored as bcrypt (legacy sha256 rows migrate on login).
  */
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
@@ -9,7 +9,7 @@ import { logAudit } from '@/lib/audit';
 import { handler, list, ok, badRequest, unauthorized, forbidden, notFound, conflict } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
-import { createHash } from 'crypto';
+import { hashPassword } from '@/lib/password';
 import { z } from 'zod';
 
 const ROLES = [
@@ -36,10 +36,6 @@ const updateSchema = z.object({
   active_status: z.enum(['active', 'inactive']).optional(),
   password: z.string().min(6).optional()
 });
-
-function hashPw(p: string): string {
-  return createHash('sha256').update(p).digest('hex');
-}
 
 function stripSecret(row: Record<string, string>): Record<string, string> {
   const { password_hash: _p, ...rest } = row;
@@ -89,7 +85,7 @@ export const POST = handler(async (req) => {
   const row: Record<string, string> = {
     user_id: userId,
     username: parsed.data.username,
-    password_hash: hashPw(parsed.data.password),
+    password_hash: await hashPassword(parsed.data.password),
     role: parsed.data.role,
     brand_id: parsed.data.brand_id,
     outlet_id: parsed.data.outlet_id,
@@ -142,7 +138,7 @@ export const PUT = handler(async (req) => {
     active_status: parsed.data.active_status ?? found.row.active_status
   };
   if (parsed.data.password) {
-    updated.password_hash = hashPw(parsed.data.password);
+    updated.password_hash = await hashPassword(parsed.data.password);
   }
 
   await updateRow(TABS.users, found.rowNumber, updated);

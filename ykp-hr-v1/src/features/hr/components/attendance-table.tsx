@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/toast';
 
 interface EmpOpt { id: string; name: string; outlet_id: string }
 interface OutletOpt { id: string; name: string }
@@ -28,6 +29,7 @@ async function fetchAttendance(): Promise<AttendanceRow[]> {
 
 export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; outlets: OutletOpt[] }) {
   const router = useRouter();
+  const toast = useToast();
   const qc = useQueryClient();
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['attendance'],
@@ -70,6 +72,7 @@ export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; o
         throw new Error(j?.error?.message ?? 'Gagal');
       }
       qc.invalidateQueries({ queryKey: ['attendance'] });
+      toast.success('Absensi tersimpan');
       setForm({ ...form, actual_check_in: '', actual_check_out: '', notes: '' });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal');
@@ -81,13 +84,25 @@ export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; o
   async function clockIn(employeeId: string) {
     setSaving(true);
     try {
-      await fetch('/api/hr/attendance/clock-in', {
+      const r = await fetch('/api/hr/attendance/clock-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ employee_id: employeeId, outlet_id: '', date: today })
       });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j?.error?.message ?? 'Gagal clock in');
+      }
+      const j = await r.json().catch(() => ({}));
+      if (j?.data?.already) {
+        toast.info('Sudah clock in hari ini', 'Absensi hari ini sudah tercatat sebelumnya.');
+      } else {
+        toast.success('Clock in berhasil');
+      }
       qc.invalidateQueries({ queryKey: ['attendance'] });
       router.refresh();
+    } catch (e) {
+      toast.error('Clock in gagal', e instanceof Error ? e.message : 'Terjadi kesalahan');
     } finally {
       setSaving(false);
     }
@@ -96,13 +111,20 @@ export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; o
   async function clockOut(attendanceId: string) {
     setSaving(true);
     try {
-      await fetch('/api/hr/attendance/clock-out', {
+      const r = await fetch('/api/hr/attendance/clock-out', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ attendance_id: attendanceId })
       });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j?.error?.message ?? 'Gagal clock out');
+      }
+      toast.success('Clock out berhasil');
       qc.invalidateQueries({ queryKey: ['attendance'] });
       router.refresh();
+    } catch (e) {
+      toast.error('Clock out gagal', e instanceof Error ? e.message : 'Terjadi kesalahan');
     } finally {
       setSaving(false);
     }
@@ -165,10 +187,10 @@ export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; o
             <input className='input mt-1 w-full' value={form.notes} onChange={(e) => set('notes', e.target.value)} />
           </label>
         </div>
-        {error && <div className='text-sm text-red-600'>{error}</div>}
+        {error && <div role='alert' className='rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700'>{error}</div>}
         <div>
           <button type='submit' disabled={saving} className='btn-primary'>
-            {saving ? '...' : 'Simpan Absensi'}
+            {saving ? 'Menyimpan…' : 'Simpan Absensi'}
           </button>
         </div>
       </form>

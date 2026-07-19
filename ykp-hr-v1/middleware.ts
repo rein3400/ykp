@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout'];
+const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/hr/notify/daily-brief'];
 
 // Edge-compatible HMAC-SHA256 verify using Web Crypto API.
 // `crypto.subtle` is available in both edge runtime and Node.js 20+.
@@ -43,6 +43,10 @@ export async function middleware(req: NextRequest) {
   }
   // Allow static + Hermez-facing summary read endpoint without session
   if (pathname.startsWith('/api/hr/summary') && req.method === 'GET') {
+    return NextResponse.next();
+  }
+  // Owner activity feed: audit trail read endpoint (GET only)
+  if (pathname.startsWith('/api/hr/audit') && req.method === 'GET') {
     return NextResponse.next();
   }
   const cookie = req.cookies.get('ykp_hr_session')?.value;

@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/toast';
 
 export function LeaveForm({ employees }: { employees: { id: string; name: string }[] }) {
   const router = useRouter();
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
@@ -19,6 +21,14 @@ export function LeaveForm({ employees }: { employees: { id: string; name: string
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (form.end_date < form.start_date) {
+      setError('Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
+      return;
+    }
+    if (!form.reason.trim()) {
+      setError('Alasan wajib diisi.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -31,6 +41,7 @@ export function LeaveForm({ employees }: { employees: { id: string; name: string
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? 'Gagal');
       }
+      toast.success('Pengajuan terkirim', 'Menunggu approval.');
       router.refresh();
       setForm({ ...form, reason: '' });
     } catch (e) {
@@ -75,8 +86,8 @@ export function LeaveForm({ employees }: { employees: { id: string; name: string
         Alasan
         <textarea className='input mt-1 w-full' rows={2} value={form.reason} onChange={(e) => set('reason', e.target.value)} />
       </label>
-      {error && <div className='text-sm text-red-600'>{error}</div>}
-      <button type='submit' disabled={saving} className='btn-primary'>{saving ? '...' : 'Ajukan'}</button>
+      {error && <div role='alert' className='rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700'>{error}</div>}
+      <button type='submit' disabled={saving} className='btn-primary'>{saving ? 'Mengirim…' : 'Ajukan'}</button>
     </form>
   );
 }

@@ -133,8 +133,8 @@ async function seedUserOnce(sheets: ReturnType<typeof getSheetsClient>, sid: str
     console.log('[seed] users already has data, skipping owner seed');
     return;
   }
-  const { createHash } = await import('crypto');
-  const pw = createHash('sha256').update('owner123').digest('hex');
+  const { default: bcrypt } = await import('bcryptjs');
+  const pw = bcrypt.hashSync('owner123', 10);
   const row = ['USR-001', 'owner', pw, 'owner', '', '', 'active', t, ''];
   await sheets.spreadsheets.values.append({
     spreadsheetId: sid,

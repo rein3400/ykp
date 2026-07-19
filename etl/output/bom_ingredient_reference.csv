@@ -1,0 +1,264 @@
+item_key,item_name,category_id,base_unit
+1883 ROUTINE GREEN APPLE,1883 ROUTINE GREEN APPLE,beverage_main,ml
+ACAR ONION,Acar Onion,sauce,g
+ADONAN ROTI CHINA,Adonan roti China,food_main,pcs
+ADONAN WAFFLE,ADONAN WAFFLE,food_main,g
+ALAS KERTAS PUTIH BESAR,Alas kertas putih besar,condiment,pcs
+ALAS KERTAS TRAY,Alas kertas tray,condiment,pcs
+APEL BUAH,APEL BUAH,food_main,g
+APPLE CINNAMON,APPLE CINNAMON,food_main,g
+APPLE SYRUP MONIN,Apple Syrup Monin,beverage_main,ml
+APPLE TEA SODA,Apple tea soda,beverage_main,ml
+APPLE VINEGAR,Apple Vinegar,food_main,ml
+AW 250 ML,AW 250 ML,beverage_main,pcs
+AYAM FILLET,Ayam Fillet,critical,kg
+BACON,BACON,food_main,g
+BAKING POWDER HERCULES,BAKING POWDER HERCULES,food_main,g
+BAKING POWDER KOEPOE,BAKING POWDER KOEPOE,food_main,g
+BAKING SODA KOEPOE,Baking Soda Koepoe,food_main,g
+BAWANG BOMBAY,BAWANG BOMBAY,food_main,g
+BAWANG BOMBAY MERAH,BAWANG BOMBAY MERAH,beverage_main,g
+BAWANG MERAH,Bawang Merah,food_main,g
+BAWANG PUTIH,BAWANG PUTIH,food_main,g
+BAYLEAF,BAYLEAF,food_main,g
+BBQ,BBQ,sauce,g
+BEANS HOT,Beans hot,beverage_main,g
+BEANS ICE,Beans ice,beverage_main,g
+BERAS,BERAS,beverage_main,g
+BIG MAC,BIG MAC,sauce,g
+BLACK PAPER POWDER,BLACK PAPER POWDER,food_main,g
+BLACK TEA,BLACK TEA,beverage_main,g
+BORA 250ML,BORA 250ml,beverage_main,pcs
+BOWL KERTAS,Bowl Kertas,condiment,pcs
+BOX CHICKEN WAFFLE (L),BOX CHICKEN WAFFLE (L),condiment,pcs
+BOX NASI,BOX NASI,condiment,pcs
+BOX SANDWHICH (M),BOX SANDWHICH (M),condiment,pcs
+BROWN SUGAR,Brown Sugar,food_main,g
+BROWN TOAST,Brown Toast,food_main,pcs
+BUFFALO,BUFFALO,sauce,g
+BUMBU NASHVILLE KERING,BUMBU NASHVILLE KERING,beverage_main,g
+BUMBU TEPUNG AYAM,BUMBU TEPUNG AYAM,beverage_main,g
+BURGER BUN,BURGER BUN,food_main,pcs
+BUTTER UNSALTED,Butter Unsalted,critical,kg
+CABAI RAWIT,CABAI RAWIT,food_main,g
+CABAI TEROPONG HIJAU,CABAI TEROPONG HIJAU,food_main,g
+CARAMEL SAUCE,CARAMEL SAUCE,beverage_main,ml
+CAYENNE POWDER,CAYENNE POWDER,food_main,g
+CEKER AYAM,Ceker Ayam,food_main,g
+CENGKEH,Cengkeh,food_main,g
+CHEDDAR BLOCK,CHEDDAR BLOCK,food_main,g
+CHICKEN SANDWICH,CHICKEN SANDWICH,sauce,g
+CHILI FLAKE,Chili Flake,food_main,g
+CHILI OIL,Chili oil,food_main,g
+CHILLI POWDER YUTAKACHI,CHILLI POWDER YUTAKACHI,food_main,g
+CHIPOTLE DRESSING,Chipotle dressing,sauce,g
+CHIPOTLE KALENG,Chipotle kaleng,food_main,g
+CINNAMON POWDER,CINNAMON POWDER,food_main,g
+COKELAT COUVERTURE,Cokelat Couverture,critical,kg
+COKLAT POWDER,COKLAT POWDER,food_main,g
+COLA 250 ML,COLA 250 ML,beverage_main,pcs
+COLATTA CHOCOCHIPS,COLATTA CHOCOCHIPS,food_main,g
+COLESLAW,COLESLAW,beverage_main,g
+COOKING CREAM,COOKING CREAM,food_main,ml
+CREAM CHEESE,CREAM CHEESE,sauce,g
+CREAMER,CREAMER,condiment,g
+CREAMER BUBUK,Creamer bubuk,beverage_main,g
+CREAMER CAIR,Creamer cair,beverage_main,ml
+CREAMY BUTTERMILK SAUCE,CREAMY BUTTERMILK SAUCE,sauce,ml
+CREAMY LEMON GARLIC,CREAMY LEMON GARLIC,sauce,pcs
+CRUMBLE LOTUS,Crumble lotus,beverage_main,g
+CUKA,CUKA,food_main,pcs
+CUP 14 OZ,CUP 14 OZ,condiment,pcs
+CUP 150 ML,Cup 150 ml,condiment,pcs
+CUP ICE CREAM LAR,CUP ICE CREAM Lar,condiment,pcs
+CUP LAJU,Cup laju,condiment,pcs
+CUP SAOS PLASTIK 35 ML,CUP SAOS PLASTIK 35 ML,condiment,pcs
+CUP SAOS PLASTIK 60 ML,CUP SAOS PLASTIK 60 ML,condiment,pcs
+CUP SAOS STAINLESS,CUP SAOS STAINLESS,condiment,pcs
+CURRY HIJAU,CURRY HIJAU,sauce,g
+DADA AYAM,DADA AYAM,food_main,g
+DADA AYAM MARINASI,DADA AYAM MARINASI,food_main,g
+DAGING SAPI SIRLOIN,Daging Sapi Sirloin,critical,kg
+DAUN BAWANG,Daun bawang,food_main,g
+DAUN CURRY,Daun curry,food_main,g
+DAUN JERUK,DAUN JERUK,food_main,g
+DAUN KETUMBAR,Daun Ketumbar,food_main,g
+DAUN KUCAI,Daun kucai,food_main,g
+DAUN SALAM,Daun salam,food_main,g
+DELIVERY BAG IDOLA 15,DELIVERY BAG IDOLA 15,condiment,pcs
+DELIVERY BAG IDOLA 24,DELIVERY BAG IDOLA 24,condiment,pcs
+DELIVERY BAG IDOLA 30,DELIVERY BAG IDOLA 30,condiment,pcs
+DELIVERY BAG PARTY 20,DELIVERY BAG PARTY 20,condiment,pcs
+DELIVERY BAG PARTY 28,DELIVERY BAG PARTY 28,condiment,pcs
+DIAMOND ICE CREAM VANILLA,DIAMOND ICE CREAM VANILLA,beverage_main,ml
+DIAMOND SOFT MIX CHOCOLATE,DIAMOND SOFT MIX CHOCOLATE,beverage_main,ml
+DIAMOND SOFT MIX VANILLA,DIAMOND SOFT MIX VANILLA,beverage_main,ml
+DIAMOND UHT,DIAMOND UHT,food_main,pcs
+DIAMOND UHT COKLAT,DIAMOND UHT COKLAT,food_main,ml
+DR PEPPER ORIGINAL,Dr Pepper Original,beverage_main,pcs
+DR PEPPER STRAWBERRY CREAM,Dr Pepper Strawberry cream,beverage_main,pcs
+EMAKU KOREAN SPICY,EMAKU KOREAN SPICY,food_main,g
+ES BATU,Es Batu,beverage_main,g
+ESPRESSO,Espresso,beverage_main,ml
+FF CRISSCUT,FF CRISSCUT,food_main,g
+FF STRAIGH CUT,FF STRAIGH CUT,food_main,g
+FLOOR CLEANER,FLOOR CLEANER,condiment,ml
+GALON,GALON,beverage_main,ml
+GARAM,GARAM,food_main,g
+GARAM MASALA,Garam Masala,food_main,g
+GARLIC PARMESAN,GARLIC PARMESAN,sauce,g
+GARLIC POWDER,GARLIC POWDER,food_main,g
+GARPU STAINLESS,GARPU STAINLESS,condiment,pcs
+GAS 50 KG,GAS 50 KG,condiment,pcs
+GINGER POWDER,GINGER POWDER,food_main,g
+GLASS CLEANER,GLASS CLEANER,condiment,ml
+GULA CAIR,GULA CAIR,food_main,g
+GULA PASIR,Gula Pasir,critical,kg
+HAND SOAP,HAND SOAP,condiment,ml
+HANDGLOVES PLASTIK,Handgloves plastik,condiment,pcs
+HONEY CHILI,HONEY CHILI,sauce,g
+HORLIC POWDER,HORLIC POWDER,beverage_main,g
+HOT CREAMY GARLIC,HOT CREAMY GARLIC,sauce,g
+HOT LAVA SAUCE,HOT LAVA SAUCE,food_main,g
+HOT SPICY,HOT SPICY,sauce,g
+ICE CREAM VANILLA,ICE CREAM VANILLA,beverage_main,ml
+ISIAN ROTI CHINA ORI,Isian roti china ori,food_main,g
+ISIAN ROTI CHINA SZECHUAN,Isian roti China szechuan,food_main,g
+ITALIAN HERBS,Italian Herbs,food_main,g
+JELLY POWDER,Jelly powder,food_main,g
+JINTEN POWDER,JINTEN POWDER,food_main,g
+KALDU AYAM,Kaldu ayam,food_main,ml
+KAPULAGA,Kapulaga,food_main,g
+KECAP INGGRIS,KECAP INGGRIS,food_main,g
+KEJU MOZZARELLA,Keju Mozzarella,critical,kg
+KEJU POWDER,Keju powder,beverage_main,g
+KEJU SLICE,KEJU SLICE,food_main,pcs
+KERTAS NASI,Kertas Nasi,condiment,pcs
+KETUMBAR POWDER,KETUMBAR POWDER,food_main,g
+KIKKOMAN KOREAN CHILLI GOCHUJANG,KIKKOMAN KOREAN CHILLI GOCHUJANG,food_main,g
+KNORR BEEF POWDER,KNORR BEEF POWDER,food_main,g
+KNORR CHEESE,Knorr cheese,food_main,g
+KOPI ARABICA BEAN,Kopi Arabica Bean,critical,kg
+KUAH CURRY,Kuah curry,food_main,ml
+KUBIS PUTIH,Kubis Putih,beverage_main,g
+KUBIS UNGU,Kubis Ungu,beverage_main,g
+KUNYIT POWDER,Kunyit Powder,food_main,g
+LADA PUTIH,LADA PUTIH,food_main,g
+LADA SZECHUAN,Lada szechuan,food_main,g
+LAJU KOPI,LAJU KOPI,other,pcs
+LAROME VANILLA POWDER,LAROME VANILLA POWDER,food_main,g
+LEMON,Lemon,beverage_main,g
+LETTUCE,LETTUCE,food_main,g
+LID CUP 14 OZ,LID CUP 14 OZ,condiment,pcs
+LID ICE CREAM LAR,LID ICE CREAM Lar,condiment,pcs
+LIME POWDER,Lime Powder,beverage_main,g
+LIQUID SMOKE,LIQUID SMOKE,food_main,ml
+LOTUS BISCOFF,LOTUS BISCOFF,beverage_main,pcs
+MADU,MADU,food_main,g
+MADU BOTOL,Madu botol,beverage_main,g
+MAIZENA,MAIZENA,food_main,g
+MAKARONI,MAKARONI,food_main,g
+MANGKOK ENAMEL,MANGKOK ENAMEL,condiment,pcs
+MAPPLE SYRUP,MAPPLE SYRUP,food_main,ml
+MARINASI BUTTERMILK,MARINASI BUTTERMILK,marinade,g
+MARINASI NASVILE,MARINASI NASVILE,marinade,g
+MAYONAISE KEWPIE,Mayonaise Kewpie,food_main,g
+MC LEWIS MAYONAISE,MC Lewis Mayonaise,food_main,g
+MICIN,MICIN,food_main,g
+MIE,Mie,food_main,pcs
+MINERAL WATER 600ML,MINERAL WATER 600ML,beverage_main,pcs
+MINYAK GORENG,Minyak Goreng,critical,liter
+MINYAK WIJEN,Minyak Wijen,food_main,ml
+MONIN PEACH SYRUP,MONIN PEACH SYRUP,beverage_main,ml
+MOZZARELLA,Mozzarella,food_main,g
+NIRA,Nira,beverage_main,ml
+NUTELLA,NUTELLA,beverage_main,g
+OAT,OAT,food_main,g
+ONION POWDER,ONION POWDER,food_main,g
+OREGANO,Oregano,food_main,g
+PAHA ATAS,PAHA ATAS,food_main,pcs
+PAHA BAWAH,PAHA BAWAH,food_main,pcs
+PALA POWDER,PALA POWDER,food_main,g
+PAPER BAG MERAH,PAPER BAG MERAH,condiment,pcs
+PAPER BAG PUTIH,PAPER BAG PUTIH,condiment,pcs
+PAPER TRAY (L),PAPER TRAY (L),condiment,pcs
+PAPER WRAP,PAPER WRAP,condiment,pcs
+PAPRIKA HIJAU,Paprika hijau,food_main,g
+PAPRIKA POWDER,PAPRIKA POWDER,food_main,g
+PARMESAN POWDER,PARMESAN POWDER,food_main,g
+PARSLEY FRESH,Parsley Fresh,food_main,g
+PARSLEY KERING,PARSLEY KERING,food_main,g
+PEACH BUAH KALENG,PEACH BUAH KALENG,beverage_main,g
+PEANUT BUTTER,PEANUT BUTTER,beverage_main,g
+PEANUT DRESSING,PEANUT DRESSING,sauce,g
+PERISA RED PASTA,PERISA RED PASTA,food_main,g
+PEWARNA KUNING,PEWARNA KUNING,food_main,ml
+PEWARNA MERAH,Pewarna merah,beverage_main,ml
+PICKLES,PICKLES,food_main,g
+PIRING ENAMEL,PIRING ENAMEL,condiment,pcs
+PISANG,PISANG,beverage_main,pcs
+PISAU STAINLESS,PISAU STAINLESS,condiment,pcs
+RAISING CANE,RAISING CANE,sauce,g
+RED VELVET POWDER,RED VELVET POWDER,food_main,g
+RICE VINEGAR,Rice vinegar,beverage_main,ml
+ROSEMARY POWDER,ROSEMARY POWDER,food_main,g
+ROYCO AYAM,ROYCO AYAM,food_main,g
+RUMPUT LAUT,Rumput laut,food_main,g
+RUSSIAN DRESSING,Russian dressing,sauce,g
+SABUN CUCI PIRING,SABUN CUCI PIRING,condiment,ml
+SALMON,Salmon,food_main,g
+SALMON FILLET,Salmon Fillet,critical,kg
+SALMON SANDWICH,Salmon sandwich,sauce,g
+SALTED CARAMEL SYRUP,SALTED CARAMEL SYRUP,beverage_main,ml
+SANTAN,Santan,food_main,ml
+SANTAN / KRIM KELAPA KARA,Santan / krim kelapa kara,food_main,ml
+SAOS SAMBAL,SAOS SAMBAL,food_main,g
+SAOS TOMAT,SAOS TOMAT,food_main,g
+SAUCE MAC & CHEESE,Sauce Mac & Cheese,sauce,g
+SAUS SACHET SAMBAL,Saus sachet sambal,food_main,pcs
+SAUS TIRAM,SAUS TIRAM,food_main,g
+SAYAP AYAM,SAYAP AYAM,food_main,pcs
+SEAL CUP,Seal cup,condiment,pcs
+SEDOTAN,Sedotan,condiment,pcs
+SEDOTAN BESAR,SEDOTAN BESAR,condiment,pcs
+SEDOTAN KECIL,SEDOTAN KECIL,condiment,pcs
+SENDOK GARPU PLASTIK,Sendok garpu plastik,condiment,pcs
+SENDOK STAINLESS,SENDOK STAINLESS,condiment,pcs
+SEREH,Sereh,food_main,g
+SIRUP ALPEN,Sirup Alpen,beverage_main,ml
+SKM,SKM,condiment,ml
+SLEEVE ROTI CHINA,Sleeve Roti China,condiment,pcs
+SODA CHARGER,SODA CHARGER,beverage_main,pcs
+SOY SAUCE,Soy sauce,beverage_main,g
+SOY SUCE,Soy Suce,food_main,ml
+SPORK HITAM,Spork hitam,condiment,pcs
+SRIRACHA SAOS,Sriracha saos,food_main,g
+SUMPIT KAYU,Sumpit Kayu,condiment,pcs
+SUNFLOWER OIL,SUNFLOWER OIL,food_main,ml
+SYRUP HAZELNUT,SYRUP HAZELNUT,food_main,ml
+SYRUP RUM,SYRUP RUM,food_main,ml
+TARO POWDER,Taro powder,beverage_main,g
+TELUR AYAM,TELUR AYAM,food_main,g
+TELUR OMEGA,Telur omega,food_main,pcs
+TEPUNG CAKRA KEMBAR,TEPUNG CAKRA KEMBAR,food_main,g
+TEPUNG ROTI,Tepung Roti,food_main,g
+TEPUNG SEGITIGA BIRU,TEPUNG SEGITIGA BIRU,food_main,g
+TERASI UDANG,Terasi udang,food_main,g
+TIKKA MASALA,Tikka masala,sauce,g
+TISSUE HANDTOWEL,TISSUE HANDTOWEL,condiment,pcs
+TISSUE MAKAN,TISSUE MAKAN,condiment,pcs
+TISSUE ROLL,TISSUE ROLL,condiment,pcs
+TOMAT FRESH,TOMAT FRESH,beverage_main,g
+TOMATO PELLED,Tomato Pelled,food_main,g
+TRASH BAG,TRASH BAG,food_main,pcs
+TRAY MELAMIN,TRAY MELAMIN,condiment,pcs
+TUTUP BOWL,Tutup bowl,condiment,pcs
+UDANG VANAME,Udang Vaname,critical,kg
+UHT,UHT,beverage_main,ml
+UNCLE MASALA,UNCLE MASALA,other,pcs
+UNSALTED BUTTER (KG),UNSALTED BUTTER (KG),food_main,g
+UNSALTED BUTTER PORTION,UNSALTED BUTTER PORTION,food_main,pcs
+VANILLA SYRUP,VANILLA SYRUP,food_main,ml
+WIJEN,WIJEN,beverage_main,g
+WORTEL,Wortel,food_main,g
+YELLOW MUSTARD,YELLOW MUSTARD,food_main,g

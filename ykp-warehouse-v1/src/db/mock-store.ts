@@ -51,7 +51,8 @@ const TAB = {
 } as const;
 
 function seed(): Record<string, Record<string, string>[]> {
-  const pw = createHash('sha256').update('owner123').digest('hex');
+  const hp = (p: string) => createHash('sha256').update(p).digest('hex');
+  const pw = hp('owner123');
   const t = now();
   return {
     [TAB.brands]: [
@@ -105,12 +106,19 @@ function seed(): Record<string, Record<string, string>[]> {
       { threshold_id: 'THR-001', brand_id: 'BR-001', outlet_id: 'OL-001', location_id: 'LOC-002', item_id: 'ITM-001', threshold_type: 'WASTE_DAILY_VALUE', warning_value: '200000', high_value: '500000', critical_value: '1000000', unit: 'IDR', active_status: 'active', updated_by: 'USR-001', updated_at: t }
     ],
     // ── Transactional tables (empty, filled at runtime) ─────────
-    [TAB.stockMovement]: [],
+    [TAB.stockMovement]: [
+      // ISSUE movements (kitchen usage) — these feed the food-cost numerator.
+      { movement_id: 'MOV-001', movement_number: 'MOV-20260716-001', movement_datetime: '2026-07-16 08:00:00', item_id: 'ITM-001', brand_id: 'BR-001', outlet_id: 'OL-001', location_id: 'LOC-001', movement_type: 'ISSUE', direction: 'OUT', quantity: '40', base_unit: 'kg', unit_cost: '175000', total_value: '7000000', reference_type: 'stock_issue', reference_id: 'ISS-001', source_location_id: 'LOC-001', destination_location_id: 'LOC-KIT', stock_before: '120', stock_after: '80', created_by: 'USR-001', approved_by: 'USR-001', notes: '', environment: 'mock', created_at: t },
+      { movement_id: 'MOV-002', movement_number: 'MOV-20260717-001', movement_datetime: '2026-07-17 08:00:00', item_id: 'ITM-001', brand_id: 'BR-001', outlet_id: 'OL-001', location_id: 'LOC-001', movement_type: 'ISSUE', direction: 'OUT', quantity: '40', base_unit: 'kg', unit_cost: '175000', total_value: '7000000', reference_type: 'stock_issue', reference_id: 'ISS-002', source_location_id: 'LOC-001', destination_location_id: 'LOC-KIT', stock_before: '80', stock_after: '40', created_by: 'USR-001', approved_by: 'USR-001', notes: '', environment: 'mock', created_at: t },
+      { movement_id: 'MOV-003', movement_number: 'MOV-20260718-001', movement_datetime: '2026-07-18 08:00:00', item_id: 'ITM-001', brand_id: 'BR-001', outlet_id: 'OL-001', location_id: 'LOC-001', movement_type: 'ISSUE', direction: 'OUT', quantity: '35', base_unit: 'kg', unit_cost: '175000', total_value: '6125000', reference_type: 'stock_issue', reference_id: 'ISS-003', source_location_id: 'LOC-001', destination_location_id: 'LOC-KIT', stock_before: '40', stock_after: '5', created_by: 'USR-001', approved_by: 'USR-001', notes: '', environment: 'mock', created_at: t }
+    ],
     [TAB.receiving]: [],
     [TAB.receivingItem]: [],
     [TAB.stockIssue]: [],
     [TAB.stockIssueItem]: [],
-    [TAB.waste]: [],
+    [TAB.waste]: [
+      { waste_id: 'WST-001', waste_number: 'WST-20260717-001', date: '2026-07-17', time: '14:30', brand_id: 'BR-001', outlet_id: 'OL-001', location_id: 'LOC-001', shift_id: 'SH-001', item_id: 'ITM-001', menu_id: '', batch_reference: '', qty: '0.5', unit: 'kg', estimated_unit_cost: '175000', estimated_total_value: '87500', waste_type: 'SPOILED', reason: 'Daging melewati suhu aman', root_cause: 'Freezer mati 2 jam', photo_url: '', reported_by: 'USR-001', witness_by: '', approval_status: 'APPROVED', approved_by: 'USR-001', related_order_id: '', related_incident_id: '', preventive_action: 'Cek freezer tiap shift', created_at: t }
+    ],
     [TAB.adjustment]: [],
     [TAB.transfer]: [],
     [TAB.transferItem]: [],
@@ -126,7 +134,15 @@ function seed(): Record<string, Record<string, string>[]> {
     [TAB.telegramDeliveryLog]: [],
     // ── Auth ────────────────────────────────────────────────────
     [TAB.users]: [
-      { user_id: 'USR-001', username: 'owner', password_hash: pw, role: 'owner', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' }
+      { user_id: 'USR-001', username: 'owner', password_hash: pw, role: 'owner', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-001', username: 'wh_admin', password_hash: hp('admin123'), role: 'warehouse_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-002', username: 'purchasing', password_hash: hp('purchase123'), role: 'purchasing', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-003', username: 'fkd_mgr', password_hash: hp('manager123'), role: 'brand_manager', brand_id: 'BR-001', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-004', username: 'cipete_pic', password_hash: hp('pic12345'), role: 'supervisor', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-005', username: 'kitchen_lead', password_hash: hp('kitchen1'), role: 'kitchen_lead', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-006', username: 'staff1', password_hash: hp('staff123'), role: 'staff', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-007', username: 'viewer', password_hash: hp('viewer12'), role: 'viewer', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-008', username: 'finance', password_hash: hp('finance1'), role: 'finance_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' }
     ],
     [TAB.auditLog]: [],
     [TAB.evidenceLog]: [],
@@ -135,16 +151,25 @@ function seed(): Record<string, Record<string, string>[]> {
     [TAB.legacyKartuStok]: [],
     [TAB.legacyPemakaian]: [],
     [TAB.legacyWaste]: [],
-    [TAB.legacyClosing]: [],
+    [TAB.legacyClosing]: [
+      { closing_id: 'CLS-001', date: '2026-07-16', outlet_id: 'OL-001', pic_stock: 'cipete_pic', shift: 'SH-001', item_id: 'ITM-001', item_name: 'Daging Sapi Sirloin', unit: 'kg', stock_open: '120', received: '0', used: '40', waste: '0', expected_stock: '80', actual_stock: '80', difference: '0', diff_pct: '0.5', status: 'OK', created_at: t },
+      { closing_id: 'CLS-002', date: '2026-07-17', outlet_id: 'OL-001', pic_stock: 'cipete_pic', shift: 'SH-001', item_id: 'ITM-001', item_name: 'Daging Sapi Sirloin', unit: 'kg', stock_open: '80', received: '0', used: '40', waste: '0.5', expected_stock: '39.5', actual_stock: '40', difference: '0.5', diff_pct: '1.2', status: 'OK', created_at: t },
+      { closing_id: 'CLS-003', date: '2026-07-18', outlet_id: 'OL-001', pic_stock: 'cipete_pic', shift: 'SH-001', item_id: 'ITM-001', item_name: 'Daging Sapi Sirloin', unit: 'kg', stock_open: '40', received: '0', used: '35', waste: '0', expected_stock: '5', actual_stock: '5', difference: '0', diff_pct: '0.3', status: 'OK', created_at: t }
+    ],
     [TAB.legacyDashboard]: [],
     [TAB.legacyAlerts]: []
   };
 }
 
-let store: Record<string, Record<string, string>[]> | null = null;
+// Dev-mode (Turbopack) gives each route-handler bundle its own module graph,
+// so a module-level `let store` is NOT shared between routes. Hoist onto
+// globalThis so all graphs in this Node process share ONE store.
+const SEED_VERSION = 3; // bump when seed() data changes to force a clean re-seed
+const GLOBAL_KEY = `__YKP_WAREHOUSE_MOCK_STORE_V${SEED_VERSION}__`;
+const g = globalThis as unknown as Record<string, Record<string, Record<string, string>[]> | undefined>;
 function getStore() {
-  if (!store) store = seed();
-  return store;
+  if (!g[GLOBAL_KEY]) g[GLOBAL_KEY] = seed();
+  return g[GLOBAL_KEY]!;
 }
 
 export function isMockMode(): boolean {

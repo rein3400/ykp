@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { useToast } from "@/components/toast";
 
 interface Adjustment {
   adjustment_id: string;
@@ -20,11 +21,12 @@ interface Adjustment {
 
 export function AdjustmentsTable({ data: initial }: { data: Adjustment[] }) {
   const router = useRouter();
+  const toast = useToast();
   const [rows, setRows] = React.useState<Adjustment[]>(initial);
-  const [busy, setBusy] = React.useState(false);
+  const [busyId, setBusyId] = React.useState<string | null>(null);
 
   async function decide(id: string, decision: "APPROVE" | "REJECT") {
-    setBusy(true);
+    setBusyId(id);
     try {
       const r = await fetch("/api/hr/adjustments/approve", {
         method: "POST",
@@ -42,11 +44,12 @@ export function AdjustmentsTable({ data: initial }: { data: Adjustment[] }) {
             : row
         )
       );
+      toast.success(decision === "APPROVE" ? "Adjustment disetujui" : "Adjustment ditolak");
       router.refresh();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Gagal");
+      toast.error("Gagal memproses", e instanceof Error ? e.message : "Terjadi kesalahan");
     } finally {
-      setBusy(false);
+      setBusyId(null);
     }
   }
 
@@ -89,15 +92,15 @@ export function AdjustmentsTable({ data: initial }: { data: Adjustment[] }) {
                       <button
                         type="button"
                         onClick={() => decide(row.adjustment_id, "APPROVE")}
-                        disabled={busy}
+                        disabled={busyId !== null}
                         className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                       >
-                        Setujui
+                        {busyId === row.adjustment_id ? "…" : "Setujui"}
                       </button>
                       <button
                         type="button"
                         onClick={() => decide(row.adjustment_id, "REJECT")}
-                        disabled={busy}
+                        disabled={busyId !== null}
                         className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
                       >
                         Tolak

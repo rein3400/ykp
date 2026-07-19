@@ -38,6 +38,23 @@ export function ThemeProvider({
 /** Inline dark/light toggle button. */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  // Hydration guard (React #418 fix): on the server, next-themes has no
+  // theme value — `theme` is undefined — so `isDark` computed false and the
+  // server rendered <Moon> + "Aktifkan mode gelap", while the hydrated
+  // client (localStorage theme = dark) rendered <Sun> + different label.
+  // Text/props mismatch on every page that mounts this toggle.
+  // Render a stable placeholder until mounted on the client.
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" aria-hidden="true" tabIndex={-1}>
+        <span className="h-4 w-4 inline-block" />
+      </Button>
+    );
+  }
+
   const isDark = theme === "dark";
   return (
     <Button

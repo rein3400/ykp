@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { useToast } from "@/components/toast";
 
 interface Payroll {
   payroll_id: string;
@@ -29,17 +30,20 @@ export function PayrollTable({
   userRole?: string;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [rows, setRows] = React.useState<Payroll[]>(initial);
-  const [busy, setBusy] = React.useState(false);
+  const [busyId, setBusyId] = React.useState<string | null>(null);
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [paymentRef, setPaymentRef] = React.useState("");
+  const [paymentRefErr, setPaymentRefErr] = React.useState("");
   const [unlockId, setUnlockId] = React.useState<string | null>(null);
   const [unlockReason, setUnlockReason] = React.useState("");
+  const [unlockErr, setUnlockErr] = React.useState("");
 
   const canUnlock = userRole === "owner" || userRole === "super_admin";
 
   async function approve(id: string) {
-    setBusy(true);
+    setBusyId(id);
     try {
       const r = await fetch("/api/hr/payroll/approve", {
         method: "POST",
@@ -55,25 +59,28 @@ export function PayrollTable({
           row.payroll_id === id ? { ...row, approval_status: "APPROVED", approved_by: "owner" } : row
         )
       );
+      toast.success("Payroll disetujui");
       router.refresh();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Gagal");
+      toast.error("Gagal approve payroll", e instanceof Error ? e.message : "Terjadi kesalahan");
     } finally {
-      setBusy(false);
+      setBusyId(null);
     }
   }
 
   function toggleMarkPaid(id: string) {
     setExpandedId(expandedId === id ? null : id);
     setPaymentRef("");
+    setPaymentRefErr("");
   }
 
   async function markPaid(id: string) {
     if (!paymentRef.trim()) {
-      alert("Payment reference wajib diisi.");
+      setPaymentRefErr("Payment reference wajib diisi.");
       return;
     }
-    setBusy(true);
+    setPaymentRefErr("");
+    setBusyId(id);
     try {
       const r = await fetch("/api/hr/payroll/mark-paid", {
         method: "POST",
@@ -102,25 +109,28 @@ export function PayrollTable({
       );
       setExpandedId(null);
       setPaymentRef("");
+      toast.success("Payroll ditandai dibayar");
       router.refresh();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Gagal");
+      toast.error("Gagal menandai dibayar", e instanceof Error ? e.message : "Terjadi kesalahan");
     } finally {
-      setBusy(false);
+      setBusyId(null);
     }
   }
 
   function toggleUnlock(id: string) {
     setUnlockId(unlockId === id ? null : id);
     setUnlockReason("");
+    setUnlockErr("");
   }
 
   async function confirmUnlock(id: string) {
     if (!unlockReason.trim()) {
-      alert("Alasan unlock wajib diisi.");
+      setUnlockErr("Alasan unlock wajib diisi.");
       return;
     }
-    setBusy(true);
+    setUnlockErr("");
+    setBusyId(id);
     try {
       const r = await fetch("/api/hr/payroll/unlock", {
         method: "POST",
@@ -145,11 +155,12 @@ export function PayrollTable({
       );
       setUnlockId(null);
       setUnlockReason("");
+      toast.success("Payroll berhasil di-unlock");
       router.refresh();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Gagal");
+      toast.error("Gagal unlock payroll", e instanceof Error ? e.message : "Terjadi kesalahan");
     } finally {
-      setBusy(false);
+      setBusyId(null);
     }
   }
 
@@ -216,17 +227,17 @@ export function PayrollTable({
                         <button
                           type="button"
                           onClick={() => approve(row.payroll_id)}
-                          disabled={busy}
+                          disabled={busyId !== null}
                           className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                         >
-                          Setujui
+                          {busyId === row.payroll_id ? "…" : "Setujui"}
                         </button>
                       )}
                       {isApproved && isUnpaid && !isLocked && (
                         <button
                           type="button"
                           onClick={() => toggleMarkPaid(row.payroll_id)}
-                          disabled={busy}
+                          disabled={busyId !== null}
                           className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                         >
                           Tandai Dibayar
@@ -236,7 +247,7 @@ export function PayrollTable({
                         <button
                           type="button"
                           onClick={() => toggleUnlock(row.payroll_id)}
-                          disabled={busy}
+                          disabled={busyId !== null}
                           className="rounded-md border border-amber-400 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
                         >
                           Unlock
@@ -259,19 +270,20 @@ export function PayrollTable({
                           className="w-full rounded-md border border-blue-300 bg-white px-3 py-2 text-sm"
                           placeholder="TRF-2026-07-001"
                         />
+                        {paymentRefErr && <div className="text-sm text-rose-600">{paymentRefErr}</div>}
                         <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={() => markPaid(row.payroll_id)}
-                            disabled={busy}
+                            disabled={busyId !== null}
                             className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                           >
-                            {busy ? "..." : "Konfirmasi"}
+                            {busyId === row.payroll_id ? "…" : "Konfirmasi"}
                           </button>
                           <button
                             type="button"
                             onClick={() => toggleMarkPaid(row.payroll_id)}
-                            disabled={busy}
+                            disabled={busyId !== null}
                             className="rounded-md border border-slate-300 px-3 py-1 text-xs"
                           >
                             Batal
@@ -293,19 +305,20 @@ export function PayrollTable({
                           className="w-full rounded-md border border-amber-300 bg-white px-3 py-2 text-sm"
                           placeholder="Mis: koreksi salah perhitungan, data belum final"
                         />
+                        {unlockErr && <div className="text-sm text-rose-600">{unlockErr}</div>}
                         <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={() => confirmUnlock(row.payroll_id)}
-                            disabled={busy}
+                            disabled={busyId !== null}
                             className="rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
                           >
-                            {busy ? "..." : "Konfirmasi Unlock"}
+                            {busyId === row.payroll_id ? "…" : "Konfirmasi Unlock"}
                           </button>
                           <button
                             type="button"
                             onClick={() => toggleUnlock(row.payroll_id)}
-                            disabled={busy}
+                            disabled={busyId !== null}
                             className="rounded-md border border-slate-300 px-3 py-1 text-xs"
                           >
                             Batal

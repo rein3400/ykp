@@ -1,0 +1,17 @@
+{
+  "name": "ykp-hermez",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hermez AI chat service - owner Telegram interface over all YKP module data",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

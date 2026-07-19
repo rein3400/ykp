@@ -29,6 +29,8 @@ export default function ReceivingClient({
 
   async function create() {
     setErr(null);
+    // Fraud gate (owner directive): photo proof of weight/receiving is mandatory.
+    if (evidence.length === 0) { setErr('Foto bukti timbang/penerimaan wajib diunggah sebelum submit'); return; }
     const body = {
       ...form,
       evidence_urls: evidence,
