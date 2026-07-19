@@ -23,7 +23,9 @@ export default function LedgerClient({
     return true;
   });
 
-  const sorted = [...filtered].sort((a, b) => b.movement_datetime.localeCompare(a.movement_datetime));
+  const sorted = [...filtered].sort((a, b) =>
+    (b.movement_datetime || '').localeCompare(a.movement_datetime || ''),
+  );
 
   return (
     <div className='space-y-3'>

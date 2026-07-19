@@ -15,6 +15,9 @@ export default function WasteClient({
   const [list, setList] = useState(rows);
   const [err, setErr] = useState<string | null>(null);
   const [evidence, setEvidence] = useState<EvidenceFile[]>([]);
+  // waste rows store only item_id (no item_name column) — resolve the display
+  // name from the items master so the Item column isn't blank / a raw id.
+  const itemNameById = new Map(items.map((i) => [i.item_id, i.item_name]));
   const selectedItem = items.find((i) => i.item_id === form.item_id);
 
   async function create() {
@@ -85,7 +88,7 @@ export default function WasteClient({
             {list.map((r) => (
               <tr key={r.waste_id} className={`border-t border-border ${!r.photo_url ? 'bg-destructive/5' : ''}`}>
                 <td className='px-2 py-1'>{r.date}</td>
-                <td className='px-2 py-1'>{r.item_name || r.item_id}</td>
+                <td className='px-2 py-1'>{r.item_name || itemNameById.get(r.item_id) || r.item_id}</td>
                 <td className='px-2 py-1 text-right'>{r.qty} {r.unit}</td>
                 <td className='px-2 py-1'>{r.reason}</td>
                 <td className='px-2 py-1 text-center'>
