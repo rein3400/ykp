@@ -244,7 +244,12 @@ export default function AlertsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 align-top">
-                        <Dialog>
+                        <Dialog
+                          open={active?.alertId === a.alertId}
+                          onOpenChange={(open) => {
+                            if (!open) setActive(null);
+                          }}
+                        >
                           <DialogTrigger asChild>
                             <Button
                               size="sm"
@@ -259,55 +264,57 @@ export default function AlertsPage() {
                               Ubah
                             </Button>
                           </DialogTrigger>
-                          {active?.alertId === a.alertId ? (
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Ubah status alert</DialogTitle>
-                                <DialogDescription>
-                                  Alert {active.alertId} · {active.alertType}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-3">
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant={nextStatus === "ack" ? "default" : "outline"}
-                                    onClick={() => setNextStatus("ack")}
-                                  >
-                                    Acknowledge
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant={nextStatus === "resolved" ? "default" : "outline"}
-                                    onClick={() => setNextStatus("resolved")}
-                                  >
-                                    Resolve
-                                  </Button>
+                          <DialogContent>
+                            {active?.alertId === a.alertId ? (
+                              <>
+                                <DialogHeader>
+                                  <DialogTitle>Ubah status alert</DialogTitle>
+                                  <DialogDescription>
+                                    Alert {active.alertId} · {active.alertType}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-3">
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant={nextStatus === "ack" ? "default" : "outline"}
+                                      onClick={() => setNextStatus("ack")}
+                                    >
+                                      Acknowledge
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant={nextStatus === "resolved" ? "default" : "outline"}
+                                      onClick={() => setNextStatus("resolved")}
+                                    >
+                                      Resolve
+                                    </Button>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-sm" htmlFor="action-taken">
+                                      Catatan tindakan
+                                    </label>
+                                    <textarea
+                                      id="action-taken"
+                                      rows={3}
+                                      value={actionTaken}
+                                      onChange={(e) => setActionTaken(e.target.value)}
+                                      placeholder="Misal: hubungi PIC outlet X, cek struk, dll."
+                                      className="w-full rounded-md border bg-background p-2 text-sm"
+                                    />
+                                  </div>
                                 </div>
-                                <div className="space-y-1">
-                                  <label className="text-sm" htmlFor="action-taken">
-                                    Catatan tindakan
-                                  </label>
-                                  <textarea
-                                    id="action-taken"
-                                    rows={3}
-                                    value={actionTaken}
-                                    onChange={(e) => setActionTaken(e.target.value)}
-                                    placeholder="Misal: hubungi PIC outlet X, cek struk, dll."
-                                    className="w-full rounded-md border bg-background p-2 text-sm"
-                                  />
-                                </div>
-                              </div>
-                              <DialogFooter>
-                                <Button variant="outline" onClick={() => setActive(null)}>
-                                  Batal
-                                </Button>
-                                <Button onClick={submitStatus} disabled={submitting}>
-                                  {submitting ? "Menyimpan..." : "Simpan"}
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          ) : null}
+                                <DialogFooter>
+                                  <Button variant="outline" onClick={() => setActive(null)}>
+                                    Batal
+                                  </Button>
+                                  <Button onClick={submitStatus} disabled={submitting}>
+                                    {submitting ? "Menyimpan..." : "Simpan"}
+                                  </Button>
+                                </DialogFooter>
+                              </>
+                            ) : null}
+                          </DialogContent>
                         </Dialog>
                       </td>
                     </tr>

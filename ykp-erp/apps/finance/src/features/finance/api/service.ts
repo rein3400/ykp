@@ -26,8 +26,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(`Invalid JSON response from ${path}`);
   }
   if (!res.ok) {
-    const err = (body as { error?: { message?: string } }).error;
-    throw new Error(err?.message ?? `Request failed: ${res.status}`);
+    const err = (body as { error?: { message?: string; details?: unknown } }).error;
+    let msg = err?.message ?? `Request failed: ${res.status}`;
+    // Surface Zod field-level details so the user sees which field failed.
+    const details = err?.details;
+    if (details && typeof details === "object") {
+      const fieldErrors = (details as { fieldErrors?: Record<string, string[]> }).fieldErrors;
+      if (fieldErrors) {
+        const parts = Object.entries(fieldErrors)
+          .map(([k, v]) => `${k}: ${(v ?? []).join(", ")}`)
+          .filter((s) => s.trim().length > 0 && !s.endsWith(": "));
+        if (parts.length) msg += ` (${parts.join("; ")})`;
+      }
+    }
+    throw new Error(msg);
   }
   return (body as { data: T }).data;
 }

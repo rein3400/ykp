@@ -75,6 +75,18 @@ export function PosReceiptFormDialog() {
     form.payment_amount >= 0 &&
     !create.isPending;
 
+  /** Human-readable list of missing/invalid required fields. */
+  const missingFields = (): string[] => {
+    const m: string[] = [];
+    if (!form.date) m.push("Tanggal");
+    if (!form.outlet_id) m.push("Outlet");
+    if (!form.receipt_number.trim()) m.push("Nomor Nota");
+    if (!form.payment_method_id) m.push("Metode Pembayaran");
+    if (!(form.gross_sales > 0)) m.push("Gross Sales (> 0)");
+    if (!(form.payment_amount >= 0)) m.push("Jumlah Bayar (>= 0)");
+    return m;
+  };
+
   const reset = () => {
     setForm({
       date: todayWib(),
@@ -101,7 +113,15 @@ export function PosReceiptFormDialog() {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!canSubmit || !selectedOutlet) return;
+    if (!canSubmit || !selectedOutlet) {
+      const missing = missingFields();
+      setError(
+        missing.length
+          ? `Lengkapi dulu: ${missing.join(", ")}.`
+          : "Pilih outlet yang valid.",
+      );
+      return;
+    }
 
     const body: CreatePosReceiptBody = {
       date: form.date,
@@ -395,7 +415,7 @@ export function PosReceiptFormDialog() {
             </p>
           )}
 
-          <Button type="submit" disabled={!canSubmit}>
+          <Button type="submit" disabled={create.isPending}>
             {create.isPending ? "Menyimpan..." : "Simpan Struk"}
           </Button>
         </form>
