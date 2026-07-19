@@ -12,7 +12,10 @@
  *   HERMEZ_WEB_URL           web base URL (default http://127.0.0.1:PORT or :3004)
  *   TELEGRAM_BOT_TOKEN / HERMEZ_TELEGRAM_BOT_TOKEN   bot token (or hermez_config via web)
  *   OWNER_CHAT_ID / TELEGRAM_OWNER_CHAT_ID           owner chat/group id
- *   HERMEZ_BOT_DISABLED=true  no-op
+ *   HERMEZ_BOT_ENABLED=true   REQUIRED to start (opt-in since 2026-07-19 —
+ *                             ykp-hermez at repo root is the authoritative bot;
+ *                             two getUpdates pollers on one token steal each
+ *                             other's messages). Previously: HERMEZ_BOT_DISABLED.
  *
  * Note: telegram/LLM creds are read from env here. When the owner sets them
  * via the UI (hermez_config), the web service is authoritative; this worker
@@ -150,7 +153,11 @@ async function handleMessage(msg) {
 }
 
 async function main() {
-  if (process.env.HERMEZ_BOT_DISABLED === "true") { console.log("[hermez-bot] disabled"); return; }
+  if (process.env.HERMEZ_BOT_ENABLED !== "true") {
+    console.log("[hermez-bot] not started: ykp-hermez (repo root) is the authoritative bot worker.");
+    console.log("[hermez-bot] set HERMEZ_BOT_ENABLED=true ONLY if you intentionally run this legacy worker instead — never both on one token.");
+    return;
+  }
   console.log(`[hermez-bot] boot web=${WEB} chat=${CHAT_ID || "(unset)"} token=${TOKEN ? "set" : "unset"} secret=${SECRET ? "set" : "unset"}`);
   if (!TOKEN || !CHAT_ID) { console.error("[hermez-bot] missing TELEGRAM_BOT_TOKEN or OWNER_CHAT_ID — retrying via watchdog"); process.exit(1); }
   if (!SECRET) { console.error("[hermez-bot] missing HERMEZ_BOT_SECRET — retrying via watchdog"); process.exit(1); }

@@ -1,5 +1,14 @@
 # YKP Hermez
 
+> **⚠️ Two Hermez implementations exist (2026-07-19).**
+> [`ykp-hermez/`](../../../ykp-hermez) at the repo root is the **authoritative** Telegram bot:
+> it reads live V1 data (Google Sheets via the modules' public endpoints) and
+> supports free-form chat, watch rules, photo/voice, and the AI daily brief.
+> This app (`ykp-erp/apps/hermez`) reads the **parked B-OLD drizzle DBs** and is
+> kept for its dashboard/Run Console only. Its `src/workers/bot-worker.mjs` is
+> now **opt-in** (`HERMEZ_BOT_ENABLED=true`) — never run two pollers on one
+> bot token: they steal each other's messages.
+
 Next.js 14 app router, dark theme, port 3004.
 
 ## No-write-back guard
