@@ -92,12 +92,21 @@ export async function GET(req: Request): Promise<Response> {
       .where(filters.length ? and(...filters) : undefined)
       .limit(200);
 
-    const enriched = await Promise.all(
-      rows.map(async (r) => ({
-        ...r,
-        employeeName: await getEmployeeName(masterDb, r.employeeId),
-      })),
-    );
+    // Batch-resolve employee names — same N+1 class as attendance GET
+    // (was 1 lookup per row). Single inArray query instead.
+    const employeeIds = [...new Set(rows.map((r) => r.employeeId).filter(Boolean))] as string[];
+    const employeeRows = employeeIds.length
+      ? await masterDb
+          .select({ employeeId: masterEmployee.employeeId, fullName: masterEmployee.fullName })
+          .from(masterEmployee)
+          .where(inArray(masterEmployee.employeeId, employeeIds))
+      : [];
+    const employeeMap = new Map(employeeRows.map((e) => [e.employeeId, e.fullName]));
+
+    const enriched = rows.map((r) => ({
+      ...r,
+      employeeName: employeeMap.get(r.employeeId) ?? null,
+    }));
 
     return jsonOk({ payroll: enriched });
   } catch (err) {

@@ -5,17 +5,34 @@
  * Password: emp123 (change in production)
  * Role: based on employee role
  *
- * Usage: node scripts/seed-employee-users.mjs
+ * Usage:
+ *   set GOOGLE_APPLICATION_CREDENTIALS=C:\path\to\service-account.json
+ *   set YKP_HR_SPREADSHEET_ID=<spreadsheet-id>
+ *   node scripts/seed-employee-users.mjs
+ *
+ * Both env vars are required (no hardcoded paths — see .env for the same keys).
  */
 import { google } from "googleapis";
-import { createHash } from "node:crypto";
+import bcrypt from "bcryptjs";
 import fs from "node:fs";
 
-const CRED_PATH = "D:/Users/stefa/Downloads/ykp-hr-v1-7786e7ed8655.json";
-const SHEET_ID = "1rdKV6BJMsDr3lKhIoxQXA8hbto9s8p0rOajHFYNsPVg";
+const CRED_PATH = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const SHEET_ID = process.env.YKP_HR_SPREADSHEET_ID;
+
+if (!CRED_PATH || !fs.existsSync(CRED_PATH)) {
+  console.error(
+    "ERROR: set GOOGLE_APPLICATION_CREDENTIALS to a readable service-account JSON path.\n" +
+    `  Got: ${CRED_PATH ?? "(unset)"}`
+  );
+  process.exit(1);
+}
+if (!SHEET_ID) {
+  console.error("ERROR: set YKP_HR_SPREADSHEET_ID to the HR spreadsheet ID.");
+  process.exit(1);
+}
 
 function hashPw(p) {
-  return createHash("sha256").update(p).digest("hex");
+  return bcrypt.hashSync(p, 10);
 }
 
 const ROLE_MAP = {

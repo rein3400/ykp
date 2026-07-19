@@ -43,6 +43,12 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
                 pathname === n.href ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
               }`}>{n.label}</Link>
           ))}
+          {user.role === 'owner' && (
+            <Link href='/investor/admin'
+              className={`block rounded px-2 py-1.5 text-xs font-medium ${
+                pathname === '/investor/admin' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
+              }`}>Admin</Link>
+          )}
         </nav>
         <button onClick={logout}
           className='mt-4 w-full rounded border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted'>

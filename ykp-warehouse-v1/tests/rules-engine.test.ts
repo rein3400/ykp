@@ -5,7 +5,9 @@ import {
   evalWasteOverLimit, evalStockVariance,
   evalNearExpiry, evalExpiredStock,
   evalRecountOverdue, evalActionOverdue,
-  shouldCreateAction
+  shouldCreateAction,
+  computeFoodCostPct, evalFoodCostVariance,
+  FOOD_COST_MIN_PCT, FOOD_COST_MAX_PCT
 } from '../src/lib/rules-engine';
 
 describe('evalLowStock', () => {
@@ -129,5 +131,46 @@ describe('shouldCreateAction', () => {
   it('false for lower', () => {
     expect(shouldCreateAction('MEDIUM')).toBe(false);
     expect(shouldCreateAction('INFO')).toBe(false);
+  });
+});
+
+describe('computeFoodCostPct', () => {
+  it('computes consumption / sales', () => {
+    // opening 10jt + purchases 40jt - closing 8jt = 42jt consumption; sales 120jt -> 35%
+    expect(computeFoodCostPct(10_000_000, 40_000_000, 8_000_000, 120_000_000)).toBeCloseTo(35, 5);
+  });
+  it('null when sales zero/negative', () => {
+    expect(computeFoodCostPct(1, 1, 1, 0)).toBeNull();
+    expect(computeFoodCostPct(1, 1, 1, -100)).toBeNull();
+  });
+});
+
+describe('evalFoodCostVariance (owner KPI band 28–35%)', () => {
+  it('null inside band', () => {
+    expect(evalFoodCostVariance(28, 'Demangan', '2026-06')).toBeNull();
+    expect(evalFoodCostVariance(31.5, 'Demangan', '2026-06')).toBeNull();
+    expect(evalFoodCostVariance(35, 'Demangan', '2026-06')).toBeNull();
+  });
+  it('null when pct not computable', () => {
+    expect(evalFoodCostVariance(null, 'Demangan', '2026-06')).toBeNull();
+  });
+  it('HIGH just outside band', () => {
+    const a = evalFoodCostVariance(38, 'Demangan', '2026-06');
+    expect(a!.alertType).toBe('FOOD_COST_VARIANCE');
+    expect(a!.severity).toBe('HIGH');
+    const b = evalFoodCostVariance(25, 'Demangan', '2026-06');
+    expect(b!.severity).toBe('HIGH');
+  });
+  it('CRITICAL beyond ±5pp', () => {
+    expect(evalFoodCostVariance(41, 'Demangan', '2026-06')!.severity).toBe('CRITICAL');
+    expect(evalFoodCostVariance(22, 'Demangan', '2026-06')!.severity).toBe('CRITICAL');
+  });
+  it('KPI band constants match owner dashboard', () => {
+    expect(FOOD_COST_MIN_PCT).toBe(28);
+    expect(FOOD_COST_MAX_PCT).toBe(35);
+  });
+  it('over-band message points at theft/waste investigation', () => {
+    const a = evalFoodCostVariance(45, 'Demangan', '2026-06');
+    expect(a!.actionRequired).toContain('pencurian');
   });
 });

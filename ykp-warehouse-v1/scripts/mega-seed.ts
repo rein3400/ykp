@@ -10,7 +10,7 @@
  */
 import { getSheetsClient, getSpreadsheetId, TAB_HEADERS, TABS, appendRows, readTab, type TabName } from '../src/db/sheets';
 import { nowTimestampWib, formatDateWib } from '../src/lib/format';
-import { createHash } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -29,7 +29,7 @@ function id(prefix: string, n: number) {
 }
 
 function hashPw(p: string) {
-  return createHash('sha256').update(p).digest('hex');
+  return bcrypt.hashSync(p, 10);
 }
 
 const BRANDS = [

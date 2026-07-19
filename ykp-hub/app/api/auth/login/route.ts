@@ -1,15 +1,18 @@
 /**
- * Hub login proxy. Forwards credentials to ykp-hr-v1 (shared user store)
- * so the browser doesn't hit a cross-origin POST (CORS).
+ * Hub login proxy. Forwards credentials to the local HR app (shared user
+ * store) so the browser doesn't hit a cross-origin POST (CORS).
  *
- * Server-to-server: same Railway network, no CORS preflight issues.
+ * Server-to-server: same machine, no CORS preflight issues.
  * Hub session cookie is issued locally (HS256-signed) for the hub UI only;
- * the upstream hr-v1 cookie is forwarded for cross-app SSO convenience.
+ * the upstream HR cookie is forwarded for cross-app SSO convenience.
+ * Upstream base URL comes from app/config (NEXT_PUBLIC_YKP_HR_URL).
  */
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
+import { findHubModule, moduleBaseUrl } from "../../../config";
 
-const UPSTREAM_LOGIN = "https://ykp-hr-v1-standalone-production.up.railway.app/api/auth/login";
+const HR_MODULE = findHubModule("hr");
+const UPSTREAM_LOGIN = `${HR_MODULE ? moduleBaseUrl(HR_MODULE) : "http://localhost:3002"}/api/auth/login`;
 
 const COOKIE_NAME = "ykp_hub_session";
 const COOKIE_MAX_AGE = 24 * 3600;

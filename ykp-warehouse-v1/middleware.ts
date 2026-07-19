@@ -2,13 +2,16 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 // Keep cookie name inline — do NOT import from session.ts (Node crypto breaks Edge Runtime).
 const SESSION_COOKIE = 'ykp_warehouse_session';
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout'];
+const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/warehouse/notify/daily-brief'];
 // Public read endpoints for Hermez integration
 const PUBLIC_GET_PREFIXES = [
   '/api/warehouse/summary',
   '/api/warehouse/alerts',
   '/api/warehouse/actions',
-  '/api/warehouse/purchase-recommendation'
+  '/api/warehouse/purchase-recommendation',
+  '/api/warehouse/audit',
+  '/api/warehouse/attachments',
+  '/api/warehouse/recipe-costs'
 ];
 
 async function verify(token: string, secret: string): Promise<boolean> {

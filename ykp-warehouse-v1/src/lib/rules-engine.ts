@@ -4,17 +4,19 @@
  * Pure evaluation functions — no I/O. Callers pass computed metrics,
  * engine returns alert candidates with type + severity.
  *
- * 14 alert types:
+ * 15 alert types:
  * LOW_STOCK, STOCKOUT_RISK, OVERSTOCK, PURCHASE_REQUIRED,
  * RECEIVING_DISCREPANCY, TRANSFER_DISCREPANCY, WASTE_OVER_LIMIT,
  * STOCK_VARIANCE, NEAR_EXPIRY, EXPIRED_STOCK,
- * MISSING_RECEIPT, UNAPPROVED_ADJUSTMENT, RECOUNT_OVERDUE, ACTION_OVERDUE
+ * MISSING_RECEIPT, UNAPPROVED_ADJUSTMENT, RECOUNT_OVERDUE, ACTION_OVERDUE,
+ * FOOD_COST_VARIANCE (owner KPI band 28–35%, anti-fraud reconciliation)
  */
 export type AlertType =
   | 'LOW_STOCK' | 'STOCKOUT_RISK' | 'OVERSTOCK' | 'PURCHASE_REQUIRED'
   | 'RECEIVING_DISCREPANCY' | 'TRANSFER_DISCREPANCY' | 'WASTE_OVER_LIMIT'
   | 'STOCK_VARIANCE' | 'NEAR_EXPIRY' | 'EXPIRED_STOCK'
-  | 'MISSING_RECEIPT' | 'UNAPPROVED_ADJUSTMENT' | 'RECOUNT_OVERDUE' | 'ACTION_OVERDUE';
+  | 'MISSING_RECEIPT' | 'UNAPPROVED_ADJUSTMENT' | 'RECOUNT_OVERDUE' | 'ACTION_OVERDUE'
+  | 'FOOD_COST_VARIANCE';
 
 export type AlertSeverity = 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
@@ -235,4 +237,60 @@ export function evalActionOverdue(
 /** HIGH/CRITICAL alerts should auto-create actions. */
 export function shouldCreateAction(severity: AlertSeverity): boolean {
   return severity === 'HIGH' || severity === 'CRITICAL';
+}
+
+/** Owner KPI band (Dashboard sheet): food cost 28–35% of sales. */
+export const FOOD_COST_MIN_PCT = 28;
+export const FOOD_COST_MAX_PCT = 35;
+/** Hard breach margin: ±5pp outside the band = CRITICAL. */
+export const FOOD_COST_CRIT_MARGIN_PP = 5;
+
+/**
+ * Compute food-cost % from two independent data sources:
+ *   consumption_value = opening_stock_value + purchases_value - closing_stock_value
+ *   food_cost_%       = consumption_value / sales_value * 100
+ * Returns null when sales are zero/negative (cannot compute).
+ */
+export function computeFoodCostPct(
+  openingStockValue: number,
+  purchasesValue: number,
+  closingStockValue: number,
+  salesValue: number
+): number | null {
+  if (salesValue <= 0) return null;
+  const consumption = openingStockValue + purchasesValue - closingStockValue;
+  return (consumption / salesValue) * 100;
+}
+
+/**
+ * FOOD_COST_VARIANCE: food-cost % outside the owner KPI band (28–35%).
+ * Above band = waste/theft/no-scan sales; below band = mis-costed recipes
+ * or unrecorded purchases. Within ±5pp of band edge = HIGH; beyond = CRITICAL.
+ * Collusion-resistant: uses purchases (supplier invoices) and sales (Moka)
+ * from independent sources — physical counts alone cannot hide the leak.
+ */
+export function evalFoodCostVariance(
+  foodCostPct: number | null,
+  outletName: string,
+  period: string,
+  minPct = FOOD_COST_MIN_PCT,
+  maxPct = FOOD_COST_MAX_PCT
+): AlertCandidate | null {
+  if (foodCostPct === null) return null;
+  if (foodCostPct >= minPct && foodCostPct <= maxPct) return null;
+  const over = foodCostPct > maxPct;
+  const margin = over ? foodCostPct - maxPct : minPct - foodCostPct;
+  const severity: AlertSeverity = margin > FOOD_COST_CRIT_MARGIN_PP ? 'CRITICAL' : 'HIGH';
+  return {
+    alertType: 'FOOD_COST_VARIANCE',
+    severity,
+    title: over ? `Food cost tinggi: ${outletName}` : `Food cost rendah: ${outletName}`,
+    message: `Food cost ${foodCostPct.toFixed(1)}% di luar band KPI ${minPct}–${maxPct}% untuk ${period}`,
+    actionRequired: over
+      ? 'Investigasi waste, pencurian, atau penjualan tidak tercatat; cocokkan dengan stock opname'
+      : 'Verifikasi costing resep dan kelengkapan pencatatan pembelian',
+    outletId: outletName,
+    referenceType: 'food_cost',
+    referenceId: period
+  };
 }

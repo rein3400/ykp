@@ -11,6 +11,7 @@ import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { buildSummary, type SummaryInput } from '@/features/hr/lib/summary';
 import { generateAlerts, type HermesAlert } from '@/lib/hermez-alerts';
+import { pushAlertNotification, shouldNotifyNewAlert } from '@/lib/telegram';
 import { z } from 'zod';
 
 const schema = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) });
@@ -49,6 +50,8 @@ export const POST = handler(async (req) => {
   const summaryRows: Record<string, string>[] = [];
   const newAlertRows: Record<string, string>[] = [];
   const updateAlerts: Array<{ rowNumber: number; row: Record<string, string> }> = [];
+  // Newly created HIGH/CRITICAL alerts → immediate Telegram push after append.
+  const newHighCritical: Array<{ alert: HermesAlert; outletName: string }> = [];
   const now = nowTimestampWib();
 
   for (const o of out) {
@@ -182,6 +185,9 @@ export const POST = handler(async (req) => {
         updateAlerts.push({ rowNumber: existingAlert.rowNumber, row: alertToRow(a) });
       } else {
         newAlertRows.push(alertToRow(a));
+        if (shouldNotifyNewAlert(true, a.severity)) {
+          newHighCritical.push({ alert: a, outletName: o.outlet_name });
+        }
       }
     }
   }
@@ -191,6 +197,19 @@ export const POST = handler(async (req) => {
   }
   if (newAlertRows.length > 0) {
     await appendRows(TABS.hermezAlerts, newAlertRows);
+  }
+  // Immediate Telegram push for newly created HIGH/CRITICAL alerts only
+  // (re-upserted alerts are not re-pushed; MEDIUM/LOW are never pushed).
+  for (const { alert, outletName } of newHighCritical) {
+    await pushAlertNotification('hr-v1', {
+      alertId: alert.alert_id,
+      alertType: alert.alert_type,
+      severity: alert.severity,
+      title: alert.message,
+      message: alert.message,
+      outletName,
+      date: alert.date
+    });
   }
   for (const u of updateAlerts) {
     await updateRow(TABS.hermezAlerts, u.rowNumber, u.row);

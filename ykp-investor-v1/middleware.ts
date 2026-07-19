@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 // Keep cookie name inline — do NOT import from session.ts (Node crypto breaks Edge Runtime).
 const SESSION_COOKIE = 'ykp_investor_session';
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout'];
+const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/investor/notify/daily-brief'];
 
 async function verify(token: string, secret: string): Promise<boolean> {
   const parts = token.split('.');
@@ -35,7 +35,18 @@ export async function middleware(req: NextRequest) {
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
+  // Public read-only surface for hub/owner aggregation: GET /api/investor/summary
+  // and GET /api/investor/summary/count. POST /api/investor/summary/regenerate
+  // is NOT covered here (method check) — it requires a session (+ owner role).
   if (pathname.startsWith('/api/investor/summary') && req.method === 'GET') {
+    return NextResponse.next();
+  }
+  // Owner activity feed: audit trail read endpoint (GET only)
+  if (pathname.startsWith('/api/investor/audit') && req.method === 'GET') {
+    return NextResponse.next();
+  }
+  // Attachment bytes/metadata for owner feed (GET only)
+  if (pathname.startsWith('/api/investor/attachments') && req.method === 'GET') {
     return NextResponse.next();
   }
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;

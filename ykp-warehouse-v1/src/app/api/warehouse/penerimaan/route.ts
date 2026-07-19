@@ -1,13 +1,15 @@
 /**
  * Legacy F1 Penerimaan — flat form.
- * Phase 3 will replace this with header+detail warehouse_receiving.
- * Writes to legacy tab for backward compatibility.
+ * DEPRECATED: superseded by header+detail warehouse_receiving (Receiving page).
+ * Writes to the legacy tab only while WAREHOUSE_LEGACY_WRITES_ENABLED != false;
+ * when disabled, POST returns 410 Gone.
  */
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { ok, list, unauthorized, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
+import { legacyWritesEnabled, legacyWritesDisabledResponse } from '@/lib/legacy';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
 
@@ -21,6 +23,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
+  if (!legacyWritesEnabled()) return legacyWritesDisabledResponse();
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   const id = nextSequentialIdSync('RCV');
   const row = {

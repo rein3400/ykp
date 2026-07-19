@@ -10,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='id'>
-      <body>
+      {/* suppressHydrationWarning: browser extensions (password managers,
+          grammar tools, AI assistants) inject attributes/classes into <body>
+          before React hydrates — that's external noise, not app bugs. */}
+      <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

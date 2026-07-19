@@ -4,7 +4,7 @@
  */
 import { getSheetsClient, getSpreadsheetId, TAB_HEADERS, TABS, columnLetter, type TabName } from '../src/db/sheets';
 import { nowTimestampWib } from '../src/lib/format';
-import { createHash } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 function quoteTab(tab: string): string {
   return /^[A-Za-z0-9_]+$/.test(tab) ? tab : `'${tab}'`;
@@ -35,7 +35,7 @@ async function seedUser(sheets: ReturnType<typeof getSheetsClient>, sid: string)
     console.log('[seed] users already seeded');
     return;
   }
-  const pw = createHash('sha256').update('owner123').digest('hex');
+  const pw = bcrypt.hashSync('owner123', 10);
   const row = ['USR-001', 'owner', pw, 'owner', '', 'active', nowTimestampWib(), ''];
   await sheets.spreadsheets.values.append({
     spreadsheetId: sid, range: `${quoteTab(TABS.users)}!A2`,

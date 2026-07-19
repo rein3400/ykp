@@ -1,16 +1,12 @@
-import { findRow, TABS } from '@/db/sheets';
+import { findRow, updateRow, TABS } from '@/db/sheets';
 import { setSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, ok } from '@/lib/http';
 import { rateLimit, clientKey } from '@/lib/ratelimit';
-import { createHash } from 'crypto';
+import { verifyPassword, hashPassword } from '@/lib/password';
 import { z } from 'zod';
 
 const schema = z.object({ username: z.string().min(1), password: z.string().min(1) });
-
-function hashPw(p: string): string {
-  return createHash('sha256').update(p).digest('hex');
-}
 
 export const POST = handler(async (req) => {
   const key = clientKey(req);
@@ -24,7 +20,17 @@ export const POST = handler(async (req) => {
   const found = await findRow(TABS.users, 'username', parsed.data.username);
   if (!found) return unauthorized('Username/password salah');
   if (found.row.active_status !== 'active') return unauthorized('Akun non-aktif');
-  if (found.row.password_hash !== hashPw(parsed.data.password)) return unauthorized('Username/password salah');
+  const verdict = await verifyPassword(parsed.data.password, found.row.password_hash ?? '');
+  if (!verdict.ok) return unauthorized('Username/password salah');
+
+  // Legacy sha256 hash matched → transparently migrate to bcrypt.
+  if (verdict.needsRehash) {
+    const newHash = await hashPassword(parsed.data.password);
+    await updateRow(TABS.users, found.rowNumber, {
+      ...found.row,
+      password_hash: newHash
+    }).catch(() => null);
+  }
 
   await setSession({
     userId: found.row.user_id,

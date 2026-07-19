@@ -1,28 +1,41 @@
 /**
- * Hub health probe — checks each upstream app + counts records where possible.
- * Used by hub landing page to show real system status (not hardcoded numbers).
+ * Hub health probe — checks each local YKP app via its public probe path
+ * (summary count endpoint where one exists, /login for the owner dashboard)
+ * and extracts record counts where possible. App registry + URLs live in
+ * app/config (env-overridable, local by default).
  */
 import { NextResponse } from "next/server";
+import { HUB_MODULES, moduleBaseUrl, moduleProbeUrl } from "../../config";
 
-const APPS = [
-  { id: "finance", name: "Finance", url: "https://ykp-erp-finance-production.up.railway.app", countUrl: null as string | null },
-  { id: "hr", name: "HR Production", url: "https://ykp-erp-hr-production.up.railway.app", countUrl: null as string | null },
-  { id: "hermez", name: "Hermez AI", url: "https://ykp-erp-hermez-production.up.railway.app", countUrl: null as string | null },
-  { id: "hr-v1", name: "HR Pilot", url: "https://ykp-hr-v1-standalone-production.up.railway.app", countUrl: "https://ykp-hr-v1-standalone-production.up.railway.app/api/hr/summary/count" },
-  { id: "warehouse", name: "Warehouse", url: process.env.NEXT_PUBLIC_WAREHOUSE_URL ?? "https://ykp-warehouse-v1.vercel.app", countUrl: null as string | null },
-  { id: "investor", name: "Investor", url: process.env.NEXT_PUBLIC_INVESTOR_URL ?? "https://ykp-investor-v1.vercel.app", countUrl: null as string | null },
-  { id: "ops", name: "Operational", url: process.env.NEXT_PUBLIC_OPS_URL ?? "https://ykp-ops-v1.vercel.app", countUrl: null as string | null },
-];
+const TIMEOUT_MS = 8000;
 
-async function probe(url: string, timeoutMs = 8000): Promise<{ status: number | null; ms: number; error?: string }> {
+interface ProbeResult {
+  status: number | null;
+  ms: number;
+  recordCount: number | null;
+  error?: string;
+}
+
+async function probe(url: string, expectCount: boolean): Promise<ProbeResult> {
   const start = Date.now();
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
-    return { status: r.status, ms: Date.now() - start };
+    let recordCount: number | null = null;
+    if (expectCount && r.ok) {
+      try {
+        const j = await r.json();
+        // finance/warehouse/ops/investor shape: {data:{count}}; hr shape: {data:{total}}
+        const c = j?.data?.count ?? j?.data?.total ?? null;
+        recordCount = typeof c === "number" ? c : null;
+      } catch {
+        // body not JSON — leave null
+      }
+    }
+    return { status: r.status, ms: Date.now() - start, recordCount };
   } catch (e) {
-    return { status: null, ms: Date.now() - start, error: e instanceof Error ? e.message : "unknown" };
+    return { status: null, ms: Date.now() - start, recordCount: null, error: e instanceof Error ? e.message : "unknown" };
   } finally {
     clearTimeout(timer);
   }
@@ -30,33 +43,17 @@ async function probe(url: string, timeoutMs = 8000): Promise<{ status: number | 
 
 export async function GET() {
   const results = await Promise.all(
-    APPS.map(async (app) => {
-      const ping = await probe(app.url);
-      let recordCount: number | null = null;
-      if (app.countUrl) {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 8000);
-        try {
-          const r = await fetch(app.countUrl, { cache: "no-store", signal: ctrl.signal });
-          if (r.ok) {
-            const j = await r.json();
-            const total = j?.data?.total ?? null;
-            recordCount = typeof total === "number" ? total : null;
-          }
-        } catch {
-          // leave null
-        } finally {
-          clearTimeout(timer);
-        }
-      }
+    HUB_MODULES.map(async (m) => {
+      const base = moduleBaseUrl(m);
+      const ping = await probe(moduleProbeUrl(m), m.probeReturnsCount);
       return {
-        id: app.id,
-        name: app.name,
-        url: app.url,
+        id: m.id,
+        name: m.name,
+        url: base,
         pingMs: ping.ms,
         httpStatus: ping.status,
         reachable: ping.status != null && ping.status < 500,
-        recordCount
+        recordCount: ping.recordCount
       };
     })
   );

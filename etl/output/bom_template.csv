@@ -1,0 +1,5 @@
+menu_name,portion_size,selling_price,ingredient_item_key,qty_per_portion,unit,note
+CONTOH: Ayam Geprek,1 porsi,25000,DADA AYAM MARINASI,150,g,contoh — ganti dengan menu asli
+CONTOH: Ayam Geprek,1 porsi,25000,MINYAK GORENG,30,ml,contoh — ganti dengan menu asli
+CONTOH: Kopi Susu Gula Aren,1 gelas,18000,FULL ARABICA (LAJU DEMANGAN),18,g,contoh — ganti dengan menu asli
+CONTOH: Kopi Susu Gula Aren,1 gelas,18000,GULA CAIR,20,ml,contoh — ganti dengan menu asli

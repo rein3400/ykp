@@ -52,12 +52,26 @@ describe("HR summary generator (mocked)", () => {
   });
 
   it("returns ok when outlet + brand exist", async () => {
+    // The impl awaits .where() directly for attendance rows — the chain must
+    // be a thenable array (with .limit attached for the master lookups).
+    const rowsP: Promise<unknown[]> & { limit?: () => Promise<unknown[]> } = Promise.resolve([]);
+    rowsP.limit = async () => [];
     const hrDb = {
-      select: () => ({ from: () => ({ where: () => ({ limit: async () => [{ brandId: "BR-001" }] }) }) }),
+      select: () => ({ from: () => ({ where: () => rowsP }) }),
       insert: () => ({ values: () => ({ onConflictDoUpdate: async () => null }) }),
     } as never;
+    // Column-aware mock: the impl selects {name} for name lookups but
+    // {brandId} for the outlet->brand resolution. Returning only name rows
+    // made brandId undefined ("brand (missing) not found") — the red test
+    // from the 2026-07-12 verification report.
     const masterDb = {
-      select: () => ({ from: () => ({ where: () => ({ limit: async () => [{ name: "Café ABC" }, { name: "Brand X" }] }) }) }),
+      select: (cols?: Record<string, unknown>) => ({
+        from: () => ({
+          where: () => ({
+            limit: async () => (cols && "brandId" in cols ? [{ brandId: "BR-001" }] : [{ name: "Café ABC" }]),
+          }),
+        }),
+      }),
     } as never;
     // Should not throw — happy path smoke.
     await expect(

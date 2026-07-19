@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { shiftLabel, type ShiftLike } from '@/lib/shift-label';
+import { useToast } from '@/components/toast';
 
 export function RosterForm({
   employees,
@@ -12,6 +13,7 @@ export function RosterForm({
   shifts: ShiftLike[];
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
@@ -38,6 +40,7 @@ export function RosterForm({
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? 'Gagal menyimpan roster');
       }
+      toast.success('Shift di-assign');
       router.refresh();
       setForm((f) => ({ ...f, notes: '' }));
     } catch (e) {
@@ -105,14 +108,8 @@ export function RosterForm({
           onChange={(e) => set('notes', e.target.value)}
         />
       </label>
-      {error && (
-        <div className="text-sm text-red-600" role="alert">
-          {error}
-        </div>
-      )}
-      <button type="submit" disabled={saving || shifts.length === 0} className="btn-primary">
-        {saving ? '...' : 'Simpan'}
-      </button>
+      {error && <div role='alert' className='rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700'>{error}</div>}
+      <button type='submit' disabled={saving || shifts.length === 0} className='btn-primary'>{saving ? 'Menyimpan…' : 'Simpan'}</button>
     </form>
   );
 }

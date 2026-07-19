@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatIdr } from '@/lib/format';
+import { useToast } from '@/components/toast';
+import { useConfirm } from '@/components/confirm-dialog';
 
 interface Employee {
   employee_id: string;
@@ -31,22 +33,30 @@ export function EmployeesTable({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [error, setError] = useState('');
 
-  async function deactivate(id: string) {
-    if (!confirm(`Nonaktifkan karyawan ${id}? Data absensi/payroll tetap tersimpan.`)) return;
+  async function deactivate(id: string, name: string) {
+    const ok = await confirm({
+      title: `Nonaktifkan ${name}?`,
+      description: `Karyawan ${id} akan dinonaktifkan. Data absensi dan payroll tetap tersimpan.`,
+      confirmLabel: 'Nonaktifkan',
+      cancelLabel: 'Batal',
+      tone: 'danger'
+    });
+    if (!ok) return;
     setBusyId(id);
-    setError('');
     try {
       const r = await fetch(`/api/hr/employees/${id}/deactivate`, { method: 'POST' });
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? 'Gagal');
       }
+      toast.success('Karyawan dinonaktifkan', name);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Gagal');
+      toast.error('Gagal menonaktifkan', e instanceof Error ? e.message : 'Terjadi kesalahan');
     } finally {
       setBusyId(null);
     }
@@ -58,7 +68,6 @@ export function EmployeesTable({
 
   return (
     <div className='space-y-2'>
-      {error && <div className='text-sm text-red-600'>{error}</div>}
       <table className='w-full text-sm'>
         <thead className='text-left text-xs text-muted-foreground'>
           <tr>
@@ -104,9 +113,9 @@ export function EmployeesTable({
                         type='button'
                         className='btn-ghost text-red-600'
                         disabled={busyId === e.employee_id}
-                        onClick={() => deactivate(e.employee_id)}
+                        onClick={() => deactivate(e.employee_id, e.full_name)}
                       >
-                        {busyId === e.employee_id ? '...' : 'Nonaktifkan'}
+                        {busyId === e.employee_id ? '…' : 'Nonaktifkan'}
                       </button>
                     )}
                   </td>

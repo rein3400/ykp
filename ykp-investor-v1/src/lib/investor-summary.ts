@@ -1,11 +1,149 @@
-/**
- * Investor daily summary + alert writers.
- */
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { nextSequentialIdSync } from '@/lib/repo';
 import { todayWib, nowTimestampWib } from '@/lib/format';
 import { getFinanceTotals } from '@/lib/finance-summary';
 
+/**
+ * investor_daily_summary engine GÇö pure functions over sheet rows (no I/O).
+ * Mirrors the finance fin-summary.ts pattern: the regenerate route reads
+ * tabs, this module computes, the route persists.
+ *
+ * One summary row per date at GROUP level (there is no outlet dimension GÇö
+ * the disclosure model exposes group aggregates only; see GOVERNANCE.md).
+ *
+ * Columns (TAB_HEADERS[TABS.summary]):
+ *   summary_id, date, total_revenue, total_profit, total_capital,
+ *   active_investors, dividend_declared, growth_pct, created_at
+ *
+ * Sources:
+ *   - total_revenue / total_profit: finance cross-read (fin_daily_summary)
+ *     rows for that exact date. Revenue = net_sales (fallback: revenue);
+ *     profit = estimated_surplus (fallback: net_profit_estimate) GÇö the
+ *     fallback keys tolerate older/mock finance shapes.
+ *   - total_capital: cumulative capital (in GêÆ out) with date <= summary date.
+ *   - active_investors: master_investor rows with status = 'active'.
+ *   - dividend_declared: cumulative declared dividends (status 'declared'
+ *     OR 'paid' GÇö paid dividends were also declared) whose declared date
+ *     (declared_at, WIB timestamp) <= summary date.
+ *   - growth_pct: day-over-day total_revenue growth vs the previous
+ *     calendar day, rounded to 1 decimal; empty when the previous day has
+ *     no finance revenue baseline (never a fake 0).
+ *   - shareholding contributes no persisted column (share_value is a
+ *     valuation snapshot, not cash flow GÇö adding it to total_capital would
+ *     double count). Its total is returned as response context only.
+ */
+
+export interface InvestorRows {
+  investors: Record<string, string>[];
+  capital: Record<string, string>[];
+  shareholding: Record<string, string>[];
+  dividend: Record<string, string>[];
+}
+
+export interface InvestorSummaryComputed {
+  date: string;
+  totalRevenue: number;
+  totalProfit: number;
+  totalCapital: number;
+  activeInvestors: number;
+  dividendDeclared: number;
+  /** null when the previous calendar day has no finance revenue baseline. */
+  growthPct: number | null;
+  /** Context only GÇö valuation snapshot, NOT written to the summary tab. */
+  totalShareValue: number;
+  /** Finance rows matched for the date GÇö 0 GçÆ data_missing alert. */
+  financeRowsForDate: number;
+}
+
+export function num(v: string | number | undefined | null): number {
+  const n = typeof v === 'number' ? v : Number(v ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** First present non-empty numeric field wins (schema-fallback helper). */
+export function firstNum(row: Record<string, string>, fields: string[]): number {
+  for (const f of fields) {
+    const v = row[f];
+    if (v !== undefined && v !== '') return num(v);
+  }
+  return 0;
+}
+
+/** Pure date math on YYYY-MM-DD (UTC-anchored, timezone-safe). */
+export function addDays(dateStr: string, n: number): string {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Date part of a WIB timestamp ('YYYY-MM-DD HH:mm:ss' or 'YYYY-MM-DD'). */
+export function datePart(ts: string | undefined | null): string {
+  return (ts ?? '').slice(0, 10);
+}
+
+export function computeInvestorSummary(
+  rows: InvestorRows,
+  finRows: Record<string, string>[],
+  date: string
+): InvestorSummaryComputed {
+  const finToday = finRows.filter((r) => r.date === date);
+  const finPrev = finRows.filter((r) => r.date === addDays(date, -1));
+
+  const revenueOf = (r: Record<string, string>) => firstNum(r, ['net_sales', 'revenue']);
+  const profitOf = (r: Record<string, string>) => firstNum(r, ['estimated_surplus', 'net_profit_estimate']);
+
+  const totalRevenue = finToday.reduce((s, r) => s + revenueOf(r), 0);
+  const totalProfit = finToday.reduce((s, r) => s + profitOf(r), 0);
+  const prevRevenue = finPrev.reduce((s, r) => s + revenueOf(r), 0);
+
+  const totalCapital = rows.capital
+    .filter((c) => c.date && c.date <= date)
+    .reduce((s, c) => s + (c.type === 'out' ? -num(c.amount) : num(c.amount)), 0);
+
+  const activeInvestors = rows.investors.filter((i) => i.status === 'active').length;
+
+  const dividendDeclared = rows.dividend
+    .filter((d) => {
+      const declared = datePart(d.declared_at);
+      return declared && declared <= date;
+    })
+    .reduce((s, d) => s + num(d.amount), 0);
+
+  const totalShareValue = rows.shareholding.reduce((s, r) => s + num(r.share_value), 0);
+
+  const growthPct = prevRevenue > 0
+    ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 1000) / 10
+    : null;
+
+  return {
+    date,
+    totalRevenue,
+    totalProfit,
+    totalCapital,
+    activeInvestors,
+    dividendDeclared,
+    growthPct,
+    totalShareValue,
+    financeRowsForDate: finToday.length
+  };
+}
+
+/** Map the computed summary to an investor_daily_summary sheet row. */
+export function toSummaryRow(summaryId: string, c: InvestorSummaryComputed, createdAt: string): Record<string, string> {
+  return {
+    summary_id: summaryId,
+    date: c.date,
+    total_revenue: String(c.totalRevenue),
+    total_profit: String(c.totalProfit),
+    total_capital: String(c.totalCapital),
+    active_investors: String(c.activeInvestors),
+    dividend_declared: String(c.dividendDeclared),
+    growth_pct: c.growthPct === null ? '' : String(c.growthPct),
+    created_at: createdAt
+  };
+}
+
+// --- Write pipeline (capital/dividend routes) -----------------------------
 export async function regenerateInvestorSummary(date?: string): Promise<Record<string, string>> {
   const d = date ?? todayWib();
   const [investors, capital, dividend, shareholding, fin] = await Promise.all([
@@ -90,7 +228,7 @@ export async function writeInvestorAlerts(
       severity: 'HIGH',
       alert_type: 'DIVIDEND_HIGH_RATIO',
       title: 'Dividend vs capital tinggi',
-      message: `Dividend declared ${dividend} â‰ˆ ${((dividend / capital) * 100).toFixed(1)}% of capital ${capital}`,
+      message: `Dividend declared ${dividend} Gëê ${((dividend / capital) * 100).toFixed(1)}% of capital ${capital}`,
       outlet_id: '',
       status: 'OPEN',
       created_at: now,

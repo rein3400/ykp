@@ -4,6 +4,15 @@
  */
 import { google, type sheets_v4 } from 'googleapis';
 import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow } from './mock-store';
+import { todayWib } from '@/lib/format';
+
+/** YYYY-MM-DD for N days before today (Asia/Jakarta), used for growth baseline. */
+function addDaysWib(days: number): string {
+  const d = new Date(Date.now() + days * 86400000);
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 let cached: sheets_v4.Sheets | null = null;
@@ -43,7 +52,12 @@ export const TABS = {
   // (shared spreadsheet multi-app; header overwrite broke login active_status).
   users: 'investor_users',
   auditLog: 'investor_audit_log',
-  hermezAlerts: 'investor_hermes_alert_log'
+  hermezAlerts: 'investor_hermes_alert_log',
+  telegramDeliveryLog: 'telegram_delivery_log',
+  // ── Photo/document attachments (Drive-backed) + MOU + share history ──
+  attachments: 'investor_attachments',
+  documents: 'investor_documents',
+  shareHistory: 'investor_share_history'
 } as const;
 export type TabName = (typeof TABS)[keyof typeof TABS];
 
@@ -83,6 +97,26 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   [TABS.hermezAlerts]: [
     'alert_id', 'date', 'source_app', 'alert_type', 'severity', 'message',
     'status', 'created_at', 'resolved_at'
+  ],
+  [TABS.telegramDeliveryLog]: [
+    'delivery_id', 'source_module', 'source_reference_id', 'message_type',
+    'recipient', 'message_id', 'status', 'retry_count', 'sent_at',
+    'error_message', 'created_at'
+  ],
+  [TABS.attachments]: [
+    'attachment_id', 'entity_type', 'entity_id', 'file_id', 'file_name',
+    'mime_type', 'size_bytes', 'uploaded_by', 'created_at'
+  ],
+  // MOU & legal docs per investor (versioned; expiry drives lapse warnings)
+  [TABS.documents]: [
+    'doc_id', 'investor_id', 'doc_type', 'attachment_id', 'signed_date',
+    'expiry_date', 'note', 'created_at'
+  ],
+  // Profit-share percentage per (investor, brand) over time; the row with
+  // the latest effective_date <= period end is authoritative for dividends.
+  [TABS.shareHistory]: [
+    'hist_id', 'investor_id', 'brand_id', 'share_pct', 'effective_date',
+    'created_by', 'created_at'
   ]
 };
 
@@ -107,7 +141,29 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
 
 /** Cross-spreadsheet read for Finance fin_daily_summary. */
 export async function readFinanceTab<T = Record<string, string>>(tabName: string): Promise<T[]> {
-  if (isMockMode()) return [] as T[]; // no finance sheet in mock
+  // In mock mode there is no shared finance spreadsheet. Read the finance
+  // app's PUBLIC summary HTTP API instead (the same no-write-back pattern the
+  // owner app uses). Works for fin_daily_summary; other tabs have no public
+  // endpoint and return empty.
+  if (isMockMode()) {
+    if (tabName !== 'fin_daily_summary') return [] as T[];
+    const base = process.env.YKP_FINANCE_URL ?? 'http://localhost:3003';
+    const dates = [todayWib(), addDaysWib(-1)];
+    const all: Record<string, string>[] = [];
+    for (const d of dates) {
+      try {
+        const res = await fetch(`${base}/api/finance/summary?date=${encodeURIComponent(d)}`, {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(8000)
+        });
+        if (!res.ok) continue;
+        const j = (await res.json()) as { data?: { items?: Record<string, string>[] } };
+        all.push(...(j.data?.items ?? []));
+      } catch { /* finance unreachable — best-effort, yields fewer rows */ }
+    }
+    return all as T[];
+  }
   const sheets = getSheetsClient();
   const sid = getFinanceSpreadsheetId();
   const res = await sheets.spreadsheets.values.get({

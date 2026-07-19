@@ -154,7 +154,7 @@ function Footer({ apps, role }: { apps: AppDef[]; role: string }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
         <div>
           <div className="font-semibold text-slate-700 dark:text-slate-200">YKP ERP</div>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Unified dashboard for HR, Finance, Hermez, dan HR Pilot.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Unified dashboard for the local YKP family: Owner, HR, Finance, Warehouse, Investor, Ops.</p>
         </div>
         <div>
           <div className="font-semibold text-slate-700 dark:text-slate-200">Modules</div>

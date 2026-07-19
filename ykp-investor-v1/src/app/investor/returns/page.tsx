@@ -16,8 +16,13 @@ export default async function ReturnsPage() {
     readTab<Record<string, string>>(TABS.shareholding)
   ]);
 
+  // investor role: only own ROI row (never other investors' positions)
+  const visibleInvestors = session.role === 'investor' && session.investorId
+    ? investors.filter((i) => i.investor_id === session.investorId)
+    : investors;
+
   const roi: { investor_id: string; name: string; total_in: number; total_out: number; net: number; dividend: number; roi_pct: string }[] = [];
-  for (const inv of investors) {
+  for (const inv of visibleInvestors) {
     const cap = capital.filter((c) => c.investor_id === inv.investor_id);
     const div = dividend.filter(
       (d) => d.investor_id === inv.investor_id && (d.status || '').toLowerCase() === 'paid'

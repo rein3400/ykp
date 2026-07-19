@@ -5,6 +5,32 @@ import DashboardClient from './dashboard-client';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Fetch POS net sales (finance module) for the given dates via the finance
+ * app's PUBLIC summary endpoint — the no-write-back cross-module pattern.
+ * Best-effort: finance unreachable/unconfigured yields 0 (KPI shows N/A).
+ */
+async function fetchPosNetSales(dates: string[]): Promise<number> {
+  const base = process.env.YKP_FINANCE_URL ?? 'http://localhost:3003';
+  const sums = await Promise.all(
+    dates.map(async (d) => {
+      try {
+        const res = await fetch(`${base}/api/finance/summary?date=${encodeURIComponent(d)}`, {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(8000)
+        });
+        if (!res.ok) return 0;
+        const j = (await res.json()) as { data?: { items?: { net_sales?: string }[] } };
+        return (j.data?.items ?? []).reduce((s, r) => s + Number(r.net_sales || 0), 0);
+      } catch {
+        return 0;
+      }
+    })
+  );
+  return sums.reduce((a, b) => a + b, 0);
+}
+
 export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect('/login');
@@ -21,6 +47,11 @@ export default async function DashboardPage() {
     ),
     readTab<Record<string, string>>(TABS.stockMovement)
   ]);
+
+  // KPI week = 7 most recent closing dates (same window the client uses).
+  const weekDates = Array.from(new Set(closing.map((c) => c.date))).sort().reverse().slice(0, 7);
+  const posNetSales = await fetchPosNetSales(weekDates);
+
   return (
     <div className='space-y-4'>
       <div>
@@ -34,6 +65,7 @@ export default async function DashboardPage() {
         receiving={receiving}
         stockIssue={stockIssue}
         ledger={ledger}
+        posNetSales={posNetSales}
       />
     </div>
   );

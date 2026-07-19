@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte, inArray } from "drizzle-orm";
 import {
   initDbClients,
   createHrDb,
   createMasterDb,
   hrAttendance,
+  masterOutlet,
+  masterEmployee,
 } from "@ykp/schema";
 import { requireRole, Role, applyOutletScope } from "@ykp/auth";
 import {
@@ -84,13 +86,35 @@ export async function GET(req: Request): Promise<Response> {
       .where(filters.length ? and(...filters) : undefined)
       .limit(500);
 
-    const enriched = await Promise.all(
-      rows.map(async (r) => ({
-        ...r,
-        outletName: await getOutletName(masterDb, r.outletId),
-        employeeName: await getEmployeeName(masterDb, r.employeeId),
-      })),
-    );
+    // Batch-resolve names — was an N+1 (up to 500 rows × 2 individual
+    // lookups = ~1,000 master-DB round trips ≈ 37s on production, see
+    // VERIFICATION_REPORT 2026-07-12). Now 2 inArray queries total.
+    const outletIds = [...new Set(rows.map((r) => r.outletId).filter(Boolean))] as string[];
+    const employeeIds = [...new Set(rows.map((r) => r.employeeId).filter(Boolean))] as string[];
+
+    const [outletRows, employeeRows] = await Promise.all([
+      outletIds.length
+        ? masterDb
+            .select({ outletId: masterOutlet.outletId, outletName: masterOutlet.outletName })
+            .from(masterOutlet)
+            .where(inArray(masterOutlet.outletId, outletIds))
+        : Promise.resolve([]),
+      employeeIds.length
+        ? masterDb
+            .select({ employeeId: masterEmployee.employeeId, fullName: masterEmployee.fullName })
+            .from(masterEmployee)
+            .where(inArray(masterEmployee.employeeId, employeeIds))
+        : Promise.resolve([]),
+    ]);
+
+    const outletMap = new Map(outletRows.map((o) => [o.outletId, o.outletName]));
+    const employeeMap = new Map(employeeRows.map((e) => [e.employeeId, e.fullName]));
+
+    const enriched = rows.map((r) => ({
+      ...r,
+      outletName: outletMap.get(r.outletId) ?? null,
+      employeeName: employeeMap.get(r.employeeId) ?? null,
+    }));
 
     return jsonOk({ attendance: enriched });
   } catch (err) {

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { useToast } from "@/components/toast";
 
 interface Leave {
   leave_id: string;
@@ -21,10 +22,11 @@ interface Leave {
 
 export function LeavesTable({ data: initial }: { data: Leave[] }) {
   const router = useRouter();
+  const toast = useToast();
   const [rows, setRows] = React.useState<Leave[]>(initial);
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [reason, setReason] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
+  const [busyId, setBusyId] = React.useState<string | null>(null);
   const [err, setErr] = React.useState("");
 
   function toggleReject(id: string) {
@@ -38,7 +40,7 @@ export function LeavesTable({ data: initial }: { data: Leave[] }) {
       setErr("Alasan penolakan wajib diisi.");
       return;
     }
-    setBusy(true);
+    setBusyId(id);
     setErr("");
     try {
       const r = await fetch("/api/hr/leaves/approve", {
@@ -66,11 +68,14 @@ export function LeavesTable({ data: initial }: { data: Leave[] }) {
       );
       setExpandedId(null);
       setReason("");
+      toast.success(decision === "APPROVE" ? "Cuti disetujui" : "Cuti ditolak");
       router.refresh();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Gagal");
+      const msg = e instanceof Error ? e.message : "Gagal";
+      setErr(msg);
+      toast.error("Gagal memproses", msg);
     } finally {
-      setBusy(false);
+      setBusyId(null);
     }
   }
 
@@ -118,15 +123,15 @@ export function LeavesTable({ data: initial }: { data: Leave[] }) {
                         <button
                           type="button"
                           onClick={() => decide(row.leave_id, "APPROVE")}
-                          disabled={busy}
+                          disabled={busyId !== null}
                           className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                         >
-                          Setujui
+                          {busyId === row.leave_id ? "…" : "Setujui"}
                         </button>
                         <button
                           type="button"
                           onClick={() => toggleReject(row.leave_id)}
-                          disabled={busy}
+                          disabled={busyId !== null}
                           className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
                         >
                           Tolak
@@ -154,15 +159,15 @@ export function LeavesTable({ data: initial }: { data: Leave[] }) {
                           <button
                             type="button"
                             onClick={() => decide(row.leave_id, "REJECT")}
-                            disabled={busy}
+                            disabled={busyId !== null}
                             className="rounded-md bg-rose-600 px-3 py-1 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
                           >
-                            {busy ? "..." : "Konfirmasi Tolak"}
+                            {busyId === row.leave_id ? "…" : "Konfirmasi Tolak"}
                           </button>
                           <button
                             type="button"
                             onClick={() => toggleReject(row.leave_id)}
-                            disabled={busy}
+                            disabled={busyId !== null}
                             className="rounded-md border border-slate-300 px-3 py-1 text-xs"
                           >
                             Batal

@@ -87,6 +87,11 @@ export const TABS = {
   users: 'users',
   auditLog: 'system_audit_log',
   evidenceLog: 'evidence_log',
+  // ── Photo/document attachments (Drive-backed) ────────────────
+  attachments: 'warehouse_attachments',
+  // ── Recipes / BOM (anti-fraud: theoretical usage vs Moka sales) ─
+  recipe: 'master_recipe',
+  recipeItem: 'master_recipe_item',
   // ── Legacy F1-F5 (read migration only) ───────────────────────
   legacyPenerimaan: 'f1_penerimaan',
   legacyKartuStok: 'f2_kartu_stok',
@@ -169,7 +174,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'receiving_item_id', 'receiving_id', 'item_id', 'batch_number', 'expiry_date',
     'qty_ordered', 'qty_delivered', 'qty_accepted', 'qty_rejected', 'unit',
     'unit_price', 'total_value', 'rejection_reason', 'condition_status',
-    'temperature_value', 'photo_url', 'notes'
+    'temperature_value', 'photo_url', 'notes', 'scale_weight', 'variance_pct'
   ],
   // ── Stock issue §13 ──────────────────────────────────────────
   [TABS.stockIssue]: [
@@ -266,6 +271,12 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'approved_by', 'created_at', 'updated_at', 'completed_at'
   ],
   // ── Daily summary §21 ────────────────────────────────────────
+  // NOTE: `value_basis` is an additive trailing column (Review Cycle 2, FIX 3)
+  // recording how total_inventory_value was computed:
+  //   BATCH_STOCK = book stock × unit cost from warehouse_batch_stock
+  //   PROXY_AVG_PRICE_X_MIN_STOCK = legacy proxy fallback (no cost data yet)
+  // Existing columns are unchanged; older sheets without this header simply
+  // ignore the value on read (readTab is header-driven).
   [TABS.dailySummary]: [
     'summary_id', 'date', 'brand_id', 'brand_name', 'outlet_id', 'outlet_name',
     'location_id', 'total_inventory_value', 'critical_low_stock_count',
@@ -276,7 +287,8 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'waste_item_count', 'waste_value', 'variance_item_count',
     'unexplained_variance_value', 'near_expiry_item_count',
     'expired_item_count', 'open_action_count', 'overdue_action_count',
-    'major_warehouse_issue', 'recommended_action', 'generated_at'
+    'major_warehouse_issue', 'recommended_action', 'generated_at',
+    'value_basis'
   ],
   // ── Telegram delivery log §23.6 ──────────────────────────────
   [TABS.telegramDeliveryLog]: [
@@ -293,7 +305,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   [TABS.auditLog]: [
     'audit_id', 'module', 'action', 'record_type', 'record_id',
     'before_value', 'after_value', 'reason', 'user_id', 'approval_user_id',
-    'environment', 'ip_address', 'created_at'
+    'environment', 'ip_address', 'created_at', 'chain_hash'
   ],
   // Evidence log — photo/video proof for warehouse transactions
   [TABS.evidenceLog]: [
@@ -301,7 +313,18 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'file_url', 'file_path', 'media_type',
     'recorded_by', 'recorded_at', 'notes'
   ],
-  // ── Legacy (read migration only) ─────────────────────────────
+  [TABS.attachments]: [
+    'attachment_id', 'entity_type', 'entity_id', 'file_id', 'file_name',
+    'mime_type', 'size_bytes', 'uploaded_by', 'created_at'
+  ],
+  // ── Recipes / BOM (anti-fraud: theoretical usage vs Moka sales) ─
+  [TABS.recipe]: [
+    'recipe_id', 'menu_name', 'outlet_id', 'portion_size', 'selling_price',
+    'active_status', 'created_at', 'updated_at', 'created_by'
+  ],
+  [TABS.recipeItem]: [
+    'recipe_item_id', 'recipe_id', 'item_id', 'qty_per_portion', 'unit', 'created_at'
+  ],
   [TABS.legacyPenerimaan]: [
     'receive_id', 'date', 'time', 'outlet_id', 'pic_stock', 'shift',
     'po_number', 'supplier_id', 'item_id', 'item_name', 'qty_order',

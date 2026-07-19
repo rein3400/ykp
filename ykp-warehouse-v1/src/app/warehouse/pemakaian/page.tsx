@@ -2,6 +2,7 @@ import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import PemakaianClient from './pemakaian-client';
+import LegacyBanner from '@/components/legacy-banner';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export default async function PemakaianPage() {
         <h1 className='text-2xl font-bold'>F3 — Bon Pemakaian Dapur</h1>
         <p className='text-sm text-muted-foreground'>Tiap kali bahan keluar dari gudang outlet wajib dicatat. Tidak ada bon = bahan tidak boleh keluar.</p>
       </div>
+      <LegacyBanner newFlow='Stock Issue (header+detail) — menu Transaksi › Stock Issue' />
       <PemakaianClient rows={rows} items={items} outlets={outlets} />
     </div>
   );

@@ -10,6 +10,7 @@ import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
+import { FraudControlError, assertReason } from '@/lib/fraud-controls';
 
 export const GET = handler(async () => {
   const s = await getSession();
@@ -27,6 +28,14 @@ export const POST = handler(async (req: NextRequest) => {
   // Business rule: waste wajib foto, tanpa foto = tidak diakui
   if (!photoUrl) {
     return badRequest('Waste wajib foto. Tanpa foto = tidak diakui.');
+  }
+  // Fraud control: reason mandatory (audit trail); waste is a classic
+  // channel for disguising theft as spoilage.
+  try {
+    assertReason(typeof body.reason === 'string' ? body.reason : undefined);
+  } catch (e) {
+    if (e instanceof FraudControlError) return badRequest(e.message);
+    throw e;
   }
   const id = nextSequentialIdSync('WST');
   const unitCost = Number(body.estimated_unit_cost || body.buy_price || 0);

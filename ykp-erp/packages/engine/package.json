@@ -66,6 +66,18 @@
     "./lookup": {
       "import": "./dist/lookup.js",
       "types": "./dist/lookup.d.ts"
+    },
+    "./triggers": {
+      "import": "./dist/triggers.js",
+      "types": "./dist/triggers.d.ts"
+    },
+    "./id-gen": {
+      "import": "./dist/id-gen.js",
+      "types": "./dist/id-gen.d.ts"
+    },
+    "./wib": {
+      "import": "./dist/wib.js",
+      "types": "./dist/wib.d.ts"
     }
   },
   "scripts": {

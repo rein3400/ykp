@@ -4,7 +4,7 @@
  */
 import { getSheetsClient, getSpreadsheetId, TAB_HEADERS, TABS, columnLetter, appendRows, findRow } from '../src/db/sheets';
 import { nowTimestampWib } from '../src/lib/format';
-import { createHash } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -36,7 +36,7 @@ async function main() {
     const r = rows[i];
     if (r[1] === 'owner') {
       // ensure password hash + active
-      const hash = createHash('sha256').update('owner123').digest('hex');
+      const hash = bcrypt.hashSync('owner123', 10);
       r[2] = hash;
       r[3] = 'owner';
       r[6] = 'active';
@@ -75,7 +75,7 @@ async function main() {
 
   const existing = await findRow(TABS.users, 'username', 'owner');
   if (!existing) {
-    const hash = createHash('sha256').update('owner123').digest('hex');
+    const hash = bcrypt.hashSync('owner123', 10);
     await appendRows(TABS.users, [{
       user_id: 'USR-001',
       username: 'owner',
@@ -89,7 +89,7 @@ async function main() {
     console.log('[fix] investor_users owner seeded');
   } else {
     // repair active + password
-    const hash = createHash('sha256').update('owner123').digest('hex');
+    const hash = bcrypt.hashSync('owner123', 10);
     const { updateRow } = await import('../src/db/sheets');
     await updateRow(TABS.users, existing.rowNumber, {
       ...existing.row,
@@ -111,7 +111,7 @@ async function main() {
       await appendRows(TABS.users, [{
         user_id: u.id,
         username: u.username,
-        password_hash: createHash('sha256').update(u.password).digest('hex'),
+        password_hash: bcrypt.hashSync(u.password, 10),
         role: u.role,
         investor_id: u.investor_id,
         active_status: 'active',

@@ -6,5 +6,7 @@ export const GET = handler(async () => {
   const s = await getSession();
   if (!s) return unauthorized();
   const rows = await readTab<Record<string, string>>(TABS.shareholding);
-  return list(rows);
+  // investor role: only own positions (never other investors' shareholding)
+  const filtered = s.role === 'investor' && s.investorId ? rows.filter((r) => r.investor_id === s.investorId) : rows;
+  return list(filtered);
 });

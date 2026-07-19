@@ -14,6 +14,13 @@ import { z } from 'zod';
 
 const schema = z.object({ period: z.string().regex(/^\d{4}-\d{2}$/) });
 
+const SALARY_TYPES = ['MONTHLY', 'DAILY', 'SHIFT_BASED', 'HOURLY'] as const;
+type SalaryType = PayrollInput['salary_type'];
+function toSalaryType(v: string): SalaryType {
+  const up = (v || '').toUpperCase();
+  return (SALARY_TYPES as readonly string[]).includes(up) ? (up as SalaryType) : 'MONTHLY';
+}
+
 interface Employee {
   employee_id: string;
   full_name: string;
@@ -129,7 +136,7 @@ export const POST = handler(async (req) => {
       employee_id: e.employee_id,
       full_name: e.full_name,
       basic_salary: Number(e.basic_salary || 0),
-      salary_type: (e.salary_type as any) || 'MONTHLY',
+      salary_type: toSalaryType(e.salary_type),
       join_date: e.join_date,
       period_start: periodStart,
       period_end: periodEnd,
