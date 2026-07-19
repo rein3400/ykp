@@ -44,5 +44,7 @@ COPY --from=builder /repo/apps/hermez/next.config.mjs ./
 COPY --from=builder /repo/packages ./packages
 COPY --from=builder /repo/apps/hermez/src/workers ./workers
 EXPOSE 3004
-# Web server + telegram dialog bot (no-op when credentials unset).
-CMD ["sh", "-c", "node workers/bot-worker.cjs & PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
+# Web server only. The telegram dialog bot is started on-demand via the
+# Bot Telegram UI / API (single polling consumer — avoids the two-process
+# getUpdates conflict that a co-launched worker would cause).
+CMD ["sh", "-c", "PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
