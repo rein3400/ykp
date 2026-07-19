@@ -50,8 +50,8 @@ export const HUB_MODULES = [
     desc: "POS, expenses, petty cash, daily summary",
     envVar: "NEXT_PUBLIC_YKP_FINANCE_URL",
     defaultUrl: "http://localhost:3003",
-    probePath: "/api/finance/summary/count",
-    probeReturnsCount: true
+    probePath: "/api/fin/summary",
+    probeReturnsCount: false
   },
   {
     id: "warehouse",
@@ -59,8 +59,8 @@ export const HUB_MODULES = [
     desc: "Stock, receiving, usage, waste",
     envVar: "NEXT_PUBLIC_YKP_WAREHOUSE_URL",
     defaultUrl: "http://localhost:3005",
-    probePath: "/api/warehouse/summary/count",
-    probeReturnsCount: true
+    probePath: "/api/warehouse/summary",
+    probeReturnsCount: false
   },
   {
     id: "investor",
@@ -68,8 +68,8 @@ export const HUB_MODULES = [
     desc: "Portfolio, capital, dividends",
     envVar: "NEXT_PUBLIC_YKP_INVESTOR_URL",
     defaultUrl: "http://localhost:3006",
-    probePath: "/api/investor/summary/count",
-    probeReturnsCount: true
+    probePath: "/api/investor/summary",
+    probeReturnsCount: false
   },
   {
     id: "ops",
@@ -77,8 +77,8 @@ export const HUB_MODULES = [
     desc: "Daily operations, incidents, actions",
     envVar: "NEXT_PUBLIC_YKP_OPS_URL",
     defaultUrl: "http://localhost:3007",
-    probePath: "/api/ops/summary/count",
-    probeReturnsCount: true
+    probePath: "/api/ops/summary",
+    probeReturnsCount: false
   }
 ] as const satisfies readonly HubModuleDef[];
 
