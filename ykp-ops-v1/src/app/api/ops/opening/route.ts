@@ -25,6 +25,7 @@ export const POST = handler(async (req: NextRequest) => {
     items?: Array<{ checklist_item: string; critical_flag?: string; status: string }>;
   };
   if (!body.outlet_id || !Array.isArray(body.items)) return badRequest('outlet_id and items required');
+  if (body.items.length === 0) return badRequest('Tidak ada item checklist OPENING untuk di-submit. Isi master template dulu.');
   const outletId = body.outlet_id;
   const brand = await readTab(TABS.outlets).then((rows) => rows.find((r) => r.outlet_id === outletId));
   if (!brand) return badRequest('outlet not found');

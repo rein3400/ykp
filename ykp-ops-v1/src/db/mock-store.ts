@@ -88,10 +88,19 @@ function seed(): Record<string, Record<string, string>[]> {
   };
 }
 
-let store: Record<string, Record<string, string>[]> | null = null;
-function getStore() {
-  if (!store) store = seed();
-  return store;
+// Store is kept on globalThis so it is shared across every module graph in
+// the dev server / route handlers / server components. A module-local `let`
+// gives each bundled route its own copy, so a POST writes to one instance
+// while the page re-render (after router.refresh()) reads a fresh, empty
+// one — data "saves" (201) but never appears. globalThis makes it singleton.
+const GLOBAL_KEY = '__ykpOpsMockStore__';
+
+type StoreShape = Record<string, Record<string, string>[]>;
+
+function getStore(): StoreShape {
+  const g = globalThis as unknown as Record<string, StoreShape | undefined>;
+  if (!g[GLOBAL_KEY]) g[GLOBAL_KEY] = seed();
+  return g[GLOBAL_KEY] as StoreShape;
 }
 
 export function isMockMode(): boolean {
@@ -144,7 +153,8 @@ export function mockFindRow(
 }
 
 export function mockReset(): void {
-  store = seed();
+  const g = globalThis as unknown as Record<string, StoreShape | undefined>;
+  g[GLOBAL_KEY] = seed();
 }
 
 export { today as mockToday };

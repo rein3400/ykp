@@ -49,10 +49,12 @@ export function QcClient({
           photo_url: photo,
         }),
       });
-      const j = await res.json();
-      if (!res.ok) { setError(j?.error?.message ?? 'Gagal'); return; }
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(j?.error?.message ?? `Gagal menyimpan (HTTP ${res.status})`); return; }
       setPhoto('');
       router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal menghubungi server');
     } finally { setLoading(false); }
   }
 

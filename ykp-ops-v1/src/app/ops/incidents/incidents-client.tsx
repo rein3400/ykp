@@ -38,13 +38,15 @@ export function IncidentsClient({
           channel,
         }),
       });
-      const j = await res.json();
-      if (!res.ok) { setError(j?.error?.message ?? 'Gagal'); return; }
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(j?.error?.message ?? `Gagal menyimpan (HTTP ${res.status})`); return; }
       setTitle('');
       setDescription('');
       setCustomerName('');
       setChannel('');
       router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal menghubungi server');
     } finally { setLoading(false); }
   }
 

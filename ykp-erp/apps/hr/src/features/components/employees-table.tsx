@@ -42,19 +42,27 @@ export function EmployeesTableClient(): JSX.Element {
   const create = useCreateEmployee();
   const qc = useQueryClient();
   const rows = data?.employees ?? [];
+  const [confirmId, setConfirmId] = React.useState<string | null>(null);
+  const [deactivating, setDeactivating] = React.useState(false);
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
-  const handleDeactivate = React.useCallback(async (employeeId: string) => {
-    if (!window.confirm(`Nonaktifkan karyawan ${employeeId}?`)) return;
+  const doDeactivate = React.useCallback(async () => {
+    if (!confirmId) return;
+    setDeactivating(true);
+    setActionError(null);
     try {
-      await apiFetch(`/api/hr/employees/${encodeURIComponent(employeeId)}`, {
+      await apiFetch(`/api/hr/employees/${encodeURIComponent(confirmId)}`, {
         method: "PATCH",
         body: JSON.stringify({ status: "inactive" }),
       });
+      setConfirmId(null);
       void qc.invalidateQueries({ queryKey: ["hr", "employees"] });
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Gagal menonaktifkan");
+      setActionError(e instanceof Error ? e.message : "Gagal menonaktifkan");
+    } finally {
+      setDeactivating(false);
     }
-  }, [qc]);
+  }, [confirmId, qc]);
 
   const columns = React.useMemo<ColumnDef<EmployeeRow>[]>(
     () => [
@@ -90,7 +98,7 @@ export function EmployeesTableClient(): JSX.Element {
                   variant="ghost"
                   size="sm"
                   className="text-amber-600 hover:text-amber-700"
-                  onClick={() => handleDeactivate(row.original.employeeId)}
+                  onClick={() => { setActionError(null); setConfirmId(row.original.employeeId); }}
                 >
                   Nonaktifkan
                 </Button>
@@ -100,7 +108,7 @@ export function EmployeesTableClient(): JSX.Element {
         },
       },
     ],
-    [handleDeactivate],
+    [],
   );
 
   return (
@@ -116,6 +124,25 @@ export function EmployeesTableClient(): JSX.Element {
         pageSize={15}
         emptyMessage={isLoading ? "Memuat..." : "Belum ada karyawan."}
       />
+      <Dialog open={confirmId !== null} onOpenChange={(o) => { if (!o) setConfirmId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nonaktifkan karyawan?</DialogTitle>
+            <DialogDescription>
+              Karyawan {confirmId} akan di-nonaktifkan. Data tidak dihapus dan bisa diaktifkan kembali.
+            </DialogDescription>
+          </DialogHeader>
+          {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmId(null)} disabled={deactivating}>
+              Batal
+            </Button>
+            <Button onClick={doDeactivate} disabled={deactivating}>
+              {deactivating ? "Memproses..." : "Nonaktifkan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

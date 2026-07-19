@@ -24,6 +24,11 @@ export function OpeningClient({
   async function submitAll() {
     setLoading(true);
     setError('');
+    if (selectedTemplates.length === 0) {
+      setError('Tidak ada item checklist OPENING. Isi master template dulu.');
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch('/api/ops/opening', {
         method: 'POST',
@@ -38,9 +43,11 @@ export function OpeningClient({
           })),
         }),
       });
-      const j = await res.json();
-      if (!res.ok) { setError(j?.error?.message ?? 'Gagal'); return; }
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(j?.error?.message ?? `Gagal menyimpan (HTTP ${res.status})`); return; }
       router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal menghubungi server');
     } finally { setLoading(false); }
   }
 
