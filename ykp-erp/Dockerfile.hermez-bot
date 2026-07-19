@@ -1,0 +1,32 @@
+# Multi-app monorepo Dockerfile — hermez telegram bot worker
+# Runs ONLY the dialog bot long-poll consumer (no web server). This makes it
+# the single getUpdates consumer, so the web service never conflicts with it.
+FROM node:22-slim AS deps
+WORKDIR /repo
+COPY package.json package-lock.json* ./
+COPY apps/hermez/package.json ./apps/hermez/
+RUN npm install --legacy-peer-deps --no-audit
+
+FROM node:22-slim AS builder
+WORKDIR /repo
+COPY --from=deps /repo/node_modules ./node_modules
+COPY packages ./packages
+COPY apps/hermez ./apps/hermez
+COPY --from=deps /repo/apps/hermez/package.json ./apps/hermez/package.json
+COPY tsconfig.json package.json package-lock.json* ./
+RUN npm install --legacy-peer-deps --no-audit
+WORKDIR /repo
+# Build workspace packages in dependency order so dist/ exists at runtime.
+RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true
+RUN npm run build --workspace @ykp/config --if-present \
+ && npm run build --workspace @ykp/engine --if-present \
+ && npm run build --workspace @ykp/auth --if-present
+
+FROM node:22-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /repo/node_modules ./node_modules
+COPY --from=builder /repo/packages ./packages
+COPY --from=builder /repo/apps/hermez/src/workers ./workers
+# Long-poll telegram bot. No port needed.
+CMD ["node", "workers/bot-worker.cjs"]

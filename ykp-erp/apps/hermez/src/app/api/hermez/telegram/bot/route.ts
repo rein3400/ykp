@@ -36,6 +36,16 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "start") {
+    // When the dedicated bot worker service is enabled, the web process must
+    // NOT also poll — two getUpdates consumers on one token split updates.
+    if (process.env.HERMEZ_BOT_WORKER_ENABLED === "true") {
+      return ok({
+        started: false,
+        reason: "managed_by_worker_service",
+        note: "Bot polling runs in the dedicated ykp-erp-hermez-bot worker. This web process only sends outbound messages.",
+        bot: getBotStatus(),
+      });
+    }
     const res = await startTelegramBot();
     return ok({ ...res, bot: getBotStatus() });
   }
