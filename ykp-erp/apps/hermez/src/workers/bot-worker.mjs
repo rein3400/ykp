@@ -24,6 +24,14 @@ const WEB = (process.env.HERMEZ_WEB_URL || `http://127.0.0.1:${process.env.PORT 
 const SECRET = process.env.HERMEZ_BOT_SECRET || "";
 const TOKEN = process.env.HERMEZ_TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "";
 const CHAT_ID = process.env.OWNER_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID || "";
+// Allow the owner to chat from the group AND from a private DM with the bot.
+// OWNER_CHAT_ID may be a single id or a comma-separated list
+// (e.g. "-5437367893,5721500978"). OWNER_USER_IDS adds extra allowed ids.
+const ALLOWED_CHATS = new Set(
+  [...CHAT_ID.split(","), ...(process.env.OWNER_USER_IDS || "").split(",")]
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
 
 const state = { lastUpdateId: 0, pollCycles: 0, updatesSeen: 0, messagesHandled: 0 };
 
@@ -106,7 +114,7 @@ async function handleMessage(msg) {
   const chatId = msg.chat.id;
   const text = (msg.text || "").trim();
   if (!text) return;
-  if (String(chatId) !== String(CHAT_ID).trim()) {
+  if (!ALLOWED_CHATS.has(String(chatId))) {
     await tg("sendMessage", { chat_id: chatId, text: "Maaf, chat ini tidak terdaftar sebagai owner Hermez." });
     return;
   }
