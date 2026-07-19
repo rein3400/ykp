@@ -342,6 +342,7 @@ export async function startTelegramBot(): Promise<{ started: boolean; reason?: s
   await tgCall(token, "deleteWebhook", { drop_pending_updates: false });
 
   void (async () => {
+    console.log(`[telegram-bot] poll loop entered, chatId=${chatId}`);
     while (state.running) {
       state.pollCycles += 1;
       const updates = await tgCall<TgUpdate[]>(token, "getUpdates", {
@@ -351,17 +352,22 @@ export async function startTelegramBot(): Promise<{ started: boolean; reason?: s
       });
       if (!updates) {
         state.lastTgError = state.lastError;
+        console.error(`[telegram-bot] getUpdates error: ${state.lastError ?? "unknown"}`);
         // transient error — back off, keep polling
         await new Promise((r) => setTimeout(r, 3000));
         continue;
       }
       state.lastTgError = null;
       state.updatesSeen += updates.length;
+      if (updates.length) console.log(`[telegram-bot] got ${updates.length} update(s)`);
       for (const u of updates) {
         state.lastUpdateId = Math.max(state.lastUpdateId, u.update_id);
         if (u.message) {
+          const fromBot = u.message.from?.is_bot;
+          console.log(`[telegram-bot] msg chat=${u.message.chat.id} fromBot=${fromBot} text=${(u.message.text ?? "").slice(0, 30)}`);
           await handleMessage(token, u.message, chatId).catch((e) => {
             state.lastError = `handle: ${e instanceof Error ? e.message : String(e)}`;
+            console.error(`[telegram-bot] handle error: ${state.lastError}`);
           });
         }
       }
