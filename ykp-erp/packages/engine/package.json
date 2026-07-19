@@ -19,6 +19,10 @@
       "import": "./dist/telegram.js",
       "types": "./dist/telegram.d.ts"
     },
+    "./integrations": {
+      "import": "./dist/integrations.js",
+      "types": "./dist/integrations.d.ts"
+    },
     "./hermez-brief": {
       "import": "./dist/hermez-brief.js",
       "types": "./dist/hermez-brief.d.ts"

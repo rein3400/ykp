@@ -1,12 +1,15 @@
 import { eq } from "drizzle-orm";
 import { createHermezDb, hermezConfig, hermezAuditLog } from "@ykp/schema";
+import { SECRET_INTEGRATION_KEYS, maskSecret } from "@ykp/engine/integrations";
 import { requireSuperAdmin, fail, ok, toIsoString, mapAuthError } from "../_helpers";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/hermez/config — returns all hermez_config rows.
- * PUT /api/hermez/config { key, value } — upsert a config row.
+ * Secret integration values (bot token, LLM api key) are masked
+ * (••••1234); the client sends the key only when the owner types a
+ * new value. PUT /api/hermez/config { key, value } — upsert a row.
  * Both require SUPER_ADMIN.
  */
 export async function GET() {
@@ -22,7 +25,8 @@ export async function GET() {
     const items = rows.map((r) => ({
       configId: r.configId,
       key: r.key,
-      value: r.value,
+      value: SECRET_INTEGRATION_KEYS.has(r.key) && r.value ? maskSecret(r.value) : r.value,
+      secret: SECRET_INTEGRATION_KEYS.has(r.key),
       updatedAt: toIsoString(r.updatedAt),
       updatedBy: r.updatedBy,
     }));
@@ -90,17 +94,18 @@ export async function PUT(req: Request) {
       });
     }
 
+    const secret = SECRET_INTEGRATION_KEYS.has(body.key);
     await db.insert(hermezAuditLog).values({
       actor: user.email,
       action: "config.update",
       entity: "hermez_config",
       entityId: body.key,
-      before: before ? { value: before.value } : null,
-      after: { value: body.value },
+      before: before ? { value: secret ? "(redacted)" : before.value } : null,
+      after: { value: secret ? "(redacted)" : body.value },
       reason: `Threshold update by ${user.role}`,
     });
 
-    return ok({ config: { configId, key: body.key, value: body.value, updatedAt: toIsoString(updatedAt), updatedBy } });
+    return ok({ config: { configId, key: body.key, value: secret ? maskSecret(body.value) : body.value, secret, updatedAt: toIsoString(updatedAt), updatedBy } });
   } catch (e) {
     if (process.env.NODE_ENV !== "production") {
       console.error("[hermez config put]", e);

@@ -11,6 +11,7 @@ import { todayWib } from "@ykp/engine/client";
 import { generateBriefForDate } from "@ykp/engine/hermez-brief";
 import { scheduleHermezCron, makeBriefWorker, makeRetryWorker } from "@ykp/engine/cron";
 import { sendTelegramMessage } from "@ykp/engine/telegram";
+import { resolveTelegramCredentials } from "@ykp/engine/integrations";
 import { eq } from "drizzle-orm";
 import { hermezDailyBrief, hermezAuditLog } from "@ykp/schema";
 
@@ -40,8 +41,7 @@ async function main() {
       date,
     });
 
-    const token = process.env.HERMEZ_TELEGRAM_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.OWNER_CHAT_ID ?? process.env.TELEGRAM_OWNER_CHAT_ID;
+    const { token, chatId } = await resolveTelegramCredentials();
     if (token && chatId && !result.brief.sentToOwner) {
       const tg = await sendTelegramMessage(token, chatId, result.brief.briefText);
       await hermezDb.insert(hermezAuditLog).values({
@@ -83,8 +83,7 @@ async function main() {
     if (!brief) return;
     if (brief.sentToOwner) return;
 
-    const token = process.env.HERMEZ_TELEGRAM_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.OWNER_CHAT_ID ?? process.env.TELEGRAM_OWNER_CHAT_ID;
+    const { token, chatId } = await resolveTelegramCredentials();
     if (!token || !chatId) return;
 
     const tg = await sendTelegramMessage(token, chatId, brief.briefText);

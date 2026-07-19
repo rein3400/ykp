@@ -8,6 +8,7 @@ import {
 } from "@ykp/schema";
 import { generateBriefForDate } from "@ykp/engine/hermez-brief";
 import { sendTelegramMessage } from "@ykp/engine/telegram";
+import { resolveTelegramCredentials } from "@ykp/engine/integrations";
 import { todayWib } from "@ykp/engine/client";
 import { eq } from "drizzle-orm";
 import { requireSuperAdmin, fail, ok, mapAuthError } from "../_helpers";
@@ -82,10 +83,7 @@ export async function POST(req: Request) {
     } = { attempted: false, sent: Boolean(brief.sentToOwner) };
 
     if (shouldSend && !brief.sentToOwner) {
-      const token =
-        process.env.HERMEZ_TELEGRAM_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN ?? "";
-      const chatId =
-        process.env.OWNER_CHAT_ID ?? process.env.TELEGRAM_OWNER_CHAT_ID ?? "";
+      const { token, chatId } = await resolveTelegramCredentials();
       if (!token || !chatId) {
         telegram = { attempted: false, sent: false, skipped: "missing_token_or_chat_id" };
       } else {

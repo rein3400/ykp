@@ -5,17 +5,15 @@
  * and alerts to OWNER_CHAT_ID (group chat preferred). This worker simply
  * ensures environment variables are loaded and a test message can be sent.
  *
- * Token priority:
+ * Token/chat resolution: hermez_config (owner-set via UI) wins; env fallback:
  *   HERMEZ_TELEGRAM_BOT_TOKEN > TELEGRAM_BOT_TOKEN
- * Chat priority:
  *   OWNER_CHAT_ID > TELEGRAM_OWNER_CHAT_ID
  */
 import { sendTelegramMessage } from "@ykp/engine/telegram";
+import { resolveTelegramCredentials } from "@ykp/engine/integrations";
 
 export async function sendHermezTelegramMessage(text: string) {
-  const token =
-    process.env.HERMEZ_TELEGRAM_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN ?? "";
-  const chatId = process.env.OWNER_CHAT_ID ?? process.env.TELEGRAM_OWNER_CHAT_ID ?? "";
+  const { token, chatId } = await resolveTelegramCredentials();
   if (!token || !chatId) {
     return { ok: false, error: "missing_token_or_chat_id" } as const;
   }

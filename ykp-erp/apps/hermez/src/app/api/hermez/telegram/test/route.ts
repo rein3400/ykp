@@ -1,4 +1,5 @@
 import { sendTelegramMessage } from "@ykp/engine/telegram";
+import { resolveTelegramCredentials } from "@ykp/engine/integrations";
 import { createHermezDb, hermezAuditLog } from "@ykp/schema";
 import { requireSuperAdmin, fail, ok, mapAuthError } from "../../_helpers";
 
@@ -36,11 +37,13 @@ export async function POST(req: Request) {
     return fail("validation", `message too long (${message.length} > 4096)`, 400);
   }
 
-  const token =
-    process.env.HERMEZ_TELEGRAM_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN ?? "";
-  const chatId = process.env.OWNER_CHAT_ID ?? process.env.TELEGRAM_OWNER_CHAT_ID ?? "";
+  const { token, chatId } = await resolveTelegramCredentials();
   if (!token || !chatId) {
-    return fail("missing-ref", "TELEGRAM_BOT_TOKEN or OWNER_CHAT_ID not set", 400);
+    return fail(
+      "missing-ref",
+      "Telegram bot token / chat ID belum di-set. Isi via Konfigurasi → Integrasi, atau set env TELEGRAM_BOT_TOKEN / OWNER_CHAT_ID.",
+      400,
+    );
   }
 
   try {
