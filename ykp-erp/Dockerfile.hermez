@@ -51,4 +51,8 @@ EXPOSE 3004
 # (its manual bot-start is gated by HERMEZ_BOT_WORKER_ENABLED=true, set in the
 # Railway env), so there is no two-consumer conflict. Free-plan friendly:
 # avoids needing a separate Railway service.
-CMD ["sh", "-c", "node workers/bot-worker.mjs & PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]
+# The worker runs under a watchdog loop: if it exits/crashes (Telegram API
+# hiccup, transient error, OOM), it is restarted after 5s so the bot stays
+# always-on without a dedicated service. Stdout/stderr stream to the
+# container log so [hermez-bot] lines are visible in Railway logs.
+CMD ["sh", "-c", "(while true; do node workers/bot-worker.mjs 2>&1; echo '[hermez-bot] exited, restarting in 5s'; sleep 5; done) & PORT=${PORT:-3004} npx next start -p $PORT -H 0.0.0.0"]

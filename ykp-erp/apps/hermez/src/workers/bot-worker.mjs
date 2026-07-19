@@ -143,8 +143,9 @@ async function handleMessage(msg) {
 
 async function main() {
   if (process.env.HERMEZ_BOT_DISABLED === "true") { console.log("[hermez-bot] disabled"); return; }
-  if (!TOKEN || !CHAT_ID) { console.error("[hermez-bot] missing TELEGRAM_BOT_TOKEN or OWNER_CHAT_ID"); process.exit(1); }
-  if (!SECRET) { console.error("[hermez-bot] missing HERMEZ_BOT_SECRET"); process.exit(1); }
+  console.log(`[hermez-bot] boot web=${WEB} chat=${CHAT_ID || "(unset)"} token=${TOKEN ? "set" : "unset"} secret=${SECRET ? "set" : "unset"}`);
+  if (!TOKEN || !CHAT_ID) { console.error("[hermez-bot] missing TELEGRAM_BOT_TOKEN or OWNER_CHAT_ID — retrying via watchdog"); process.exit(1); }
+  if (!SECRET) { console.error("[hermez-bot] missing HERMEZ_BOT_SECRET — retrying via watchdog"); process.exit(1); }
 
   await tg("deleteWebhook", { drop_pending_updates: false });
   console.log(`[hermez-bot] polling started, web=${WEB} chat=${CHAT_ID}`);
