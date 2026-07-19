@@ -30,9 +30,12 @@ export function FinanceDashboardCards() {
   // Query the last 14 WIB days (ordered desc by the API). If today's summary
   // has not been rebuilt yet, fall back to the most recent day that has data
   // so the dashboard cards show the latest snapshot instead of all-zero.
-  const from = new Date();
-  from.setDate(from.getDate() - 13);
-  const fromStr = from.toISOString().slice(0, 10);
+  // Compute `from` in WIB too — new Date().toISOString() is the UTC calendar
+  // day, which is one day behind WIB between 00:00–06:59 WIB and shifts the
+  // whole window by a day during those hours.
+  const fromDate = new Date(`${today}T00:00:00+07:00`);
+  fromDate.setDate(fromDate.getDate() - 13);
+  const fromStr = `${fromDate.getFullYear()}-${String(fromDate.getMonth() + 1).padStart(2, "0")}-${String(fromDate.getDate()).padStart(2, "0")}`;
   const params = new URLSearchParams({ date_from: fromStr, date_to: today, limit: "400" });
   const { data: rows = [], isLoading } = useSummaryList(params);
 

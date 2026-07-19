@@ -23,10 +23,14 @@ ENV YKP_HERMEZ_DATABASE_URL=postgresql://placeholder/db
 # Build workspace packages in dependency order so dist/ folders exist
 # when next build resolves @ykp/* (dist/ is gitignored, so absent in repo).
 # config (leaf) -> engine/auth (depend on config) -> ui (depends on format).
-# Clear stale tsbuildinfo first to force a fresh tsc compile.
+# Clear stale tsbuildinfo AND dist/ so tsc does a full clean compile —
+# incremental builds left a stale dist/index.js (barrel) that predated the
+# data-table globalFilter fix, so the served UI never got the search wiring.
 WORKDIR /repo
-RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true
+RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true \
+ && rm -rf packages/ui/dist packages/engine/dist packages/auth/dist packages/config/dist packages/format/dist
 RUN npm run build --workspace @ykp/config --if-present \
+ && npm run build --workspace @ykp/format --if-present \
  && npm run build --workspace @ykp/engine --if-present \
  && npm run build --workspace @ykp/auth --if-present \
  && npm run build --workspace @ykp/ui --if-present

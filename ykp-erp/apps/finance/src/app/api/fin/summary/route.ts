@@ -29,8 +29,13 @@ export const GET = handler(async (req: Request) => {
   const db = getFinanceDb();
 
   const conds = [];
-  if (date_from) conds.push(gte(finDailySummary.date, new Date(date_from)));
-  if (date_to) conds.push(lte(finDailySummary.date, new Date(date_to)));
+  // finDailySummary.date is a calendar `date` column (WIB day). new Date(str)
+  // alone is UTC midnight, which shifts the boundary by the DB-connection TZ
+  // and can drop/include a day. Anchor to WIB midnight (+07:00) so the filter
+  // matches the calendar day exactly.
+  const wibDay = (s: string) => new Date(`${s}T00:00:00+07:00`);
+  if (date_from) conds.push(gte(finDailySummary.date, wibDay(date_from)));
+  if (date_to) conds.push(lte(finDailySummary.date, wibDay(date_to)));
   if (outlet) conds.push(eq(finDailySummary.outlet, outlet));
   applyOutletScope(user, conds, finDailySummary.outletId);
 
