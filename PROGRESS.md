@@ -28,7 +28,7 @@ Implemented all AI features required by `YKP_ERP_Operational_Developer_Brief_V1.
 | **Hub** | residual close | apps list + health probe: warehouse, investor, ops |
 | **Finance** | residual close | Expense cross-link fields (source_module/linked_*) schema+API+form |
 | **Warehouse** | already ~100% code | Purchase-request approve UI + telegram dispatch already present; tsc clean |
-| **Hermez** | multi-source | Ops proxy `/api/hermez/ops-summary`, ops triggers (incident/waste/SLA), alertType enum +3, engine rebuild |
+| **Hermez** | multi-source | `ykp-erp/apps/hermez` is primary V1 (writes brief/alert log to Postgres); `ykp-hermez/` is read-only Telegram interface |
 
 Verification (local):
 - `ykp-ops-v1` tests 4/4, tsc clean
@@ -89,12 +89,33 @@ Note: ops first deploy accidentally hit `ykp-hr-v1` Vercel project; restored HR-
 
 ---
 
+### Architecture Decision — Dual Hermez strategy (2026-07-20)
+
+There are two Hermez implementations in the repo:
+
+1. **`ykp-erp/apps/hermez`** (primary for V1 pilot) — Next.js app, cron-based daily brief generator that reads `hr_daily_summary` + `fin_daily_summary` and writes `hermez_daily_brief` / `hermez_alert_log` to Postgres. This matches blueprint §10.
+2. **`ykp-hermez/`** (Telegram interface) — Standalone Node service with LLM tool-use and Telegram long-polling. It reads the public summary APIs of HR/Finance/Ops/Warehouse/Investor and responds to owner messages. It does **not** write back to any domain DB (enforced by `tools.ts`).
+
+Going forward:
+- V1 pilot uses `ykp-erp/apps/hermez` as the source of truth for `hermez_daily_brief` and `hermez_alert_log`.
+- `ykp-hermez/` remains a read-only conversational interface. It can be pointed at the public summary endpoints and, in the future, at `/api/hermez/brief` to fetch the already-generated brief instead of recomposing it.
+- Do not add write-back paths from `ykp-hermez/` into HR/Finance/Operational tables; that boundary is enforced by the public-API-only tool set.
+
 ## 🟡 In Progress
 
 ### Phase 4 — Approval UI
 - 11 missing approval buttons (leaves/adjustments/payroll approve/mark-paid)
 
 ---
+
+### Architecture Decision — 3-DB split compliance (2026-07-20)
+
+Blueprint §4.3 specifies three isolated databases: `YKP_MASTER_DATABASE`, `YKP_HR_DATABASE`, and `YKP_FINANCE_DATABASE`. In the V1 Google Sheets implementation (`ykp-hr-v1` / `ykp-finance-v1`), each app owns its own spreadsheet and embeds `master_brand` and `master_outlet` tabs inside it.
+
+- **Status for V1 pilot**: accepted deviation. A single spreadsheet per app is simpler to bootstrap, share with the owner, and manage permissions for 5–10 staff / 1 outlet.
+- **Risk**: master data (brands, outlets) can drift between HR and Finance spreadsheets.
+- **Mitigation**: app-layer FK validation (`assertBrand` / `assertOutlet`) ensures any referenced master row exists in the local spreadsheet. Summary APIs only return aggregates, never raw master rows.
+- **V2 path**: introduce a shared `MASTER_SPREADSHEET_ID` (or migrate to Postgres `ykp_master`) and have domain apps read brands/outlets from it. Until then, keep HR and Finance master tabs in sync during onboarding.
 
 ## ⏸️ Blocked
 

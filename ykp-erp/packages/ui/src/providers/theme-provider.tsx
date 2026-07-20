@@ -22,6 +22,9 @@ export function ThemeProvider({
   defaultTheme = "dark",
   storageKey = "ykp-theme",
 }: ThemeProviderProps) {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
   return (
     <NextThemesProvider
       attribute="class"
@@ -30,7 +33,7 @@ export function ThemeProvider({
       enableSystem={false}
       disableTransitionOnChange
     >
-      {children}
+      {mounted ? children : <div style={{ visibility: "hidden" }}>{children}</div>}
     </NextThemesProvider>
   );
 }

@@ -1,20 +1,22 @@
 /**
- * PUBLIC: stream an attachment's bytes from Drive.
  * GET /api/warehouse/attachments/[id]/file
- * Auth bypassed for GET in middleware.ts — ids are unguessable (ATT-XXXXXX
- * + Drive file ids), files are proof photos meant for the owner feed.
+ * Session required — stream an attachment's bytes from Drive.
  * Photos are immutable → aggressive cache headers.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { findRow, TABS } from '@/db/sheets';
-import { notFound } from '@/lib/http';
+import { notFound, unauthorized, handler } from '@/lib/http';
+import { getSession } from '@/lib/session';
 import { isDriveConfigured, getFileFromDrive } from '@/lib/drive';
 
-export async function GET(
+export const GET = handler(async (
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse> {
-  const { id } = await params;
+  { params }: { params: Record<string, string> }
+): Promise<NextResponse> => {
+  const s = await getSession();
+  if (!s) return unauthorized();
+
+  const { id } = params;
   const found = await findRow(TABS.attachments, 'attachment_id', id);
   if (!found) return notFound('Attachment not found');
   const { file_id: fileId, mime_type: mimeType, file_name: fileName } = found.row;
@@ -34,4 +36,4 @@ export async function GET(
   } catch {
     return notFound('File tidak ditemukan di Drive');
   }
-}
+});

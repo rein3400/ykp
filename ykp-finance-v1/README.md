@@ -27,7 +27,7 @@ cp .env.example .env
 npm.cmd install
 npm.cmd run sheets:bootstrap     # create all tabs + headers + seed masters + thresholds + owner user
 npm.cmd run sheets:smoke         # write+read roundtrip check
-npm.cmd run dev                  # http://localhost:3003  (login: owner / owner123 — GANTI sebelum pilot)
+npm.cmd run dev                  # http://localhost:3003
 ```
 
 Tanpa `.env` (atau `USE_MOCK_DB=true`) app berjalan penuh di **mock-store** dengan data contoh:
@@ -44,7 +44,7 @@ refund day, satu cash-diff day (Rp75.000 → alert HIGH), petty over limit, dan 
 | `test` | vitest run (pure calc libs) |
 | `sheets:bootstrap` | idempotent: buat semua tab + header + seed master/threshold/user |
 | `sheets:smoke` | tulis+baca 1 baris fin_pos_daily |
-| `sheets:seed-user` | seed owner/owner123 |
+| `sheets:seed-user` | seed owner user (password from SEED_PASSWORD or generated) |
 
 ## Pages (Bahasa Indonesia)
 

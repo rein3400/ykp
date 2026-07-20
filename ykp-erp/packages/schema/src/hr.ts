@@ -10,6 +10,7 @@ import {
   bigserial,
   uniqueIndex,
   unique,
+  index,
 } from "drizzle-orm/pg-core";
 
 const hr = pgSchema("hr");
@@ -68,6 +69,7 @@ export const hrAttendance = hr.table(
   },
   (t) => ({
     dateEmployeeIdx: uniqueIndex("hr_attendance_date_employee_idx").on(t.date, t.employeeId),
+    dateOutletIdx: index("hr_attendance_date_outlet_idx").on(t.date, t.outletId),
   }),
 );
 

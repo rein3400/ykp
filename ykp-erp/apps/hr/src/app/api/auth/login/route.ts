@@ -1,30 +1,36 @@
 /**
- * Login API — demo only.
+ * Login API — demo only, gated by ERP_SSO_SECRET.
  * Real users: Clerk (planned). For pilot demo: simple form
- * that mints a session cookie with role=OWNER.
+ * that mints a session cookie with role=OWNER after verifying the secret.
  *
  * GET handler: Hub portal SSO bridge. Hub opens
- *   /api/auth/login?role=<hubRole>&redirect=/<path>
+ *   /api/auth/login?role=<hubRole>&redirect=/<path>&token=<ERP_SSO_SECRET>
  * We mint the ykp_session cookie (same as POST) and 302-redirect
- * to `redirect` (default "/"). No shared secret — the existing
- * POST login already accepts any role with no credential check
- * (demo role-picker), so this GET adds no new attack surface.
+ * to `redirect` (default "/"). The token must equal the ERP_SSO_SECRET
+ * env var to prevent unauthenticated role minting.
  * `redirect` is constrained to same-origin absolute paths to avoid
  * open-redirect abuse.
  */
 import { setSession, isRole, Role } from "@ykp/auth";
+
+const SSO_SECRET = process.env.ERP_SSO_SECRET?.trim() ?? "";
+
+function verifySecret(token: string | null): boolean {
+  if (!SSO_SECRET || SSO_SECRET.length < 16) return false;
+  if (!token) return false;
+  const a = Buffer.from(token);
+  const b = Buffer.from(SSO_SECRET);
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
 
 function safeRedirect(target: string | null): string {
   if (!target || !target.startsWith("/") || target.startsWith("//")) return "/";
   return target;
 }
 
-/**
- * Resolve the public origin from forwarded headers. Behind Railway's proxy,
- * req.url origin is the internal bind address (https://0.0.0.0:8080), so a
- * bare Response.redirect would point the browser at an invalid host. Use
- * x-forwarded-host/proto (set by Railway) to reconstruct the public URL.
- */
 function publicOrigin(req: Request): string {
   const xfHost = req.headers.get("x-forwarded-host");
   const xfProto = req.headers.get("x-forwarded-proto");
@@ -34,6 +40,10 @@ function publicOrigin(req: Request): string {
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
+  const token = url.searchParams.get("token");
+  if (!verifySecret(token)) {
+    return Response.json({ error: { code: "unauthorized", message: "Invalid or missing SSO token" } }, { status: 401 });
+  }
   const roleParam = url.searchParams.get("role") ?? "OWNER";
   const role = isRole(roleParam) ? (roleParam as Role) : Role.OWNER;
   const redirect = safeRedirect(url.searchParams.get("redirect"));
@@ -48,6 +58,10 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
+  const password = String(body.password ?? "");
+  if (!verifySecret(password)) {
+    return Response.json({ error: { code: "unauthorized", message: "Invalid or missing access password" } }, { status: 401 });
+  }
   const role = body.role ?? "OWNER";
   const id = body.id ?? "demo-user";
   await setSession({

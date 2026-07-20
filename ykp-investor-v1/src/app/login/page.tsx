@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState('owner');
-  const [password, setPassword] = useState('owner123');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -46,7 +46,7 @@ export default function LoginPage() {
             {loading ? 'Memproses…' : 'Login'}
           </button>
         </form>
-        <p className='mt-4 text-[10px] text-muted-foreground'>Default: owner / owner123 — GANTI sebelum pilot.</p>
+        <p className='mt-4 text-[10px] text-muted-foreground'>Masukkan kredensial yang telah dikonfigurasi. Jika belum ada, jalankan sheets:seed-user.</p>
       </div>
     </div>
   );

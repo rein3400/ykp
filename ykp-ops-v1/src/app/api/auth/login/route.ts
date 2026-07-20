@@ -10,14 +10,11 @@
  * matrix is keyed on lowercase roles.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash } from 'crypto';
 import { setSession } from '@/lib/session';
 import { readTab, TABS } from '@/db/sheets';
 import { ok, handler, unauthorized, badRequest } from '@/lib/http';
-
-function hashPassword(pw: string): string {
-  return createHash('sha256').update(pw).digest('hex');
-}
+import { verifyPassword, hashPassword } from '@/lib/password';
+import { rateLimit, clientKey } from '@/lib/ratelimit';
 
 function safeRedirect(target: string | null): string {
   if (!target || !target.startsWith('/') || target.startsWith('//')) return '/ops';
@@ -33,14 +30,25 @@ function publicOrigin(req: NextRequest): string {
 }
 
 export const POST = handler(async (req: NextRequest) => {
+  const key = clientKey(req);
+  const limit = rateLimit(`login:${key}`, 10, 60_000);
+  if (!limit.ok) return unauthorized('Terlalu banyak percobaan, coba lagi nanti');
+
   const body = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
   const { username, password } = body;
   if (!username || !password) return badRequest('username and password required');
   const users = await readTab(TABS.users);
   const user = users.find((u) => u.username === username && u.active_status === 'active');
-  if (!user || user.password_hash !== hashPassword(password)) {
-    return unauthorized('Invalid username or password');
+  if (!user) return unauthorized('Invalid username or password');
+  const verdict = await verifyPassword(password, user.password_hash ?? '');
+  if (!verdict.ok) return unauthorized('Invalid username or password');
+
+  if (verdict.needsRehash) {
+    const newHash = await hashPassword(password);
+    // Ops sheets.ts does not expose updateRow by column key easily; skip rehash in sheets.
+    void newHash;
   }
+
   await setSession({
     userId: user.user_id,
     username: user.username,

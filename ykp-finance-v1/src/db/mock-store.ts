@@ -12,7 +12,8 @@
  *  - satu hari expense spike (>20% vs rata-rata 7 hari)
  *  - supplier PAID/PARTIAL/UNPAID/OVERDUE/CANCELLED + cross-link anti double-count
  */
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 // ── Deterministic PRNG (stable demo data within a process) ──────
 let seedNum = 42;
@@ -21,6 +22,22 @@ function rnd(): number {
   return seedNum / 2147483648;
 }
 function pick<T>(arr: T[]): T { return arr[Math.floor(rnd() * arr.length)]; }
+
+function generatePassword(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = randomBytes(length);
+  let pw = '';
+  for (let i = 0; i < length; i++) {
+    pw += chars[bytes[i] % chars.length];
+  }
+  return pw;
+}
+
+const MOCK_PASSWORD = process.env.MOCK_PASSWORD ?? (() => {
+  const p = generatePassword();
+  console.error('[mock-store] SECURITY: MOCK_PASSWORD not set. Generated random mock password:', p);
+  return p;
+})();
 
 function todayWib(): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -101,8 +118,8 @@ const CASHIERS = ['Andi', 'Budi', 'Citra', 'Dewi', 'Eko'];
 
 function seed(): Record<string, Record<string, string>[]> {
   const t = now();
-  const pwOwner = createHash('sha256').update('owner123').digest('hex');
-  const pwFinance = createHash('sha256').update('finance123').digest('hex');
+  const pwOwner = bcrypt.hashSync(MOCK_PASSWORD, 10);
+  const pwFinance = bcrypt.hashSync(MOCK_PASSWORD, 10);
   const brandName = (id: string) => BRANDS.find((b) => b[0] === id)?.[1] ?? id;
 
   // ── POS daily: 7 outlets × 14 hari ────────────────────────────

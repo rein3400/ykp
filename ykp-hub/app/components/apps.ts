@@ -112,9 +112,12 @@ export const SSO_ROLE: Partial<Record<AppId, string>> = {};
 /**
  * Build the URL to open an app from Hub so the user lands authenticated.
  * Apps in ROLE_SSO_APPS get the SSO bridge URL; others get the app base URL.
+ * The ERP demo SSO bridge requires `ERP_SSO_SECRET` as a token to prevent
+ * unauthenticated role minting.
  */
 export function ssoUrl(app: AppDef, role: string): string {
   if (!ROLE_SSO_APPS.has(app.id)) return app.url;
   const r = encodeURIComponent(SSO_ROLE[app.id] ?? role ?? "OWNER");
-  return `${app.url}/api/auth/login?role=${r}&redirect=/`;
+  const token = encodeURIComponent(process.env.NEXT_PUBLIC_ERP_SSO_SECRET ?? "");
+  return `${app.url}/api/auth/login?role=${r}&token=${token}&redirect=/`;
 }

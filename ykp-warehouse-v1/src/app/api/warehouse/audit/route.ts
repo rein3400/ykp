@@ -1,7 +1,7 @@
 /**
- * PUBLIC (owner layer): audit trail read endpoint.
+ * Audit trail read endpoint.
  * GET /api/warehouse/audit?from=YYYY-MM-DD&to=YYYY-MM-DD&limit=200
- * Auth is bypassed for GET in middleware.ts (PUBLIC_GET_PREFIXES).
+ * Session required + role must be able to view audit.
  *
  * POST /api/warehouse/audit { action: 'verify_chain' }
  * Authenticated — runs the tamper-evidence hash-chain verification.
@@ -9,7 +9,7 @@
  */
 import { NextRequest } from 'next/server';
 import { readTab, TABS } from '@/db/sheets';
-import { list, handler, ok, unauthorized, badRequest } from '@/lib/http';
+import { list, handler, ok, unauthorized, badRequest, forbidden } from '@/lib/http';
 import { getSession } from '@/lib/session';
 import { can, type Role } from '@/lib/rbac';
 import { verifyAuditChain } from '@/lib/audit';
@@ -17,6 +17,10 @@ import { verifyAuditChain } from '@/lib/audit';
 const MAX_LIMIT = 500;
 
 export const GET = handler(async (req: NextRequest) => {
+  const s = await getSession();
+  if (!s) return unauthorized();
+  if (!can(s.role as Role, 'view', 'audit')) return forbidden();
+
   const q = req.nextUrl.searchParams;
   const from = q.get('from') ?? '';
   const to = q.get('to') ?? '';

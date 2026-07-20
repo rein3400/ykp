@@ -2,9 +2,29 @@
  * In-memory mock DB for local demo / Playwright.
  * Self-contained (no import from sheets.ts) to avoid circular deps.
  */
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+function generatePassword(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = randomBytes(length);
+  let pw = '';
+  for (let i = 0; i < length; i++) {
+    pw += chars[bytes[i] % chars.length];
+  }
+  return pw;
+}
+
+const MOCK_PASSWORD = process.env.MOCK_PASSWORD ?? (() => {
+  const p = generatePassword();
+  console.error('[mock-store] SECURITY: MOCK_PASSWORD not set. Generated random mock password:', p);
+  return p;
+})();
+
+const pw = bcrypt.hashSync(MOCK_PASSWORD, 10);
+const hp = () => bcrypt.hashSync(MOCK_PASSWORD, 10);
 
 const TAB = {
   investors: 'master_investor',
@@ -20,8 +40,7 @@ const TAB = {
 } as const;
 
 function seed(): Record<string, Record<string, string>[]> {
-  const hp = (p: string) => createHash('sha256').update(p).digest('hex');
-  const pw = hp('owner123');
+  const t = now();
   return {
     [TAB.investors]: [
       {
@@ -75,7 +94,7 @@ function seed(): Record<string, Record<string, string>[]> {
       {
         user_id: 'USR-INV-002',
         username: 'investor1',
-        password_hash: hp('invest123'),
+        password_hash: hp(),
         role: 'investor',
         investor_id: 'INV-003',
         active_status: 'active',
@@ -85,7 +104,7 @@ function seed(): Record<string, Record<string, string>[]> {
       {
         user_id: 'USR-INV-003',
         username: 'investor2',
-        password_hash: hp('invest123'),
+        password_hash: hp(),
         role: 'investor',
         investor_id: 'INV-005',
         active_status: 'active',
@@ -95,7 +114,7 @@ function seed(): Record<string, Record<string, string>[]> {
       {
         user_id: 'USR-INV-004',
         username: 'investor_inst',
-        password_hash: hp('invest123'),
+        password_hash: hp(),
         role: 'investor',
         investor_id: 'INV-002',
         active_status: 'active',
@@ -105,7 +124,7 @@ function seed(): Record<string, Record<string, string>[]> {
       {
         user_id: 'USR-INV-005',
         username: 'viewer',
-        password_hash: hp('viewer12'),
+        password_hash: hp(),
         role: 'viewer',
         investor_id: '',
         active_status: 'active',

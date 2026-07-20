@@ -45,12 +45,16 @@ function base64UrlDecode(s: string): Uint8Array {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const res = NextResponse.next();
+  res.headers.set('X-Content-Type-Options', 'nosniff');
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return NextResponse.next();
+    return res;
   }
   // Public read endpoints for Hermez (GET only)
   if (req.method === 'GET' && PUBLIC_GET_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return NextResponse.next();
+    return res;
   }
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;
   const secret = process.env.SESSION_SECRET ?? '';
@@ -62,7 +66,7 @@ export async function middleware(req: NextRequest) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
-  return NextResponse.next();
+  return res;
 }
 
 export const config = {

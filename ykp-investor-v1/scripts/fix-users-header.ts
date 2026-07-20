@@ -1,12 +1,26 @@
 /**
  * Restore warehouse `users` header after accidental overwrite by investor bootstrap,
  * and force-seed investor_users with owner + mega users.
+ *
+ * Security: no hardcoded passwords. Use SEED_PASSWORD for owner and
+ * INVESTOR_DEFAULT_PASSWORD for sample investors, or random passwords are generated.
  */
 import { getSheetsClient, getSpreadsheetId, TAB_HEADERS, TABS, columnLetter, appendRows, findRow } from '../src/db/sheets';
 import { nowTimestampWib } from '../src/lib/format';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function generatePassword(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = randomBytes(length);
+  let pw = '';
+  for (let i = 0; i < length; i++) {
+    pw += chars[bytes[i] % chars.length];
+  }
+  return pw;
+}
 
 async function main() {
   const sheets = getSheetsClient();
@@ -32,12 +46,11 @@ async function main() {
     range: 'users!A2:I10'
   });
   const rows = whUsers.data.values ?? [];
+  const ownerPassword = process.env.SEED_PASSWORD ?? generatePassword();
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     if (r[1] === 'owner') {
-      // ensure password hash + active
-      const hash = bcrypt.hashSync('owner123', 10);
-      r[2] = hash;
+      r[2] = bcrypt.hashSync(ownerPassword, 10);
       r[3] = 'owner';
       r[6] = 'active';
       await sheets.spreadsheets.values.update({
@@ -75,11 +88,10 @@ async function main() {
 
   const existing = await findRow(TABS.users, 'username', 'owner');
   if (!existing) {
-    const hash = bcrypt.hashSync('owner123', 10);
     await appendRows(TABS.users, [{
       user_id: 'USR-001',
       username: 'owner',
-      password_hash: hash,
+      password_hash: bcrypt.hashSync(ownerPassword, 10),
       role: 'owner',
       investor_id: '',
       active_status: 'active',
@@ -88,30 +100,29 @@ async function main() {
     }]);
     console.log('[fix] investor_users owner seeded');
   } else {
-    // repair active + password
-    const hash = bcrypt.hashSync('owner123', 10);
     const { updateRow } = await import('../src/db/sheets');
     await updateRow(TABS.users, existing.rowNumber, {
       ...existing.row,
-      password_hash: hash,
+      password_hash: bcrypt.hashSync(ownerPassword, 10),
       role: 'owner',
       active_status: 'active'
     });
     console.log('[fix] investor_users owner repaired');
   }
 
-  // seed extra investor users if missing
+  const investorPassword = process.env.INVESTOR_DEFAULT_PASSWORD ?? generatePassword();
+  const generatedInvestors = [] as { username: string; password: string }[];
   for (const u of [
-    { id: 'USR-INV-002', username: 'investor1', password: 'invest123', role: 'investor', investor_id: 'INV-003' },
-    { id: 'USR-INV-003', username: 'investor2', password: 'invest123', role: 'investor', investor_id: 'INV-005' },
-    { id: 'USR-INV-004', username: 'investor_inst', password: 'invest123', role: 'investor', investor_id: 'INV-002' }
+    { id: 'USR-INV-002', username: 'investor1', role: 'investor', investor_id: 'INV-003' },
+    { id: 'USR-INV-003', username: 'investor2', role: 'investor', investor_id: 'INV-005' },
+    { id: 'USR-INV-004', username: 'investor_inst', role: 'investor', investor_id: 'INV-002' }
   ]) {
     const found = await findRow(TABS.users, 'username', u.username);
     if (!found) {
       await appendRows(TABS.users, [{
         user_id: u.id,
         username: u.username,
-        password_hash: bcrypt.hashSync(u.password, 10),
+        password_hash: bcrypt.hashSync(investorPassword, 10),
         role: u.role,
         investor_id: u.investor_id,
         active_status: 'active',
@@ -119,8 +130,22 @@ async function main() {
         last_login_at: ''
       }]);
       console.log('[fix] seeded', u.username);
+      generatedInvestors.push({ username: u.username, password: investorPassword });
       await sleep(500);
     }
+  }
+
+  if (!process.env.SEED_PASSWORD) {
+    console.log('=== OWNER PASSWORD ===');
+    console.log(ownerPassword);
+    console.log('======================');
+  }
+  if (generatedInvestors.length > 0 && !process.env.INVESTOR_DEFAULT_PASSWORD) {
+    console.log('=== GENERATED INVESTOR PASSWORDS ===');
+    for (const g of generatedInvestors) {
+      console.log(`  ${g.username}: ${g.password}`);
+    }
+    console.log('====================================');
   }
 
   console.log('[fix] done');

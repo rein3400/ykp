@@ -118,16 +118,33 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
     .filter((r) => !r.linkedExpenseId)
     .reduce((acc, r) => acc + (r.amount ?? 0), 0);
 
+  // 3a. Supplier unpaid amount (any invoice with remaining unpaid > 0 up to `date`)
   const unpaidRows = await financeDb
-    .select({ unpaid: finSupplierCost.unpaidAmount })
+    .select({
+      unpaid: finSupplierCost.unpaidAmount,
+      dueDate: finSupplierCost.dueDate,
+    })
     .from(finSupplierCost)
     .where(and(
       eq(finSupplierCost.outletId, outlet_id),
       lte(finSupplierCost.date, new Date(date)),
     ));
-  const unpaidSupplier = unpaidRows
-    .filter((r) => r.unpaid != null && (r.unpaid as number) > 0)
+  const unpaidPositiveRows = unpaidRows
+    .filter((r) => r.unpaid != null && (r.unpaid as number) > 0);
+  const unpaidSupplier = unpaidPositiveRows
     .reduce((acc, r) => acc + ((r.unpaid as number) ?? 0), 0);
+  // Oldest overdue age in days among outstanding supplier invoices as of `date`.
+  const wibDate = new Date(date + "T00:00:00+07:00");
+  const oldestUnpaidDays = unpaidPositiveRows.length
+    ? Math.max(
+        ...unpaidPositiveRows.map((r) => {
+          const due = r.dueDate ? new Date(r.dueDate).getTime() : 0;
+          if (!due) return 0;
+          const ageMs = wibDate.getTime() - due;
+          return ageMs > 0 ? Math.floor(ageMs / 86_400_000) : 0;
+        })
+      )
+    : 0;
 
   const pettyRows = await financeDb
     .select({
@@ -187,11 +204,13 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
     supplierCost,
     pettyCashOut,
     unpaidSupplier,
+    oldestUnpaidDays,
     cashDifference,
     settlementDifference,
     netProfitEstimate: estimated_operating_result,
     majorFinanceIssue,
     recommendedAction,
+    createdAt: new Date(),
   };
 
   await financeDb
@@ -207,6 +226,7 @@ export async function generateFinDailySummary(input: FinDailySummaryInput): Prom
         supplierCost: sql`excluded.supplier_cost`,
         pettyCashOut: sql`excluded.petty_cash_out`,
         unpaidSupplier: sql`excluded.unpaid_supplier`,
+        oldestUnpaidDays: sql`excluded.oldest_unpaid_days`,
         cashDifference: sql`excluded.cash_difference`,
         settlementDifference: sql`excluded.settlement_difference`,
         netProfitEstimate: sql`excluded.net_profit_estimate`,

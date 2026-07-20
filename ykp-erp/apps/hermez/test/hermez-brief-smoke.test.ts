@@ -76,21 +76,22 @@ function makeFakeDb(rows: Record<string, unknown>[] = []) {
   const record = (table: { __label?: string } | undefined, op: TouchLog["op"]) => {
     touchLog.push({ table: table?.__label ?? "(unknown)", op });
   };
+  const makeQuery = (table: { __label?: string }) => {
+    const run = async () => {
+      record(table, "select");
+      return [...rows];
+    };
+    const thenable: any = {
+      where: () => thenable,
+      orderBy: () => thenable,
+      limit: () => thenable,
+      then: (resolve: (v: typeof rows) => void) => run().then(resolve),
+    };
+    return thenable;
+  };
   return {
     select: (_cols?: unknown) => ({
-      from: (table: { __label?: string }) => {
-        record(table, "select");
-        // Thenable with chainable where/orderBy/limit — covers all impl chains.
-        const chain: Promise<Record<string, unknown>[]> & {
-          where?: () => Promise<Record<string, unknown>[]>;
-          orderBy?: () => { limit: () => Promise<Record<string, unknown>[]> };
-          limit?: () => Promise<Record<string, unknown>[]>;
-        } = Promise.resolve(rows);
-        chain.where = () => Promise.resolve(rows);
-        chain.orderBy = () => ({ limit: async () => rows });
-        chain.limit = async () => rows;
-        return chain;
-      },
+      from: (table: { __label?: string }) => makeQuery(table),
     }),
     insert: (table: { __label?: string }) => {
       record(table, "insert");

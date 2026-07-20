@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            orchestrator: orchestrator/**
+            ykp-erp: ykp-erp/**
+            ykp-hr-v1: ykp-hr-v1/**
+            ykp-finance-v1: ykp-finance-v1/**
+            ykp-warehouse-v1: ykp-warehouse-v1/**
+            ykp-investor-v1: ykp-investor-v1/**
+            ykp-ops-v1: ykp-ops-v1/**
+            ykp-owner-v1: ykp-owner-v1/**
+            ykp-hermez: ykp-hermez/**
+
+  test:
+    needs: changes
+    if: ${{ needs.changes.outputs.apps != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: orchestrator
+            dir: orchestrator
+            node: 22
+          - app: ykp-erp
+            dir: ykp-erp
+            node: 20
+          - app: ykp-hr-v1
+            dir: ykp-hr-v1
+            node: 22
+          - app: ykp-finance-v1
+            dir: ykp-finance-v1
+            node: 22
+          - app: ykp-warehouse-v1
+            dir: ykp-warehouse-v1
+            node: 22
+          - app: ykp-investor-v1
+            dir: ykp-investor-v1
+            node: 22
+          - app: ykp-ops-v1
+            dir: ykp-ops-v1
+            node: 22
+          - app: ykp-owner-v1
+            dir: ykp-owner-v1
+            node: 22
+          - app: ykp-hermez
+            dir: ykp-hermez
+            node: 22
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: npm ci
+
+      - name: Lint
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if npm run | grep -q "^\s*lint$"; then
+            npm run lint
+          else
+            echo "No lint script; skipping"
+          fi
+
+      - name: Type check
+        working-directory: ${{ matrix.dir }}
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'a-very-long-dummy-secret-for-ci-32-chars-min' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'a-very-long-dummy-secret-for-ci-32-chars-min' }}
+          NEXT_PUBLIC_ERP_SSO_SECRET: ${{ secrets.ERP_SSO_SECRET || 'dummy-sso-secret-for-ci' }}
+          ERP_SSO_SECRET: ${{ secrets.ERP_SSO_SECRET || 'dummy-sso-secret-for-ci' }}
+        run: |
+          if npm run | grep -q "^\s*typecheck$"; then
+            npm run typecheck
+          elif npm run | grep -q "^\s*lint$" && grep -q '"lint":.*tsc --noEmit' package.json; then
+            npm run lint
+          else
+            echo "No typecheck script; skipping"
+          fi
+
+      - name: Test
+        working-directory: ${{ matrix.dir }}
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'a-very-long-dummy-secret-for-ci-32-chars-min' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'a-very-long-dummy-secret-for-ci-32-chars-min' }}
+          USE_MOCK_DB: true
+          MOCK_PASSWORD: ${{ secrets.MOCK_PASSWORD || 'DummyCI123!' }}
+        run: |
+          if npm run | grep -q "^\s*test$"; then
+            npm test -- --run
+          else
+            echo "No test script; skipping"
+          fi
+
+      - name: Build
+        working-directory: ${{ matrix.dir }}
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'a-very-long-dummy-secret-for-ci-32-chars-min' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'a-very-long-dummy-secret-for-ci-32-chars-min' }}
+          NEXT_PUBLIC_ERP_SSO_SECRET: ${{ secrets.ERP_SSO_SECRET || 'dummy-sso-secret-for-ci' }}
+          ERP_SSO_SECRET: ${{ secrets.ERP_SSO_SECRET || 'dummy-sso-secret-for-ci' }}
+          USE_MOCK_DB: true
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL || 'dummy@example.com' }}
+          GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '-----BEGIN PRIVATE KEY-----\nMIIBOgIBAAJBAKj34GkxFhD90vcNLYLInFEX6Ppy1tPf9Cnzj4p4WGeKLs1Pt8Qu\nKUpRKfFLfRYC9AIKjbJTWit+Cevjjs+AEwcCAwEAAQJAIv64inmpgcmdA8eH7Wac\n3/PDG4AE0+GacG6E7N5eV1t7N3zvOXr7W7x+7e6f7W7x+7e6f7W7x+7e6f7W7x+7e\n6fQ==\n-----END PRIVATE KEY-----' }}
+          YKP_HR_SPREADSHEET_ID: ${{ secrets.YKP_HR_SPREADSHEET_ID || 'dummy-spreadsheet-id' }}
+          YKP_FINANCE_SPREADSHEET_ID: ${{ secrets.YKP_FINANCE_SPREADSHEET_ID || 'dummy-spreadsheet-id' }}
+          YKP_WAREHOUSE_SPREADSHEET_ID: ${{ secrets.YKP_WAREHOUSE_SPREADSHEET_ID || 'dummy-spreadsheet-id' }}
+          YKP_INVESTOR_SPREADSHEET_ID: ${{ secrets.YKP_INVESTOR_SPREADSHEET_ID || 'dummy-spreadsheet-id' }}
+          YKP_OPS_SPREADSHEET_ID: ${{ secrets.YKP_OPS_SPREADSHEET_ID || 'dummy-spreadsheet-id' }}
+          YKP_OWNER_SPREADSHEET_ID: ${{ secrets.YKP_OWNER_SPREADSHEET_ID || 'dummy-spreadsheet-id' }}
+          YKP_DRIVE_FOLDER_ID: ${{ secrets.YKP_DRIVE_FOLDER_ID || 'dummy-drive-folder' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || 'dummy-token' }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-dummy-openai-key' }}
+        run: |
+          if npm run | grep -q "^\s*build$"; then
+            npm run build
+          else
+            echo "No build script; skipping"
+          fi
+
+  root-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ykp-erp/package-lock.json
+      - name: Install (ykp-erp)
+        working-directory: ykp-erp
+        run: npm ci
+      - name: Smoke scripts
+        working-directory: ykp-erp
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'a-very-long-dummy-secret-for-ci-32-chars-min' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'a-very-long-dummy-secret-for-ci-32-chars-min' }}
+        run: |
+          if npm run | grep -q "^\s*smoke$"; then
+            npm run smoke
+          else
+            echo "No smoke script; skipping"
+          fi

@@ -1,16 +1,22 @@
 /**
- * PUBLIC (owner layer): audit trail read endpoint.
+ * Audit trail read endpoint.
  * GET /api/investor/audit?from=YYYY-MM-DD&to=YYYY-MM-DD&limit=200
- * Auth is bypassed for GET in middleware.ts (see /api/investor/summary precedent).
+ * Session required, owner only.
  * Note: investor audit schema uses `timestamp` (not `created_at`).
  */
 import { NextRequest } from 'next/server';
 import { readTab, TABS } from '@/db/sheets';
-import { list, handler } from '@/lib/http';
+import { list, handler, unauthorized, forbidden } from '@/lib/http';
+import { getSession } from '@/lib/session';
+import { isOwner } from '@/lib/rbac';
 
 const MAX_LIMIT = 500;
 
 export const GET = handler(async (req: NextRequest) => {
+  const s = await getSession();
+  if (!s) return unauthorized();
+  if (!isOwner(s.role)) return forbidden();
+
   const q = req.nextUrl.searchParams;
   const from = q.get('from') ?? '';
   const to = q.get('to') ?? '';

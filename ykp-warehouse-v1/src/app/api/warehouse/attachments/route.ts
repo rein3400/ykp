@@ -1,6 +1,6 @@
 /**
  * Attachments — photo/document proof stored in Google Drive.
- * GET  /api/warehouse/attachments?entity_type=&entity_id=  (PUBLIC, owner feed)
+ * GET  /api/warehouse/attachments?entity_type=&entity_id=  (session required)
  * POST /api/warehouse/attachments  multipart: file, entity_type, entity_id
  *      (session) — uploads to Drive, appends warehouse_attachments row.
  * Mock mode: row is written with a MOCK- file_id (bytes are not stored),
@@ -20,6 +20,9 @@ import { randomBytes } from 'crypto';
 const MAX_BYTES = 10 * 1024 * 1024; // 10MB — client compresses to ~300KB anyway
 
 export const GET = handler(async (req: NextRequest) => {
+  const s = await getSession();
+  if (!s) return unauthorized();
+
   const q = req.nextUrl.searchParams;
   const entityType = q.get('entity_type') ?? '';
   const entityId = q.get('entity_id') ?? '';

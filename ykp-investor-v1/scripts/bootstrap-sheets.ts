@@ -5,6 +5,17 @@
 import { getSheetsClient, getSpreadsheetId, TAB_HEADERS, TABS, columnLetter, type TabName } from '../src/db/sheets';
 import { nowTimestampWib } from '../src/lib/format';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
+
+function generatePassword(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = randomBytes(length);
+  let pw = '';
+  for (let i = 0; i < length; i++) {
+    pw += chars[bytes[i] % chars.length];
+  }
+  return pw;
+}
 
 function quoteTab(tab: string): string {
   return /^[A-Za-z0-9_]+$/.test(tab) ? tab : `'${tab}'`;
@@ -35,14 +46,26 @@ async function seedUser(sheets: ReturnType<typeof getSheetsClient>, sid: string)
     console.log('[seed] users already seeded');
     return;
   }
-  const pw = bcrypt.hashSync('owner123', 10);
+  const explicitPassword = process.env.SEED_PASSWORD;
+  const password = explicitPassword ?? generatePassword();
+  if (!explicitPassword && password.length < 12) {
+    throw new Error('SEED_PASSWORD must be at least 12 characters');
+  }
+  const pw = bcrypt.hashSync(password, 10);
   const row = ['USR-001', 'owner', pw, 'owner', '', 'active', nowTimestampWib(), ''];
   await sheets.spreadsheets.values.append({
     spreadsheetId: sid, range: `${quoteTab(TABS.users)}!A2`,
     valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS',
     requestBody: { values: [row] }
   });
-  console.log('[seed] owner/owner123 (CHANGE before pilot)');
+  console.log(`[seed] created user: owner`);
+  if (!explicitPassword) {
+    console.log('=== ONE-TIME GENERATED PASSWORD ===');
+    console.log(password);
+    console.log('====================================');
+  } else {
+    console.log('[seed] password set from SEED_PASSWORD env var');
+  }
 }
 
 async function seedSampleInvestor(sheets: ReturnType<typeof getSheetsClient>, sid: string): Promise<void> {

@@ -3,6 +3,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { useToast } from "@/components/toast";
+import { can, Role } from "@/lib/rbac";
 
 interface Payroll {
   payroll_id: string;
@@ -40,6 +41,8 @@ export function PayrollTable({
   const [unlockReason, setUnlockReason] = React.useState("");
   const [unlockErr, setUnlockErr] = React.useState("");
 
+  const canApprove = userRole ? can(userRole as Role, 'approve', 'payroll') : false;
+  const canMarkPaid = userRole ? can(userRole as Role, 'mark_paid', 'payroll') : false;
   const canUnlock = userRole === "owner" || userRole === "super_admin";
 
   async function approve(id: string) {
@@ -223,7 +226,7 @@ export function PayrollTable({
                   </td>
                   <td className="px-3 py-2 text-right">
                     <div className="flex justify-end gap-2">
-                      {isPending && !isLocked && (
+                      {isPending && !isLocked && canApprove && (
                         <button
                           type="button"
                           onClick={() => approve(row.payroll_id)}
@@ -233,7 +236,7 @@ export function PayrollTable({
                           {busyId === row.payroll_id ? "…" : "Setujui"}
                         </button>
                       )}
-                      {isApproved && isUnpaid && !isLocked && (
+                      {isApproved && isUnpaid && !isLocked && canMarkPaid && (
                         <button
                           type="button"
                           onClick={() => toggleMarkPaid(row.payroll_id)}

@@ -1,6 +1,6 @@
 /**
  * Attachments — photo/document proof stored in Google Drive.
- * GET  /api/investor/attachments?entity_type=&entity_id=  (PUBLIC, owner feed)
+ * GET  /api/investor/attachments?entity_type=&entity_id=  (session required, owner only)
  * POST /api/investor/attachments  multipart: file, entity_type, entity_id
  *      (session) — images AND pdf (MOU scans) accepted; max 10MB.
  * Mock mode: row is written with a MOCK- file_id (bytes are not stored).
@@ -8,7 +8,8 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, fail, handler } from '@/lib/http';
+import { ok, list, unauthorized, badRequest, fail, handler, forbidden } from '@/lib/http';
+import { isOwner } from '@/lib/rbac';
 import { logAudit } from '@/lib/audit';
 import { isMockMode } from '@/db/mock-store';
 import { isDriveConfigured, uploadToDrive } from '@/lib/drive';
@@ -19,6 +20,10 @@ import { randomBytes } from 'crypto';
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export const GET = handler(async (req: NextRequest) => {
+  const s = await getSession();
+  if (!s) return unauthorized();
+  if (!isOwner(s.role)) return forbidden();
+
   const q = req.nextUrl.searchParams;
   const entityType = q.get('entity_type') ?? '';
   const entityId = q.get('entity_id') ?? '';

@@ -114,14 +114,14 @@ export default function DailyBriefPage() {
           </CardHeader>
           <CardContent>
             <pre className="whitespace-pre-wrap rounded-md bg-muted/40 p-4 font-mono text-sm">
-              {brief.briefText}
+              {brief.briefText || "Brief text kosong — generate ulang via Run Console."}
             </pre>
             <div className="mt-4 flex gap-2">
               <a
-                href={`/alerts?date=${brief.date}`}
+                href={`/alerts?date=${brief.date ?? date}`}
                 className="text-sm text-primary underline-offset-4 hover:underline"
               >
-                Lihat alert log untuk {brief.date}
+                Lihat alert log untuk {brief.date ?? date}
               </a>
             </div>
           </CardContent>

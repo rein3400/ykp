@@ -11,6 +11,7 @@
 import { getSheetsClient, getSpreadsheetId, TAB_HEADERS, TABS, appendRows, readTab, type TabName } from '../src/db/sheets';
 import { nowTimestampWib, formatDateWib } from '../src/lib/format';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -28,8 +29,19 @@ function id(prefix: string, n: number) {
   return `MEGA-${prefix}-${pad(n, 4)}`;
 }
 
-function hashPw(p: string) {
-  return bcrypt.hashSync(p, 10);
+function generatePassword(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = randomBytes(length);
+  let pw = '';
+  for (let i = 0; i < length; i++) {
+    pw += chars[bytes[i] % chars.length];
+  }
+  return pw;
+}
+
+const megaPassword = process.env.SEED_MEGA_PASSWORD ?? generatePassword();
+function hashPw() {
+  return bcrypt.hashSync(megaPassword, 10);
 }
 
 const BRANDS = [
@@ -223,14 +235,14 @@ async function main() {
 
   // Users (multi-role)
   const users: Record<string, string>[] = [
-    { user_id: 'USR-MEGA-001', username: 'wh_admin', password_hash: hashPw('admin123'), role: 'warehouse_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' },
-    { user_id: 'USR-MEGA-002', username: 'purchasing', password_hash: hashPw('purchase123'), role: 'purchasing', brand_id: '', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' },
-    { user_id: 'USR-MEGA-003', username: 'fkd_mgr', password_hash: hashPw('manager123'), role: 'brand_manager', brand_id: 'BR-001', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' },
-    { user_id: 'USR-MEGA-004', username: 'cipete_pic', password_hash: hashPw('pic12345'), role: 'supervisor', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: now, last_login_at: '' },
-    { user_id: 'USR-MEGA-005', username: 'kitchen_lead', password_hash: hashPw('kitchen1'), role: 'kitchen_lead', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: now, last_login_at: '' },
-    { user_id: 'USR-MEGA-006', username: 'staff1', password_hash: hashPw('staff123'), role: 'staff', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: now, last_login_at: '' },
-    { user_id: 'USR-MEGA-007', username: 'viewer', password_hash: hashPw('viewer12'), role: 'viewer', brand_id: '', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' },
-    { user_id: 'USR-MEGA-008', username: 'finance', password_hash: hashPw('finance1'), role: 'finance_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' }
+    { user_id: 'USR-MEGA-001', username: 'wh_admin', password_hash: hashPw(), role: 'warehouse_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' },
+    { user_id: 'USR-MEGA-002', username: 'purchasing', password_hash: hashPw(), role: 'purchasing', brand_id: '', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' },
+    { user_id: 'USR-MEGA-003', username: 'fkd_mgr', password_hash: hashPw(), role: 'brand_manager', brand_id: 'BR-001', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' },
+    { user_id: 'USR-MEGA-004', username: 'cipete_pic', password_hash: hashPw(), role: 'supervisor', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: now, last_login_at: '' },
+    { user_id: 'USR-MEGA-005', username: 'kitchen_lead', password_hash: hashPw(), role: 'kitchen_lead', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: now, last_login_at: '' },
+    { user_id: 'USR-MEGA-006', username: 'staff1', password_hash: hashPw(), role: 'staff', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: now, last_login_at: '' },
+    { user_id: 'USR-MEGA-007', username: 'viewer', password_hash: hashPw(), role: 'viewer', brand_id: '', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' },
+    { user_id: 'USR-MEGA-008', username: 'finance', password_hash: hashPw(), role: 'finance_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: now, last_login_at: '' }
   ];
   const existingUsers = await readTab(TABS.users);
   const userNames = new Set(existingUsers.map((u) => u.username));
@@ -714,9 +726,10 @@ async function main() {
   await appendBatched(TABS.adjustment, adjustments, 20);
 
   console.log('[mega-seed] DONE');
-  console.log('Login demo users (password in seed):');
-  console.log('  owner/owner123 | wh_admin/admin123 | purchasing/purchase123');
-  console.log('  fkd_mgr/manager123 | cipete_pic/pic12345 | staff1/staff123');
+  console.log('=== MEGA SEED PASSWORDS ===');
+  console.log(`  MEGA sample users: ${process.env.SEED_MEGA_PASSWORD ?? megaPassword}`);
+  console.log('  Set SEED_MEGA_PASSWORD env var to avoid generated passwords.');
+  console.log('===========================');
 }
 
 main().catch((e) => {

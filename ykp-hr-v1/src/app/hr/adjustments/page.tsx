@@ -18,7 +18,11 @@ interface Adj {
   payroll_period: string;
 }
 
+import { getSession } from '@/lib/session';
+
 export default async function AdjustmentsPage() {
+  const session = await getSession();
+  const userRole = session?.role ?? '';
   const [employees, adj] = await Promise.all([
     readTab<{ employee_id: string; full_name: string; active_status: string }>(TABS.employees),
     readTab<Adj>(TABS.adjustments)
@@ -40,7 +44,7 @@ export default async function AdjustmentsPage() {
         </div>
         <div className='card lg:col-span-2'>
           <h2 className='mb-2 font-semibold'>Daftar</h2>
-          <AdjustmentsTable data={adj} />
+          <AdjustmentsTable data={adj} userRole={userRole} />
         </div>
       </div>
     </div>

@@ -17,7 +17,8 @@
 | 6 | **HR Pilot (Sheets)** | Vercel | https://ykp-hr-v1.vercel.app | same app, alternate host |
 | 7 | **Warehouse** | Vercel | https://ykp-warehouse-v1.vercel.app | username/password (mock or Sheets) |
 | 8 | **Investor** | Vercel | https://ykp-investor-v1.vercel.app | username/password (mock or Sheets) |
-| 9 | **Operational (NEW)** | Vercel | https://ykp-ops-v1.vercel.app | `owner` / `owner123` (mock mode) |
+| 9 | **Operational (NEW)** | Vercel | https://ykp-ops-v1.vercel.app | Set `MOCK_PASSWORD` env var (mock mode) |
+| 10 | **Finance V1 (Sheets)** | Vercel | TBD — deploy via `ykp-finance-v1/vercel.json` | username/password (Sheets users) |
 
 ---
 
@@ -102,13 +103,13 @@ cd ykp-hr-v1        && vercel --prod --yes
 
 ---
 
-## Default test credentials (change before real pilot)
+## Default test credentials (REMOVED — use seeded credentials)
 
-| App | User | Password | Notes |
-|---|---|---|---|
-| Ops V1 (mock) | `owner` | `owner123` | Mock store; rotate before pilot |
-| HR-v1 | `owner` | `owner123` (seed) | Rotate before pilot |
-| Warehouse / Investor | seed owner | seed default | Check each app seed |
+| App | Notes |
+|---|---|
+| Ops V1 (mock) | Set `MOCK_PASSWORD` env var. Run `npm run sheets:seed-user` for real Sheets. |
+| HR-v1 | Run `npm run sheets:seed-user` with `SEED_PASSWORD` env var. |
+| Warehouse / Investor | Run `npm run sheets:seed-user` with `SEED_PASSWORD` env var. |
 
 Finance / HR Postgres / Hermez: Hub SSO role-picker (`OWNER` / `SUPER_ADMIN` for Hermez).
 

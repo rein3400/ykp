@@ -5,9 +5,29 @@
  *
  * Schema matches sheets.ts TABS — full Warehouse V1 brief.
  */
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+function generatePassword(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = randomBytes(length);
+  let pw = '';
+  for (let i = 0; i < length; i++) {
+    pw += chars[bytes[i] % chars.length];
+  }
+  return pw;
+}
+
+const MOCK_PASSWORD = process.env.MOCK_PASSWORD ?? (() => {
+  const p = generatePassword();
+  console.error('[mock-store] SECURITY: MOCK_PASSWORD not set. Generated random mock password:', p);
+  return p;
+})();
+
+const pw = bcrypt.hashSync(MOCK_PASSWORD, 10);
+const hp = () => bcrypt.hashSync(MOCK_PASSWORD, 10);
 
 // String keys must match TABS values in sheets.ts
 const TAB = {
@@ -51,8 +71,6 @@ const TAB = {
 } as const;
 
 function seed(): Record<string, Record<string, string>[]> {
-  const hp = (p: string) => createHash('sha256').update(p).digest('hex');
-  const pw = hp('owner123');
   const t = now();
   return {
     [TAB.brands]: [
@@ -135,14 +153,14 @@ function seed(): Record<string, Record<string, string>[]> {
     // ── Auth ────────────────────────────────────────────────────
     [TAB.users]: [
       { user_id: 'USR-001', username: 'owner', password_hash: pw, role: 'owner', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-MEGA-001', username: 'wh_admin', password_hash: hp('admin123'), role: 'warehouse_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-MEGA-002', username: 'purchasing', password_hash: hp('purchase123'), role: 'purchasing', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-MEGA-003', username: 'fkd_mgr', password_hash: hp('manager123'), role: 'brand_manager', brand_id: 'BR-001', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-MEGA-004', username: 'cipete_pic', password_hash: hp('pic12345'), role: 'supervisor', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-MEGA-005', username: 'kitchen_lead', password_hash: hp('kitchen1'), role: 'kitchen_lead', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-MEGA-006', username: 'staff1', password_hash: hp('staff123'), role: 'staff', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-MEGA-007', username: 'viewer', password_hash: hp('viewer12'), role: 'viewer', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-MEGA-008', username: 'finance', password_hash: hp('finance1'), role: 'finance_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' }
+      { user_id: 'USR-MEGA-001', username: 'wh_admin', password_hash: hp(), role: 'warehouse_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-002', username: 'purchasing', password_hash: hp(), role: 'purchasing', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-003', username: 'fkd_mgr', password_hash: hp(), role: 'brand_manager', brand_id: 'BR-001', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-004', username: 'cipete_pic', password_hash: hp(), role: 'supervisor', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-005', username: 'kitchen_lead', password_hash: hp(), role: 'kitchen_lead', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-006', username: 'staff1', password_hash: hp(), role: 'staff', brand_id: 'BR-001', outlet_id: 'OL-001', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-007', username: 'viewer', password_hash: hp(), role: 'viewer', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-MEGA-008', username: 'finance', password_hash: hp(), role: 'finance_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' }
     ],
     [TAB.auditLog]: [],
     [TAB.evidenceLog]: [],

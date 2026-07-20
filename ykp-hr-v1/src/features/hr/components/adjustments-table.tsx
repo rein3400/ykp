@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { useToast } from "@/components/toast";
 
+import { can, Role } from "@/lib/rbac";
+
 interface Adjustment {
   adjustment_id: string;
   date: string;
@@ -19,11 +21,13 @@ interface Adjustment {
   approved_by?: string;
 }
 
-export function AdjustmentsTable({ data: initial }: { data: Adjustment[] }) {
+export function AdjustmentsTable({ data: initial, userRole }: { data: Adjustment[]; userRole?: string }) {
   const router = useRouter();
   const toast = useToast();
   const [rows, setRows] = React.useState<Adjustment[]>(initial);
   const [busyId, setBusyId] = React.useState<string | null>(null);
+
+  const canDecide = userRole ? can(userRole as Role, 'approve', 'adjustment') : false;
 
   async function decide(id: string, decision: "APPROVE" | "REJECT") {
     setBusyId(id);
@@ -87,7 +91,7 @@ export function AdjustmentsTable({ data: initial }: { data: Adjustment[] }) {
                   <StatusBadge status={row.approval_status} />
                 </td>
                 <td className="px-3 py-2 text-right">
-                  {isPending ? (
+                  {isPending && canDecide ? (
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"

@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "cd ykp-finance-v1 && npm install && npm run build",
+  "outputDirectory": "ykp-finance-v1/.next",
+  "devCommand": "cd ykp-finance-v1 && npm run dev",
+  "installCommand": "cd ykp-finance-v1 && npm install",
+  "env": {
+    "NEXT_TELEMETRY_DISABLED": "1"
+  }
+}

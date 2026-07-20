@@ -345,6 +345,7 @@ export const finDailySummary = finance.table(
     supplierCost: integer("supplier_cost").notNull().default(0),
     pettyCashOut: integer("petty_cash_out").notNull().default(0),
     unpaidSupplier: integer("unpaid_supplier").notNull().default(0),
+    oldestUnpaidDays: integer("oldest_unpaid_days").notNull().default(0),
     cashDifference: integer("cash_difference").notNull().default(0),
     settlementDifference: integer("settlement_difference").notNull().default(0),
     netProfitEstimate: integer("net_profit_estimate").notNull().default(0),

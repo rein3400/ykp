@@ -1,0 +1,2 @@
+ALTER TABLE "finance"."fin_daily_summary" ADD COLUMN "oldest_unpaid_days" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hr_attendance_date_outlet_idx" ON "hr"."hr_attendance" USING btree ("date","outlet_id");

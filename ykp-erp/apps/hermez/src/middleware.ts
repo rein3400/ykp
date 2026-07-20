@@ -15,8 +15,10 @@ const SENSITIVE_PATHS = [
   "/api/hermez/cron",
 ];
 
+const HEALTH_PATHS = ["/health", "/api/health"];
+
 const TOKEN_BUCKET = new Map<string, { tokens: number; ts: number }>();
-const LIMIT_DEFAULT = 60;
+const LIMIT_DEFAULT = 120;
 const LIMIT_SENSITIVE = 30;
 const WINDOW_MS = 60_000;
 
@@ -29,25 +31,29 @@ function clientIp(req: NextRequest): string {
   );
 }
 
-function allowRequest(ip: string, limit: number): boolean {
+function allowRequest(ip: string, limit: number): { allowed: boolean; remaining: number } {
   const now = Date.now();
   const entry = TOKEN_BUCKET.get(ip);
   if (!entry) {
     TOKEN_BUCKET.set(ip, { tokens: limit - 1, ts: now });
-    return true;
+    return { allowed: true, remaining: limit - 1 };
   }
   const elapsed = now - entry.ts;
   if (elapsed > WINDOW_MS) {
     TOKEN_BUCKET.set(ip, { tokens: limit - 1, ts: now });
-    return true;
+    return { allowed: true, remaining: limit - 1 };
   }
-  if (entry.tokens <= 0) return false;
+  if (entry.tokens <= 0) return { allowed: false, remaining: 0 };
   entry.tokens -= 1;
-  return true;
+  return { allowed: true, remaining: entry.tokens };
 }
 
 function isSensitivePath(pathname: string): boolean {
   return SENSITIVE_PATHS.some((p) => pathname.startsWith(p));
+}
+
+function isHealthPath(pathname: string): boolean {
+  return HEALTH_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
 function buildCsp(): string {
@@ -91,16 +97,37 @@ export function middleware(req: NextRequest) {
     return applyCors(req, res);
   }
 
-  const limit = isSensitivePath(req.nextUrl.pathname) ? LIMIT_SENSITIVE : LIMIT_DEFAULT;
+  const pathname = req.nextUrl.pathname;
+  if (isHealthPath(pathname)) {
+    const res = NextResponse.next();
+    res.headers.set("Content-Security-Policy", buildCsp());
+    res.headers.set("X-Content-Type-Options", "nosniff");
+    res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    return applyCors(req, res);
+  }
+
+  const limit = isSensitivePath(pathname) ? LIMIT_SENSITIVE : LIMIT_DEFAULT;
   const ip = clientIp(req);
-  if (!allowRequest(ip, limit)) {
+  const { allowed, remaining } = allowRequest(ip, limit);
+  if (!allowed) {
     return new NextResponse(
       JSON.stringify({ error: { code: "rate_limited", message: "Too many requests" } }),
-      { status: 429, headers: { "Content-Type": "application/json" } },
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "X-RateLimit-Limit": String(limit),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(Math.ceil(Date.now() / 1000) + 60),
+        },
+      },
     );
   }
 
   const res = NextResponse.next();
+  res.headers.set("X-RateLimit-Limit", String(limit));
+  res.headers.set("X-RateLimit-Remaining", String(remaining));
+  res.headers.set("X-RateLimit-Reset", String(Math.ceil(Date.now() / 1000) + 60));
   res.headers.set("Content-Security-Policy", buildCsp());
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");

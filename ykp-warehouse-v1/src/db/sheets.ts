@@ -373,7 +373,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
   const lastCol = columnLetter(headers.length);
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sid,
-    range: `${quoteTab(tab)}!A1:${lastCol}1000`
+    range: `${quoteTab(tab)}!A1:${lastCol}`
   });
   const rows = res.data.values ?? [];
   if (rows.length < 2) return [];

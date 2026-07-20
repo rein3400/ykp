@@ -1,6 +1,18 @@
 /**
  * Simple in-memory rate limiter. Per (userId OR ip, key). Not distributed.
- * For Sheets V1 pilot, this is sufficient.
+ * For the Sheets V1 pilot this is sufficient; for multi-replica production
+ * deployments, replace the Map with a Redis backend (e.g. Upstash Ratelimit)
+ * so the bucket is shared across server instances. The function signature
+ * (key, limit, windowMs) remains the same, so callers do not need to change.
+ *
+ * Suggested production adapter:
+ *   import { Ratelimit } from "@upstash/ratelimit";
+ *   import { Redis } from "@upstash/redis";
+ *   const ratelimit = new Ratelimit({
+ *     redis: Redis.fromEnv(),
+ *     limiter: Ratelimit.slidingWindow(60, "30s"),
+ *   });
+ *   const { success } = await ratelimit.limit(key);
  */
 const buckets = new Map<string, { count: number; resetAt: number }>();
 

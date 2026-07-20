@@ -7,9 +7,29 @@
  * Dates (attendance/roster/lateness/summary/payroll period) are computed in
  * Asia/Jakarta at seed time so "today" views always render demo data.
  */
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+function generatePassword(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = randomBytes(length);
+  let pw = '';
+  for (let i = 0; i < length; i++) {
+    pw += chars[bytes[i] % chars.length];
+  }
+  return pw;
+}
+
+const MOCK_PASSWORD = process.env.MOCK_PASSWORD ?? (() => {
+  const p = generatePassword();
+  console.error('[mock-store] SECURITY: MOCK_PASSWORD not set. Generated random mock password:', p);
+  return p;
+})();
+
+const ownerPw = bcrypt.hashSync(MOCK_PASSWORD, 10);
+const hrPw = bcrypt.hashSync(MOCK_PASSWORD, 10);
 
 /** WIB date "YYYY-MM-DD", offset in days from today. Local copy of lib/format
  *  logic — kept inline to stay dependency-free (same as warehouse mock). */
@@ -63,8 +83,6 @@ const TAB = {
 } as const;
 
 function seed(): Record<string, Record<string, string>[]> {
-  const ownerPw = createHash('sha256').update('owner123').digest('hex');
-  const hrPw = createHash('sha256').update('hradmin123').digest('hex');
   const t = now();
   const tw = wibTimestamp();
   const today = wibDate(0);

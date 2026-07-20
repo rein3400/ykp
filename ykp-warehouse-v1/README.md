@@ -11,7 +11,7 @@ npm run dev            # http://localhost:3005
 ```
 
 Set `USE_MOCK_DB=true` to run without Google Sheets (in-memory demo data,
-login `owner` / `owner123`).
+login via `MOCK_PASSWORD` env var).
 
 ## Legacy F1–F5 deprecation (Review Cycle 2)
 

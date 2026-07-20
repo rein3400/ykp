@@ -8,11 +8,24 @@
 import { appendRows, readTab, TABS } from '../src/db/sheets';
 import { nowTimestampWib, formatDateWib } from '../src/lib/format';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const pad = (n: number, w = 3) => String(n).padStart(w, '0');
 const id = (p: string, n: number) => `MEGA-${p}-${pad(n, 4)}`;
-const hashPw = (p: string) => bcrypt.hashSync(p, 10);
+
+function generatePassword(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = randomBytes(length);
+  let pw = '';
+  for (let i = 0; i < length; i++) {
+    pw += chars[bytes[i] % chars.length];
+  }
+  return pw;
+}
+
+const megaPassword = process.env.SEED_MEGA_PASSWORD ?? generatePassword();
+const hashPw = () => bcrypt.hashSync(megaPassword, 10);
 
 function dayOffset(daysAgo: number): string {
   const d = new Date();
@@ -230,10 +243,10 @@ async function main() {
 
   // Extra users (investor-scoped + owner already from bootstrap)
   const users = [
-    { user_id: 'USR-INV-002', username: 'investor1', password: 'invest123', role: 'investor', investor_id: 'INV-003' },
-    { user_id: 'USR-INV-003', username: 'investor2', password: 'invest123', role: 'investor', investor_id: 'INV-005' },
-    { user_id: 'USR-INV-004', username: 'investor_inst', password: 'invest123', role: 'investor', investor_id: 'INV-002' },
-    { user_id: 'USR-INV-005', username: 'viewer', password: 'viewer12', role: 'viewer', investor_id: '' }
+    { user_id: 'USR-INV-002', username: 'investor1', role: 'investor', investor_id: 'INV-003' },
+    { user_id: 'USR-INV-003', username: 'investor2', role: 'investor', investor_id: 'INV-005' },
+    { user_id: 'USR-INV-004', username: 'investor_inst', role: 'investor', investor_id: 'INV-002' },
+    { user_id: 'USR-INV-005', username: 'viewer', role: 'viewer', investor_id: '' }
   ];
   const existingUsers = await readTab(TABS.users);
   const unames = new Set(existingUsers.map((u) => u.username));
@@ -244,7 +257,7 @@ async function main() {
       .map((u) => ({
         user_id: u.user_id,
         username: u.username,
-        password_hash: hashPw(u.password),
+        password_hash: hashPw(),
         role: u.role,
         investor_id: u.investor_id,
         active_status: 'active',
@@ -278,7 +291,10 @@ async function main() {
     dashboard: dash.length,
     summaries: summaries.length
   });
-  console.log('Logins: owner/owner123 | investor1/invest123 | investor2/invest123 | investor_inst/invest123');
+  console.log('=== MEGA SEED PASSWORDS ===');
+  console.log(`  MEGA sample users: ${process.env.SEED_MEGA_PASSWORD ?? megaPassword}`);
+  console.log('  Set SEED_MEGA_PASSWORD env var to avoid generated passwords.');
+  console.log('===========================');
 }
 
 main().catch((e) => {
