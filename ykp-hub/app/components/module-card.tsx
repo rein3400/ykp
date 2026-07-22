@@ -90,7 +90,7 @@ export function ModuleCard({ app, result, role, onPreview, lastAccessedAt }: Pro
               disabled={disabled}
               className={`inline-flex items-center justify-center gap-1 rounded-lg border ${tone.ring} bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold ${tone.text} hover:bg-slate-50 dark:hover:bg-slate-700 focus-ring disabled:opacity-50 disabled:cursor-not-allowed transition`}
               aria-label={`Preview ${app.name} di hub`}
-              title="Preview di hub (iframe)"
+              title="Buka di tab baru (auto-login via SSO)"
             >
               <EyeIcon className="h-3.5 w-3.5" />
               Preview

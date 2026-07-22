@@ -75,7 +75,10 @@ export default function HubDashboard() {
     }
   });
 
-  /** Open a module in the in-hub iframe preview (ModuleView). */
+  /** Open a module in a new tab (cross-origin iframes can't reliably
+   *  receive the ERP session cookie in modern browsers — third-party
+   *  cookie blocking — so Preview opens the SSO bridge in a top-level
+   *  tab, exactly like Buka). */
   const previewModule = useCallback((id: AppId) => {
     try {
       const raw = localStorage.getItem(HUB_LAST_ACCESS_KEY);
@@ -83,13 +86,16 @@ export default function HubDashboard() {
       map[id] = new Date().toISOString();
       localStorage.setItem(HUB_LAST_ACCESS_KEY, JSON.stringify(map));
     } catch {}
-    // Render the embedded ModuleView iframe preview. The iframe loads the
-    // SSO bridge URL; the ERP app sets its session cookie on that top-level
-    // iframe navigation, which modern browsers allow (it's a first-party
-    // navigation within the iframe, not a third-party subresource). The
-    // finance/hermez CSP frame-ancestors already whitelists the hub origin.
-    setActiveModule(id);
-  }, []);
+    // Cross-origin iframes can't reliably receive the ERP app's session
+    // cookie in modern browsers (third-party cookie blocking), so the
+    // "Preview" action opens the app in a new tab via the SSO bridge
+    // (auto-login) instead of an embedded iframe. The cookie is set in a
+    // top-level navigation, which browsers always allow.
+    const app = APPS.find((a) => a.id === id);
+    if (app) {
+      window.open(ssoUrl(app, session?.role ?? "OWNER"), "_blank", "noopener,noreferrer");
+    }
+  }, [session]);
 
   async function login(username: string, password: string): Promise<void> {
     const r = await fetch("/api/auth/login", {
