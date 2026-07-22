@@ -1,7 +1,8 @@
 # YKP Hermez — Deployed Production Links
 
-> Last verified: **2026-07-18**  
-> Source of truth for live URLs. Update this file every deploy.
+> Last verified: **2026-07-22**  
+> Source of truth for live URLs. Update this file every deploy.  
+> Production code source: branch `origin/stagging` @ `5ad8271` (deep-test fixes 2026-07-22: Hub SSO token baked, Hermez SUPER_ADMIN SSO + ops-summary route, Finance form banner). Prior `1243c84` = security cutover 2026-07-21.
 
 ---
 
@@ -147,20 +148,27 @@ USE_MOCK_DB=true
 
 ---
 
-## Health probe (2026-07-18)
+## Health probe (2026-07-21 cutover from `stagging`)
 
-| URL | HTTP |
-|---|---|
-| finance Railway | 200 |
-| hermez Railway | 200 |
-| hr Railway | 307 |
-| hub Railway | 200 |
-| hr-v1 Railway | 307 |
-| warehouse Vercel | 307 |
-| investor Vercel | 307 |
-| hr-v1 Vercel | 307 |
-| ops Vercel `/login` | 200 |
-| ops Vercel `/api/ops/summary` | 200 |
+| URL | HTTP | Notes |
+|---|---|---|
+| hub Railway `/` | 200 | login `owner/owner123` → dashboard 6/6 online |
+| finance Railway SSO | 302 | `/api/auth/login?role=OWNER&token=ERP_SSO_SECRET` → cookie + dashboard |
+| hermez Railway SSO | 302 | SUPER_ADMIN mint via SSO |
+| hr Railway (Postgres) SSO | 302 | OWNER mint via SSO |
+| hr-v1-standalone Railway login | 200 | bcrypt verify; hub proxy target |
+| warehouse Vercel `/login` | 200 | Sheets real data |
+| investor Vercel `/login` | 200 | Sheets real data |
+| hr-v1 Vercel `/login` | 200 | Sheets real data |
+| ops Vercel `/login` | 200 | mock |
+
+### Env set during cutover (production)
+- `ERP_SSO_SECRET` on ykp-erp-finance / ykp-erp-hr / ykp-erp-hermez (shared secret >=16 chars)
+- `NEXT_PUBLIC_ERP_SSO_SECRET` on ykp-hub (same value)
+- Migration 0002 applied manually: `finance.fin_daily_summary.oldest_unpaid_days` + `hr.hr_attendance_date_outlet_idx`
+
+### Telegram bot (NOT 24/7 yet)
+Hermez dialog bot (`bot-worker.mjs`) is long-poll only; prod image `Dockerfile.hermez.new` is web-only. Plan: dedicated VPS for bot after soak (see plan Phase B).
 
 ---
 
