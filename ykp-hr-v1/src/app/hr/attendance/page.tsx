@@ -23,8 +23,12 @@ export default async function AttendancePage() {
   //  - owner/super_admin/hr_admin: all
   let scopedEmployees = employees.filter((e) => e.active_status === 'active' || e.active_status === '1');
   if (role === 'employee') {
+    // Self only — include the linked employee even if their active_status is
+    // not flagged "active"/"1" (e.g. seed row flagged inactive by mistake),
+    // so the employee can still record their own attendance. Anyone else is
+    // excluded.
     scopedEmployees = session.employeeId
-      ? scopedEmployees.filter((e) => e.employee_id === session.employeeId)
+      ? employees.filter((e) => e.employee_id === session.employeeId)
       : [];
   } else if (role === 'outlet_manager' || role === 'supervisor') {
     scopedEmployees = session.outletId
