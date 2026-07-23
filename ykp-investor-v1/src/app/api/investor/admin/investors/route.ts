@@ -5,7 +5,7 @@
  *        initial shareholding (+ share history) + optional MOU document.
  */
 import { NextRequest } from 'next/server';
-import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
+import { readTab, readTabSafe, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { ok, list, unauthorized, forbidden, badRequest, conflict, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
@@ -18,10 +18,10 @@ export const GET = handler(async () => {
   if (!s) return unauthorized();
   if (s.role !== 'owner') return forbidden('Owner only');
   const [investors, shareholding, documents, users] = await Promise.all([
-    readTab<Record<string, string>>(TABS.investors),
-    readTab<Record<string, string>>(TABS.shareholding),
-    readTab<Record<string, string>>(TABS.documents),
-    readTab<Record<string, string>>(TABS.users)
+    readTabSafe<Record<string, string>>(TABS.investors),
+    readTabSafe<Record<string, string>>(TABS.shareholding),
+    readTabSafe<Record<string, string>>(TABS.documents),
+    readTabSafe<Record<string, string>>(TABS.users)
   ]);
   const rows = investors.map((inv) => ({
     ...inv,

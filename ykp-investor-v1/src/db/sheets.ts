@@ -139,6 +139,20 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
   });
 }
 
+/**
+ * Best-effort readTab that never throws — used by pages/routes that join many
+ * tabs where one optional tab (e.g. `investor_documents`) may not yet exist
+ * on the prod spreadsheet and Google Sheets returns a 400 "Unable to parse
+ * range". Returns [] on any error so the rest of the page still renders.
+ */
+export async function readTabSafe<T = Record<string, string>>(tab: TabName): Promise<T[]> {
+  try {
+    return await readTab<T>(tab);
+  } catch {
+    return [] as T[];
+  }
+}
+
 /** Cross-spreadsheet read for Finance fin_daily_summary. */
 export async function readFinanceTab<T = Record<string, string>>(tabName: string): Promise<T[]> {
   // In mock mode there is no shared finance spreadsheet. Read the finance
