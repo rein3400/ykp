@@ -1,16 +1,16 @@
 /**
- * Single source of truth for the LOCAL YKP app family.
+ * Single source of truth for the YKP app family.
  *
- * Base URLs default to the local dev ports and can be overridden with
- * NEXT_PUBLIC_YKP_*_URL env vars (see .env.example) — e.g. to point the hub
- * back at the Railway deployments later. NEXT_PUBLIC_* is required because
- * the registry is consumed by client components (app launcher cards) as
- * well as the server-side /api/health probe.
+ * Base URLs DEFAULT to production hosts (Railway/Vercel). Override with
+ * NEXT_PUBLIC_YKP_*_URL for local dev (see .env.example). Production-first
+ * defaults are intentional: Railway's Docker build does NOT inject service
+ * env vars into `next build`, so NEXT_PUBLIC_* would otherwise be undefined
+ * at build time and the client bundle would bake in localhost — wrong for
+ * production. Hardcoding prod URLs as defaultUrl is the reliable path.
  *
  * Health probes: every Sheets app exposes a PUBLIC summary count endpoint
- * (GET /api/<module>/summary/count → { data: { count, ... } }). The owner
- * dashboard (3010) has no count endpoint, so it is probed at /login for
- * reachability instead.
+ * (GET /api/<module>/summary/count → { data: { count, ... } }). Hermez
+ * has no count endpoint, so it is probed at /login for reachability.
  */
 
 export interface HubModuleDef {
@@ -31,7 +31,7 @@ export const HUB_MODULES = [
     name: "Owner Command",
     desc: "Cross-module read-only overview",
     envVar: "NEXT_PUBLIC_YKP_OWNER_URL",
-    defaultUrl: "http://localhost:3010",
+    defaultUrl: "https://ykp-erp-hermez-production.up.railway.app",
     probePath: "/login",
     probeReturnsCount: false
   },
@@ -40,7 +40,7 @@ export const HUB_MODULES = [
     name: "HR",
     desc: "Attendance, employees, roster",
     envVar: "NEXT_PUBLIC_YKP_HR_URL",
-    defaultUrl: "http://localhost:3002",
+    defaultUrl: "https://ykp-hr-v1-standalone-production.up.railway.app",
     probePath: "/api/hr/summary/count",
     probeReturnsCount: true
   },
@@ -49,7 +49,7 @@ export const HUB_MODULES = [
     name: "Finance",
     desc: "POS, expenses, petty cash, daily summary",
     envVar: "NEXT_PUBLIC_YKP_FINANCE_URL",
-    defaultUrl: "http://localhost:3003",
+    defaultUrl: "https://ykp-erp-finance-production.up.railway.app",
     probePath: "/api/fin/summary",
     probeReturnsCount: false
   },
@@ -58,7 +58,7 @@ export const HUB_MODULES = [
     name: "Warehouse",
     desc: "Stock, receiving, usage, waste",
     envVar: "NEXT_PUBLIC_YKP_WAREHOUSE_URL",
-    defaultUrl: "http://localhost:3005",
+    defaultUrl: "https://ykp-warehouse-v1.vercel.app",
     probePath: "/api/warehouse/summary",
     probeReturnsCount: false
   },
@@ -67,7 +67,7 @@ export const HUB_MODULES = [
     name: "Investor",
     desc: "Portfolio, capital, dividends",
     envVar: "NEXT_PUBLIC_YKP_INVESTOR_URL",
-    defaultUrl: "http://localhost:3006",
+    defaultUrl: "https://ykp-investor-v1.vercel.app",
     probePath: "/api/investor/summary",
     probeReturnsCount: false
   },
@@ -76,7 +76,7 @@ export const HUB_MODULES = [
     name: "Ops",
     desc: "Daily operations, incidents, actions",
     envVar: "NEXT_PUBLIC_YKP_OPS_URL",
-    defaultUrl: "http://localhost:3007",
+    defaultUrl: "https://ykp-ops-v1.vercel.app",
     probePath: "/api/ops/summary",
     probeReturnsCount: false
   }
@@ -88,9 +88,27 @@ export function findHubModule(id: string): HubModuleDef | undefined {
   return HUB_MODULES.find((m) => m.id === id);
 }
 
-/** Env-overridden base URL (no trailing slash). */
+/**
+ * Env-overridden base URL (no trailing slash).
+ *
+ * IMPORTANT: access each NEXT_PUBLIC_* env var via a direct, statically-known
+ * `process.env.X` reference (the switch below). Next.js only inlines
+ * `NEXT_PUBLIC_*` into the client bundle when the variable name is a literal
+ * at build time; `process.env[variable]` (dynamic key) and object-literal
+ * maps are NOT replaced and resolve to `undefined` in the browser, which would
+ * fall back to the localhost defaultUrl below — wrong in production.
+ */
 export function moduleBaseUrl(def: HubModuleDef): string {
-  return (process.env[def.envVar] ?? def.defaultUrl).replace(/\/+$/, "");
+  let url: string | undefined;
+  switch (def.envVar) {
+    case "NEXT_PUBLIC_YKP_OWNER_URL": url = process.env.NEXT_PUBLIC_YKP_OWNER_URL; break;
+    case "NEXT_PUBLIC_YKP_HR_URL": url = process.env.NEXT_PUBLIC_YKP_HR_URL; break;
+    case "NEXT_PUBLIC_YKP_FINANCE_URL": url = process.env.NEXT_PUBLIC_YKP_FINANCE_URL; break;
+    case "NEXT_PUBLIC_YKP_WAREHOUSE_URL": url = process.env.NEXT_PUBLIC_YKP_WAREHOUSE_URL; break;
+    case "NEXT_PUBLIC_YKP_INVESTOR_URL": url = process.env.NEXT_PUBLIC_YKP_INVESTOR_URL; break;
+    case "NEXT_PUBLIC_YKP_OPS_URL": url = process.env.NEXT_PUBLIC_YKP_OPS_URL; break;
+  }
+  return (url ?? def.defaultUrl).replace(/\/+$/, "");
 }
 
 /** Full URL the health probe should hit for this module. */
