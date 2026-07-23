@@ -4,11 +4,11 @@ import { todayWib, nowTimestampWib } from '@/lib/format';
 import { getFinanceTotals } from '@/lib/finance-summary';
 
 /**
- * investor_daily_summary engine GÇö pure functions over sheet rows (no I/O).
+ * investor_daily_summary engine â€” pure functions over sheet rows (no I/O).
  * Mirrors the finance fin-summary.ts pattern: the regenerate route reads
  * tabs, this module computes, the route persists.
  *
- * One summary row per date at GROUP level (there is no outlet dimension GÇö
+ * One summary row per date at GROUP level (there is no outlet dimension â€”
  * the disclosure model exposes group aggregates only; see GOVERNANCE.md).
  *
  * Columns (TAB_HEADERS[TABS.summary]):
@@ -18,18 +18,18 @@ import { getFinanceTotals } from '@/lib/finance-summary';
  * Sources:
  *   - total_revenue / total_profit: finance cross-read (fin_daily_summary)
  *     rows for that exact date. Revenue = net_sales (fallback: revenue);
- *     profit = estimated_surplus (fallback: net_profit_estimate) GÇö the
+ *     profit = estimated_surplus (fallback: net_profit_estimate) â€” the
  *     fallback keys tolerate older/mock finance shapes.
- *   - total_capital: cumulative capital (in GêÆ out) with date <= summary date.
+ *   - total_capital: cumulative capital (in â€” out) with date <= summary date.
  *   - active_investors: master_investor rows with status = 'active'.
  *   - dividend_declared: cumulative declared dividends (status 'declared'
- *     OR 'paid' GÇö paid dividends were also declared) whose declared date
+ *     OR 'paid' â€” paid dividends were also declared) whose declared date
  *     (declared_at, WIB timestamp) <= summary date.
  *   - growth_pct: day-over-day total_revenue growth vs the previous
  *     calendar day, rounded to 1 decimal; empty when the previous day has
  *     no finance revenue baseline (never a fake 0).
  *   - shareholding contributes no persisted column (share_value is a
- *     valuation snapshot, not cash flow GÇö adding it to total_capital would
+ *     valuation snapshot, not cash flow â€” adding it to total_capital would
  *     double count). Its total is returned as response context only.
  */
 
@@ -49,9 +49,9 @@ export interface InvestorSummaryComputed {
   dividendDeclared: number;
   /** null when the previous calendar day has no finance revenue baseline. */
   growthPct: number | null;
-  /** Context only GÇö valuation snapshot, NOT written to the summary tab. */
+  /** Context only â€” valuation snapshot, NOT written to the summary tab. */
   totalShareValue: number;
-  /** Finance rows matched for the date GÇö 0 GçÆ data_missing alert. */
+  /** Finance rows matched for the date â€” 0 â€” data_missing alert. */
   financeRowsForDate: number;
 }
 
@@ -228,7 +228,7 @@ export async function writeInvestorAlerts(
       severity: 'HIGH',
       alert_type: 'DIVIDEND_HIGH_RATIO',
       title: 'Dividend vs capital tinggi',
-      message: `Dividend declared ${dividend} Gëê ${((dividend / capital) * 100).toFixed(1)}% of capital ${capital}`,
+      message: `Dividend declared ${dividend} â€” ${((dividend / capital) * 100).toFixed(1)}% of capital ${capital}`,
       outlet_id: '',
       status: 'OPEN',
       created_at: now,
