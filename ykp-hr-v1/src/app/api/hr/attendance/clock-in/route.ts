@@ -7,8 +7,9 @@ import { readTab, appendRows, TABS, findRow } from '@/db/sheets';
 import { assertEmployee, nextSequentialId } from '@/lib/repo';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
-import { handler, badRequest, missingRef, unauthorized, ok } from '@/lib/http';
+import { handler, badRequest, missingRef, unauthorized, forbidden, ok } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
+import { attendanceTargetGuard } from '@/lib/rbac-guard';
 import { formatTimeWib, nowTimestampWib, todayWib } from '@/lib/format';
 import { z } from 'zod';
 
@@ -54,6 +55,10 @@ export const POST = handler(async (req) => {
   } catch (e) {
     return missingRef(e instanceof Error ? e.message : 'Missing ref');
   }
+
+  // RBAC: EMPLOYEE may only clock in for themselves.
+  const guard = attendanceTargetGuard(session, parsed.data.employee_id);
+  if (guard.forbidden) return forbidden(guard.reason ?? 'Forbidden');
 
   const today = todayWib();
   const existing = await readTab<{ date: string; employee_id: string; actual_check_in: string }>(TABS.attendance);

@@ -133,6 +133,13 @@ export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; o
   const sorted = [...rows].sort((a, b) =>
     b.date.localeCompare(a.date) || a.employee_name.localeCompare(b.employee_name)
   );
+  // Guard against malformed time values in old Sheets rows (e.g. "NaN:NaN"
+  // from a bad seed) so the history never renders literal "NaN:NaN".
+  const cleanTime = (v?: string) => {
+    if (!v) return '-';
+    if (/^NaN/i.test(v) || v === 'NaT' || !/^\d{2}:\d{2}/.test(v)) return '-';
+    return v;
+  };
   const statusVariant = (s: string) => {
     if (s === 'PRESENT') return 'badge-green';
     if (s === 'LATE') return 'badge-yellow';
@@ -220,8 +227,8 @@ export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; o
                 <tr key={r.attendance_id} className='border-t border-border'>
                   <td className='py-1 font-mono text-xs'>{r.date}</td>
                   <td>{r.employee_name || r.employee_id}</td>
-                  <td className='font-mono text-xs'>{r.actual_check_in || '-'}</td>
-                  <td className='font-mono text-xs'>{r.actual_check_out || '-'}</td>
+                  <td className='font-mono text-xs'>{cleanTime(r.actual_check_in)}</td>
+                  <td className='font-mono text-xs'>{cleanTime(r.actual_check_out)}</td>
                   <td><span className={statusVariant(r.attendance_status)}>{r.attendance_status || 'PRESENT'}</span></td>
                   <td className='text-right'>{r.late_minutes || '0'}</td>
                   <td className='text-right'>{r.overtime_minutes || '0'}</td>

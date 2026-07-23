@@ -249,3 +249,39 @@ Script `tests/finance-linking-sync.mts` siap. Saya gak punya credential prod Sup
 2. Navigasi `/telegram-bot` → status "berhenti", messages handled 0
 3. (outbound OK) `/telegram-test` → Kirim → message_id 106
 4. Kirim `/brief` dari Telegram group ke bot → **tidak reply** (bot stopped)
+
+---
+
+## UI Walkthrough Final (2026-07-23 22:30 WIB) — post-fix
+
+| Modul | Halaman | Input test | Status |
+|---|---|---|---|
+| Hub | Dashboard | 6/6 online, URL production, SSO token | ✅ |
+| Finance | Ringkasan | KPI cards render (fallback 07-15) | ✅ |
+| Finance | Expenses | **UI form Tambah Expense → POST 201**, dialog close, list refresh | ✅ FIXED (was 500) |
+| Finance | Suppliers | list MTD 260M, unpaid 38M, overdue 29 | ✅ |
+| Finance | POS | empty banner + 201 + 409 verified earlier | ✅ |
+| HR V1 | Attendance | form check-in/out + history | ⚠️ Out time = `NaN:NaN` (display bug) |
+| HR V1 | Payroll | list rows render | ⚠️ layout kolom aneh (GAJI POKOK shows date) |
+| Hermez | Alerts | 3 supplier overdue today (lokasi asli), filter OK | ✅ |
+| Hermez | Actions | list + Start/Complete/Cancel | ✅ |
+| Hermez | Config | Integrasi Telegram+LLM "tersimpan" | ✅ |
+| Hermez | Brief | Rp 91.2M, 52/55, 3 alert, YELLOW | ✅ |
+| Hermez | Bot | running 156 cycles, 12 msgs, LLM reply OK | ✅ |
+| Warehouse | Waste | list + form "Catat Waste" | ✅ |
+| Warehouse | Login | 200 (1× cold-start 500 transient) | ✅ |
+| Investor | Dashboard | Revenue FIN Rp 2.3B, Profit 1.1B, http 485 rows | ✅ |
+| Investor | Portfolio | Cap table YKP Owner 55% Funkydak etc | ✅ (1× session-expire 500 transient) |
+| Ops | Opening | form render (outlet mock "Funkydak Kemang") | ✅ |
+| Ops | Closing | POST 201, cash_diff -20k | ✅ |
+| Ops | Incidents | POST 201 earlier | ✅ |
+
+### Residual (non-blocker demo)
+
+1. **HR Attendance Out = `NaN:NaN`** — display bug format waktu checkout. Repro: `/hr/attendance` history kolom Out.
+2. **HR Payroll layout** — kolom "GAJI POKOK" nampilin date, "NET" nampilin "owner". Data binding salah di table.
+3. **Finance Ringkasan fallback 07-15** — "Belum ada data hari ini" padahal summary 07-23 ada (API `/api/fin/summary?limit=10` returns today). Dashboard query window mismatch.
+4. **Outlet inactive (OL-006~015) masih di dropdown** Finance/HR — app gak filter `status=active`.
+5. **Ops mock outlet "Funkydak Kemang"** — beda dari master real "Funkydak Mrican". Ops mock-mode seed terpisah.
+6. **Warehouse/Investor cold-start 500** — 1× transient, retry 200. Vercel cold start.
+7. **Bot in-process** — restart Hermez = bot stop. Re-Start polling sebelum demo.

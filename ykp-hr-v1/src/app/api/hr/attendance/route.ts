@@ -4,6 +4,7 @@ import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, list, badRequest, missingRef, conflict, unauthorized, forbidden, ok } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
+import { attendanceTargetGuard } from '@/lib/rbac-guard';
 import { formatTimeWib, nowTimestampWib, todayWib } from '@/lib/format';
 import { z } from 'zod';
 
@@ -52,6 +53,18 @@ export const POST = handler(async (req) => {
   const parsed = insertSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.message);
 
+  // RBAC: EMPLOYEE may only record attendance for themselves.
+  const guard = attendanceTargetGuard(session, parsed.data.employee_id);
+  if (guard.forbidden) return forbidden(guard.reason ?? 'Forbidden');
+
+  // Outlet scope: outlet_manager/supervisor may only act on employees in
+  // their own outlet. We resolve the target employee's outlet below and
+  // check after assertEmployee.
+  const scopedOutlet =
+    session.role === 'outlet_manager' || session.role === 'supervisor'
+      ? session.outletId
+      : undefined;
+
   try {
     await assertEmployee(parsed.data.employee_id);
     if (parsed.data.outlet_id) await assertOutlet(parsed.data.outlet_id);
@@ -62,9 +75,12 @@ export const POST = handler(async (req) => {
 
   // Resolve outlet if not provided: from employee record.
   let outletId = parsed.data.outlet_id;
+  const empEarly = await findRow(TABS.employees, 'employee_id', parsed.data.employee_id);
   if (!outletId) {
-    const emp = await findRow(TABS.employees, 'employee_id', parsed.data.employee_id);
-    outletId = emp?.row.outlet_id;
+    outletId = empEarly?.row.outlet_id;
+  }
+  if (scopedOutlet && outletId && outletId !== scopedOutlet) {
+    return forbidden('Outlet manager/supervisor hanya dapat mencatat absensi di outlet sendiri.');
   }
 
   // Lookup shift to compute late + early leave + overtime if not provided.

@@ -67,6 +67,19 @@ export function handler(
         if (code === 'HTTP_404') return notFound();
         if (code === 'HTTP_409') return conflict('Conflict');
       }
+      // Google Sheets quota (429) and other Gaxios errors used to surface as
+      // opaque 500. Map them to a clear 429 so clients can back off.
+      const msg = e instanceof Error ? e.message : String(e);
+      if (
+        /rateLimitExceeded|Quota exceeded|Too Many Requests|status code 429/i.test(msg) ||
+        (e as { code?: number })?.code === 429
+      ) {
+        return fail(
+          'rate_limited',
+          'Terlalu banyak permintaan ke Google Sheets. Tunggu ~60 detik lalu coba lagi.',
+          429
+        );
+      }
       return serverError(logId);
     }
   };
