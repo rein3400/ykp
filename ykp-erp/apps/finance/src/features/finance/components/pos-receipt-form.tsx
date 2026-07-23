@@ -179,9 +179,16 @@ export function PosReceiptFormDialog() {
         <DialogHeader>
           <DialogTitle>Tambah Struk POS</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="grid gap-4 py-2">
+        {/* noValidate: let onSubmit's missingFields() banner handle validation
+            instead of browser HTML5 tooltips (one field at a time, hard to
+            see in automated testing / small dialogs). required attrs stay as
+            a11y hints for screen readers. */}
+        <form onSubmit={onSubmit} noValidate className="grid gap-4 py-2">
           {error && (
-            <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div
+              role="alert"
+              className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700"
+            >
               {error}
             </div>
           )}

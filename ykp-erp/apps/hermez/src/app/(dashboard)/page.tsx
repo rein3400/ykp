@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from "@ykp/ui";
+import { todayWib } from "@ykp/engine/client";
 
 interface BriefRow {
   briefId: string;
@@ -27,7 +28,9 @@ function levelVariant(level: BriefRow["alertLevel"]) {
 
 export default function DailyBriefPage() {
   const router = useRouter();
-  const [date, setDate] = React.useState<string>(() => new Date().toISOString().slice(0, 10));
+  // Asia/Jakarta date — never use UTC toISOString (hydration mismatch +
+// wrong day between 00:00-07:00 WIB). todayWib is pure Intl, SSR-safe.
+const [date, setDate] = React.useState<string>(() => todayWib());
   const [brief, setBrief] = React.useState<BriefRow | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
