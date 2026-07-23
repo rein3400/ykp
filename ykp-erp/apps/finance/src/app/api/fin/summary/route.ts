@@ -29,15 +29,15 @@ export const GET = handler(async (req: Request) => {
   const db = getFinanceDb();
 
   const conds = [];
-  // finDailySummary.date is a calendar `date` column (WIB day). new Date(str)
-  // alone is UTC midnight, which shifts the boundary by the DB-connection TZ
-  // and can drop/include a day. Anchor from/to to full WIB calendar day so a
-  // same-day filter (date_from === date_to) returns the day's rows instead of
-  // empty (lte against midnight excluded the whole day).
-  const wibDayStart = (s: string) => new Date(`${s}T00:00:00+07:00`);
-  const wibDayEnd = (s: string) => new Date(`${s}T23:59:59.999+07:00`);
-  if (date_from) conds.push(gte(finDailySummary.date, wibDayStart(date_from)));
-  if (date_to) conds.push(lte(finDailySummary.date, wibDayEnd(date_to)));
+  // finDailySummary.date is a calendar `date` column. Comparing it against
+  // JS Date objects goes through a timestamp cast that is sensitive to the
+  // DB-connection timezone, which previously leaked rows from the adjacent
+  // day into same-day and range queries (e.g. 2026-07-23 rows surfaced under
+  // a 2026-07-24 filter). Cast the column to text and compare against the
+  // literal YYYY-MM-DD so the filter is purely calendar-day based and
+  // timezone-agnostic.
+  if (date_from) conds.push(sql`${finDailySummary.date}::text >= ${date_from}`);
+  if (date_to) conds.push(sql`${finDailySummary.date}::text <= ${date_to}`);
   if (outlet) conds.push(eq(finDailySummary.outlet, outlet));
   applyOutletScope(user, conds, finDailySummary.outletId);
 
