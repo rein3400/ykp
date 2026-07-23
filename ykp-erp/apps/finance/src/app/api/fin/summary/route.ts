@@ -31,11 +31,13 @@ export const GET = handler(async (req: Request) => {
   const conds = [];
   // finDailySummary.date is a calendar `date` column (WIB day). new Date(str)
   // alone is UTC midnight, which shifts the boundary by the DB-connection TZ
-  // and can drop/include a day. Anchor to WIB midnight (+07:00) so the filter
-  // matches the calendar day exactly.
-  const wibDay = (s: string) => new Date(`${s}T00:00:00+07:00`);
-  if (date_from) conds.push(gte(finDailySummary.date, wibDay(date_from)));
-  if (date_to) conds.push(lte(finDailySummary.date, wibDay(date_to)));
+  // and can drop/include a day. Anchor from/to to full WIB calendar day so a
+  // same-day filter (date_from === date_to) returns the day's rows instead of
+  // empty (lte against midnight excluded the whole day).
+  const wibDayStart = (s: string) => new Date(`${s}T00:00:00+07:00`);
+  const wibDayEnd = (s: string) => new Date(`${s}T23:59:59.999+07:00`);
+  if (date_from) conds.push(gte(finDailySummary.date, wibDayStart(date_from)));
+  if (date_to) conds.push(lte(finDailySummary.date, wibDayEnd(date_to)));
   if (outlet) conds.push(eq(finDailySummary.outlet, outlet));
   applyOutletScope(user, conds, finDailySummary.outletId);
 
