@@ -3,10 +3,20 @@
  */
 import { findRow, readTab, TABS } from '@/db/sheets';
 
-const counters: Record<string, number> = {};
+// Counter is kept on globalThis via Symbol.for so it is shared across every
+// module graph in the dev server. A module-local `const` would reset when
+// Turbopack re-evaluates the module, producing duplicate IDs.
+const COUNTER_SYMBOL = Symbol.for('ykpOpsCounters');
+
+function getCounters(): Record<string, number> {
+  const g = globalThis as unknown as Record<symbol, Record<string, number> | undefined>;
+  if (!g[COUNTER_SYMBOL]) g[COUNTER_SYMBOL] = {};
+  return g[COUNTER_SYMBOL] as Record<string, number>;
+}
 
 export function nextSequentialIdSync(prefix: string): string {
   const key = prefix.toUpperCase();
+  const counters = getCounters();
   counters[key] = (counters[key] ?? 0) + 1;
   const n = counters[key];
   if (key === 'EMP') return `${key}-${String(n).padStart(5, '0')}`;
