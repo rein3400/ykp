@@ -23,7 +23,11 @@ export interface LatenessRow {
 export function LatenessTable({ data: initial }: { data: LatenessRow[] }) {
   const router = useRouter();
   const toast = useToast();
+  // Keep client state in sync when server re-fetches after router.refresh().
   const [rows, setRows] = React.useState<LatenessRow[]>(initial);
+  React.useEffect(() => {
+    setRows(initial);
+  }, [initial]);
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [reason, setReason] = React.useState("");
   const [busyId, setBusyId] = React.useState<string | null>(null);

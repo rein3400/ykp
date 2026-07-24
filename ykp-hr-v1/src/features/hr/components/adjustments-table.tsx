@@ -22,7 +22,12 @@ interface Adjustment {
 export function AdjustmentsTable({ data: initial }: { data: Adjustment[] }) {
   const router = useRouter();
   const toast = useToast();
+  // Keep client state in sync when server re-fetches after router.refresh()
+  // (useState(initial) alone is only used on first mount — new rows would vanish).
   const [rows, setRows] = React.useState<Adjustment[]>(initial);
+  React.useEffect(() => {
+    setRows(initial);
+  }, [initial]);
   const [busyId, setBusyId] = React.useState<string | null>(null);
 
   async function decide(id: string, decision: "APPROVE" | "REJECT") {

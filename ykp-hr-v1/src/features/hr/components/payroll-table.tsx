@@ -31,7 +31,11 @@ export function PayrollTable({
 }) {
   const router = useRouter();
   const toast = useToast();
+  // Keep client state in sync when server re-fetches after router.refresh().
   const [rows, setRows] = React.useState<Payroll[]>(initial);
+  React.useEffect(() => {
+    setRows(initial);
+  }, [initial]);
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [paymentRef, setPaymentRef] = React.useState("");

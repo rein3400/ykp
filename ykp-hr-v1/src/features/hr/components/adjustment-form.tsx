@@ -15,9 +15,11 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
     amount: '',
     reason: '',
     payroll_period: new Date().toISOString().slice(0, 7),
-    date: new Date().toISOString().slice(0, 10)
+    date: new Date().toISOString().slice(0, 10),
+    attachment_url: ''
   });
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const needsBukti = form.adjustment_type === 'REIMBURSEMENT';
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,6 +29,10 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
     }
     if (!form.reason.trim()) {
       setError('Alasan wajib diisi.');
+      return;
+    }
+    if (needsBukti && !form.attachment_url.trim()) {
+      setError('Reimburse wajib isi URL bukti (foto struk / link Google Drive).');
       return;
     }
     setSaving(true);
@@ -43,7 +49,7 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
       }
       toast.success('Adjustment ditambahkan', 'Menunggu approval owner.');
       router.refresh();
-      setForm({ ...form, amount: '', reason: '' });
+      setForm({ ...form, amount: '', reason: '', attachment_url: '' });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal');
     } finally {
@@ -89,6 +95,20 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
       <label className='text-sm'>
         Alasan
         <textarea className='input mt-1 w-full' rows={2} value={form.reason} onChange={(e) => set('reason', e.target.value)} />
+      </label>
+      <label className='text-sm'>
+        URL Bukti {needsBukti ? <span className='text-rose-600'>(wajib untuk Reimburse)</span> : <span className='text-slate-400'>(opsional)</span>}
+        <input
+          type='url'
+          className='input mt-1 w-full'
+          placeholder='https://drive.google.com/... atau link foto struk'
+          value={form.attachment_url}
+          onChange={(e) => set('attachment_url', e.target.value)}
+          required={needsBukti}
+        />
+        <span className='mt-1 block text-xs text-slate-500'>
+          Upload dulu ke Drive/WhatsApp → salin link-nya ke sini. Belum ada upload file langsung di form.
+        </span>
       </label>
       {error && <div role='alert' className='rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700'>{error}</div>}
       <button type='submit' disabled={saving} className='btn-primary'>{saving ? 'Menyimpan…' : 'Simpan'}</button>
