@@ -88,19 +88,24 @@ function seed(): Record<string, Record<string, string>[]> {
   };
 }
 
-// Store is kept on globalThis so it is shared across every module graph in
-// the dev server / route handlers / server components. A module-local `let`
-// gives each bundled route its own copy, so a POST writes to one instance
-// while the page re-render (after router.refresh()) reads a fresh, empty
-// one — data "saves" (201) but never appears. globalThis makes it singleton.
-const GLOBAL_KEY = '__ykpOpsMockStore__';
+// Store is kept on globalThis via Symbol.for so it is shared across every
+// module graph in the dev server / route handlers / server components.
+// A module-local `let` gives each bundled route its own copy, so a POST
+// writes to one instance while the page re-render (after router.refresh())
+// reads a fresh, empty one — data "saves" (201) but never appears.
+// Symbol.for is used instead of a string key because the Symbol registry
+// is truly process-global and immune to string-key collisions or accidental
+// deletion, making the singleton robust across Turbopack HMR re-evaluations.
+const STORE_SYMBOL = Symbol.for('ykpOpsMockStore');
 
 type StoreShape = Record<string, Record<string, string>[]>;
 
 function getStore(): StoreShape {
-  const g = globalThis as unknown as Record<string, StoreShape | undefined>;
-  if (!g[GLOBAL_KEY]) g[GLOBAL_KEY] = seed();
-  return g[GLOBAL_KEY] as StoreShape;
+  const g = globalThis as unknown as Record<symbol, StoreShape | undefined>;
+  if (!g[STORE_SYMBOL]) {
+    g[STORE_SYMBOL] = seed();
+  }
+  return g[STORE_SYMBOL] as StoreShape;
 }
 
 export function isMockMode(): boolean {
@@ -153,8 +158,8 @@ export function mockFindRow(
 }
 
 export function mockReset(): void {
-  const g = globalThis as unknown as Record<string, StoreShape | undefined>;
-  g[GLOBAL_KEY] = seed();
+  const g = globalThis as unknown as Record<symbol, StoreShape | undefined>;
+  g[STORE_SYMBOL] = seed();
 }
 
 export { today as mockToday };
