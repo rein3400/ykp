@@ -1,13 +1,10 @@
 /**
  * Quick clock-out: update existing attendance row by attendance_id.
  */
-import { readTab, updateRow, TABS, findRow } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { logAudit } from '@/lib/audit';
 import { handler, badRequest, conflict, unauthorized, forbidden, ok, notFound } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
-import { attendanceTargetGuard } from '@/lib/rbac-guard';
-import { formatTimeWib, nowTimestampWib } from '@/lib/format';
+import { performClockOut } from '@/lib/attendance-service';
 import { z } from 'zod';
 
 const schema = z.object({ attendance_id: z.string().min(1) });
@@ -26,30 +23,18 @@ export const POST = handler(async (req) => {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.message);
 
-  const found = await findRow(TABS.attendance, 'attendance_id', parsed.data.attendance_id);
-  if (!found) return notFound('Attendance not found');
-  if (found.row.actual_check_out) return conflict('Already clocked out');
-
-  // RBAC: EMPLOYEE may only clock out their own attendance row.
-  if (role === 'employee') {
-    const guard = attendanceTargetGuard(session, found.row.employee_id);
-    if (guard.forbidden) return forbidden(guard.reason ?? 'Forbidden');
-  }
-
-  const timeNow = formatTimeWib(new Date());
-  const updated = {
-    ...found.row,
-    actual_check_out: timeNow,
-    updated_at: nowTimestampWib()
-  };
-  await updateRow(TABS.attendance, found.rowNumber, updated);
-  await logAudit({
-    actorUserId: session.userId,
-    actorRole: session.role,
-    action: 'update',
-    entity: 'attendance',
-    entityId: parsed.data.attendance_id,
-    afterValue: 'clock-out'
+  const result = await performClockOut({
+    attendanceId: parsed.data.attendance_id,
+    actor: { userId: session.userId, role: session.role, employeeId: session.employeeId },
+    source: 'web'
   });
-  return ok(updated);
+
+  if (!result.ok) {
+    const e = result.error;
+    if (e.status === 404) return notFound(e.message);
+    if (e.status === 409) return conflict(e.message);
+    if (e.status === 403) return forbidden(e.message);
+    return badRequest(e.message);
+  }
+  return ok(result.row);
 });
