@@ -46,7 +46,7 @@ export function LoginForm({ onLogin }: Props) {
           <form onSubmit={submit} className="rounded-3xl bg-white/95 backdrop-blur p-7 shadow-2xl shadow-black/40 ring-1 ring-white/20 text-slate-800">
             <div className="mb-5">
               <h2 className="text-lg font-bold">Selamat datang kembali</h2>
-              <p className="text-xs text-slate-500 mt-1">Masuk untuk mengakses 4 module.</p>
+              <p className="text-xs text-slate-500 mt-1">Masuk untuk mengakses 6 module.</p>
             </div>
 
             <label className="block text-sm">

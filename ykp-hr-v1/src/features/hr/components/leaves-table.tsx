@@ -23,7 +23,12 @@ interface Leave {
 export function LeavesTable({ data: initial }: { data: Leave[] }) {
   const router = useRouter();
   const toast = useToast();
+  // Keep client state in sync when server re-fetches after router.refresh()
+  // (useState(initial) alone is only used on first mount — new rows would vanish).
   const [rows, setRows] = React.useState<Leave[]>(initial);
+  React.useEffect(() => {
+    setRows(initial);
+  }, [initial]);
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [reason, setReason] = React.useState("");
   const [busyId, setBusyId] = React.useState<string | null>(null);

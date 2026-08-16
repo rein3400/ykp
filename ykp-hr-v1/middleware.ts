@@ -1,6 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/hr/notify/daily-brief'];
+const PUBLIC = [
+  '/login',
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/hr/notify/daily-brief',
+  // Telegram Bot webhook — authenticated via X-Telegram-Bot-Api-Secret-Token
+  // inside the route, not via the session cookie.
+  '/api/hr/attendance/telegram'
+];
 
 // Edge-compatible HMAC-SHA256 verify using Web Crypto API.
 // `crypto.subtle` is available in both edge runtime and Node.js 20+.

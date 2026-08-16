@@ -218,15 +218,20 @@ function PosForm({ outlets, onClose, onSave, saving }: {
 }
 
 function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [mode, setMode] = useState<'csv' | 'sheet'>('csv');
   const [csv, setCsv] = useState('');
+  const [sheetUrl, setSheetUrl] = useState('');
   const [busy, setBusy] = useState(false);
   const [report, setReport] = useState<{ inserted: number; skipped: { date: string; outlet: string; reason: string }[]; errors: { row: number; reason: string }[]; variance_report: { total_input_lines: number; parsed_lines: number; dropped_lines: number; alias_guesses: Record<string, string> } } | null>(null);
+
+  const canSubmit = busy ? false : mode === 'sheet' ? sheetUrl.trim().length > 0 : csv.trim().length > 0;
 
   async function doImport() {
     setBusy(true);
     try {
+      const body = mode === 'sheet' ? { sheet_url: sheetUrl.trim() } : { csv };
       const r = await fetch('/api/finance/pos/import', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
       });
       const j = await r.json();
       if (!r.ok) { toast.error(j.error?.message ?? 'Import gagal'); return; }
@@ -236,24 +241,55 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
   }
 
   return (
-    <Modal title='Import CSV Moka' onClose={onClose} wide>
+    <Modal title='Import Moka (CSV / Google Sheet)' onClose={onClose} wide>
       {!report ? (
         <>
-          <p className='mb-2 text-[10px] text-muted-foreground'>
-            Format: header wajib memuat <code>date/tanggal, outlet, gross_sales, net_sales, payment_method</code>.
-            Opsional: brand, discount, refund, void, tax, service_charge, transaction_count, shift.
-            Tanggal dd/mm/yyyy atau yyyy-mm-dd. Baris dengan (tanggal, outlet) yang sama digabung otomatis.
-          </p>
-          <textarea
-            value={csv}
-            onChange={(e) => setCsv(e.target.value)}
-            rows={10}
-            placeholder={'tanggal,outlet,gross_sales,net_sales,discount,refund,void,payment_method,transaction_count\n02/07/2026,Funkydak Cipete,5200000,5000000,100000,0,0,cash,95'}
-            className='w-full rounded border border-border p-2 font-mono text-[10px]'
-          />
+          <div className='mb-2 flex gap-1 rounded border border-border p-1'>
+            <button
+              type='button'
+              onClick={() => setMode('csv')}
+              className={`flex-1 rounded px-2 py-1 text-xs ${mode === 'csv' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+            >Tempel CSV</button>
+            <button
+              type='button'
+              onClick={() => setMode('sheet')}
+              className={`flex-1 rounded px-2 py-1 text-xs ${mode === 'sheet' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+            >Dari Google Sheet</button>
+          </div>
+
+          {mode === 'csv' ? (
+            <>
+              <p className='mb-2 text-[10px] text-muted-foreground'>
+                Format: header wajib memuat <code>date/tanggal, outlet, gross_sales, net_sales, payment_method</code>.
+                Opsional: brand, discount, refund, void, tax, service_charge, transaction_count, shift.
+                Tanggal dd/mm/yyyy atau yyyy-mm-dd. Baris dengan (tanggal, outlet) yang sama digabung otomatis.
+              </p>
+              <textarea
+                value={csv}
+                onChange={(e) => setCsv(e.target.value)}
+                rows={10}
+                placeholder={'tanggal,outlet,gross_sales,net_sales,discount,refund,void,payment_method,transaction_count\n02/07/2026,Funkydak Cipete,5200000,5000000,100000,0,0,cash,95'}
+                className='w-full rounded border border-border p-2 font-mono text-[10px]'
+              />
+            </>
+          ) : (
+            <>
+              <p className='mb-2 text-[10px] text-muted-foreground'>
+                Tempel URL Google Sheet (tab pertama atau <code>#gid=</code> tab tertentu). Sheet harus
+                dibagikan ke service-account email sebagai <b>Viewer</b>. Header dan format sama dengan CSV.
+              </p>
+              <Input
+                label='URL Google Sheet'
+                value={sheetUrl}
+                onChange={(e) => setSheetUrl(e.target.value)}
+                placeholder='https://docs.google.com/spreadsheets/d/<ID>/edit#gid=0'
+              />
+            </>
+          )}
+
           <div className='mt-3 flex justify-end gap-2'>
             <Btn variant='outline' onClick={onClose}>Batal</Btn>
-            <Btn disabled={busy || !csv.trim()} onClick={doImport}>{busy ? 'Mengimport…' : 'Import'}</Btn>
+            <Btn disabled={!canSubmit} onClick={doImport}>{busy ? 'Mengimport…' : 'Import'}</Btn>
           </div>
         </>
       ) : (
@@ -286,15 +322,20 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
 }
 
 function ImportItemsModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [mode, setMode] = useState<'csv' | 'sheet'>('csv');
   const [csv, setCsv] = useState('');
+  const [sheetUrl, setSheetUrl] = useState('');
   const [busy, setBusy] = useState(false);
   const [report, setReport] = useState<{ inserted: number; skipped: { date: string; outlet: string; item: string; reason: string }[]; errors: { row: number; reason: string }[]; variance_report: { total_input_lines: number; parsed_lines: number; dropped_lines: number } } | null>(null);
+
+  const canSubmit = busy ? false : mode === 'sheet' ? sheetUrl.trim().length > 0 : csv.trim().length > 0;
 
   async function doImport() {
     setBusy(true);
     try {
+      const body = mode === 'sheet' ? { sheet_url: sheetUrl.trim() } : { csv };
       const r = await fetch('/api/finance/pos/items/import', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
       });
       const j = await r.json();
       if (!r.ok) { toast.error(j.error?.message ?? 'Import gagal'); return; }
@@ -304,25 +345,56 @@ function ImportItemsModal({ onClose, onDone }: { onClose: () => void; onDone: ()
   }
 
   return (
-    <Modal title='Import Item CSV Moka (Penjualan per Item)' onClose={onClose} wide>
+    <Modal title='Import Item Moka (CSV / Google Sheet)' onClose={onClose} wide>
       {!report ? (
         <>
-          <p className='mb-2 text-[10px] text-muted-foreground'>
-            Export dari Moka: <b>Reports → Item Sales → Export CSV</b>. Header wajib memuat{' '}
-            <code>date/tanggal, outlet, item/nama_item, qty, net_sales</code>. Opsional: sku, category,
-            gross_sales, discount, refund, brand. Baris (tanggal, outlet, item) yang sama digabung otomatis;
-            duplikat dengan data yang sudah ada dilewati.
-          </p>
-          <textarea
-            value={csv}
-            onChange={(e) => setCsv(e.target.value)}
-            rows={10}
-            placeholder={'tanggal,outlet,item_name,category,qty,gross_sales,net_sales\n02/07/2026,Funkydak Cipete,Ayam Geprek,Food,85,4250000,4200000'}
-            className='w-full rounded border border-border p-2 font-mono text-[10px]'
-          />
+          <div className='mb-2 flex gap-1 rounded border border-border p-1'>
+            <button
+              type='button'
+              onClick={() => setMode('csv')}
+              className={`flex-1 rounded px-2 py-1 text-xs ${mode === 'csv' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+            >Tempel CSV</button>
+            <button
+              type='button'
+              onClick={() => setMode('sheet')}
+              className={`flex-1 rounded px-2 py-1 text-xs ${mode === 'sheet' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+            >Dari Google Sheet</button>
+          </div>
+
+          {mode === 'csv' ? (
+            <>
+              <p className='mb-2 text-[10px] text-muted-foreground'>
+                Export dari Moka: <b>Reports → Item Sales → Export CSV</b>. Header wajib memuat{' '}
+                <code>date/tanggal, outlet, item/nama_item, qty, net_sales</code>. Opsional: sku, category,
+                gross_sales, discount, refund, brand. Baris (tanggal, outlet, item) yang sama digabung otomatis;
+                duplikat dengan data yang sudah ada dilewati.
+              </p>
+              <textarea
+                value={csv}
+                onChange={(e) => setCsv(e.target.value)}
+                rows={10}
+                placeholder={'tanggal,outlet,item_name,category,qty,gross_sales,net_sales\n02/07/2026,Funkydak Cipete,Ayam Geprek,Food,85,4250000,4200000'}
+                className='w-full rounded border border-border p-2 font-mono text-[10px]'
+              />
+            </>
+          ) : (
+            <>
+              <p className='mb-2 text-[10px] text-muted-foreground'>
+                Tempel URL Google Sheet (tab pertama atau <code>#gid=</code> tab tertentu). Sheet harus
+                dibagikan ke service-account email sebagai <b>Viewer</b>. Header dan format sama dengan CSV.
+              </p>
+              <Input
+                label='URL Google Sheet'
+                value={sheetUrl}
+                onChange={(e) => setSheetUrl(e.target.value)}
+                placeholder='https://docs.google.com/spreadsheets/d/<ID>/edit#gid=0'
+              />
+            </>
+          )}
+
           <div className='mt-3 flex justify-end gap-2'>
             <Btn variant='outline' onClick={onClose}>Batal</Btn>
-            <Btn disabled={busy || !csv.trim()} onClick={doImport}>{busy ? 'Mengimport…' : 'Import'}</Btn>
+            <Btn disabled={!canSubmit} onClick={doImport}>{busy ? 'Mengimport…' : 'Import'}</Btn>
           </div>
         </>
       ) : (

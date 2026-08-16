@@ -356,7 +356,8 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'outlet_id',
     'active_status',
     'created_at',
-    'last_login_at'
+    'last_login_at',
+    'employee_id'
   ],
   [TABS.auditLog]: [
     'audit_id',

@@ -47,6 +47,8 @@ export interface SessionUser {
   role: string;
   brandId?: string;
   outletId?: string;
+  /** Linked employee_id (master_employee). Used for EMPLOYEE self-only RBAC. */
+  employeeId?: string;
 }
 
 export async function setSession(user: SessionUser): Promise<void> {
@@ -75,7 +77,8 @@ export async function getSession(): Promise<SessionUser | null> {
     username: payload.username as string,
     role: (payload.role as string)?.toLowerCase() as string,
     brandId: payload.brandId as string | undefined,
-    outletId: payload.outletId as string | undefined
+    outletId: payload.outletId as string | undefined,
+    employeeId: payload.employeeId as string | undefined
   };
 }
 
