@@ -8,7 +8,7 @@ import type { NextConfig } from 'next';
  * - strict referrer: don't leak internal URLs
  * - camera/mic off; geolocation allowed (scale/receiving devices may use it)
  */
-const HUB_ORIGIN = process.env.YKP_HUB_ORIGIN ?? 'https://ykp-hub-production.up.railway.app';
+const HUB_ORIGIN = process.env.YKP_HUB_ORIGIN ?? 'http://187.77.114.168:3000';
 
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },

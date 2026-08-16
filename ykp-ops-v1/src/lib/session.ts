@@ -60,8 +60,8 @@ export async function setSession(user: SessionUser): Promise<void> {
   // works (cookie set on a first-party redirect).
   store.set('ykp_ops_session', token, {
     httpOnly: true,
-    sameSite: 'none',
-    secure: true,
+    sameSite: "lax",
+    secure: process.env.HTTPS === "true" || process.env.FORCE_SECURE_COOKIE === "true",
     path: '/',
     maxAge: 24 * 3600,
   });

@@ -56,7 +56,7 @@ export async function setSession(user: SessionUser): Promise<void> {
   store.set('ykp_hr_session', token, {
     httpOnly: true,
     sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === "production" && (process.env.HTTPS === "true" || process.env.FORCE_SECURE_COOKIE === "true"),
     path: '/',
     maxAge: 24 * 3600
   });

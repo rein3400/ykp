@@ -41,8 +41,8 @@ export async function setSession(user: SessionUser): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
   const token = sign({ ...user, iat: now, exp: now + 24 * 3600 });
   store.set(COOKIE_NAME, token, {
-    httpOnly: true, sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true, sameSite: "lax",
+    secure: process.env.NODE_ENV === "production" && (process.env.HTTPS === "true" || process.env.FORCE_SECURE_COOKIE === "true"),
     path: '/', maxAge: 24 * 3600
   });
 }
