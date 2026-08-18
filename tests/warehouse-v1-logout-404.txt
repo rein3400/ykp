@@ -1,0 +1,7 @@
+LOGOUT NAV: {"ok":true,"data":{"type":"string","value":"{\"ok\":true}"}}
+AFTER LOGOUT: {"ok":true,"data":{"type":"string","value":"{\"url\":\"chrome-error://chromewebdata/\",\"headings\":[\"This page isn’t working right now\"],\"body\":\"This page isn’t working right now\\n\\nIf the problem continues, contact the site owner.\\n\\nHTTP ERROR 405\\nRefresh\"}"}}
+
+=== Direct route /warehouse/nonexistent ===
+INFO: {"ok":true,"data":{"type":"string","value":"{\"url\":\"https://ykp-warehouse-v1.vercel.app/warehouse/nonexistent\",\"title\":\"YKP Warehouse V1\",\"body\":\"404\\nThis page could not be found.\"}"}}
+
+404 SHOT: {"ok":true,"data":{"format":"png","path":"D:/Users/stefa/Project/YKP HERMEZ AI COMMAND CENTER/tests/screenshots/warehouse-404.png","sizeBytes":11106,"mimeType":"image/png"}}

@@ -1,0 +1,1 @@
+{"action":"evaluate","args":{"code":"(() => { const btn = document.querySelector('button[type=\"submit\"], button'); if (btn) { btn.click(); return 'clicked button'; } const form = document.querySelector('form'); if (form) { form.submit(); return 'submitted form'; } return 'no button or form found'; })()"},"session":"ykp-hermez-test"}

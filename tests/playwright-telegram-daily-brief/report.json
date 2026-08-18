@@ -1,0 +1,12 @@
+{
+  "ts": "2026-07-17T14:12:46.240Z",
+  "results": {
+    "ok": true,
+    "briefId": "HZBR-20260715",
+    "messageId": 57,
+    "error": null,
+    "resultText": "Terkirim (message_id: 57)",
+    "telegramApiOk": true,
+    "telegramApiDetail": "copied to 58"
+  }
+}

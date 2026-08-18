@@ -1,0 +1,7 @@
+{
+  "action": "evaluate",
+  "args": {
+    "code": "(() => { const buttons = [...document.querySelectorAll('button,a')].map((b,i) => ({i, tag:b.tagName, text:b.innerText.trim().slice(0,80), href:b.getAttribute('href')||null, disabled:b.disabled})).filter(x => x.text); const modals = [...document.querySelectorAll('[role=dialog],[data-state=open]')].map(m => m.getAttribute('aria-label') || m.innerText.slice(0,120)); const inputs = [...document.querySelectorAll('input,select,textarea')].map((el,i) => ({i, tag:el.tagName, type:el.type||'', name:el.name||el.getAttribute('aria-label')||'', val:(el.value||'').slice(0,40)})).slice(0,20); const rows = document.querySelectorAll('table tbody tr, table tr').length; return JSON.stringify({url:location.pathname, buttons:buttons.slice(0,30), modals, inputs, rows}); })()"
+  },
+  "session": "hr-pilot-test"
+}

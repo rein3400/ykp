@@ -1,0 +1,704 @@
+[
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "root render",
+    "ok": true,
+    "detail": "status=200 body=true mounted=true",
+    "ts": "2026-07-09T08:42:09.532Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "login page reachable",
+    "ok": true,
+    "detail": "status=404",
+    "ts": "2026-07-09T08:42:10.103Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "owner auth attempt",
+    "ok": true,
+    "detail": "skipped (no-input-fields)",
+    "ts": "2026-07-09T08:42:10.401Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "/petty-cash",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:10.947Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "/expenses",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:11.388Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "/pos",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:11.838Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "/suppliers",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:12.350Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "/summary",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:12.926Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "asset cf503934e383facb.css",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:13.929Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "asset 1dd3208c-7e9067dc1d4f4358.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:14.002Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "asset 528-55853a0d91058402.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:14.055Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "asset main-app-bb1b5ac5bf1f623a.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:14.101Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "asset 13-6cd8f8907c1709c2.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:14.149Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "console error budget",
+    "ok": false,
+    "detail": "total=87 csp=63 other=24",
+    "ts": "2026-07-09T08:42:14.150Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-finance",
+      "base": "https://ykp-erp-finance.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/petty-cash",
+        "/expenses",
+        "/pos",
+        "/suppliers",
+        "/summary"
+      ]
+    },
+    "label": "no 5xx on network",
+    "ok": true,
+    "detail": "clean ✓",
+    "ts": "2026-07-09T08:42:14.150Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "root render",
+    "ok": true,
+    "detail": "status=200 body=true mounted=true",
+    "ts": "2026-07-09T08:42:15.348Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "login page reachable",
+    "ok": true,
+    "detail": "status=404",
+    "ts": "2026-07-09T08:42:15.619Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "owner auth attempt",
+    "ok": true,
+    "detail": "skipped (no-input-fields)",
+    "ts": "2026-07-09T08:42:15.918Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "/dashboard",
+    "ok": true,
+    "detail": "status=404",
+    "ts": "2026-07-09T08:42:16.521Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "/api/hermez/config",
+    "ok": false,
+    "detail": "status=500 body=500 Internal Server Error.",
+    "ts": "2026-07-09T08:42:17.402Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "/api/hermez/alerts",
+    "ok": false,
+    "detail": "status=500 body=500 Internal Server Error.",
+    "ts": "2026-07-09T08:42:18.210Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "/api/hermez/config JSON contract",
+    "ok": false,
+    "detail": "status=500 ct=text/html; charset=utf-8 json=no body[:120]=500 Internal Server Error.",
+    "ts": "2026-07-09T08:42:18.758Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "asset d732d05e3f43543a.css",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:19.649Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "asset 1dd3208c-715636071c96b302.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:19.729Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "asset 528-a8c97eacc8663036.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:19.818Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "asset main-app-bb1b5ac5bf1f623a.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:19.875Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "asset 113-bd8e4a5dec7d782f.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:19.930Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "console error budget",
+    "ok": false,
+    "detail": "total=49 csp=30 other=19",
+    "ts": "2026-07-09T08:42:19.930Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hermez",
+      "base": "https://ykp-erp-hermez.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/dashboard",
+        "/api/hermez/config",
+        "/api/hermez/alerts"
+      ]
+    },
+    "label": "no 5xx on network",
+    "ok": false,
+    "detail": "failures=6 unique=4 first=500 https://ykp-erp-hermez.vercel.app/api/hermez/config",
+    "ts": "2026-07-09T08:42:19.931Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "root render",
+    "ok": true,
+    "detail": "status=307 body=true mounted=true",
+    "ts": "2026-07-09T08:42:21.100Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "login page reachable",
+    "ok": true,
+    "detail": "status=404",
+    "ts": "2026-07-09T08:42:21.546Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "owner auth attempt",
+    "ok": true,
+    "detail": "skipped (no-input-fields)",
+    "ts": "2026-07-09T08:42:21.821Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "/attendance",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:22.371Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "/payroll",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:22.826Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "/employees",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:23.323Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "asset 1dd3208c-7e9067dc1d4f4358.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:24.191Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "asset 528-55853a0d91058402.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:24.243Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "asset main-app-bb1b5ac5bf1f623a.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:24.290Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "asset polyfills-42372ed130431b0a.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:24.344Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "asset webpack-ae9e01c21a82c676.js",
+    "ok": true,
+    "detail": "status=200",
+    "ts": "2026-07-09T08:42:24.395Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "console error budget",
+    "ok": false,
+    "detail": "total=62 csp=42 other=20",
+    "ts": "2026-07-09T08:42:24.395Z"
+  },
+  {
+    "app": {
+      "name": "ykp-erp-hr",
+      "base": "https://ykp-erp-hr.vercel.app",
+      "loginPath": "/login",
+      "authedPaths": [
+        "/attendance",
+        "/payroll",
+        "/employees"
+      ]
+    },
+    "label": "no 5xx on network",
+    "ok": true,
+    "detail": "clean ✓",
+    "ts": "2026-07-09T08:42:24.395Z"
+  }
+]

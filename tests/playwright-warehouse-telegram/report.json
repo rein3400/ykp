@@ -1,0 +1,14 @@
+{
+  "ts": "2026-07-18T01:33:01.656Z",
+  "results": {
+    "ok": true,
+    "send_wired": false,
+    "loginOk": true,
+    "summaryStatus": 200,
+    "alertsHighStatus": 200,
+    "alertsCriticalStatus": 200,
+    "queuedHigh": 97,
+    "queuedCritical": 169,
+    "error": null
+  }
+}

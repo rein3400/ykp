@@ -1,0 +1,37 @@
+[
+  {
+    "url": "/api/hermez/alerts",
+    "status": 200,
+    "body": ""
+  },
+  {
+    "url": "/api/hermez/alerts",
+    "status": 200,
+    "body": ""
+  },
+  {
+    "url": "/api/hermez/alerts/HZAL-20260715-014/status",
+    "status": 200,
+    "body": ""
+  },
+  {
+    "url": "/api/hermez/alerts",
+    "status": 200,
+    "body": ""
+  },
+  {
+    "url": "/api/hermez/actions",
+    "status": 200,
+    "body": ""
+  },
+  {
+    "url": "/api/hermez/warehouse-alerts?severity=HIGH&status=OPEN",
+    "status": 200,
+    "body": ""
+  },
+  {
+    "url": "/api/hermez/warehouse-summary",
+    "status": 200,
+    "body": ""
+  }
+]

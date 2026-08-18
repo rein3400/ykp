@@ -1,0 +1,11 @@
+{
+  "ts": "2026-07-18T01:33:21.903Z",
+  "results": {
+    "ok": true,
+    "message": "Terkirim (message_id: 64)",
+    "messageId": 64,
+    "sent": true,
+    "error": null,
+    "telegramApiReachable": true
+  }
+}

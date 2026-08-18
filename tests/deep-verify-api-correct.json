@@ -1,0 +1,340 @@
+[
+  {
+    "app": "finance",
+    "kind": "unauth",
+    "path": "/api/fin/pos",
+    "status": 403,
+    "ms": 488,
+    "body": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Forbidden: insufficient role\"}}"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/summary",
+    "status": 200,
+    "ms": 851,
+    "body": "{\"data\":[{\"summaryId\":\"FIN-20260712-OL-013-001\",\"date\":\"2026-07-12T00:00:00.000Z\",\"brand\":\"Uncle Masala\",\"outlet\":\"Uncle Masala Surabaya\",\"brandId\":\"BR-005\",\"outletId\":\"OL-013\",\"revenue\":0,\"expense\":0,\"supplierCost\":0,\"p"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/pos",
+    "status": 200,
+    "ms": 1079,
+    "body": "{\"data\":[{\"posId\":\"POS-OL-015-20260710-317\",\"date\":\"2026-07-10T00:00:00.000Z\",\"brandId\":\"BR-005\",\"brandName\":\"Uncle Masala\",\"outletId\":\"OL-015\",\"outletName\":\"Uncle Masala Bali\",\"grossSales\":2767755,\"netSales\":2717433,\"di"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/expense",
+    "status": 200,
+    "ms": 835,
+    "body": "{\"data\":[{\"expenseId\":\"EXP-OL-004-20260710-550\",\"date\":\"2026-07-10T00:00:00.000Z\",\"brandId\":\"BR-004\",\"brandName\":\"Laju Kopi\",\"outletId\":\"OL-004\",\"outletName\":\"Laju Kopi Cipete\",\"categoryId\":\"EC-001\",\"description\":\"Pembel"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/petty-cash",
+    "status": 200,
+    "ms": 836,
+    "body": "{\"data\":[{\"pcId\":\"PC-OL-011-20260612-740\",\"date\":\"2026-06-12T00:00:00.000Z\",\"brandId\":\"BR-001\",\"brandName\":\"Funkydak\",\"outletId\":\"OL-011\",\"outletName\":\"Funkydak Depok\",\"accountId\":\"PCA-011\",\"type\":\"out\",\"amount\":159032,\""
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/supplier",
+    "status": 200,
+    "ms": 841,
+    "body": "{\"data\":[{\"costId\":\"SC-OL-001-20260710-962\",\"date\":\"2026-07-10T00:00:00.000Z\",\"brandId\":\"BR-001\",\"brandName\":\"Funkydak\",\"outletId\":\"OL-001\",\"outletName\":\"Funkydak Sudirman\",\"supplierId\":\"SUP-002\",\"supplierName\":\"CV Makmu"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/master-data",
+    "status": 400,
+    "ms": 282,
+    "body": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Invalid query\",\"details\":{\"formErrors\":[],\"fieldErrors\":{\"kind\":[\"Required\"]}}}}"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/unpaid",
+    "status": 200,
+    "ms": 867,
+    "body": "{\"data\":[{\"costId\":\"SC-OL-008-20260710-839\",\"date\":\"2026-07-10T00:00:00.000Z\",\"brandId\":\"BR-003\",\"brandName\":\"Suburbuns\",\"outletId\":\"OL-008\",\"outletName\":\"Suburbuns Kelapa Gading\",\"supplierId\":\"SUP-009\",\"supplierName\":\"P"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/analytics/revenue",
+    "status": 200,
+    "ms": 1070,
+    "body": "{\"data\":{\"period\":\"month\",\"from\":\"2026-07-01\",\"to\":\"2026-07-12\",\"total\":725957816,\"by_day\":[{\"date\":\"2026-07-01\",\"revenue\":66309064},{\"date\":\"2026-07-02\",\"revenue\":72113168},{\"date\":\"2026-07-03\",\"revenue\":76150686},{\"dat"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/analytics/profit",
+    "status": 200,
+    "ms": 1700,
+    "body": "{\"data\":{\"period\":\"month\",\"from\":\"2026-07-01\",\"to\":\"2026-07-12\",\"revenue\":725957816,\"expense\":133271968,\"supplier_cost\":260449825,\"petty_cash_out\":18829992,\"net\":313406031}}"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/closing-cash",
+    "status": 400,
+    "ms": 269,
+    "body": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Invalid query\",\"details\":{\"formErrors\":[],\"fieldErrors\":{\"date\":[\"Required\"],\"outlet_id\":[\"Required\"]}}}}"
+  },
+  {
+    "app": "finance",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/fin/export/csv",
+    "status": 405,
+    "ms": 271,
+    "body": ""
+  },
+  {
+    "app": "hermez",
+    "kind": "unauth",
+    "path": "/api/hermez/brief",
+    "status": 403,
+    "ms": 471,
+    "body": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Forbidden: insufficient role\"}}"
+  },
+  {
+    "app": "hermez",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hermez/config",
+    "status": 200,
+    "ms": 538,
+    "body": "{\"data\":{\"items\":[{\"configId\":\"CFG-cash_diff_critical\",\"key\":\"cash_diff_critical\",\"value\":\"200000\",\"updatedAt\":\"2026-07-10T02:27:06.000Z\",\"updatedBy\":\"system\"},{\"configId\":\"CFG-cash_diff_warning\",\"key\":\"cash_diff_warning"
+  },
+  {
+    "app": "hermez",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hermez/brief",
+    "status": 200,
+    "ms": 623,
+    "body": "{\"data\":{\"brief\":{\"briefId\":\"HZBR-20260712\",\"date\":\"2026-07-12\",\"alertLevel\":\"yellow\",\"briefText\":\"Brief YKP Hermez — 12/07/2026, 00.00 WIB\\n\\nRevenue hari ini: Rp 0\\nExpense hari ini: Rp 0\\nNet profit estimate: Rp 0\\nKe"
+  },
+  {
+    "app": "hermez",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hermez/alerts",
+    "status": 200,
+    "ms": 676,
+    "body": "{\"data\":{\"items\":[{\"alertId\":\"HZAL-20260712-029\",\"date\":\"2026-07-12\",\"brand\":\"Uncle Masala\",\"outlet\":\"Uncle Masala Surabaya\",\"alertType\":\"data_missing\",\"severity\":\"warning\",\"message\":\"Data laporan belum lengkap untuk: hr"
+  },
+  {
+    "app": "hermez",
+    "kind": "auth",
+    "method": "POST",
+    "path": "/api/hermez/run",
+    "status": 200,
+    "ms": 27936,
+    "body": "{\"data\":{\"brief_id\":\"HZBR-20260712\",\"date\":\"2026-07-12\",\"alert_count\":29,\"level\":\"yellow\"}}"
+  },
+  {
+    "app": "hermez",
+    "kind": "auth",
+    "method": "POST",
+    "path": "/api/hermez/telegram/test",
+    "status": 400,
+    "ms": 299,
+    "body": "{\"error\":{\"code\":\"validation\",\"message\":\"message is required\"}}"
+  },
+  {
+    "app": "hr",
+    "kind": "unauth",
+    "path": "/api/hr/employees",
+    "status": 403,
+    "ms": 404,
+    "body": "{\"error\":{\"code\":403,\"message\":\"Forbidden: insufficient role\"}}"
+  },
+  {
+    "app": "hr",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/summary",
+    "status": 200,
+    "ms": 1050,
+    "body": "{\"data\":{\"summaries\":[{\"summaryId\":\"HR-SUM-OL-006-20260611-698\",\"date\":\"2026-06-11T00:00:00.000Z\",\"brand\":\"Funkydak\",\"outlet\":\"Funkydak Cikini\",\"brandId\":\"BR-001\",\"outletId\":\"OL-006\",\"totalStaff\":10,\"staffPresent\":9,\"sta"
+  },
+  {
+    "app": "hr",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/employees",
+    "status": 200,
+    "ms": 636,
+    "body": "{\"data\":{\"employees\":[{\"employeeId\":\"EMP-00001\",\"fullName\":\"Putri Lestari\",\"role\":\"staff\",\"department\":\"Operations\",\"brandId\":\"BR-001\",\"outletId\":\"OL-001\",\"phone\":\"+628193839885\",\"telegramId\":\"@putri.lestari\",\"employment"
+  },
+  {
+    "app": "hr",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/attendance",
+    "status": 200,
+    "ms": 37062,
+    "body": "{\"data\":{\"attendance\":[{\"attendanceId\":\"ATT-EMP-00001-20260710-1848\",\"date\":\"2026-07-10T00:00:00.000Z\",\"employeeId\":\"EMP-00001\",\"outletId\":\"OL-001\",\"shiftName\":\"Siang\",\"checkIn\":\"2026-07-10T05:00:00.000Z\",\"checkOut\":\"202"
+  },
+  {
+    "app": "hr",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/payroll",
+    "status": 200,
+    "ms": 2663,
+    "body": "{\"data\":{\"payroll\":[{\"payrollId\":\"PAY-EMP-00001-202606\",\"employeeId\":\"EMP-00001\",\"periodStart\":\"2026-06-01T00:00:00.000Z\",\"periodEnd\":\"2026-06-30T00:00:00.000Z\",\"payrollDays\":25,\"attendanceCount\":22,\"absentDays\":3,\"daily"
+  },
+  {
+    "app": "hr",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/rules",
+    "status": 200,
+    "ms": 617,
+    "body": "{\"data\":{\"rules\":[{\"ruleId\":\"RULE-001\",\"outletId\":\"OL-001\",\"shiftName\":\"Pagi\",\"shiftStart\":\"07:00\",\"shiftEnd\":\"15:00\",\"lateToleranceMinutes\":10,\"overtimeRateMultiplier\":\"1.50\",\"overtimeDailyCapHours\":\"4.00\",\"firstBlockHo"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "unauth",
+    "path": "/api/hr/employees",
+    "status": 401,
+    "ms": 370,
+    "body": "{\"error\":{\"code\":\"unauthorized\",\"message\":\"Unauthorized\"}}"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/summary",
+    "status": 200,
+    "ms": 506,
+    "body": "{\"data\":{\"items\":[{\"summary_id\":\"SUM-00001\",\"date\":\"2026-07-10\",\"brand_id\":\"BR-001\",\"brand_name\":\"Funkydak Cipete\",\"outlet_id\":\"BR-001\",\"outlet_name\":\"OL-001\",\"total_staff\":\"8\",\"scheduled_staff\":\"8\",\"staff_present\":\"2\",\""
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/employees",
+    "status": 200,
+    "ms": 454,
+    "body": "{\"data\":{\"items\":[{\"employee_id\":\"EMP-001\",\"employee_code\":\"K-001\",\"full_name\":\"Sari Wijaya\",\"nickname\":\"Sari\",\"gender\":\"F\",\"phone\":\"6281234567890\",\"email\":\"emp-001@ykp.local\",\"telegram_id\":\"@emp-001\",\"address\":\"Jakarta\""
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/attendance",
+    "status": 200,
+    "ms": 552,
+    "body": "{\"data\":{\"items\":[{\"attendance_id\":\"ATT-00001\",\"date\":\"2026-07-10\",\"employee_id\":\"EMP-001\",\"employee_name\":\"Sari Wijaya\",\"brand_id\":\"BR-001\",\"outlet_id\":\"OL-001\",\"shift_id\":\"SH-002\",\"scheduled_check_in\":\"2026-07-10T12:00"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/leaves",
+    "status": 200,
+    "ms": 460,
+    "body": "{\"data\":{\"items\":[{\"leave_id\":\"LV-00001\",\"employee_id\":\"EMP-001\",\"leave_type\":\"UNPAID_LEAVE\",\"start_date\":\"2026-06-26\",\"end_date\":\"2026-06-29\",\"total_days\":\"4\",\"reason\":\"Keperluan unpaid_leave\",\"attachment_url\":\"\",\"submi"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/adjustments",
+    "status": 200,
+    "ms": 439,
+    "body": "{\"data\":{\"items\":[{\"adjustment_id\":\"ADJ-00001\",\"date\":\"2026-07-01\",\"employee_id\":\"EMP-001\",\"adjustment_type\":\"CASH_ADVANCE\",\"category\":\"CASH_ADVANCE\",\"amount\":\"273079\",\"quantity\":\"1\",\"unit\":\"IDR\",\"reason\":\"Adjustment cas"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/roster",
+    "status": 200,
+    "ms": 492,
+    "body": "{\"data\":{\"items\":[{\"roster_id\":\"RST-00001\",\"date\":\"2026-07-10\",\"employee_id\":\"EMP-001\",\"brand_id\":\"BR-001\",\"outlet_id\":\"OL-001\",\"shift_id\":\"SH-001\",\"role\":\"staff\",\"roster_status\":\"COMPLETED\",\"replacement_employee_id\":\"\","
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "POST",
+    "path": "/api/hr/payroll/generate",
+    "status": 400,
+    "ms": 274,
+    "body": "{\"error\":{\"code\":\"bad_request\",\"message\":\"[\\n {\\n \\\"code\\\": \\\"invalid_type\\\",\\n \\\"expected\\\": \\\"string\\\",\\n \\\"received\\\": \\\"undefined\\\",\\n \\\"path\\\": [\\n \\\"period\\\"\\n ],\\n \\\"message\\\": \\\"Required\\\""
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "POST",
+    "path": "/api/hr/payroll/approve",
+    "status": 400,
+    "ms": 268,
+    "body": "{\"error\":{\"code\":\"bad_request\",\"message\":\"[\\n {\\n \\\"code\\\": \\\"invalid_type\\\",\\n \\\"expected\\\": \\\"string\\\",\\n \\\"received\\\": \\\"undefined\\\",\\n \\\"path\\\": [\\n \\\"payroll_id\\\"\\n ],\\n \\\"message\\\": \\\"Requir"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "POST",
+    "path": "/api/hr/payroll/mark-paid",
+    "status": 400,
+    "ms": 283,
+    "body": "{\"error\":{\"code\":\"bad_request\",\"message\":\"[\\n {\\n \\\"code\\\": \\\"invalid_type\\\",\\n \\\"expected\\\": \\\"string\\\",\\n \\\"received\\\": \\\"undefined\\\",\\n \\\"path\\\": [\\n \\\"payroll_id\\\"\\n ],\\n \\\"message\\\": \\\"Requir"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "POST",
+    "path": "/api/hr/leaves/approve",
+    "status": 400,
+    "ms": 274,
+    "body": "{\"error\":{\"code\":\"bad_request\",\"message\":\"[\\n {\\n \\\"code\\\": \\\"invalid_type\\\",\\n \\\"expected\\\": \\\"string\\\",\\n \\\"received\\\": \\\"undefined\\\",\\n \\\"path\\\": [\\n \\\"leave_id\\\"\\n ],\\n \\\"message\\\": \\\"Required"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "POST",
+    "path": "/api/hr/adjustments/approve",
+    "status": 400,
+    "ms": 347,
+    "body": "{\"error\":{\"code\":\"bad_request\",\"message\":\"[\\n {\\n \\\"code\\\": \\\"invalid_type\\\",\\n \\\"expected\\\": \\\"string\\\",\\n \\\"received\\\": \\\"undefined\\\",\\n \\\"path\\\": [\\n \\\"adjustment_id\\\"\\n ],\\n \\\"message\\\": \\\"Req"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "GET",
+    "path": "/api/hr/summary/count",
+    "status": 200,
+    "ms": 560,
+    "body": "{\"data\":{\"tabs\":[{\"name\":\"master_brand\",\"columns\":8,\"rows\":5},{\"name\":\"master_outlet\",\"columns\":11,\"rows\":11},{\"name\":\"master_employee\",\"columns\":34,\"rows\":8},{\"name\":\"master_role\",\"columns\":6,\"rows\":9},{\"name\":\"master_s"
+  },
+  {
+    "app": "hr-v1",
+    "kind": "auth",
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "status": 307,
+    "ms": 271,
+    "body": ""
+  }
+]

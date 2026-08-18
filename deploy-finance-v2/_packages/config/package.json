@@ -1,0 +1,26 @@
+{
+  "name": "@ykp/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tailwind-preset.css": "./tailwind-preset.css",
+    "./eslint.config.mjs": "./eslint.config.mjs"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

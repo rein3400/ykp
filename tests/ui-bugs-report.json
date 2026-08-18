@@ -1,0 +1,113 @@
+{
+  "passes": [
+    {
+      "app": "ykp-erp-finance",
+      "location": "/",
+      "note": "status=200 title=\"YKP Finance\" buttons=0 inputs=0 links=8 forms=0"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/pos",
+      "note": "status=200 title=\"YKP Finance\" buttons=6 inputs=2 links=8 forms=0"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/suppliers",
+      "note": "status=200 title=\"YKP Finance\" buttons=8 inputs=1 links=8 forms=0"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/petty-cash",
+      "note": "status=200 title=\"YKP Finance\" buttons=9 inputs=1 links=8 forms=0"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/expenses",
+      "note": "status=200 title=\"YKP Finance\" buttons=6 inputs=1 links=8 forms=0"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/",
+      "note": "status=200 title=\"YKP Hermez\" buttons=1 inputs=1 links=5 forms=0"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/alerts",
+      "note": "status=200 title=\"YKP Hermez\" buttons=1 inputs=3 links=5 forms=0"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/config",
+      "note": "status=200 title=\"YKP Hermez\" buttons=7 inputs=6 links=5 forms=0"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/run",
+      "note": "status=200 title=\"YKP Hermez\" buttons=2 inputs=1 links=5 forms=0"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/telegram-test",
+      "note": "status=200 title=\"YKP Hermez\" buttons=2 inputs=0 links=5 forms=0"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "button \"(no text)\"",
+      "note": "clickable"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/attendance",
+      "note": "status=200 title=\"YKP HR — Dashboard\" buttons=5 inputs=1 links=6 forms=0"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/payroll",
+      "note": "status=200 title=\"YKP HR — Dashboard\" buttons=5 inputs=1 links=6 forms=0"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/rules",
+      "note": "status=200 title=\"YKP HR — Dashboard\" buttons=5 inputs=1 links=6 forms=0"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/employees",
+      "note": "status=200 title=\"YKP HR — Dashboard\" buttons=6 inputs=1 links=6 forms=0"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/summary",
+      "note": "status=200 title=\"YKP HR — Dashboard\" buttons=5 inputs=2 links=6 forms=0"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "button \"Export\"",
+      "note": "clickable"
+    }
+  ],
+  "bugs": [
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/summary",
+      "description": "unexpected status 429",
+      "ts": "2026-07-09T19:07:33.965Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/analytics",
+      "description": "unexpected status 429",
+      "ts": "2026-07-09T19:07:37.435Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/settings",
+      "description": "unexpected status 429",
+      "ts": "2026-07-09T19:07:40.962Z"
+    }
+  ],
+  "ts": "2026-07-09T19:08:25.783Z"
+}

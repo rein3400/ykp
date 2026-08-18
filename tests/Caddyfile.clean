@@ -1,0 +1,109 @@
+# ==============================================================================
+# Caddy Configuration - VPS Gateway
+# Host: 187.77.114.168
+#
+# YKP ERP & Command Center Ecosystem (Ports 3000-3010)
+# Other projects can add domain/subdomain blocks below or bind external ports.
+# ==============================================================================
+
+:80 {
+    encode gzip
+
+    # --- YKP Hub (Launcher) ---
+    handle /hub/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3000
+    }
+    handle /api/auth/* {
+        reverse_proxy localhost:3000
+    }
+    handle /api/health {
+        reverse_proxy localhost:3000
+    }
+
+    # --- YKP HR (Postgres ERP) ---
+    handle /hr/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3002
+    }
+    handle /api/hr/* {
+        reverse_proxy localhost:3002
+    }
+
+    # --- YKP Finance (Postgres ERP) ---
+    handle /finance/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3003
+    }
+    handle /api/fin/* {
+        reverse_proxy localhost:3003
+    }
+
+    # --- YKP Hermez (AI Controller) ---
+    handle /hermez/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3004
+    }
+    handle /api/hermez/* {
+        reverse_proxy localhost:3004
+    }
+
+    # --- YKP Warehouse (Sheets) ---
+    handle /warehouse/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3005
+    }
+    handle /api/warehouse/* {
+        reverse_proxy localhost:3005
+    }
+
+    # --- YKP Investor (Sheets) ---
+    handle /investor/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3006
+    }
+    handle /api/investor/* {
+        reverse_proxy localhost:3006
+    }
+
+    # --- YKP Ops (Sheets) ---
+    handle /ops/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3007
+    }
+    handle /api/ops/* {
+        reverse_proxy localhost:3007
+    }
+
+    # --- YKP HR-v1 (Sheets Pilot) ---
+    handle /hr-v1/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3008
+    }
+    handle /api/hr-v1/* {
+        reverse_proxy localhost:3008
+    }
+
+    # --- YKP Finance-v1 (Sheets) ---
+    handle /finance-v1/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3009
+    }
+    handle /api/fin-v1/* {
+        reverse_proxy localhost:3009
+    }
+
+    # --- YKP Owner Command (Dashboard) ---
+    handle /owner/* {
+        rewrite * /{path}
+        reverse_proxy localhost:3010
+    }
+    handle /api/owner/* {
+        reverse_proxy localhost:3010
+    }
+
+    # --- Default Landing: YKP Hub ---
+    handle {
+        reverse_proxy localhost:3000
+    }
+}

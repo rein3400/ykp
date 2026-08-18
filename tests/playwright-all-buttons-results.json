@@ -1,0 +1,296 @@
+[
+  {
+    "app": "finance",
+    "label": "pc-tab [All]",
+    "ok": false,
+    "detail": "CLICK FIRED but CSP-blocked hydration (no handler bound, 0 API calls)",
+    "ts": "2026-07-09T10:19:41.448Z"
+  },
+  {
+    "app": "finance",
+    "label": "pc-tab [Debit]",
+    "ok": false,
+    "detail": "CLICK FIRED but CSP-blocked hydration (no handler bound, 0 API calls)",
+    "ts": "2026-07-09T10:19:43.993Z"
+  },
+  {
+    "app": "finance",
+    "label": "pc-tab [Kredit]",
+    "ok": false,
+    "detail": "CLICK FIRED but CSP-blocked hydration (no handler bound, 0 API calls)",
+    "ts": "2026-07-09T10:19:46.512Z"
+  },
+  {
+    "app": "finance",
+    "label": "pc-tab [Urgent]",
+    "ok": false,
+    "detail": "CLICK FIRED but CSP-blocked hydration (no handler bound, 0 API calls)",
+    "ts": "2026-07-09T10:19:49.033Z"
+  },
+  {
+    "app": "finance",
+    "label": "petty-cash Export trigger",
+    "ok": false,
+    "detail": "CLICK FIRED but CSP-blocked hydration (no handler bound, 0 API calls)",
+    "ts": "2026-07-09T10:19:51.552Z"
+  },
+  {
+    "app": "finance",
+    "label": "expenses: Tambah Expense",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:19:53.685Z"
+  },
+  {
+    "app": "finance",
+    "label": "expenses: Export trigger",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:19:53.687Z"
+  },
+  {
+    "app": "finance",
+    "label": "pos: Catat transaksi baru",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:19:55.808Z"
+  },
+  {
+    "app": "finance",
+    "label": "pos: Export trigger",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:19:55.810Z"
+  },
+  {
+    "app": "finance",
+    "label": "suppliers: Tambah Cost",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:19:57.940Z"
+  },
+  {
+    "app": "finance",
+    "label": "summary: Rebuild Today",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:00.089Z"
+  },
+  {
+    "app": "finance",
+    "label": "settings: Kirim (Telegram)",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:02.207Z"
+  },
+  {
+    "app": "finance",
+    "label": "settings-tab [brands]",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:02.209Z"
+  },
+  {
+    "app": "finance",
+    "label": "settings-tab [outlets]",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:02.210Z"
+  },
+  {
+    "app": "finance",
+    "label": "settings-tab [suppliers]",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:02.212Z"
+  },
+  {
+    "app": "finance",
+    "label": "settings-tab [categories]",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:02.213Z"
+  },
+  {
+    "app": "finance",
+    "label": "settings-tab [methods]",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:02.215Z"
+  },
+  {
+    "app": "finance",
+    "label": "settings-tab [accounts]",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:02.216Z"
+  },
+  {
+    "app": "hermez",
+    "label": "layout: ThemeToggle",
+    "ok": false,
+    "detail": "no target text extracted",
+    "ts": "2026-07-09T10:20:04.717Z"
+  },
+  {
+    "app": "hermez",
+    "label": "brief: 'Lihat alert log' link",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:04.723Z"
+  },
+  {
+    "app": "hermez",
+    "label": "config: Simpan (first row)",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:10.637Z"
+  },
+  {
+    "app": "hermez",
+    "label": "run: Generate brief",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:12.761Z"
+  },
+  {
+    "app": "hermez",
+    "label": "telegram: Kirim",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:14.889Z"
+  },
+  {
+    "app": "hr",
+    "label": "attendance: Export (CSV)",
+    "ok": false,
+    "detail": "CLICK FIRED but CSP-blocked hydration (no handler bound, 0 API calls)",
+    "ts": "2026-07-09T10:20:20.455Z"
+  },
+  {
+    "app": "hr",
+    "label": "employees: + Karyawan",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:22.690Z"
+  },
+  {
+    "app": "hr",
+    "label": "employees: Import CSV",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:22.691Z"
+  },
+  {
+    "app": "hr",
+    "label": "payroll: Generate",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:24.812Z"
+  },
+  {
+    "app": "hr",
+    "label": "rules: + Tambah Rule",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:26.979Z"
+  },
+  {
+    "app": "hr",
+    "label": "summary: Rebuild",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:29.118Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "login owner/owner123 via /api/auth/login",
+    "ok": false,
+    "detail": "status=500",
+    "ts": "2026-07-09T10:20:32.239Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "session persisted after login",
+    "ok": false,
+    "detail": "url=https://ykp-hr-v1.vercel.app/login",
+    "ts": "2026-07-09T10:20:35.077Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "employees: Tambah Karyawan link",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:37.383Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "employees: Import CSV link",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:37.385Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "employees: Export CSV link",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:37.386Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "employees/new: Submit",
+    "ok": false,
+    "detail": "no target text extracted",
+    "ts": "2026-07-09T10:20:39.544Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "employees/new: Batal",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:39.549Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "roster: Submit",
+    "ok": false,
+    "detail": "no target text extracted",
+    "ts": "2026-07-09T10:20:43.955Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "leaves: Submit",
+    "ok": false,
+    "detail": "no target text extracted",
+    "ts": "2026-07-09T10:20:46.210Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "payroll: Generate link",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:48.381Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "payroll/gen: Run",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:50.547Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "adjustments: Submit",
+    "ok": false,
+    "detail": "no target text extracted",
+    "ts": "2026-07-09T10:20:52.709Z"
+  },
+  {
+    "app": "hr-v1",
+    "label": "summary: Regenerate",
+    "ok": false,
+    "detail": "button not in DOM (CSP-blocked hydration?)",
+    "ts": "2026-07-09T10:20:54.878Z"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "ts": "2026-07-17T14:48:05.435Z",
+  "results": {
+    "validCreate": {
+      "error": null,
+      "actionRowVisible": true
+    },
+    "invalidError": "Error: sourceAlertId does not reference an existing alert"
+  }
+}

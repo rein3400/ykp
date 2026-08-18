@@ -1,0 +1,2565 @@
+{
+  "sheets": [
+    "Petunjuk",
+    "Master_Item",
+    "F1_Penerimaan",
+    "F2_Kartu_Stok",
+    "F3_Bon_Pemakaian",
+    "F4_Waste",
+    "F5_Closing",
+    "Dashboard"
+  ],
+  "tables": {
+    "Petunjuk": [
+      {
+        "row": 2,
+        "cells": [
+          "",
+          "SISTEM KONTROL BAHAN BAKU — PT YKP"
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          "",
+          "Template Form F1–F5  |  Versi 1.0  |  Untuk operasional outlet F&B YKP Group"
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          "",
+          "CARA PAKAI"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          "",
+          "1. Upload file ini ke Google Drive PT YKP, lalu klik kanan → 'Open with Google Sheets' untuk versi cloud."
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          "",
+          "2. Atau cetak (print) tiap sheet untuk dipakai manual di outlet di hari pertama."
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          "",
+          "3. Tiap outlet pegang 1 file copy (rename: 'Stok_NamaOutlet_Bulan.xlsx')."
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          "",
+          "4. PIC Stok mengisi sel berwarna KUNING (input). Sel HIJAU dihitung otomatis (jangan diedit)."
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          "",
+          "5. Tutup buku tiap malam jam 22:00. Kirim screenshot Sheet F5 ke WA grup 'Closing Harian YKP'."
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          "",
+          "LEGENDA WARNA"
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          "",
+          "   • Kuning  = Sel input (diisi manual oleh PIC Stok)"
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          "",
+          "   • Hijau    = Sel otomatis (rumus, jangan diubah)"
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          "",
+          "   • Merah    = Indikator selisih > toleransi (alert)"
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          "",
+          "DAFTAR FORM"
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          "",
+          "   F1  Penerimaan Barang        — diisi saat barang datang dari supplier/gudang pusat"
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          "",
+          "   F2  Kartu Stok Gudang         — 1 baris per transaksi keluar-masuk per item"
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          "",
+          "   F3  Bon Pemakaian Dapur     — wajib tiap kali bahan keluar dari gudang outlet"
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          "",
+          "   F4  Waste / Kerusakan         — wajib foto, tanpa foto = tidak diakui"
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          "",
+          "   F5  Stock Opname Harian     — closing tiap malam, kirim ke owner"
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          "",
+          "   Master Item                          — daftar 5–10 item kritikal yang dipantau"
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          "",
+          "ATURAN EMAS"
+        ]
+      },
+      {
+        "row": 27,
+        "cells": [
+          "",
+          "   1. Tidak ada tanda tangan = barang tidak diterima."
+        ]
+      },
+      {
+        "row": 28,
+        "cells": [
+          "",
+          "   2. Tidak ada bon F3 = bahan tidak boleh keluar dari gudang."
+        ]
+      },
+      {
+        "row": 29,
+        "cells": [
+          "",
+          "   3. Tidak ada foto F4 = waste tidak diakui (jadi tanggung jawab PIC)."
+        ]
+      },
+      {
+        "row": 30,
+        "cells": [
+          "",
+          "   4. Tidak ada closing F5 = outlet tidak boleh buka besok."
+        ]
+      },
+      {
+        "row": 31,
+        "cells": [
+          "",
+          "   5. Selisih > 5% per item = wajib investigasi 24 jam."
+        ]
+      },
+      {
+        "row": 33,
+        "cells": [
+          "",
+          "KONTAK ESCALATION"
+        ]
+      },
+      {
+        "row": 34,
+        "cells": [
+          "",
+          "   • Selisih harian ≤ 2% → lanjut normal"
+        ]
+      },
+      {
+        "row": 35,
+        "cells": [
+          "",
+          "   • Selisih 2–5%           → lapor Manager Outlet, tunggu approval"
+        ]
+      },
+      {
+        "row": 36,
+        "cells": [
+          "",
+          "   • Selisih > 5%            → lapor Owner langsung malam itu juga"
+        ]
+      }
+    ],
+    "Master_Item": [
+      {
+        "row": 1,
+        "cells": [
+          "MASTER ITEM KRITIKAL",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          "Daftar 5–10 bahan baku paling mahal / paling sering bocor yang dipantau harian",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          "Kode",
+          "Nama Item",
+          "Satuan",
+          "Harga Beli (Rp)",
+          "Stok Min",
+          "Toleransi Selisih (%)",
+          "Catatan"
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          "ITM-001",
+          "Daging Sapi Sirloin",
+          "kg",
+          "180000",
+          "5",
+          "2",
+          "Cek kondisi & timbang ulang"
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          "ITM-002",
+          "Ayam Fillet",
+          "kg",
+          "55000",
+          "10",
+          "3",
+          ""
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          "ITM-003",
+          "Salmon Fillet",
+          "kg",
+          "320000",
+          "3",
+          "2",
+          "Wajib ditimbang depan supplier"
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          "ITM-004",
+          "Keju Mozzarella",
+          "kg",
+          "145000",
+          "4",
+          "3",
+          ""
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          "ITM-005",
+          "Minyak Goreng",
+          "liter",
+          "18000",
+          "20",
+          "5",
+          ""
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          "ITM-006",
+          "Gula Pasir",
+          "kg",
+          "14000",
+          "15",
+          "3",
+          ""
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          "ITM-007",
+          "Kopi Arabica Bean",
+          "kg",
+          "220000",
+          "5",
+          "2",
+          "Item rawan bocor"
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          "ITM-008",
+          "Butter Unsalted",
+          "kg",
+          "95000",
+          "5",
+          "3",
+          ""
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          "ITM-009",
+          "Udang Vaname",
+          "kg",
+          "110000",
+          "4",
+          "3",
+          ""
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          "ITM-010",
+          "Cokelat Couverture",
+          "kg",
+          "165000",
+          "3",
+          "2",
+          ""
+        ]
+      }
+    ],
+    "F1_Penerimaan": [
+      {
+        "row": 1,
+        "cells": [
+          "F1 — PENERIMAAN BARANG",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          "Wajib diisi saat barang datang. Timbang ulang. TTD 2 orang. Selisih > 0 = klaim hari itu juga.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          "Tanggal:",
+          "",
+          "Outlet:",
+          "",
+          "PIC Stok:",
+          "",
+          "Shift:",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          "No",
+          "Tanggal",
+          "Jam",
+          "No. PO/DO",
+          "Nama Item",
+          "Qty Pesan",
+          "Qty Terima",
+          "Satuan",
+          "Selisih",
+          "Kondisi",
+          "TTD Pengirim & Penerima"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          "1",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          "2",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          "3",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          "4",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          "5",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          "6",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          "7",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          "8",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          "9",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          "10",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          "11",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          "12",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          "13",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          "14",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          "15",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          "16",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          "17",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          "18",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          "19",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          "20",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ],
+    "F2_Kartu_Stok": [
+      {
+        "row": 1,
+        "cells": [
+          "F2 — KARTU STOK GUDANG",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          "1 transaksi = 1 baris. Saldo terhitung otomatis. Cocokkan dengan fisik tiap closing.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          "Tanggal:",
+          "",
+          "Outlet:",
+          "",
+          "PIC Stok:",
+          "",
+          "Shift:",
+          ""
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          "Item Dipantau:",
+          "",
+          "",
+          "",
+          "Satuan:",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          "No",
+          "Tanggal",
+          "Jam",
+          "Masuk",
+          "Keluar",
+          "Saldo",
+          "Keterangan",
+          "Paraf"
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          "",
+          "SALDO AWAL",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          "1",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          "2",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          "3",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          "4",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          "5",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          "6",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          "7",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          "8",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          "9",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          "10",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          "11",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          "12",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          "13",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          "14",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          "15",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          "16",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          "17",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          "18",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 27,
+        "cells": [
+          "19",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 28,
+        "cells": [
+          "20",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 29,
+        "cells": [
+          "21",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 30,
+        "cells": [
+          "22",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 31,
+        "cells": [
+          "23",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 32,
+        "cells": [
+          "24",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 33,
+        "cells": [
+          "25",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 34,
+        "cells": [
+          "26",
+          "",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ],
+    "F3_Bon_Pemakaian": [
+      {
+        "row": 1,
+        "cells": [
+          "F3 — BON PEMAKAIAN DAPUR",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          "Tiap kali bahan keluar dari gudang outlet wajib dicatat. Tidak ada bon = bahan tidak boleh keluar.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          "Tanggal:",
+          "",
+          "Outlet:",
+          "",
+          "PIC Stok:",
+          "",
+          "Shift:",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          "No",
+          "Tanggal",
+          "Jam",
+          "Nama Item",
+          "Qty Keluar",
+          "Satuan",
+          "Untuk Menu/Keperluan",
+          "Diminta Oleh",
+          "Disetujui PIC"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          "1",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          "2",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          "3",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          "4",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          "5",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          "6",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          "7",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          "8",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          "9",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          "10",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          "11",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          "12",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          "13",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          "14",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          "15",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          "16",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          "17",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          "18",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          "19",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          "20",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 27,
+        "cells": [
+          "21",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 28,
+        "cells": [
+          "22",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 29,
+        "cells": [
+          "23",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 30,
+        "cells": [
+          "24",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 31,
+        "cells": [
+          "25",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    ],
+    "F4_Waste": [
+      {
+        "row": 1,
+        "cells": [
+          "F4 — WASTE / KERUSAKAN",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          "WAJIB FOTO. Tanpa foto = tidak diakui sebagai waste (jadi tanggung jawab PIC).",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          "Tanggal:",
+          "",
+          "Outlet:",
+          "",
+          "PIC Stok:",
+          "",
+          "Shift:",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          "No",
+          "Tanggal",
+          "Nama Item",
+          "Qty",
+          "Satuan",
+          "Alasan",
+          "Foto (Y/N)",
+          "PIC",
+          "TTD Saksi"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          "1",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          "2",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          "3",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          "4",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          "5",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          "6",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          "7",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          "8",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          "9",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          "10",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          "11",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          "12",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          "13",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          "14",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          "15",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          "16",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          "17",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          "18",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          "19",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          "20",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    ],
+    "F5_Closing": [
+      {
+        "row": 1,
+        "cells": [
+          "F5 — STOCK OPNAME HARIAN (CLOSING)",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          "Diisi tiap malam jam 22:00. Kirim screenshot ke WA grup 'Closing Harian YKP' sebelum jam 23:00.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          "Tanggal:",
+          "",
+          "Outlet:",
+          "",
+          "PIC Stok:",
+          "",
+          "Shift:",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          "No",
+          "Kode",
+          "Nama Item",
+          "Satuan",
+          "Stok Awal",
+          "Penerimaan",
+          "Pemakaian",
+          "Waste",
+          "Stok Seharusnya",
+          "Stok Aktual",
+          "Selisih",
+          "% Selisih"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          "1",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          "2",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          "3",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          "4",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          "5",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          "6",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          "7",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          "8",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          "9",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          "10",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          "11",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          "12",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          "",
+          "",
+          "TOTAL ITEM TERPANTAU",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          "",
+          "RINGKASAN HARIAN",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          "",
+          "Jumlah item dengan selisih > 0 (item bocor):",
+          "",
+          "",
+          "",
+          "0",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          "",
+          "Jumlah item dengan selisih > 5% (alert):",
+          "",
+          "",
+          "",
+          "(belum ada data)",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          "",
+          "Item paling besar selisihnya:",
+          "",
+          "",
+          "",
+          "(belum ada data)",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          "",
+          "Status closing:",
+          "",
+          "",
+          "",
+          "BELUM CLOSING",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    ],
+    "Dashboard": [
+      {
+        "row": 1,
+        "cells": [
+          "DASHBOARD KONTROL — RINGKASAN MINGGUAN",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          "Diisi tiap Senin pagi oleh Manager Outlet. Untuk review owner.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          "Periode:",
+          "",
+          "",
+          "",
+          "Outlet:",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          "KPI MINGGU INI",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          "KPI",
+          "Target",
+          "Aktual",
+          "Status",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          "Selisih stok rata-rata harian per item",
+          "≤ 2%",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          "Food cost % vs sales",
+          "28% – 35%",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          "Waste ratio (% dari pemakaian)",
+          "≤ 2%",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          "Akurasi penerimaan barang",
+          "100%",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          "Compliance form F1–F5 (lengkap terisi)",
+          "100%",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          "Total nilai selisih minggu ini (Rp)",
+          "Rp 0",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          "Jumlah audit mendadak minggu ini",
+          "≥ 1×",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          "3 TEMUAN UTAMA MINGGU INI",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          "1.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          "2.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          "3.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          "3 RENCANA AKSI MINGGU DEPAN",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          "1.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          "2.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          "3.",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

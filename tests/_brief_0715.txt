@@ -1,0 +1,24 @@
+Brief YKP Hermez â€” 15/07/2026, 00.00 WIB
+
+Revenue hari ini: Rp 0
+Expense hari ini: Rp 0
+Net profit estimate: Rp 0
+Kehadiran: 0/0 (terlambat 0)
+
+Alert aktif: 14
+- [WARNING] Funkydak Kemang: Tagihan supplier tertunggak Rp 3.462.411. Risiko operasional.
+- [WARNING] Funkydak Senopati: Tagihan supplier tertunggak Rp 7.298.557. Risiko operasional.
+- [WARNING] Funkydak Sudirman: Tagihan supplier tertunggak Rp 5.712.747. Risiko operasional.
+- [WARNING] Laju Kopi Bandung: Tagihan supplier tertunggak Rp 5.556.861. Risiko operasional.
+- [WARNING] Laju Kopi Bekasi: Tagihan supplier tertunggak Rp 6.120.257. Risiko operasional.
+- [WARNING] Laju Kopi Depok: Tagihan supplier tertunggak Rp 3.466.977. Risiko operasional.
+- [WARNING] Sekarpizza Cikini: Tagihan supplier tertunggak Rp 10.100.944. Risiko operasional.
+- [WARNING] Sekarpizza Cipete: Tagihan supplier tertunggak Rp 5.970.171. Risiko operasional.
+- [WARNING] Sekarpizza Pondok Indah: Tagihan supplier tertunggak Rp 5.555.553. Risiko operasional.
+- [WARNING] Suburbuns Bintaro: Tagihan supplier tertunggak Rp 7.031.386. Risiko operasional.
+- [WARNING] Suburbuns Kelapa Gading: Tagihan supplier tertunggak Rp 14.087.530. Risiko operasional.
+- [WARNING] Suburbuns PIK: Tagihan supplier tertunggak Rp 6.219.730. Risiko operasional.
+- [WARNING] Uncle Masala Bali: Tagihan supplier tertunggak Rp 5.543.121. Risiko operasional.
+- [WARNING] Uncle Masala Medan: Tagihan supplier tertunggak Rp 8.974.019. Risiko operasional.
+
+Level: YELLOW

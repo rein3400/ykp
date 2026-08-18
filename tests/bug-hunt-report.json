@@ -1,0 +1,105 @@
+{
+  "passes": [
+    {
+      "app": "ykp-erp-finance",
+      "location": "root /",
+      "note": "loads OK"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/petty-cash tab \"All\"",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/petty-cash tab \"Debit\"",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/petty-cash tab \"Kredit\"",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/petty-cash tab \"Urgent\"",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "/expenses loads",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "Tambah Expense dialog opens",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-finance",
+      "location": "Tambah Expense form fillable",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "root / loads",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/alerts loads",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/config Simpan button clickable",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/run Generate brief clickable",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/telegram-test Kirim clickable",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/attendance loads",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/payroll loads",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/payroll Generate Payroll dialog opens",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/rules Tambah Rule dialog opens",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/summary Rebuild clickable",
+      "note": ""
+    }
+  ],
+  "bugs": [
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "location": "/login",
+      "description": "status 502",
+      "status": 502,
+      "ts": "2026-07-09T17:43:42.305Z"
+    }
+  ],
+  "ts": "2026-07-09T17:43:42.619Z"
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "label": "ykp-erp-finance: CSP has 'unsafe-inline' for script-src",
+    "ok": false,
+    "detail": "csp=default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src…"
+  },
+  {
+    "label": "ykp-erp-hermez: CSP has 'unsafe-inline' for script-src",
+    "ok": false,
+    "detail": "csp=default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src…"
+  },
+  {
+    "label": "ykp-erp-hr: CSP has 'unsafe-inline' for script-src",
+    "ok": false,
+    "detail": "csp=default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src…"
+  },
+  {
+    "label": "HR V1 login API returns 2xx (no longer 500)",
+    "ok": false,
+    "detail": "status=500 body={\"error\":{\"code\":\"internal_error\",\"message\":\"Internal server error (ref MRDHPWXH)\"}}"
+  },
+  {
+    "label": "finance root: buttons in DOM (hydration worked)",
+    "ok": false,
+    "detail": "count=0"
+  },
+  {
+    "label": "finance /expenses: Tambah Expense button in DOM",
+    "ok": false,
+    "detail": "count=0"
+  },
+  {
+    "label": "hermez root: buttons in DOM (hydration worked)",
+    "ok": true,
+    "detail": "count=1"
+  },
+  {
+    "label": "hr /attendance: buttons in DOM (hydration worked)",
+    "ok": true,
+    "detail": "count=5"
+  },
+  {
+    "label": "hr-v1 /hr/employees: skip (login failed)",
+    "ok": false,
+    "detail": "login not 2xx"
+  }
+]

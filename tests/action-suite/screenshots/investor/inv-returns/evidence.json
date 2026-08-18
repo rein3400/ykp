@@ -1,0 +1,40 @@
+{
+  "id": "inv-returns",
+  "title": "View returns / ROI table",
+  "module": "investor",
+  "status": "pass",
+  "startedAt": "2026-07-19T04:31:16.151Z",
+  "durationMs": 4427,
+  "stepResults": [
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "goto",
+      "target": "https://ykp-investor-v1.vercel.app/investor/returns"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "waitSettled"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "screenshot",
+      "path": "tests\\action-suite\\screenshots\\investor\\inv-returns\\returns.png"
+    }
+  ],
+  "verifyResults": [
+    {
+      "ok": true,
+      "type": "noErrorText",
+      "count": 0
+    }
+  ],
+  "consoleErrors": [],
+  "networkFails": [],
+  "screenshots": [
+    "tests\\action-suite\\screenshots\\investor\\inv-returns\\returns.png"
+  ],
+  "attempts": 1
+}

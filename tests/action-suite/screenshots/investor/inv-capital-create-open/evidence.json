@@ -1,0 +1,46 @@
+{
+  "id": "inv-capital-create-open",
+  "title": "Open create capital form",
+  "module": "investor",
+  "status": "pass",
+  "startedAt": "2026-07-19T04:31:03.620Z",
+  "durationMs": 3625,
+  "stepResults": [
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "goto",
+      "target": "https://ykp-investor-v1.vercel.app/investor/capital"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "click",
+      "target": "/Catat Capital/i"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "waitSettled"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "screenshot",
+      "path": "tests\\action-suite\\screenshots\\investor\\inv-capital-create-open\\create-capital-form.png"
+    }
+  ],
+  "verifyResults": [
+    {
+      "ok": true,
+      "type": "noConsoleErrors",
+      "errs": []
+    }
+  ],
+  "consoleErrors": [],
+  "networkFails": [],
+  "screenshots": [
+    "tests\\action-suite\\screenshots\\investor\\inv-capital-create-open\\create-capital-form.png"
+  ],
+  "attempts": 1
+}

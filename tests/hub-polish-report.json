@@ -1,0 +1,36 @@
+{
+  "ts": "2026-07-11T02:38:31.431Z",
+  "findings": [
+    {
+      "severity": "warn",
+      "area": "dashboard",
+      "message": "no rows labels (hr-v1 should have count)"
+    },
+    {
+      "severity": "fail",
+      "area": "theme",
+      "message": "dark class not applied"
+    },
+    {
+      "severity": "warn",
+      "area": "theme",
+      "message": "expected 'system' after cycle, got: Theme: dark"
+    },
+    {
+      "severity": "error",
+      "area": "console",
+      "message": "Failed to load resource: the server responded with a status of 401 ()"
+    },
+    {
+      "severity": "fail",
+      "area": "login",
+      "message": "no error on bad credentials"
+    },
+    {
+      "severity": "fail",
+      "area": "theme",
+      "message": "dark mode lost on reload"
+    }
+  ],
+  "total": 6
+}

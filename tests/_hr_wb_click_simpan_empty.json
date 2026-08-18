@@ -1,0 +1,1 @@
+{"action":"evaluate","args":{"code":"(() => { const btn = [...document.querySelectorAll('button')].find(b => /Simpan|Ajukan|Generate|Regenerate|\\+ Tambah User/i.test(b.innerText)); if (!btn) return JSON.stringify({found:false}); btn.click(); return JSON.stringify({found:true, clicked: btn.innerText.trim().slice(0,40)}); })()"},"session":"hr-pilot-test"}

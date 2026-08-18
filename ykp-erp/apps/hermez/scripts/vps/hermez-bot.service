@@ -1,0 +1,29 @@
+[Unit]
+Description=Hermez Telegram dialog bot worker (long-poll)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hermez-bot
+WorkingDirectory=/opt/hermez-bot
+# Node 22 required (bot-worker.mjs uses AbortSignal.timeout, top-level await).
+ExecStart=/usr/bin/node /opt/hermez-bot/bot-worker.mjs
+Restart=always
+RestartSec=5
+# Load env file into the service environment.
+EnvironmentFile=/opt/hermez-bot/.env
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+# Bot writes nothing to disk, so read-only root is safe.
+ReadWritePaths=/opt/hermez-bot
+# Journald captures console output ([hermez-bot] ...).
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hermez-bot
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,378 @@
+{
+  "module": "investor",
+  "startedAt": "2026-07-19T04:29:07.459Z",
+  "finishedAt": "2026-07-19T04:31:25.224Z",
+  "totals": {
+    "actions": 10,
+    "pass": 8,
+    "fail": 0,
+    "skip": 2,
+    "error": 0
+  },
+  "login": {
+    "ok": true,
+    "mode": "password",
+    "ms": 2979
+  },
+  "actions": [
+    {
+      "id": "inv-login",
+      "title": "Login to Investor app",
+      "status": "skip",
+      "reason": "already passed (resume)"
+    },
+    {
+      "id": "inv-dashboard-cards",
+      "title": "View dashboard cards",
+      "status": "skip",
+      "reason": "already passed (resume)"
+    },
+    {
+      "id": "inv-regenerate-summary",
+      "title": "Regenerate summary (owner only)",
+      "module": "investor",
+      "status": "pass",
+      "startedAt": "2026-07-19T04:30:47.205Z",
+      "durationMs": 6933,
+      "stepResults": [
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "goto",
+          "target": "https://ykp-investor-v1.vercel.app/investor"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "click",
+          "target": "/Regenerate Summary|Regenerate/i"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "waitSettled"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "screenshot",
+          "path": "tests\\action-suite\\screenshots\\investor\\inv-regenerate-summary\\regenerated.png"
+        }
+      ],
+      "verifyResults": [
+        {
+          "ok": true,
+          "type": "noNetwork5xx",
+          "fails": []
+        }
+      ],
+      "consoleErrors": [],
+      "networkFails": [],
+      "screenshots": [
+        "tests\\action-suite\\screenshots\\investor\\inv-regenerate-summary\\regenerated.png"
+      ],
+      "attempts": 1
+    },
+    {
+      "id": "inv-portfolio",
+      "title": "View portfolio table",
+      "module": "investor",
+      "status": "pass",
+      "startedAt": "2026-07-19T04:30:54.148Z",
+      "durationMs": 4961,
+      "stepResults": [
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "goto",
+          "target": "https://ykp-investor-v1.vercel.app/investor/portfolio"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "waitSettled"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "screenshot",
+          "path": "tests\\action-suite\\screenshots\\investor\\inv-portfolio\\portfolio.png"
+        }
+      ],
+      "verifyResults": [
+        {
+          "ok": true,
+          "type": "noErrorText",
+          "count": 0
+        }
+      ],
+      "consoleErrors": [],
+      "networkFails": [],
+      "screenshots": [
+        "tests\\action-suite\\screenshots\\investor\\inv-portfolio\\portfolio.png"
+      ],
+      "attempts": 1
+    },
+    {
+      "id": "inv-capital-list",
+      "title": "View capital movements list",
+      "module": "investor",
+      "status": "pass",
+      "startedAt": "2026-07-19T04:30:59.115Z",
+      "durationMs": 4497,
+      "stepResults": [
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "goto",
+          "target": "https://ykp-investor-v1.vercel.app/investor/capital"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "waitSettled"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "screenshot",
+          "path": "tests\\action-suite\\screenshots\\investor\\inv-capital-list\\capital-list.png"
+        }
+      ],
+      "verifyResults": [
+        {
+          "ok": true,
+          "type": "noErrorText",
+          "count": 0
+        }
+      ],
+      "consoleErrors": [],
+      "networkFails": [],
+      "screenshots": [
+        "tests\\action-suite\\screenshots\\investor\\inv-capital-list\\capital-list.png"
+      ],
+      "attempts": 1
+    },
+    {
+      "id": "inv-capital-create-open",
+      "title": "Open create capital form",
+      "module": "investor",
+      "status": "pass",
+      "startedAt": "2026-07-19T04:31:03.620Z",
+      "durationMs": 3625,
+      "stepResults": [
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "goto",
+          "target": "https://ykp-investor-v1.vercel.app/investor/capital"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "click",
+          "target": "/Catat Capital/i"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "waitSettled"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "screenshot",
+          "path": "tests\\action-suite\\screenshots\\investor\\inv-capital-create-open\\create-capital-form.png"
+        }
+      ],
+      "verifyResults": [
+        {
+          "ok": true,
+          "type": "noConsoleErrors",
+          "errs": []
+        }
+      ],
+      "consoleErrors": [],
+      "networkFails": [],
+      "screenshots": [
+        "tests\\action-suite\\screenshots\\investor\\inv-capital-create-open\\create-capital-form.png"
+      ],
+      "attempts": 1
+    },
+    {
+      "id": "inv-dividend-list",
+      "title": "View dividend list",
+      "module": "investor",
+      "status": "pass",
+      "startedAt": "2026-07-19T04:31:07.254Z",
+      "durationMs": 4720,
+      "stepResults": [
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "goto",
+          "target": "https://ykp-investor-v1.vercel.app/investor/dividend"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "waitSettled"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "screenshot",
+          "path": "tests\\action-suite\\screenshots\\investor\\inv-dividend-list\\dividend-list.png"
+        }
+      ],
+      "verifyResults": [
+        {
+          "ok": true,
+          "type": "noErrorText",
+          "count": 0
+        }
+      ],
+      "consoleErrors": [],
+      "networkFails": [],
+      "screenshots": [
+        "tests\\action-suite\\screenshots\\investor\\inv-dividend-list\\dividend-list.png"
+      ],
+      "attempts": 1
+    },
+    {
+      "id": "inv-dividend-create-open",
+      "title": "Open declare dividend form",
+      "module": "investor",
+      "status": "pass",
+      "startedAt": "2026-07-19T04:31:11.983Z",
+      "durationMs": 4160,
+      "stepResults": [
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "goto",
+          "target": "https://ykp-investor-v1.vercel.app/investor/dividend"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "click",
+          "target": "/Declare Dividend/i"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "waitSettled"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "screenshot",
+          "path": "tests\\action-suite\\screenshots\\investor\\inv-dividend-create-open\\declare-dividend-form.png"
+        }
+      ],
+      "verifyResults": [
+        {
+          "ok": true,
+          "type": "noConsoleErrors",
+          "errs": []
+        }
+      ],
+      "consoleErrors": [],
+      "networkFails": [],
+      "screenshots": [
+        "tests\\action-suite\\screenshots\\investor\\inv-dividend-create-open\\declare-dividend-form.png"
+      ],
+      "attempts": 1
+    },
+    {
+      "id": "inv-returns",
+      "title": "View returns / ROI table",
+      "module": "investor",
+      "status": "pass",
+      "startedAt": "2026-07-19T04:31:16.151Z",
+      "durationMs": 4427,
+      "stepResults": [
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "goto",
+          "target": "https://ykp-investor-v1.vercel.app/investor/returns"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "waitSettled"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "screenshot",
+          "path": "tests\\action-suite\\screenshots\\investor\\inv-returns\\returns.png"
+        }
+      ],
+      "verifyResults": [
+        {
+          "ok": true,
+          "type": "noErrorText",
+          "count": 0
+        }
+      ],
+      "consoleErrors": [],
+      "networkFails": [],
+      "screenshots": [
+        "tests\\action-suite\\screenshots\\investor\\inv-returns\\returns.png"
+      ],
+      "attempts": 1
+    },
+    {
+      "id": "inv-logout",
+      "title": "Logout from Investor app",
+      "module": "investor",
+      "status": "pass",
+      "startedAt": "2026-07-19T04:31:20.585Z",
+      "durationMs": 4628,
+      "stepResults": [
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "goto",
+          "target": "https://ykp-investor-v1.vercel.app/investor"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "click",
+          "target": "/Logout|Keluar/i"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "waitSettled"
+        },
+        {
+          "phase": "steps",
+          "ok": true,
+          "name": "screenshot",
+          "path": "tests\\action-suite\\screenshots\\investor\\inv-logout\\after-logout.png"
+        }
+      ],
+      "verifyResults": [
+        {
+          "ok": true,
+          "type": "urlMatches",
+          "url": "https://ykp-investor-v1.vercel.app/login"
+        }
+      ],
+      "consoleErrors": [],
+      "networkFails": [],
+      "screenshots": [
+        "tests\\action-suite\\screenshots\\investor\\inv-logout\\after-logout.png"
+      ],
+      "attempts": 1
+    }
+  ],
+  "findings": [],
+  "base": "https://ykp-investor-v1.vercel.app",
+  "durationMs": 41012
+}

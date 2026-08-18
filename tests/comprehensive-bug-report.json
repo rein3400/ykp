@@ -1,0 +1,446 @@
+{
+  "passes": [
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/",
+      "note": "200 buttons=1 inputs=1"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/alerts",
+      "note": "200 buttons=1 inputs=3"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/config",
+      "note": "200 buttons=7 inputs=6"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/run",
+      "note": "200 buttons=2 inputs=1"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "location": "/telegram-test",
+      "note": "200 buttons=2 inputs=0"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/attendance",
+      "note": "200 buttons=5"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/payroll",
+      "note": "200 buttons=5"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/payroll Generate dialog",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/rules",
+      "note": "200 buttons=5"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/rules Tambah Rule dialog",
+      "note": ""
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/employees",
+      "note": "200 buttons=6"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "location": "/summary",
+      "note": "200 buttons=5"
+    }
+  ],
+  "bugs": [
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "/",
+      "description": "HTTP 429",
+      "status": 429,
+      "url": "https://ykp-erp-finance-production.up.railway.app/",
+      "ts": "2026-07-09T18:50:58.517Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/",
+      "description": "1 error text(s) visible",
+      "body": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "ts": "2026-07-09T18:50:58.518Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "/petty-cash",
+      "description": "HTTP 429",
+      "status": 429,
+      "url": "https://ykp-erp-finance-production.up.railway.app/petty-cash",
+      "ts": "2026-07-09T18:51:00.970Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/petty-cash",
+      "description": "1 error text(s) visible",
+      "body": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "ts": "2026-07-09T18:51:00.970Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "/pos",
+      "description": "HTTP 429",
+      "status": 429,
+      "url": "https://ykp-erp-finance-production.up.railway.app/pos",
+      "ts": "2026-07-09T18:51:03.413Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/pos",
+      "description": "1 error text(s) visible",
+      "body": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "ts": "2026-07-09T18:51:03.413Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "/suppliers",
+      "description": "HTTP 429",
+      "status": 429,
+      "url": "https://ykp-erp-finance-production.up.railway.app/suppliers",
+      "ts": "2026-07-09T18:51:05.834Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/suppliers",
+      "description": "1 error text(s) visible",
+      "body": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "ts": "2026-07-09T18:51:05.834Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "/expenses",
+      "description": "HTTP 429",
+      "status": 429,
+      "url": "https://ykp-erp-finance-production.up.railway.app/expenses",
+      "ts": "2026-07-09T18:51:08.284Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/expenses",
+      "description": "1 error text(s) visible",
+      "body": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "ts": "2026-07-09T18:51:08.284Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "/summary",
+      "description": "HTTP 429",
+      "status": 429,
+      "url": "https://ykp-erp-finance-production.up.railway.app/summary",
+      "ts": "2026-07-09T18:51:10.719Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/summary",
+      "description": "1 error text(s) visible",
+      "body": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "ts": "2026-07-09T18:51:10.719Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "/analytics",
+      "description": "HTTP 429",
+      "status": 429,
+      "url": "https://ykp-erp-finance-production.up.railway.app/analytics",
+      "ts": "2026-07-09T18:51:13.135Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/analytics",
+      "description": "1 error text(s) visible",
+      "body": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "ts": "2026-07-09T18:51:13.135Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "/settings",
+      "description": "HTTP 429",
+      "status": 429,
+      "url": "https://ykp-erp-finance-production.up.railway.app/settings",
+      "ts": "2026-07-09T18:51:15.579Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "/settings",
+      "description": "1 error text(s) visible",
+      "body": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "ts": "2026-07-09T18:51:15.579Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "location": "Tambah Expense submit",
+      "description": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Sim",
+      "ts": "2026-07-09T18:51:50.261Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-finance",
+      "location": "Export PDF",
+      "description": "HTTP 403",
+      "status": 403,
+      "body": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Forbidden: insufficient role\"}}",
+      "ts": "2026-07-09T18:51:53.863Z"
+    },
+    {
+      "severity": "low",
+      "app": "ykp-erp-finance",
+      "location": "Export CSV",
+      "description": "menuitem not in DOM",
+      "ts": "2026-07-09T18:51:53.866Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-hermez",
+      "location": "/config Simpan",
+      "description": "HTTP 403",
+      "status": 403,
+      "body": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Forbidden: insufficient role\"}}",
+      "ts": "2026-07-09T18:52:02.287Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-hermez",
+      "location": "/run Generate",
+      "description": "status=403",
+      "status": 403,
+      "body": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Forbidden: insufficient role\"}}",
+      "ts": "2026-07-09T18:52:05.068Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hermez",
+      "location": "/telegram-test",
+      "description": "response: {\"error\":{\"code\":\"forbidden\",\"message\":\"Forbidden: insufficient role\"}}",
+      "ts": "2026-07-09T18:52:07.859Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hr",
+      "location": "/payroll",
+      "description": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Gen",
+      "ts": "2026-07-09T18:52:44.910Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hr",
+      "location": "/rules",
+      "description": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Bua",
+      "ts": "2026-07-09T18:53:19.005Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-hr",
+      "location": "/summary Rebuild",
+      "description": "HTTP 403",
+      "status": 403,
+      "body": "{\"error\":{\"code\":403,\"message\":\"Forbidden: insufficient role\"}}",
+      "ts": "2026-07-09T18:53:24.258Z"
+    }
+  ],
+  "network_log": [
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=outlets",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/expense?date_from=2026-06-30&date_to=2026-07-09",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=payment_methods",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=categories",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/expense?date_from=2026-06-30&date_to=2026-07-09",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=outlets",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=payment_methods",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=categories",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=outlets",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=payment_methods",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=categories",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/expense?date_from=2026-06-30&date_to=2026-07-09",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=payment_methods",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=outlets",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/master-data?kind=categories",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/expense?date_from=2026-06-30&date_to=2026-07-09",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-finance-production.up.railway.app/api/fin/export/pdf",
+      "status": 403,
+      "method": "POST"
+    },
+    {
+      "url": "https://ykp-erp-hermez-production.up.railway.app/api/hermez/brief?date=2026-07-09",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hermez-production.up.railway.app/api/hermez/alerts",
+      "status": 401,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hermez-production.up.railway.app/api/hermez/config",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hermez-production.up.railway.app/api/hermez/config",
+      "status": 403,
+      "method": "PUT"
+    },
+    {
+      "url": "https://ykp-erp-hermez-production.up.railway.app/api/hermez/run",
+      "status": 403,
+      "method": "POST"
+    },
+    {
+      "url": "https://ykp-erp-hermez-production.up.railway.app/api/hermez/telegram/test",
+      "status": 403,
+      "method": "POST"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/attendance?date=2026-07-10",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/attendance?date=2026-07-10",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/payroll",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/payroll",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/rules",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/rules",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/employees",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/employees",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/summary?date=2026-07-10",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/summary?date=2026-07-10",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "url": "https://ykp-erp-hr-production.up.railway.app/api/hr/summary",
+      "status": 403,
+      "method": "POST"
+    }
+  ],
+  "ts": "2026-07-09T18:53:24.570Z"
+}

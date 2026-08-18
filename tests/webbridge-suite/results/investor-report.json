@@ -1,0 +1,59 @@
+﻿{
+    "module":  "investor",
+    "startedAt":  "2026-07-19T12:02:31.4400203+07:00",
+    "finishedAt":  "2026-07-19T12:16:47.2477326+07:00",
+    "totals":  {
+                   "actions":  0,
+                   "pass":  0,
+                   "fail":  0,
+                   "skip":  0,
+                   "error":  0
+               },
+    "login":  {
+                  "ok":  false,
+                  "mode":  "password",
+                  "ms":  2792.5647000000004,
+                  "error":  "fill failed: {\"ok\":false,\"error\":{\"code\":\"extension_error\",\"message\":\"fill: Uncaught\"}}"
+              },
+    "actions":  [
+
+                ],
+    "findings":  [
+                     {
+                         "severity":  "CRITICAL",
+                         "actionId":  "login",
+                         "msg":  "Login failed: evaluate failed: {\"ok\":false,\"error\":{\"code\":\"tool_error\",\"message\":\"session \\\"ykp-qa-investor\\\" has no tab — navigate or find_tab first\"}}",
+                         "evidence":  null,
+                         "ts":  "2026-07-19T12:02:31.5526032+07:00"
+                     },
+                     {
+                         "severity":  "CRITICAL",
+                         "actionId":  "login",
+                         "msg":  "Login failed: evaluate failed: {\"ok\":false,\"error\":{\"code\":\"tool_error\",\"message\":\"session \\\"ykp-qa-investor\\\" has no tab — navigate or find_tab first\"}}",
+                         "evidence":  null,
+                         "ts":  "2026-07-19T12:09:07.4759007+07:00"
+                     },
+                     {
+                         "severity":  "CRITICAL",
+                         "actionId":  "login",
+                         "msg":  "Login failed: navigate failed: {\"ok\":false,\"error\":{\"code\":\"extension_error\",\"message\":\"navigate: url is required\"}}",
+                         "evidence":  null,
+                         "ts":  "2026-07-19T12:10:16.6245201+07:00"
+                     },
+                     {
+                         "severity":  "CRITICAL",
+                         "actionId":  "login",
+                         "msg":  "Login failed: navigate failed: {\"ok\":false,\"error\":{\"code\":\"extension_error\",\"message\":\"navigate: url is required\"}}",
+                         "evidence":  null,
+                         "ts":  "2026-07-19T12:13:44.5705402+07:00"
+                     },
+                     {
+                         "severity":  "CRITICAL",
+                         "actionId":  "login",
+                         "msg":  "Login failed: fill failed: {\"ok\":false,\"error\":{\"code\":\"extension_error\",\"message\":\"fill: Uncaught\"}}",
+                         "evidence":  null,
+                         "ts":  "2026-07-19T12:16:47.2342042+07:00"
+                     }
+                 ],
+    "base":  "https://ykp-investor-v1.vercel.app"
+}

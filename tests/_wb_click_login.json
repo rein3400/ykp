@@ -1,0 +1,1 @@
+{"action":"evaluate","args":{"code":"(() => { const btn = Array.from(document.querySelectorAll('button')).find(b => /masuk/i.test(b.textContent||'')); if(btn) { btn.click(); return 'clicked'; } return 'no button'; })()"},"session":"ykp-ops-v1-test-20260718"}

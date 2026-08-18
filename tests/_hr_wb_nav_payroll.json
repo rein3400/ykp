@@ -1,0 +1,7 @@
+{
+  "action": "navigate",
+  "args": {
+    "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll"
+  },
+  "session": "hr-pilot-test"
+}

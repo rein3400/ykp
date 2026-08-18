@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Add Employee",
+    "before": 9,
+    "after": 9,
+    "added": false,
+    "delta": 0,
+    "success": false,
+    "status": 400,
+    "screenshot": "tests/screenshots/verify-after/add-employee-after.png"
+  },
+  {
+    "name": "Add Leave",
+    "before": 1,
+    "after": 1,
+    "added": false,
+    "delta": 0,
+    "screenshot": "tests/screenshots/verify-after/add-leave-after.png"
+  },
+  {
+    "name": "Add Adjustment",
+    "before": 1,
+    "after": 1,
+    "added": false,
+    "delta": 0,
+    "screenshot": "tests/screenshots/verify-after/add-adjustment-after.png"
+  },
+  {
+    "name": "Generate Daily Summary",
+    "before": 1,
+    "after": 1,
+    "added": false,
+    "delta": 0,
+    "success": true,
+    "status": 200,
+    "screenshot": "tests/screenshots/verify-after/summary-after.png"
+  }
+]

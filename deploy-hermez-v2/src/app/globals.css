@@ -1,0 +1,4 @@
+@tailwind base;
+@import "../../_packages/config/tailwind-preset.css";
+@tailwind components;
+@tailwind utilities;

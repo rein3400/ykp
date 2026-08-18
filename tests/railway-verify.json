@@ -1,0 +1,82 @@
+[
+  {
+    "app": "ykp-erp-finance",
+    "path": "/",
+    "status": 200,
+    "finalUrl": "/",
+    "buttons": 0,
+    "csp": "CSP_FIXED"
+  },
+  {
+    "app": "ykp-erp-finance",
+    "path": "/petty-cash",
+    "status": 200,
+    "finalUrl": "/petty-cash",
+    "buttons": 9,
+    "csp": "CSP_FIXED"
+  },
+  {
+    "app": "ykp-erp-finance",
+    "path": "/expenses",
+    "status": 200,
+    "finalUrl": "/expenses",
+    "buttons": 6,
+    "csp": "CSP_FIXED"
+  },
+  {
+    "app": "ykp-erp-hermez",
+    "path": "/",
+    "status": 200,
+    "finalUrl": "/",
+    "buttons": 1,
+    "csp": "CSP_FIXED"
+  },
+  {
+    "app": "ykp-erp-hermez",
+    "path": "/alerts",
+    "status": 200,
+    "finalUrl": "/alerts",
+    "buttons": 1,
+    "csp": "CSP_FIXED"
+  },
+  {
+    "app": "ykp-erp-hermez",
+    "path": "/config",
+    "status": 200,
+    "finalUrl": "/config",
+    "buttons": 7,
+    "csp": "CSP_FIXED"
+  },
+  {
+    "app": "ykp-erp-hr",
+    "path": "/",
+    "status": 307,
+    "finalUrl": "/attendance",
+    "buttons": 5,
+    "csp": "CSP_FIXED"
+  },
+  {
+    "app": "ykp-erp-hr",
+    "path": "/attendance",
+    "status": 200,
+    "finalUrl": "/attendance",
+    "buttons": 5,
+    "csp": "CSP_FIXED"
+  },
+  {
+    "app": "ykp-hr-v1",
+    "path": "/login",
+    "status": 502,
+    "finalUrl": "/login",
+    "buttons": 0,
+    "csp": "CSP_OLD"
+  },
+  {
+    "app": "ykp-hr-v1",
+    "path": "/hr",
+    "status": 502,
+    "finalUrl": "/hr",
+    "buttons": 0,
+    "csp": "CSP_OLD"
+  }
+]

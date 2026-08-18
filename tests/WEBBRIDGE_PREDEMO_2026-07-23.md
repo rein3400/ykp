@@ -278,10 +278,49 @@ Script `tests/finance-linking-sync.mts` siap. Saya gak punya credential prod Sup
 
 ### Residual (non-blocker demo)
 
-1. **HR Attendance Out = `NaN:NaN`** — display bug format waktu checkout. Repro: `/hr/attendance` history kolom Out.
-2. **HR Payroll layout** — kolom "GAJI POKOK" nampilin date, "NET" nampilin "owner". Data binding salah di table.
-3. **Finance Ringkasan fallback 07-15** — "Belum ada data hari ini" padahal summary 07-23 ada (API `/api/fin/summary?limit=10` returns today). Dashboard query window mismatch.
+1. **HR Attendance Out = `NaN:NaN`** — display bug format waktu checkout. Repro: `/hr/attendance` history kolom Out. *(partially mitigated by cleanTime() guard — old Sheets rows still dirty)*
+2. **HR Payroll layout** — kolom "GAJI POKOK" nampilin date, "NET" nampilin "owner". Data binding/seed Sheets residual.
+3. **Finance same-day summary empty** — **FIXED 2026-07-23 night** (`date_to` was lte midnight; now end-of-day WIB). Deployed Finance Railway SUCCESS. Verified 24-07 shows rows.
 4. **Outlet inactive (OL-006~015) masih di dropdown** Finance/HR — app gak filter `status=active`.
 5. **Ops mock outlet "Funkydak Kemang"** — beda dari master real "Funkydak Mrican". Ops mock-mode seed terpisah.
 6. **Warehouse/Investor cold-start 500** — 1× transient, retry 200. Vercel cold start.
 7. **Bot in-process** — restart Hermez = bot stop. Re-Start polling sebelum demo.
+8. **Investor `/investor/admin` hard crash** — "This page couldn't load" ERROR 2972506939 (reproduced 2× after login). Dashboard/portfolio/capital/dividend/returns OK.
+9. **Finance `fin_daily_summary` 2026-07-24 duplicate rows** — 5 outlets × 2 (seed double-insert). UI shows double revenue if not deduped. Brief still correct (reads once per outlet via engine).
+10. **⚠️ JANGAN klik Finance "Rebuild Today" pada 24-07** — rebuild overwrites seed with POS-derived zeros (proven on 23-07 earlier).
+
+---
+
+## Full Page Crawl (2026-07-23 night → 2026-07-24 morning)
+
+### Coverage matrix (route render + primary buttons)
+
+| App | Routes crawled | All 200? | Input forms / CTAs seen | Hard fails |
+|---|---|---|---|---|
+| **Hub** | `/` | ✅ | Login, Buka, Preview, Refresh, Logout | none (prod URLs) |
+| **Finance** | `/` `/pos` `/suppliers` `/petty-cash` `/expenses` `/summary` `/analytics` `/settings` | ✅ | Tambah Struk, Tambah Cost, Tambah Expense, Export, Rebuild Today, Filter, Kirim Telegram, tabs | none |
+| **Hermez** | `/` `/alerts` `/actions` `/warehouse` `/config` `/run` `/telegram-test` `/telegram-bot` | ✅ | Generate brief, Start/Stop poller, Kirim test, Acknowledge/Resolve, Start/Complete/Cancel action | none |
+| **HR V1** | `/hr` `/hr/employees` `/hr/employees/new` `/hr/attendance` `/hr/roster` `/hr/lateness` `/hr/leaves` `/hr/payroll` `/hr/payroll/generate` `/hr/adjustments` `/hr/summary` `/hr/users` | ✅ | Simpan Absensi, Clock in/out, Simpan roster, Setujui/Tolak, Ajukan cuti, Generate payroll, Tambah User | none (owner role) |
+| **Warehouse** | Overview, items, locations, suppliers, categories, unit-conversion, threshold, penerimaan, pemakaian, transfer, waste, opname, ledger, expiry, purchase-recommendation, purchase-request, alerts, actions, summary, dashboard, closing, stok | ✅ (after path fix) | + Receiving, + Bon, + Waste, + Opname, + Transfer, Generate Recs, Approve/Reject PR, ACK/Resolve, Regenerate | early crawl used EN path → 404; real ID paths OK |
+| **Investor** | `/investor` portfolio capital dividend returns admin | 5/6 ✅ | Regenerate Summary, + Catat Capital, + Declare Dividend | **`/investor/admin` crash** |
+| **Ops** | `/ops` briefing opening kds qc incidents closing waste analytics ai-assistant | ✅ | Publish Briefing, Submit Opening/Closing/Waste/QC, Submit Incident, Regenerate, Kirim AI | none |
+
+### Demo-day morning probe (2026-07-24)
+
+| Check | Result |
+|---|---|
+| Finance summary 24-07 | ✅ 200, UI shows 5 outlets (Uncle Masala Demangan Rp 20.188.000 …) — note: API may return 10 rows if duplicates not cleaned |
+| Hermez brief HZBR-20260724 | ✅ YELLOW, Rp 93.936.000, 51/55 hadir, 4 alert |
+| Telegram bot | ✅ running, 24 msgs handled, 355 cycles, lastError null |
+| Hub cards | ✅ production URLs, no localhost |
+
+### New bugs found in full crawl
+
+| Sev | Bug | Repro | Status |
+|---|---|---|---|
+| HIGH→FIXED | Investor Admin page crash | `/investor/admin` readTab(documents) in Promise.all rejected when tab absent → RSC crash. Fixed: readTabSafe (catch→[]) for joined reads (commit 8e34af0, Vercel prod). Verified: API 200 + page renders | ✅ live |
+| MED→FIXED | Finance summary TZ leak: `date=2026-07-24` filter returned 23-07 rows too (double revenue) | Drizzle `date` col vs JS Date cast through connection TZ. Fixed: compare `date::text` vs literal YYYY-MM-DD (commit 27782cc) | deploy pending |
+| LOW | Warehouse EN path aliases 404 | `/warehouse/receiving` vs `/warehouse/penerimaan` | by design (ID routes) |
+| FIXED | Finance same-day filter empty | `date_from=date_to` returned [] | commit a174df0 + Railway deploy |
+| FIXED | Finance TZ leak double rows | `date=24` returned 23 rows | commit 27782cc + Railway deploy |
+| FIXED→deploy | Brief kehadiran salah: `51/55` vs bot `49/55` | `composeBriefText` derived present = totalStaff - staffLate (excludes late arrivals who are still present). Fix: use `staffPresent` column (commit db761d1, Hermez deploy) | deploy pending |

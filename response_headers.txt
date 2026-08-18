@@ -1,0 +1,11 @@
+HTTP/1.1 405 Method Not Allowed
+Age: 0
+Cache-Control: public, max-age=0, must-revalidate
+Content-Length: 0
+Date: Wed, 22 Jul 2026 08:25:23 GMT
+Server: Vercel
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Matched-Path: /api/investor/summary/regenerate
+X-Vercel-Cache: MISS
+X-Vercel-Id: hnd1::iad1::nx2w9-1784708721194-636536c79250
+

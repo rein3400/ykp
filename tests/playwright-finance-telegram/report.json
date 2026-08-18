@@ -1,0 +1,12 @@
+{
+  "ts": "2026-07-18T01:30:50.431Z",
+  "results": {
+    "ok": true,
+    "messageId": 62,
+    "resultText": "Terkirim. message_id=62",
+    "error": null,
+    "roleTried": "OWNER",
+    "telegramApiOk": true,
+    "telegramApiDetail": "copied to 63"
+  }
+}

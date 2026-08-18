@@ -1,0 +1,161 @@
+[
+  {
+    "id": "inv-login",
+    "module": "investor",
+    "page": "/login",
+    "title": "Login to Investor app",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/login" },
+      { "do": "fill", "selector": "input[name='username'], input[type='text']", "value": "owner" },
+      { "do": "fill", "selector": "input[name='password'], input[type='password']", "value": "owner123" },
+      { "do": "click", "selector": "button[type='submit'], button:has-text('Login'), button:has-text('Masuk')", "fallbackSelector": "button[type='submit']" },
+      { "do": "waitSettled", "ms": 2000 },
+      { "do": "screenshot", "name": "dashboard" }
+    ],
+    "verify": [
+      { "type": "urlMatches", "pattern": "^https://ykp-investor-v1.vercel.app/(investor)?$" },
+      { "type": "noErrorText", "selector": "p.text-destructive" }
+    ]
+  },
+  {
+    "id": "inv-dashboard-cards",
+    "module": "investor",
+    "page": "/investor",
+    "title": "View dashboard cards",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor" },
+      { "do": "waitSettled", "ms": 1500 },
+      { "do": "screenshot", "name": "dashboard-cards" }
+    ],
+    "verify": [
+      { "type": "noErrorText", "selector": "body:has-text('Internal Server Error')" },
+      { "type": "noNetwork5xx" }
+    ]
+  },
+  {
+    "id": "inv-regenerate-summary",
+    "module": "investor",
+    "page": "/investor",
+    "title": "Regenerate summary (owner only)",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor" },
+      { "do": "click", "text": "/Regenerate Summary|Regenerate/i", "timeout": 5000 },
+      { "do": "waitSettled", "ms": 2000 },
+      { "do": "screenshot", "name": "regenerated" }
+    ],
+    "verify": [
+      { "type": "noNetwork5xx" }
+    ]
+  },
+  {
+    "id": "inv-portfolio",
+    "module": "investor",
+    "page": "/investor/portfolio",
+    "title": "View portfolio table",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor/portfolio" },
+      { "do": "waitSettled", "ms": 1500 },
+      { "do": "screenshot", "name": "portfolio" }
+    ],
+    "verify": [
+      { "type": "noErrorText", "selector": "body:has-text('Internal Server Error')" }
+    ]
+  },
+  {
+    "id": "inv-capital-list",
+    "module": "investor",
+    "page": "/investor/capital",
+    "title": "View capital movements list",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor/capital" },
+      { "do": "waitSettled", "ms": 1500 },
+      { "do": "screenshot", "name": "capital-list" }
+    ],
+    "verify": [
+      { "type": "noErrorText", "selector": "body:has-text('Internal Server Error')" }
+    ]
+  },
+  {
+    "id": "inv-capital-create-open",
+    "module": "investor",
+    "page": "/investor/capital",
+    "title": "Open create capital form",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor/capital" },
+      { "do": "click", "text": "/Catat Capital/i", "timeout": 5000 },
+      { "do": "waitSettled", "ms": 500 },
+      { "do": "screenshot", "name": "create-capital-form" }
+    ],
+    "verify": [
+      { "type": "noConsoleErrors" }
+    ]
+  },
+  {
+    "id": "inv-dividend-list",
+    "module": "investor",
+    "page": "/investor/dividend",
+    "title": "View dividend list",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor/dividend" },
+      { "do": "waitSettled", "ms": 1500 },
+      { "do": "screenshot", "name": "dividend-list" }
+    ],
+    "verify": [
+      { "type": "noErrorText", "selector": "body:has-text('Internal Server Error')" }
+    ]
+  },
+  {
+    "id": "inv-dividend-create-open",
+    "module": "investor",
+    "page": "/investor/dividend",
+    "title": "Open declare dividend form",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor/dividend" },
+      { "do": "click", "text": "/Declare Dividend/i", "timeout": 5000 },
+      { "do": "waitSettled", "ms": 500 },
+      { "do": "screenshot", "name": "declare-dividend-form" }
+    ],
+    "verify": [
+      { "type": "noConsoleErrors" }
+    ]
+  },
+  {
+    "id": "inv-returns",
+    "module": "investor",
+    "page": "/investor/returns",
+    "title": "View returns / ROI table",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor/returns" },
+      { "do": "waitSettled", "ms": 1500 },
+      { "do": "screenshot", "name": "returns" }
+    ],
+    "verify": [
+      { "type": "noErrorText", "selector": "body:has-text('Internal Server Error')" }
+    ]
+  },
+  {
+    "id": "inv-logout",
+    "module": "investor",
+    "page": "/investor",
+    "title": "Logout from Investor app",
+    "auth": "password",
+    "steps": [
+      { "do": "goto", "path": "/investor" },
+      { "do": "click", "text": "/Logout|Keluar/i", "timeout": 5000 },
+      { "do": "waitSettled", "ms": 1000 },
+      { "do": "screenshot", "name": "after-logout" }
+    ],
+    "verify": [
+      { "type": "urlMatches", "pattern": "/login" }
+    ]
+  }
+]

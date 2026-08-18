@@ -1,0 +1,100 @@
+=== INITIAL SNAP === URL: https://ykp-warehouse-v1.vercel.app/warehouse ===
+--- PAGE: Overview ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse","text":"Overview"}
+INFO: {"headings":["Warehouse Overview"],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":null,"bodySnippet":"Warehouse Overview\n\nSistem Kontrol Bahan Baku — snapshot harian.\n\nITEM AKTIF\n\n25 item\n\nITEM DI BAWAH MIN\n\n25 item\n\nWASTE HARI INI\n\n0 item\n\nOPNAME HARI INI\n\nBelum\n\nVARIANCE > 5%\n\n0 item\n\nGenerated 2026-07-18 16:30:19"}
+
+--- PAGE: Master Item ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/items","text":"Master Item"}
+INFO: {"headings":["Master Item"],"buttons":["+ Tambah Item"],"inputs":[],"tables":1,"rows":25,"errText":null,"bodySnippet":"Master Item\n\n32 kolom per brief §8.1 — item_type, unit, supplier, stok, lead time, expiry, criticality.\n\n+ Tambah Item\nKode\tNama\tKategori\tUnit\tAvg Harga\tMin/Safety/Max\tReorder\tLead Time\tCriticality\nITM-001\tDaging Sapi Sirloin\tProtein\tkg\t175.000\t5/3/25\t13\t2 h\tCRITICAL\nITM-002\tAyam Fillet\tProtein\tkg\t53.000\t10/5/40\t27\t2 h\tCRITICAL\nITM-003\tSalmon Fillet\tProtein\tkg\t315.000\t3/2/12\t8\t2 h\tHIGH\nITM-004\tKej"}
+
+--- PAGE: Lokasi ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/locations
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/locations","text":"Lokasi"}
+INFO: {"headings":["Master Location"],"buttons":["+ Tambah Lokasi"],"inputs":[],"tables":1,"rows":36,"errText":null,"bodySnippet":"Master Location\n\nLokasi penyimpanan: gudang pusat, outlet, kitchen, chiller, freezer, dry storage.\n\n+ Tambah Lokasi\nKode\tNama\tBrand\tOutlet\tTipe\tParent\nFKD-CW\tGudang Pusat Funkydak\tFunkydak\t-\tCENTRAL WAREHOUSE\t-\nFKD-KIT\tKitchen Funkydak Cipete\tFunkydak\tFunkydak Cipete\tKITCHEN\tLOC-001\nFKD-CHL\tChiller Funkydak Cipete\tFunkydak\tFunkydak Cipete\tCHILLER\tLOC-001\nFKD-DRY\tDry Storage Funkydak Cipete\tFunkyda"}
+
+--- PAGE: Supplier ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/suppliers
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/suppliers","text":"Supplier"}
+INFO: {"headings":["Master Supplier"],"buttons":["+ Tambah Supplier"],"inputs":[],"tables":1,"rows":8,"errText":null,"bodySnippet":"Master Supplier\n\nSupplier dengan lead time, minimum order, dan info bank.\n\n+ Tambah Supplier\nKode\tNama\tKategori\tKontak\tLead Time\tMin Order\tDelivery Day\nSUP-001\tSupplier Utama Daging\tprotein\t81234000001 / rahmat@supplier.com\t2 h\t500.000\t3\nSUP-002\tSupplier Bahan Kering\tdry\t81234000002 / sari@supplier.com\t1 h\t300.000\t2\nSUP-SEA\tPT Laut Segar\tseafood\t812000003 / sup-sea@supplier.ykp.local\t1 h\t500.000\t2"}
+
+--- PAGE: Kategori ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/categories
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/categories","text":"Kategori"}
+INFO: {"headings":["Master Item Category"],"buttons":["+ Tambah Kategori"],"inputs":[],"tables":1,"rows":8,"errText":null,"bodySnippet":"Master Item Category\n\nKategori item: Protein, Dairy, Dry Goods, dll.\n\n+ Tambah Kategori\nID\tNama\tParent\tStatus\nCAT-001\tProtein\t-\tactive\nCAT-002\tDairy\t-\tactive\nCAT-003\tDry Goods\t-\tactive\nCAT-004\tSeafood\t-\tactive\nCAT-005\tProduce\t-\tactive\nCAT-006\tPackaging\t-\tactive\nCAT-007\tSpice & Seasoning\t-\tactive\nCAT-008\tBeverage Base\t-\tactive"}
+
+--- PAGE: Unit Conversion ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/unit-conversion
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/unit-conversion","text":"Unit Conversion"}
+INFO: {"headings":["Unit Conversion"],"buttons":["+ Tambah Konversi"],"inputs":[],"tables":1,"rows":7,"errText":null,"bodySnippet":"Unit Conversion\n\nKonversi antar satuan: 1 carton = 10 kg, 1 kg = 1000 gram, dll.\n\n+ Tambah Konversi\nItem\tDari\tKe\tFaktor\nDaging Sapi Sirloin\tkg\tgram\t1000\nMinyak Goreng\tliter\tml\t1000\nDaging Sapi Sirloin\tkg\tgram\t1000\nMinyak Goreng\tliter\tml\t1000\nTepung Terigu\tsak\tkg\t25\nBox Takeaway M\tpack\tpcs\t50\nCup 12oz\tsleeve\tpcs\t50"}
+
+--- PAGE: Threshold ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/threshold
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/threshold","text":"Threshold"}
+INFO: {"headings":["Inventory Threshold"],"buttons":["+ Tambah Threshold"],"inputs":[],"tables":1,"rows":12,"errText":null,"bodySnippet":"Inventory Threshold\n\nBatas warning/high/critical per item/lokasi untuk alert engine.\n\n+ Tambah Threshold\nTipe\tItem\tLokasi\tWarning\tHigh\tCritical\tUnit\nWASTE_DAILY_VALUE\tDaging Sapi Sirloin\tKitchen Funkydak Cipete\t200000\t500000\t1000000\tIDR\nWASTE_DAILY_VALUE\tDaging Sapi Sirloin\tKitchen Funkydak Cipete\t360000\t900000\t1800000\tIDR\nWASTE_DAILY_VALUE\tAyam Fillet\tKitchen Funkydak Cipete\t110000\t275000\t550000\t"}
+
+--- PAGE: Receiving ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/penerimaan
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/penerimaan","text":"Receiving"}
+INFO: {"headings":["Receiving / Penerimaan Barang"],"buttons":["+ Receiving Baru"],"inputs":[],"tables":1,"rows":665,"errText":"404","bodySnippet":"Receiving / Penerimaan Barang\n\nHeader+detail per brief §12. Batch, expiry, condition, temperature. Discrepancy → auto alert.\n\n+ Receiving Baru\nID\tTanggal\tSource\tSupplier\tLokasi\tStatus\tPO/Invoice\nMEGA-RCV-0001\t2026-06-16\tSUPPLIER\tPT Laut Segar\tOUTLET WAREHOUSE Funkydak Cipete\tRECEIVED\tPO-20260616-0 / INV-00002\nMEGA-RCV-0002\t2026-06-16\tSUPPLIER\tSupplier Utama Daging\tOUTLET WAREHOUSE Funkydak Cipete\t"}
+
+--- PAGE: Stock Issue ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/penerimaan
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/pemakaian","text":"Stock Issue"}
+INFO: {"headings":["F3 — Bon Pemakaian Dapur"],"buttons":["+ Bon Pemakaian"],"inputs":[],"tables":1,"rows":1,"errText":null,"bodySnippet":"F3 — Bon Pemakaian Dapur\n\nTiap kali bahan keluar dari gudang outlet wajib dicatat. Tidak ada bon = bahan tidak boleh keluar.\n\n+ Bon Pemakaian\nTanggal\tOutlet\tItem\tQty Keluar\tUntuk\tDiminta\tDisetujui\nBelum ada bon pemakaian."}
+
+--- PAGE: Transfer ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/pemakaian
+CLICK: {"ok":true,"href":"https://ykp-warehouse-v1.vercel.app/warehouse/transfer","text":"Transfer"}
+INFO: {"headings":["F3 — Bon Pemakaian Dapur"],"buttons":["+ Bon Pemakaian"],"inputs":[],"tables":1,"rows":1,"errText":null,"bodySnippet":"F3 — Bon Pemakaian Dapur\n\nTiap kali bahan keluar dari gudang outlet wajib dicatat. Tidak ada bon = bahan tidak boleh keluar.\n\n+ Bon Pemakaian\nTanggal\tOutlet\tItem\tQty Keluar\tUntuk\tDiminta\tDisetujui\nBelum ada bon pemakaian."}
+
+--- PAGE: Waste ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Stock Opname ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Stock Ledger ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Expiry ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Recommendation ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Request ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Alerts ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Actions ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Summary ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}
+
+--- PAGE: Dashboard ---
+URL: https://ykp-warehouse-v1.vercel.app/warehouse/transfer
+CLICK: {"ok":false,"reason":"not found","available":["Reload"]}
+INFO: {"headings":[],"buttons":[],"inputs":[],"tables":0,"rows":0,"errText":"error","bodySnippet":""}

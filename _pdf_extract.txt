@@ -1,0 +1,209 @@
+YKP ERP Roadmap & Phase 1 Migration Brief
+YKP ERP ROADMAP & PHASE 1 MIGRATION 
+BRIEF
+HR + Finance Foundation | Spreadsheet/Data Migration | Hermez-ready Summary Layer
+Prepared for internal YKP briefing and developer execution
+ONE-LINER: Phase 1 is not a full ERP build. Phase 1 is migration and activation of existing HR + Finance apps using real 
+YKP data, with master data and summary sheets ready for Orchestration and Hermez.
+Executive Summary
+YKP will build the ERP in phases. The first phase focuses only on getting the existing HR and Finance apps running with 
+YKP data. Operational, Marketing, Orchestration Layer, and Hermez AI come after the foundation is stable.
+Module Current Status Phase 1 Action Later Phase
+HR App Existing + running Clone/migrate to YKP data, test 
+attendance/payroll Hermez HR insight
+Finance App Existing but not running YKP Clone/migrate to YKP data, 
+POS/costing/petty cash Finance alerts, profit insight
+Operational App Visual/mockup exists Out of Phase 1 Opening, closing, waste, QC, 
+incident
+Marketing App Visual/mockup exists Out of Phase 1 Content, IG scheduler, WA blast, 
+review
+Hermez AI Not active yet Prepare summaries only Daily brief, alerts, SOP bot
+YKP ERP Roadmap & Phase 1 Migration Brief
+Part 1 - Roadmap YKP ERP + Hermez
+1. Project Overview
+YKP wants to build an internal ERP for multi-brand F&B operations covering Funkydak, Sekarpizza, Suburbuns, Laju Kopi, 
+and Uncle Masala. The strategy is modular: use existing apps where possible, stabilize data first, then add orchestration and 
+AI.
+2. Big Architecture
+1. HR App + Finance App + Operational App + Marketing App + Moka Export
+2. Spreadsheet / Database Layer
+3. Daily Summary Layer
+4. Orchestration Layer
+5. Hermez AI Command Center
+6. Owner Brief / Alert / Dashboard / Telegram
+3. Build Roadmap
+Phase Name Estimate Main Scope
+Phase 0 Audit Existing System 2-3 days
+Audit HR & Finance apps, sheets, 
+dummy data, hardcoded 
+formulas, role access.
+Phase 1 HR & Finance Migration 
+Foundation 2-4 weeks
+Clone apps, create YKP 
+database/spreadsheets, migrate 
+HR and Finance, pilot 1 
+brand/outlet.
+Phase 2 Operational Dashboard V1 2-4 weeks
+Opening checklist, closing 
+reconciliation, waste log, 
+incident/complaint, QC, ops 
+summary.
+Phase 3 Marketing Dashboard V1 2-4 weeks
+Content tasks, IG scheduler, WA 
+blast planner, campaign tracker, 
+review monitor, marketing 
+summary.
+Phase 4 Orchestration Layer V1 2-3 weeks
+Connector, normalizer, summary 
+generator, rules, alert, action 
+tracker, audit log.
+Phase 5 Hermez AI Command Center V1 2-4 weeks
+Owner daily brief, weekly 
+summary, insight, alert 
+explanation, SOP/Recipe bot.
+4. Non-Negotiable Principles
+ Do not build all modules at once.
+ Start with HR and Finance because both apps already exist.
+ V1 can use spreadsheet/Google Sheet, but structure must be clean and migration-ready.
+ All modules must share the same master data: brand, outlet, employee, supplier, menu, expense category.
+ Every module must produce daily summary sheets.
+ Hermez is not the input app. Hermez reads summary and gives insight.
+ Every important process must have timestamp, PIC/user, and audit log.
+YKP ERP Roadmap & Phase 1 Migration Brief
+Part 2 - Phase 1 Migration Brief
+1. Phase Name
+Phase 1 - HR & Finance Migration Foundation
+2. Objective
+Make the existing HR App and Finance App usable for YKP data. This phase is focused on cloning, database replacement, 
+data mapping, testing, pilot rollout, and summary preparation for future Hermez integration.
+3. Scope vs Out of Scope
+Included in Phase 1 Not Included in Phase 1
+Audit HR and Finance apps
+Clone HR and Finance apps
+Create YKP spreadsheet/database
+Master data setup
+HR data migration
+Payroll rules setup
+Finance data migration
+POS/Moka import setup
+Supplier costing
+Petty cash
+Expense log
+HR + Finance summary sheets
+Pilot 1 brand/outlet
+Basic documentation and admin training
+Full Operational app
+Full Marketing app
+Full Hermez AI
+Full Orchestration Layer
+Moka real-time API
+WhatsApp API
+Real-time KDS
+PostgreSQL/Supabase migration
+SOP bot
+AI purchasing/payroll automation
+Full multi-outlet rollout without pilot
+4. Phase 1 Data Pack Required from Owner
+File/Data Required Contents
+Master Brand & Outlet brand_id, brand_name, outlet_id, outlet_name, address, PIC, status
+Master Karyawan employee_id, name, phone, telegram_id, brand, outlet, role, join_date, 
+status, salary, default shift, late tolerance, bank details
+Aturan Payroll working hours, shift, late tolerance, late deduction, overtime, bonus, 
+leave rules, payroll date
+Master Supplier supplier_id, supplier_name, category, supplied items, phone, bank, 
+account number, status
+Master Kategori Biaya category_id, category_name, type: COGS/OPEX/CAPEX/Petty Cash, 
+related brand/outlet
+Export Moka / POS 7-30 days sales: date, outlet, gross/net sales, discount, refund, void, 
+payment method, transaction count, item sales, cashier/shift
+Petty Cash date, brand, outlet, description, debit/top-up, credit/out, balance, 
+receipt, PIC
+Supplier Costing date, brand, outlet, supplier, item, category, qty, unit, unit price, total, 
+paid status, receipt, PIC
+Existing App Access testing account, HR app link, Finance app link, old database/sheet link, 
+screenshots, known bugs
+5. Recommended Spreadsheet/Database Structure
+Database/File Tabs/Tables
+YKP_MASTER_DATABASE master_brand, master_outlet, master_employee, master_supplier, 
+master_menu, master_expense_category
+YKP_HR_DATABASE hr_employee, hr_shift, hr_attendance, hr_lateness, hr_payroll, 
+hr_bonus_penalty, hr_daily_summary
+YKP_FINANCE_DATABASE fin_pos_revenue, fin_supplier_costing, fin_petty_cash, fin_expense, 
+fin_unpaid_supplier, fin_daily_summary
+YKP_SYSTEM_LOG migration_log, error_log, user_activity_log
+YKP ERP Roadmap & Phase 1 Migration Brief
+6. Developer Technical Tasks
+6.1 Audit Existing Apps
+ Check old Spreadsheet ID and sheet tabs.
+ Check column structure and data types.
+ Find hardcoded formulas or dummy brand/outlet names.
+ Check role/user access and auth flow.
+ List known bugs and reusable components.
+6.2 Clone Apps
+ Create YKP HR App Testing and YKP Finance App Testing.
+ After validation, create YKP HR App Production and YKP Finance App Production.
+ Do not edit old app without backup.
+6.3 Replace Database Source
+ Replace old spreadsheet/database source with YKP database.
+ Ensure every page reads from new source.
+ Ensure every form writes to new source.
+ Ensure filters use YKP master data.
+ Remove all dummy data from production.
+6.4 HR Migration
+ Import employees and shift rules.
+ Setup late tolerance and deduction rules.
+ Setup payroll, bonus, and penalty logic.
+ Test attendance check-in/check-out.
+ Generate hr_daily_summary.
+6.5 Finance Migration
+ Import suppliers and expense categories.
+ Setup POS revenue import/export from Moka.
+ Setup supplier costing, petty cash, expenses, unpaid supplier.
+ Validate revenue against Moka export.
+ Generate fin_daily_summary.
+7. Pilot Test
+Pilot should be done with 1 brand or 1 outlet for 7-14 days. Recommended options: Funkydak if YKP wants to test the most 
+complex data, or Suburbuns if YKP wants a more stable and cleaner first pilot.
+ HR attendance
+ Payroll simulation
+ Finance input
+ Supplier costing
+ Petty cash
+ POS revenue
+ Daily summaries
+ Bug and UX feedback
+8. Timeline Phase 1
+Week Focus
+Week 1 Audit HR/Finance apps, create YKP database, clone testing apps, map 
+old DB to new DB.
+Week 2 Migrate HR and Finance, import employee/supplier/category data, test 
+attendance/payroll/POS/petty cash.
+Week 3 Pilot 1 brand/outlet, fix bugs, validate numbers, create HR/Finance 
+summaries, train admin.
+YKP ERP Roadmap & Phase 1 Migration Brief
+Week 4 Limited go-live, support, Phase 2 notes, prepare Operational App V1.
+9. Risks & Mitigation
+Risk Mitigation
+YKP data is not clean Start with simple master data; do not wait for perfection.
+Hardcoded formulas in old apps Audit all formulas and sheet references before migration.
+Dummy data mixed with production Create new production spreadsheets and remove dummy data before 
+go-live.
+Payroll mismatch Manual test 5-10 employees before full use.
+Finance mismatch with Moka Reconcile daily revenue with Moka export.
+Scope creep Phase 1 is HR + Finance only. Operational, Marketing, Orchestration, 
+Hermez are later.
+10. Definition of Done - Phase 1
+ ☐ HR App reads YKP data.
+ ☐ Finance App reads YKP data.
+ ☐ Master brand/outlet/employee/supplier data is clean.
+ ☐ Attendance works.
+ ☐ Payroll simulation works.
+ ☐ Finance revenue, supplier costing, petty cash, and expenses work.
+ ☐ HR daily summary exists.
+ ☐ Finance daily summary exists.
+ ☐ Pilot 1 brand/outlet runs for at least 7 days.
+ ☐ No dummy data mixed with production.
+ ☐ Basic documentation exists.
+ ☐ Admin can input data independently.
+FINAL NOTE: Phase 1 must stay focused. The goal is HR + Finance running with real YKP data, not building the full ERP 
+yet.

@@ -1,0 +1,63 @@
+{
+  "id": "inv-login",
+  "title": "Login to Investor app",
+  "module": "investor",
+  "status": "pass",
+  "startedAt": "2026-07-19T04:29:41.679Z",
+  "durationMs": 3154,
+  "stepResults": [
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "goto",
+      "target": "https://ykp-investor-v1.vercel.app/login"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "fill",
+      "value": "owner"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "fill",
+      "value": "owner123"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "click",
+      "target": "button[type='submit'], button:has-text('Login'), button:has-text('Masuk')"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "waitSettled"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "screenshot",
+      "path": "tests\\action-suite\\screenshots\\investor\\inv-login\\dashboard.png"
+    }
+  ],
+  "verifyResults": [
+    {
+      "ok": true,
+      "type": "urlMatches",
+      "url": "https://ykp-investor-v1.vercel.app/investor"
+    },
+    {
+      "ok": true,
+      "type": "noErrorText",
+      "count": 0
+    }
+  ],
+  "consoleErrors": [],
+  "networkFails": [],
+  "screenshots": [
+    "tests\\action-suite\\screenshots\\investor\\inv-login\\dashboard.png"
+  ],
+  "attempts": 1
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "app": "ykp-erp-finance",
+    "status": 200,
+    "finalUrl": "https://ykp-erp-finance-production.up.railway.app/",
+    "bodyLen": 36721,
+    "buttonCount": 0,
+    "title": "YKP Finance"
+  },
+  {
+    "app": "ykp-erp-hermez",
+    "status": 200,
+    "finalUrl": "https://ykp-erp-hermez-production.up.railway.app/",
+    "bodyLen": 11612,
+    "buttonCount": 1,
+    "title": "YKP Hermez"
+  },
+  {
+    "app": "ykp-erp-hr",
+    "status": 307,
+    "finalUrl": "https://ykp-erp-hr-production.up.railway.app/attendance",
+    "bodyLen": 17566,
+    "buttonCount": 5,
+    "title": "YKP HR — Dashboard"
+  },
+  {
+    "app": "ykp-hr-v1",
+    "status": 502,
+    "finalUrl": "https://ykp-hr-v1-production.up.railway.app/",
+    "bodyLen": 4636,
+    "buttonCount": 0,
+    "title": "502 Bad Gateway"
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "id": "inv-regenerate-summary",
+  "title": "Regenerate summary (owner only)",
+  "module": "investor",
+  "status": "pass",
+  "startedAt": "2026-07-19T04:30:47.205Z",
+  "durationMs": 6933,
+  "stepResults": [
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "goto",
+      "target": "https://ykp-investor-v1.vercel.app/investor"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "click",
+      "target": "/Regenerate Summary|Regenerate/i"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "waitSettled"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "screenshot",
+      "path": "tests\\action-suite\\screenshots\\investor\\inv-regenerate-summary\\regenerated.png"
+    }
+  ],
+  "verifyResults": [
+    {
+      "ok": true,
+      "type": "noNetwork5xx",
+      "fails": []
+    }
+  ],
+  "consoleErrors": [],
+  "networkFails": [],
+  "screenshots": [
+    "tests\\action-suite\\screenshots\\investor\\inv-regenerate-summary\\regenerated.png"
+  ],
+  "attempts": 1
+}

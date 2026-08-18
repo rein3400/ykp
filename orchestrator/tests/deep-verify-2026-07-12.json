@@ -1,0 +1,2456 @@
+{
+  "generatedAt": "2026-07-12T14:09:43.521Z",
+  "goal": "Deep verify PROGRESS_STATUS features: exists / works / production / bugs",
+  "method": [
+    "CLI HTTP",
+    "Playwright click-one-by-one",
+    "local vitest"
+  ],
+  "summary": {
+    "findings": {
+      "critical": 8,
+      "high": 6,
+      "medium": 22,
+      "low": 3
+    },
+    "findingsTotal": 39,
+    "pages": {
+      "ok": 26,
+      "total": 35
+    },
+    "clicks": {
+      "ok": 85,
+      "total": 88
+    },
+    "apis": {
+      "ok": 36,
+      "total": 36
+    },
+    "unitTests": [
+      {
+        "app": "orchestrator",
+        "check": "vitest",
+        "ok": true,
+        "exit": 0,
+        "tail": "sts/risk-manager.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/scoring.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 9\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/session-filter.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 128\u001b[2mms\u001b[22m\u001b[39m\n\u001b[90mstdout\u001b[2m | tests/mt5-mock.test.ts\n\u001b[22m\u001b[39m◇ injected env (32) from .env // tip: ⌘ override existing { override: true }\n\n \u001b[32m✓\u001b[39m tests/mt5-mock.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m18 passed\u001b[39m\u001b[22m\u001b[90m (18)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:09:19\n\u001b[2m   Duration \u001b[22m 2.84s\u001b[2m (transform 898ms, setup 0ms, collect 2.88s, tests 167ms, environment 2ms, prepare 1.34s)\u001b[22m\n\n"
+      },
+      {
+        "app": "ykp-hr-v1",
+        "check": "vitest",
+        "ok": true,
+        "exit": 0,
+        "tail": "\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/features/hr/lib/payroll.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 11\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/hermez-alerts.test.ts \u001b[2m(\u001b[22m\u001b[2m8 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 13\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/db/sheets.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/audit.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 20\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/repo.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 31\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m6 passed\u001b[39m\u001b[22m\u001b[90m (6)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m28 passed\u001b[39m\u001b[22m\u001b[90m (28)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:09:28\n\u001b[2m   Duration \u001b[22m 6.52s\u001b[2m (transform 802ms, setup 0ms, collect 12.31s, tests 94ms, environment 3ms, prepare 1.86s)\u001b[22m\n\n"
+      },
+      {
+        "app": "ykp-erp",
+        "check": "vitest",
+        "ok": false,
+        "exit": 1,
+        "tail": "\u001b[2m(\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 114\u001b[2mms\u001b[22m\u001b[39m\n \u001b[31m❯\u001b[39m apps/hr/test/attendance-smoke.test.ts \u001b[2m(\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[90m 48\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m HR summary generator (mocked)\u001b[2m > \u001b[22mreturns ok when outlet + brand exist\u001b[90m 26\u001b[2mms\u001b[22m\u001b[31m\u001b[39m\n\u001b[31m     → promise rejected \"Error: generateHrDailySummary: brand (mis…\" instead of resolving\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m2 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m16 passed\u001b[39m\u001b[22m\u001b[90m (17)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:09:37\n\u001b[2m   Duration \u001b[22m 5.72s\u001b[2m (transform 12.88s, setup 0ms, collect 12.29s, tests 174ms, environment 2ms, prepare 941ms)\u001b[22m\n\n"
+      }
+    ]
+  },
+  "productionGate": {
+    "noCritical5xx": false,
+    "authWorks": true,
+    "noStackLeak": true,
+    "unitTestsGreen": false,
+    "phase4ApprovalUi": true,
+    "realData": false,
+    "pilot7day": false
+  },
+  "findings": [
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "area": "button",
+      "title": "/hr/attendance \"Clock in\" → API 5xx",
+      "detail": "500 https://ykp-hr-v1-standalone-production.up.railway.app/api/hr/attendance/clock-in",
+      "evidence": {},
+      "ts": "2026-07-12T14:08:22.198Z"
+    },
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "area": "page",
+      "title": "/hr/lateness HTTP 500",
+      "detail": "This page couldn’t load\n\nA server error occurred. Reload to try again.\n\nReload\n\nERROR 1632549260",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr_lateness.png"
+      },
+      "ts": "2026-07-12T14:08:44.986Z"
+    },
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "area": "page",
+      "title": "/hr/lateness triggered 1 5xx network",
+      "detail": "500 https://ykp-hr-v1-standalone-production.up.railway.app/hr/lateness",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr_lateness.png"
+      },
+      "ts": "2026-07-12T14:08:44.987Z"
+    },
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "area": "page",
+      "title": "/hr/leaves navigation crashed",
+      "detail": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/leaves\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/lateness?",
+      "evidence": {},
+      "ts": "2026-07-12T14:08:50.553Z"
+    },
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "area": "page",
+      "title": "/hr/payroll navigation crashed",
+      "detail": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/leaves\"\n",
+      "evidence": {},
+      "ts": "2026-07-12T14:08:53.364Z"
+    },
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "area": "page",
+      "title": "/hr/payroll/generate navigation crashed",
+      "detail": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll/generate\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr",
+      "evidence": {},
+      "ts": "2026-07-12T14:08:53.765Z"
+    },
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "area": "page",
+      "title": "/hr/adjustments navigation crashed",
+      "detail": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/adjustments\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/payr",
+      "evidence": {},
+      "ts": "2026-07-12T14:08:54.235Z"
+    },
+    {
+      "severity": "critical",
+      "app": "ykp-hr-v1",
+      "area": "page",
+      "title": "/hr/summary navigation crashed",
+      "detail": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/summary\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/adjustme",
+      "evidence": {},
+      "ts": "2026-07-12T14:08:54.726Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-hermez",
+      "area": "page",
+      "title": "/ pageerror",
+      "detail": "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_.png"
+      },
+      "ts": "2026-07-12T14:05:49.915Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-hermez",
+      "area": "page",
+      "title": "/alerts pageerror",
+      "detail": "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_alerts.png"
+      },
+      "ts": "2026-07-12T14:05:52.796Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-hermez",
+      "area": "page",
+      "title": "/config pageerror",
+      "detail": "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_config.png"
+      },
+      "ts": "2026-07-12T14:06:27.506Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-hermez",
+      "area": "page",
+      "title": "/run pageerror",
+      "detail": "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_run.png"
+      },
+      "ts": "2026-07-12T14:06:43.241Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-erp-hermez",
+      "area": "page",
+      "title": "/telegram-test pageerror",
+      "detail": "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_telegram_test.png"
+      },
+      "ts": "2026-07-12T14:06:47.907Z"
+    },
+    {
+      "severity": "high",
+      "app": "ykp-hr-v1",
+      "area": "page",
+      "title": "/hr/lateness pageerror",
+      "detail": "Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr_lateness.png"
+      },
+      "ts": "2026-07-12T14:08:44.987Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "area": "api",
+      "title": "/api/fin/expenses not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:02:51.083Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "area": "api",
+      "title": "/api/fin/suppliers not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:02:52.705Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "area": "api",
+      "title": "/api/master/brands not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:02:53.220Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "area": "api",
+      "title": "/api/master/outlets not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:02:53.731Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "area": "api",
+      "title": "/api/auth/me not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:02:54.538Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hermez",
+      "area": "api",
+      "title": "/api/hermez/health not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:02:59.912Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hermez",
+      "area": "api",
+      "title": "/api/auth/me not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:03:00.428Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hr",
+      "area": "api",
+      "title": "/api/master/brands not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:03:47.085Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hr",
+      "area": "api",
+      "title": "/api/auth/me not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:03:47.576Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-hr-v1",
+      "area": "api",
+      "title": "/api/hr/payroll not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:03:53.700Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-hr-v1",
+      "area": "api",
+      "title": "/api/auth/me not found (404)",
+      "detail": "Route missing or renamed",
+      "evidence": {},
+      "ts": "2026-07-12T14:03:55.774Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "area": "button",
+      "title": "/summary \"Rebuild Today\" click had no visible effect",
+      "detail": "No dialog/nav/api/dom change — possible missing handler (Phase 4 approval UI?)",
+      "evidence": {},
+      "ts": "2026-07-12T14:05:13.766Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-finance",
+      "area": "data",
+      "title": "Finance dashboard shows many Rp 0 cards",
+      "detail": "May be empty today without rebuild — check fallback to latest day (ec0e865)",
+      "evidence": {},
+      "ts": "2026-07-12T14:05:40.592Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hermez",
+      "area": "button",
+      "title": "/config button not clickable: \"Simpan\"",
+      "detail": "DOM re-render or hidden",
+      "evidence": {},
+      "ts": "2026-07-12T14:06:33.034Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hermez",
+      "area": "button",
+      "title": "/config button not clickable: \"Simpan\"",
+      "detail": "DOM re-render or hidden",
+      "evidence": {},
+      "ts": "2026-07-12T14:06:36.681Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hermez",
+      "area": "button",
+      "title": "/run \"Generate brief\" click had no visible effect",
+      "detail": "No dialog/nav/api/dom change — possible missing handler (Phase 4 approval UI?)",
+      "evidence": {},
+      "ts": "2026-07-12T14:06:45.067Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hr",
+      "area": "rate-limit",
+      "title": "/rules rate limited in browser",
+      "detail": "",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_rules.png"
+      },
+      "ts": "2026-07-12T14:07:26.704Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hr",
+      "area": "rate-limit",
+      "title": "/summary rate limited in browser",
+      "detail": "",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_summary.png"
+      },
+      "ts": "2026-07-12T14:07:29.426Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp-hr",
+      "area": "rate-limit",
+      "title": "/login rate limited in browser",
+      "detail": "",
+      "evidence": {
+        "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_login.png"
+      },
+      "ts": "2026-07-12T14:07:32.105Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-hr-v1",
+      "area": "button",
+      "title": "/hr/employees/new \"Simpan\" click had no visible effect",
+      "detail": "No dialog/nav/api/dom change — possible missing handler (Phase 4 approval UI?)",
+      "evidence": {},
+      "ts": "2026-07-12T14:08:08.596Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-hr-v1",
+      "area": "button",
+      "title": "/hr/roster \"Simpan\" click had no visible effect",
+      "detail": "No dialog/nav/api/dom change — possible missing handler (Phase 4 approval UI?)",
+      "evidence": {},
+      "ts": "2026-07-12T14:08:39.782Z"
+    },
+    {
+      "severity": "medium",
+      "app": "ykp-erp",
+      "area": "tests",
+      "title": "Workspace tests failed or not configured",
+      "detail": "is…\" instead of resolving\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m2 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m16 passed\u001b[39m\u001b[22m\u001b[90m (17)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:09:37\n\u001b[2m   Duration \u001b[22m 5.72s\u001b[2m (transform 12.88s, setup 0ms, collect 12.29s, tests 174ms, environment 2ms, prepare 941ms)\u001b[22m\n\n",
+      "evidence": {},
+      "ts": "2026-07-12T14:09:43.519Z"
+    },
+    {
+      "severity": "low",
+      "app": "ykp-hr-v1",
+      "area": "security",
+      "title": "Missing CSP header on root",
+      "detail": "",
+      "evidence": {},
+      "ts": "2026-07-12T14:03:48.366Z"
+    },
+    {
+      "severity": "low",
+      "app": "ykp-hr-v1",
+      "area": "security",
+      "title": "Missing X-Content-Type-Options",
+      "detail": "",
+      "evidence": {},
+      "ts": "2026-07-12T14:03:48.366Z"
+    },
+    {
+      "severity": "low",
+      "app": "ykp-hub",
+      "area": "security",
+      "title": "Missing X-Content-Type-Options",
+      "detail": "",
+      "evidence": {},
+      "ts": "2026-07-12T14:03:56.980Z"
+    }
+  ],
+  "pageResults": [
+    {
+      "app": "ykp-erp-finance",
+      "path": "/",
+      "status": 200,
+      "finalUrl": "/",
+      "title": "YKP Finance",
+      "buttons": 0,
+      "buttonLabels": [],
+      "inputs": 0,
+      "errorVisible": 0,
+      "emptyState": true,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance ONEFINANCE Ringkasan POS Revenue Costing Supplier Petty Cash Expense Log Summary Analytics Settings v0.1.0 · dark Finance Command Center WIB · IDR Ringkasan Finance Posisi kas, revenue, dan ringkasan harian per outlet. Default-nya hari",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_.png"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/pos",
+      "status": 200,
+      "finalUrl": "/pos",
+      "title": "YKP Finance",
+      "buttons": 2,
+      "buttonLabels": [
+        "Export",
+        "Catat transaksi baru"
+      ],
+      "inputs": 2,
+      "errorVisible": 0,
+      "emptyState": true,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance ONEFINANCE Ringkasan POS Revenue Costing Supplier Petty Cash Expense Log Summary Analytics Settings v0.1.0 · dark Finance Command Center WIB · IDR POS Revenue Import CSV Export Catat transaksi baru Total Revenue Rp 0 Paid Invoices 0",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_pos.png"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "status": 200,
+      "finalUrl": "/suppliers",
+      "title": "YKP Finance",
+      "buttons": 15,
+      "buttonLabels": [
+        "Export",
+        "Tambah Cost",
+        "Semua",
+        "Unpaid",
+        "Edit",
+        "Edit",
+        "Edit",
+        "Edit",
+        "Bayar",
+        "Edit",
+        "Edit",
+        "Edit",
+        "Edit",
+        "Edit",
+        "Edit"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance ONEFINANCE Ringkasan POS Revenue Costing Supplier Petty Cash Expense Log Summary Analytics Settings v0.1.0 · dark Finance Command Center WIB · IDR Costing Supplier Export Tambah Cost Total MTD Rp 260.449.825 Paid Rp 221.601.622 Unp",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_suppliers.png"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/petty-cash",
+      "status": 200,
+      "finalUrl": "/petty-cash",
+      "title": "YKP Finance",
+      "buttons": 5,
+      "buttonLabels": [
+        "Export",
+        "All",
+        "Debit",
+        "Kredit",
+        "Urgent"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance ONEFINANCE Ringkasan POS Revenue Costing Supplier Petty Cash Expense Log Summary Analytics Settings v0.1.0 · dark Finance Command Center WIB · IDR Petty Cash Export Opening Rp 0 Top-up Rp 22.903.195 Out Rp 14.759.054 Running Bala",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_petty_cash.png"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/expenses",
+      "status": 200,
+      "finalUrl": "/expenses",
+      "title": "YKP Finance",
+      "buttons": 3,
+      "buttonLabels": [
+        "Export",
+        "Tambah Expense",
+        "Approve"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance ONEFINANCE Ringkasan POS Revenue Costing Supplier Petty Cash Expense Log Summary Analytics Settings v0.1.0 · dark Finance Command Center WIB · IDR Expense Log Export Tambah Expense Total MTD Rp 104.921.039 Jumlah Transaksi 100 Daft",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_expenses.png"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/summary",
+      "status": 200,
+      "finalUrl": "/summary",
+      "title": "YKP Finance",
+      "buttons": 1,
+      "buttonLabels": [
+        "Rebuild Today"
+      ],
+      "inputs": 0,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance ONEFINANCE Ringkasan POS Revenue Costing Supplier Petty Cash Expense Log Summary Analytics Settings v0.1.0 · dark Finance Command Center WIB · IDR Daily Summary Rebuild Today fin_daily_summary Tanggal Brand Outlet Revenue Expense Suppli",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_summary.png"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/analytics",
+      "status": 200,
+      "finalUrl": "/analytics",
+      "title": "YKP Finance",
+      "buttons": 0,
+      "buttonLabels": [],
+      "inputs": 0,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance ONEFINANCE Ringkasan POS Revenue Costing Supplier Petty Cash Expense Log Summary Analytics Settings v0.1.0 · dark Finance Command Center WIB · IDR Analytics Trend revenue & profit untuk periode bulan ini. Total Revenue (month) Rp 725",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_analytics.png"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/settings",
+      "status": 200,
+      "finalUrl": "/settings",
+      "title": "YKP Finance",
+      "buttons": 7,
+      "buttonLabels": [
+        "Brand",
+        "Outlet",
+        "Supplier",
+        "Category",
+        "Payment Method",
+        "Petty Cash Account",
+        "Kirim"
+      ],
+      "inputs": 3,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance ONEFINANCE Ringkasan POS Revenue Costing Supplier Petty Cash Expense Log Summary Analytics Settings v0.1.0 · dark Finance Command Center WIB · IDR Settings Brand Outlet Supplier Category Payment Method Petty Cash Account Master Brand br",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_settings.png"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/login",
+      "status": 200,
+      "finalUrl": "/login",
+      "title": "YKP Finance",
+      "buttons": 1,
+      "buttonLabels": [
+        "Login"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Finance — Pilot Login Demo only. Choose a role to mint a session cookie. Role OWNER (full access) FINANCE_ADMIN HR_ADMIN SUPER_ADMIN VIEWER Login",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-finance_login.png"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/",
+      "status": 200,
+      "finalUrl": "/",
+      "title": "YKP Hermez",
+      "buttons": 0,
+      "buttonLabels": [],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #423; visit https://react.dev/errors/423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      ],
+      "net5xx": [],
+      "bodySnippet": "YKP Hermez AI Command Center Brief Alerts Config Run Console Telegram Test Brief Daily Brief Brief harian hasil baca summary HR + Finance + 7 trigger Hermez. Tanggal Brief Dibuat WIB · belum terkirim Lihat alert log untuk",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_.png"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "status": 200,
+      "finalUrl": "/alerts",
+      "title": "YKP Hermez",
+      "buttons": 89,
+      "buttonLabels": [
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah",
+        "Ubah"
+      ],
+      "inputs": 5,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #423; visit https://react.dev/errors/423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      ],
+      "net5xx": [],
+      "bodySnippet": "YKP Hermez AI Command Center Brief Alerts Config Run Console Telegram Test Alerts Alert Log Alert otomatis dari 7 trigger Hermez. Perubahan status hanya via owner/manager. Filter Semua severity Warning Critical Semua status Open Acknowledged R",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_alerts.png"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/config",
+      "status": 200,
+      "finalUrl": "/config",
+      "title": "YKP Hermez",
+      "buttons": 7,
+      "buttonLabels": [
+        "Simpan",
+        "Simpan",
+        "Simpan",
+        "Simpan",
+        "Simpan",
+        "Simpan",
+        "Simpan"
+      ],
+      "inputs": 7,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #423; visit https://react.dev/errors/423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      ],
+      "net5xx": [],
+      "bodySnippet": "YKP Hermez AI Command Center Brief Alerts Config Run Console Telegram Test Config Threshold Config Tuning parameter trigger Hermez. Hanya super-admin. Keys late_staff_warning_ratio Simpan late_staff_critical_ratio Simpan cash_diff_warning Simp",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_config.png"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/run",
+      "status": 200,
+      "finalUrl": "/run",
+      "title": "YKP Hermez",
+      "buttons": 1,
+      "buttonLabels": [
+        "Generate brief"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #423; visit https://react.dev/errors/423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      ],
+      "net5xx": [],
+      "bodySnippet": "YKP Hermez AI Command Center Brief Alerts Config Run Console Telegram Test Run Console Run Console Trigger generateBriefForDate manual. Hanya super-admin. Trigger Tanggal (WIB) Generate brief",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_run.png"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/telegram-test",
+      "status": 200,
+      "finalUrl": "/telegram-test",
+      "title": "YKP Hermez",
+      "buttons": 1,
+      "buttonLabels": [
+        "Kirim"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "Error: Minified React error #423; visit https://react.dev/errors/423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      ],
+      "net5xx": [],
+      "bodySnippet": "YKP Hermez AI Command Center Brief Alerts Config Run Console Telegram Test Telegram Test Telegram Test Kirim pesan test ke owner chat via engine.sendTelegramMessage. Pesan Kirim",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_telegram_test.png"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/login",
+      "status": 200,
+      "finalUrl": "/login",
+      "title": "YKP Hermez",
+      "buttons": 1,
+      "buttonLabels": [
+        "Login"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP Hermez — Pilot Login Demo only. Pilih role untuk masuk (default SUPER_ADMIN). Role SUPER_ADMIN (full access) OWNER FINANCE_ADMIN HR_ADMIN VIEWER Login",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hermez_login.png"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/",
+      "status": 307,
+      "finalUrl": "/attendance",
+      "title": "YKP HR — Dashboard",
+      "buttons": 1,
+      "buttonLabels": [
+        "Export"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "HR YKP HR PEOPLE & PAYROLL Dashboard Attendance Payroll Rules Employees Summary v0.1.0 · Asia/Jakarta HR & Payroll WIB Attendance Kehadiran per outlet hari ini. Check-in / check-out real-time via API. Filter Export Karyawan Outlet Check-in Check-ou",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_.png"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/attendance",
+      "status": 200,
+      "finalUrl": "/attendance",
+      "title": "YKP HR — Dashboard",
+      "buttons": 1,
+      "buttonLabels": [
+        "Export"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "HR YKP HR PEOPLE & PAYROLL Dashboard Attendance Payroll Rules Employees Summary v0.1.0 · Asia/Jakarta HR & Payroll WIB Attendance Kehadiran per outlet hari ini. Check-in / check-out real-time via API. Filter Export Karyawan Outlet Check-in Check-ou",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_attendance.png"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/employees",
+      "status": 200,
+      "finalUrl": "/employees",
+      "title": "YKP HR — Dashboard",
+      "buttons": 2,
+      "buttonLabels": [
+        "Import CSV",
+        "+ Karyawan"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "HR YKP HR PEOPLE & PAYROLL Dashboard Attendance Payroll Rules Employees Summary v0.1.0 · Asia/Jakarta HR & Payroll WIB Employees Roster karyawan aktif. Import CSV untuk onboarding massal. Import CSV + Karyawan ID Nama Role Departemen Outlet Gaji Po",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_employees.png"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/payroll",
+      "status": 200,
+      "finalUrl": "/payroll",
+      "title": "YKP HR — Dashboard",
+      "buttons": 1,
+      "buttonLabels": [
+        "Generate"
+      ],
+      "inputs": 1,
+      "errorVisible": 0,
+      "emptyState": true,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 429 ()",
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "HR YKP HR PEOPLE & PAYROLL Dashboard Attendance Payroll Rules Employees Summary v0.1.0 · Asia/Jakarta HR & Payroll WIB Payroll Generate payroll per periode, preview kalkulasi, jalur approval. Total Gross Rp 0 Total Net Rp 0 Generate Payroll Generat",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_payroll.png"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/rules",
+      "status": 429,
+      "finalUrl": "/rules",
+      "title": "",
+      "buttons": 0,
+      "buttonLabels": [],
+      "inputs": 0,
+      "errorVisible": 1,
+      "emptyState": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_rules.png"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/summary",
+      "status": 429,
+      "finalUrl": "/summary",
+      "title": "",
+      "buttons": 0,
+      "buttonLabels": [],
+      "inputs": 0,
+      "errorVisible": 1,
+      "emptyState": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_summary.png"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/login",
+      "status": 429,
+      "finalUrl": "/login",
+      "title": "",
+      "buttons": 0,
+      "buttonLabels": [],
+      "inputs": 0,
+      "errorVisible": 1,
+      "emptyState": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 429 ()"
+      ],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "{\"error\":{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}}",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-erp-hr_login.png"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/login",
+      "status": 200,
+      "finalUrl": "/login",
+      "title": "YKP HR V1",
+      "buttons": 1,
+      "buttonLabels": [
+        "Login"
+      ],
+      "inputs": 2,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Login dengan akun owner / HR admin Username Password Login Default testing: owner / owner123 (seed first via npm run sheets:bootstrap + sheets:seed-user).",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_login.png"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr",
+      "status": 200,
+      "finalUrl": "/hr",
+      "title": "YKP HR V1",
+      "buttons": 1,
+      "buttonLabels": [
+        "Logout"
+      ],
+      "inputs": 3,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout HR Overview Snapshot harian untuk owner, HR admin, manager. Brand Semua Brand Funkydak Sekarpizza Suburbuns Laju Kopi U",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr.png"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "status": 200,
+      "finalUrl": "/hr/employees",
+      "title": "YKP HR V1",
+      "buttons": 9,
+      "buttonLabels": [
+        "Logout",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan"
+      ],
+      "inputs": 0,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Master Karyawan Sumber data utama fungsi HR. Export CSV Import CSV + Tambah Karyawan Employee ID Nama Role Posisi Brand",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr_employees.png"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees/new",
+      "status": 200,
+      "finalUrl": "/hr/employees/new",
+      "title": "YKP HR V1",
+      "buttons": 3,
+      "buttonLabels": [
+        "Logout",
+        "Simpan",
+        "Batal"
+      ],
+      "inputs": 16,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Tambah Karyawan Nama Lengkap * Nama Panggilan Gender Laki-laki Perempuan Role Staff Supervisor Outlet Manager Brand Manag",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr_employees_new.png"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "status": 200,
+      "finalUrl": "/hr/attendance",
+      "title": "YKP HR V1",
+      "buttons": 83,
+      "buttonLabels": [
+        "Logout",
+        "Simpan Absensi",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in",
+        "Clock in"
+      ],
+      "inputs": 6,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Absensi Check-in / check-out harian. Tanggal hari ini: 2026-07-12 Karyawan Sari Wijaya Budi Santoso Citra Lestari Dewi ",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr_attendance.png"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/roster",
+      "status": 200,
+      "finalUrl": "/hr/roster",
+      "title": "YKP HR V1",
+      "buttons": 2,
+      "buttonLabels": [
+        "Logout",
+        "Simpan"
+      ],
+      "inputs": 4,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Shift & Roster Jadwal harian per outlet. Buat Roster Assign Shift Karyawan Sari Wijaya Budi Santoso Citra Lestari Dewi ",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr_roster.png"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/lateness",
+      "status": 500,
+      "finalUrl": "/hr/lateness",
+      "title": "",
+      "buttons": 1,
+      "buttonLabels": [
+        "Reload"
+      ],
+      "inputs": 0,
+      "errorVisible": 2,
+      "emptyState": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "pageErrors": [
+        "Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error."
+      ],
+      "net5xx": [
+        "500 https://ykp-hr-v1-standalone-production.up.railway.app/hr/lateness"
+      ],
+      "bodySnippet": "This page couldn’t load A server error occurred. Reload to try again. Reload ERROR 1632549260",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hr-v1_hr_lateness.png"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/leaves",
+      "status": 0,
+      "error": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/leaves\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/lateness?"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/payroll",
+      "status": 0,
+      "error": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/leaves\"\n"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/payroll/generate",
+      "status": 0,
+      "error": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll/generate\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/adjustments",
+      "status": 0,
+      "error": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/adjustments\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/payr"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/summary",
+      "status": 0,
+      "error": "page.goto: Navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/summary\" is interrupted by another navigation to \"https://ykp-hr-v1-standalone-production.up.railway.app/hr/adjustme"
+    },
+    {
+      "app": "ykp-hub",
+      "path": "/",
+      "status": 200,
+      "finalUrl": "/",
+      "title": "YKP ERP — Unified Dashboard",
+      "buttons": 1,
+      "buttonLabels": [
+        "Sign in"
+      ],
+      "inputs": 2,
+      "errorVisible": 0,
+      "emptyState": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "pageErrors": [],
+      "net5xx": [],
+      "bodySnippet": "YKP ERP Unified Dashboard · Pilot Selamat datang kembali Masuk untuk mengakses 4 module. Username Password Sign in Default kredensial: owner / owner123 — ganti sebelum produksi. YKP HERMEZ AI Command Center · v0.1.0",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\orchestrator\\tests\\screenshots\\deep-verify-2026-07-12\\ykp-hub_.png"
+    }
+  ],
+  "clickResults": [
+    {
+      "app": "ykp-erp-finance",
+      "path": "/pos",
+      "button": "Export",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/pos",
+      "button": "Catat transaksi baru",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Export",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Tambah Cost",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Semua",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Unpaid",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Edit",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Edit",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Edit",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Edit",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Bayar",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Edit",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Edit",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/suppliers",
+      "button": "Edit",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/petty-cash",
+      "button": "Export",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/petty-cash",
+      "button": "All",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/petty-cash",
+      "button": "Debit",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/petty-cash",
+      "button": "Kredit",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/petty-cash",
+      "button": "Urgent",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/expenses",
+      "button": "Export",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/expenses",
+      "button": "Tambah Expense",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/expenses",
+      "button": "Approve",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/summary",
+      "button": "Rebuild Today",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/settings",
+      "button": "Brand",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/settings",
+      "button": "Outlet",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/settings",
+      "button": "Supplier",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/settings",
+      "button": "Category",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/settings",
+      "button": "Payment Method",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/settings",
+      "button": "Petty Cash Account",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/settings",
+      "button": "Kirim",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/login",
+      "button": "Login",
+      "clickOk": true,
+      "effect": "nav",
+      "apiCalls": 2,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/alerts",
+      "button": "Ubah",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/config",
+      "button": "Simpan",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/config",
+      "button": "Simpan",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 2,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/config",
+      "button": "Simpan",
+      "clickOk": false,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": false
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/config",
+      "button": "Simpan",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/config",
+      "button": "Simpan",
+      "clickOk": false,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": false
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/config",
+      "button": "Simpan",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 2,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/config",
+      "button": "Simpan",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 2,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/run",
+      "button": "Generate brief",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/telegram-test",
+      "button": "Kirim",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/login",
+      "button": "Login",
+      "clickOk": true,
+      "effect": "nav",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/",
+      "button": "Export",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/attendance",
+      "button": "Export",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/employees",
+      "button": "Import CSV",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/employees",
+      "button": "+ Karyawan",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/payroll",
+      "button": "Generate",
+      "clickOk": true,
+      "effect": "dialog",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/login",
+      "button": "Login",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr",
+      "button": "Logout",
+      "action": "skipped-logout",
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Logout",
+      "action": "skipped-logout",
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Nonaktifkan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Nonaktifkan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Nonaktifkan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Nonaktifkan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Nonaktifkan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Nonaktifkan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Nonaktifkan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees",
+      "button": "Nonaktifkan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees/new",
+      "button": "Logout",
+      "action": "skipped-logout",
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees/new",
+      "button": "Simpan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/employees/new",
+      "button": "Batal",
+      "clickOk": true,
+      "effect": "nav",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Logout",
+      "action": "skipped-logout",
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Simpan Absensi",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 2,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 1,
+      "ok": false
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 5,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 3,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 2,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 2,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/attendance",
+      "button": "Clock in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 2,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/roster",
+      "button": "Logout",
+      "action": "skipped-logout",
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/roster",
+      "button": "Simpan",
+      "clickOk": true,
+      "effect": "none",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/hr/lateness",
+      "button": "Reload",
+      "clickOk": true,
+      "effect": "err:page.evaluate: Execution context was destroyed, most likely because of a navigat",
+      "apiCalls": 0,
+      "api5xx": 0,
+      "ok": true
+    },
+    {
+      "app": "ykp-hub",
+      "path": "/",
+      "button": "Sign in",
+      "clickOk": true,
+      "effect": "api",
+      "apiCalls": 1,
+      "api5xx": 0,
+      "ok": true
+    }
+  ],
+  "apiResults": [
+    {
+      "app": "ykp-erp-finance",
+      "path": "/",
+      "phase": "unauth-root",
+      "status": 200,
+      "ms": 642,
+      "ct": "text/html; charset=utf-8",
+      "body": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/cd1a1182efdb8040.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/webpack-ae9e01c21a82c676.js\"/><script src=\"/_next/static/chunks/1dd3208c-7e9067dc1d4f4358.js\" async=\"\"></script><script src=\"/_next/static/chunks/528-55853a0d91058402.js\" async=\"\"></script><script src=\"/_next/static/chunks/main-app-9528e6b2c3d1cdcc.js\" async=\"\"></script><script src=\"/_next/static/chunks/13-6cd8f8907c1709c2.js\" async=\"\"></script><script src=\"/_next/static/chunks/191-83e9aed149c056c1.js\" async=\"\"></script><script src=\"/_next/static/chunks/988-49585509b8208b42.js\" async=\"\"></script><script src=\"/_next/static/chunks/535-42623074101773a2.js\" async=\"\"></script><script src=\"/_next/static/chunks/981-30fcfa4bfecdabcf.js\" async=\"\"></script><script src=\"/_next/static/chunks/859-3221190ee00385ed.js\" async=\"\"></script><script src=\"/_next/static/chunks/708-2b13b6109bfa2cf0.js\" async=\"\"></script><script src=\"/_next/static/chunks/470-7e6912064e4935ff.js\" async=\"\"></script><script src=\"/_next/static/chunks/app/(dashboard)/page-ae6d9ba0ed95904e.js\" async=\"\"></script><script src=\"/_next/static/chunks/340-1900b40a9ca8d516.js\" async=\"\"></script><script src=\"/_next/static/chunks/app/(dashboard)/layout-1f0f89865dced144.js\" async=\"\"></script><title>YKP Finance</title><meta n",
+      "setCookie": [],
+      "location": null,
+      "headers": {
+        "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'self' https://ykp-hub-production.up.railway.app",
+        "xfo": "",
+        "hsts": "",
+        "xcto": "nosniff"
+      }
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/fin/summary",
+      "phase": "auth",
+      "status": 200,
+      "ms": 2124,
+      "ct": "application/json; charset=utf-8",
+      "bodyPreview": "{\"data\":[{\"summaryId\":\"FIN-20260712-OL-013-001\",\"date\":\"2026-07-12T00:00:00.000Z\",\"brand\":\"Uncle Masala\",\"outlet\":\"Uncle Masala Surabaya\",\"brandId\":\"BR-005\",\"outletId\":\"OL-013\",\"revenue\":0,\"expense\":0,\"supplierCost\":0,\"pettyCashOut\":0,\"unpaidSupplier\":316103,\"cashDifference\":0,\"netProfitEstimate\":0,"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/fin/pos",
+      "phase": "auth",
+      "status": 200,
+      "ms": 905,
+      "ct": "application/json; charset=utf-8",
+      "bodyPreview": "{\"data\":[{\"posId\":\"POS-OL-015-20260710-317\",\"date\":\"2026-07-10T00:00:00.000Z\",\"brandId\":\"BR-005\",\"brandName\":\"Uncle Masala\",\"outletId\":\"OL-015\",\"outletName\":\"Uncle Masala Bali\",\"grossSales\":2767755,\"netSales\":2717433,\"discount\":14411,\"refund\":19610,\"void\":16301,\"tax\":0,\"serviceCharge\":0,\"paymentMeth"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/fin/expenses",
+      "phase": "auth",
+      "status": 404,
+      "ms": 285,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/cd1a1182efdb8040.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/fin/petty-cash",
+      "phase": "auth",
+      "status": 200,
+      "ms": 828,
+      "ct": "application/json; charset=utf-8",
+      "bodyPreview": "{\"data\":[{\"pcId\":\"PC-OL-011-20260612-740\",\"date\":\"2026-06-12T00:00:00.000Z\",\"brandId\":\"BR-001\",\"brandName\":\"Funkydak\",\"outletId\":\"OL-011\",\"outletName\":\"Funkydak Depok\",\"accountId\":\"PCA-011\",\"type\":\"out\",\"amount\":159032,\"categoryId\":null,\"description\":null,\"attachmentUrl\":null,\"urgentFlag\":false,\"app"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/fin/suppliers",
+      "phase": "auth",
+      "status": 404,
+      "ms": 360,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/cd1a1182efdb8040.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/master/brands",
+      "phase": "auth",
+      "status": 404,
+      "ms": 306,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/cd1a1182efdb8040.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/master/outlets",
+      "phase": "auth",
+      "status": 404,
+      "ms": 298,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/cd1a1182efdb8040.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/auth/me",
+      "phase": "auth",
+      "status": 404,
+      "ms": 398,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/cd1a1182efdb8040.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/"
+    },
+    {
+      "app": "ykp-erp-finance",
+      "path": "/api/auth/me",
+      "phase": "unauth-protected",
+      "status": 404,
+      "ms": 285
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/",
+      "phase": "unauth-root",
+      "status": 200,
+      "ms": 429,
+      "ct": "text/html; charset=utf-8",
+      "body": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/ed81fd33931806e3.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/webpack-d697fe63d2c21f55.js\"/><script src=\"/_next/static/chunks/1dd3208c-715636071c96b302.js\" async=\"\"></script><script src=\"/_next/static/chunks/528-a8c97eacc8663036.js\" async=\"\"></script><script src=\"/_next/static/chunks/main-app-9528e6b2c3d1cdcc.js\" async=\"\"></script><script src=\"/_next/static/chunks/113-bd8e4a5dec7d782f.js\" async=\"\"></script><script src=\"/_next/static/chunks/app/(dashboard)/page-34f16cc6e0f87dce.js\" async=\"\"></script><script src=\"/_next/static/chunks/964-3ff3701e7ecfc155.js\" async=\"\"></script><script src=\"/_next/static/chunks/app/(dashboard)/layout-73b69b2348b98e5e.js\" async=\"\"></script><script src=\"/_next/static/chunks/670-08df46cdacffb1cf.js\" async=\"\"></script><script src=\"/_next/static/chunks/11-715a04cc82423081.js\" async=\"\"></script><script src=\"/_next/static/chunks/app/layout-fd6305a577286906.js\" async=\"\"></script><title>YKP Hermez</title><meta name=\"description\" content=\"Hermez AI Command Center\"/><script src=\"/_next/static/chunks/polyfills-42372ed130431b0a.js\" noModule=\"\"></script></head><body class=\"min-h-screen bg-background text-foreground antialiased\"><script>((e,t,n,r,o,l,i,a)=>{let u=document.documentElement,s=[\"light\",\"dark\"];functio",
+      "setCookie": [],
+      "location": null,
+      "headers": {
+        "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'self' https://ykp-hub-production.up.railway.app",
+        "xfo": "",
+        "hsts": "",
+        "xcto": "nosniff"
+      }
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/api/hermez/config",
+      "phase": "auth",
+      "status": 200,
+      "ms": 1925,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"items\":[{\"configId\":\"CFG-cash_diff_critical\",\"key\":\"cash_diff_critical\",\"value\":\"200000\",\"updatedAt\":\"2026-07-10T02:27:06.000Z\",\"updatedBy\":\"system\"},{\"configId\":\"CFG-cash_diff_warning\",\"key\":\"cash_diff_warning\",\"value\":\"50000\",\"updatedAt\":\"2026-07-10T02:27:06.000Z\",\"updatedBy\":\"system\"},{"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/api/hermez/brief",
+      "phase": "auth",
+      "status": 200,
+      "ms": 666,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"brief\":{\"briefId\":\"HZBR-20260711\",\"date\":\"2026-07-11\",\"alertLevel\":\"green\",\"briefText\":\"Brief YKP Hermez — 11/07/2026, 00.00 WIB\\n\\nRevenue hari ini: Rp 0\\nExpense hari ini: Rp 0\\nNet profit estimate: Rp 0\\nKehadiran: 0/0 (terlambat 0)\\n\\nAlert aktif: 0\\n\\nLevel: GREEN\",\"sentToOwner\":false"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/api/hermez/alerts",
+      "phase": "auth",
+      "status": 200,
+      "ms": 632,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"items\":[{\"alertId\":\"ALT-20260710-OL-012-1\",\"date\":\"2026-07-10\",\"brand\":\"Sekarpizza\",\"outlet\":\"Sekarpizza Bandung\",\"alertType\":\"supplier_overdue\",\"severity\":\"warning\",\"message\":\"Tagihan supplier overdue 29 hari\",\"sourceApp\":\"hr\",\"status\":\"ack\",\"actionTaken\":\"none\",\"assignedTo\":\"supervisor\","
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/api/hermez/health",
+      "phase": "auth",
+      "status": 404,
+      "ms": 283,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/ed81fd33931806e3.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/api/auth/me",
+      "phase": "auth",
+      "status": 404,
+      "ms": 301,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"dark\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/ed81fd33931806e3.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/"
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "path": "/api/auth/me",
+      "phase": "unauth-protected",
+      "status": 404,
+      "ms": 273
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/",
+      "phase": "unauth-root",
+      "status": 307,
+      "ms": 408,
+      "ct": "text/html; charset=utf-8",
+      "body": "<!DOCTYPE html><html id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/webpack-ae9e01c21a82c676.js\"/><script src=\"/_next/static/chunks/1dd3208c-7e9067dc1d4f4358.js\" async=\"\"></script><script src=\"/_next/static/chunks/528-55853a0d91058402.js\" async=\"\"></script><script src=\"/_next/static/chunks/main-app-9528e6b2c3d1cdcc.js\" async=\"\"></script><title>YKP HR</title><meta name=\"description\" content=\"HR &amp; payroll dashboard\"/><script src=\"/_next/static/chunks/polyfills-42372ed130431b0a.js\" noModule=\"\"></script></head><body><script src=\"/_next/static/chunks/webpack-ae9e01c21a82c676.js\" async=\"\"></script><script>(self.__next_f=self.__next_f||[]).push([0]);self.__next_f.push([2,null])</script><script>self.__next_f.push([1,\"1:HL[\\\"/_next/static/css/d75e2b0afb2ffe56.css\\\",\\\"style\\\"]\\n\"])</script><script>self.__next_f.push([1,\"2:I[1815,[],\\\"\\\"]\\n5:I[5426,[\\\"823\\\",\\\"static/chunks/823-c47ffdee701111eb.js\\\",\\\"650\\\",\\\"static/chunks/650-1136f84a24a06909.js\\\",\\\"180\\\",\\\"static/chunks/180-d2819db14799fc9d.js\\\",\\\"647\\\",\\\"static/chunks/647-c5781eb62a13bfe8.js\\\",\\\"340\\\",\\\"static/chunks/340-1900b40a9ca8d516.js\\\",\\\"599\\\",\\\"static/chunks/599-d05525e01890143f.js\\\",\\\"642\\\",\\\"static/chunks/app/(dashboard)/layout-4ce2c965589bcee1.js\\\"],\\\"ThemeProvider\\\"]\\n6:I[1064,[\\\"823\\\",\\\"static/chunks/823-c47ffdee701111eb.js\\\",\\\"650\\\",\\\"static/chunks/650-1136f84a24a06909.",
+      "setCookie": [],
+      "location": null,
+      "headers": {
+        "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'self' https://ykp-hub-production.up.railway.app",
+        "xfo": "",
+        "hsts": "",
+        "xcto": "nosniff"
+      }
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/api/hr/summary",
+      "phase": "auth",
+      "status": 200,
+      "ms": 2291,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"summaries\":[{\"summaryId\":\"HR-SUM-OL-006-20260611-698\",\"date\":\"2026-06-11T00:00:00.000Z\",\"brand\":\"Funkydak\",\"outlet\":\"Funkydak Cikini\",\"brandId\":\"BR-001\",\"outletId\":\"OL-006\",\"totalStaff\":10,\"staffPresent\":9,\"staffLate\":0,\"staffAbsent\":1,\"payrollIssue\":\"no\",\"majorHrIssue\":\"1 staff absent\",\"r"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/api/hr/employees",
+      "phase": "auth",
+      "status": 200,
+      "ms": 679,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"employees\":[{\"employeeId\":\"EMP-00001\",\"fullName\":\"Putri Lestari\",\"role\":\"staff\",\"department\":\"Operations\",\"brandId\":\"BR-001\",\"outletId\":\"OL-001\",\"phone\":\"+628193839885\",\"telegramId\":\"@putri.lestari\",\"employmentType\":\"contract\",\"joinDate\":\"2025-08-08T00:00:00.000Z\",\"baseSalary\":4750000,\"sta"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/api/hr/attendance",
+      "phase": "auth",
+      "status": 200,
+      "ms": 38289,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"attendance\":[{\"attendanceId\":\"ATT-EMP-00001-20260710-1848\",\"date\":\"2026-07-10T00:00:00.000Z\",\"employeeId\":\"EMP-00001\",\"outletId\":\"OL-001\",\"shiftName\":\"Siang\",\"checkIn\":\"2026-07-10T05:00:00.000Z\",\"checkOut\":\"2026-07-10T13:00:00.000Z\",\"checkInLocation\":null,\"isLate\":false,\"lateMinutes\":0,\"is"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/api/hr/payroll",
+      "phase": "auth",
+      "status": 200,
+      "ms": 2650,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"payroll\":[{\"payrollId\":\"PAY-EMP-00001-202606\",\"employeeId\":\"EMP-00001\",\"periodStart\":\"2026-06-01T00:00:00.000Z\",\"periodEnd\":\"2026-06-30T00:00:00.000Z\",\"payrollDays\":25,\"attendanceCount\":22,\"absentDays\":3,\"dailyRate\":180000,\"hourlyRate\":22500,\"regularHourlyRate\":22500,\"attendanceBase\":39600"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/api/master/brands",
+      "phase": "auth",
+      "status": 404,
+      "ms": 360,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"light\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/d75e2b0afb2ffe56.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/api/auth/me",
+      "phase": "auth",
+      "status": 404,
+      "ms": 280,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\" class=\"light\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/d75e2b0afb2ffe56.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next"
+    },
+    {
+      "app": "ykp-erp-hr",
+      "path": "/api/auth/me",
+      "phase": "unauth-protected",
+      "status": 404,
+      "ms": 331
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/",
+      "phase": "unauth-root",
+      "status": 307,
+      "ms": 423,
+      "ct": "",
+      "body": "/login",
+      "setCookie": [],
+      "location": "/login",
+      "headers": {
+        "csp": "",
+        "xfo": "",
+        "hsts": "",
+        "xcto": ""
+      }
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/hr/summary",
+      "phase": "auth",
+      "status": 200,
+      "ms": 718,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"items\":[{\"summary_id\":\"SUM-00001\",\"date\":\"2026-07-10\",\"brand_id\":\"BR-001\",\"brand_name\":\"Funkydak Cipete\",\"outlet_id\":\"BR-001\",\"outlet_name\":\"OL-001\",\"total_staff\":\"8\",\"scheduled_staff\":\"8\",\"staff_present\":\"2\",\"staff_late\":\"0\",\"staff_absent\":\"no\",\"staff_leave\":\"none\",\"incomplete_attendance\""
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/hr/employees",
+      "phase": "auth",
+      "status": 200,
+      "ms": 535,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"items\":[{\"employee_id\":\"EMP-001\",\"employee_code\":\"K-001\",\"full_name\":\"Sari Wijaya\",\"nickname\":\"Sari\",\"gender\":\"F\",\"phone\":\"6281234567890\",\"email\":\"emp-001@ykp.local\",\"telegram_id\":\"@emp-001\",\"address\":\"Jakarta\",\"date_of_birth\":\"1995-01-15\",\"join_date\":\"2024-03-15\",\"employment_status\":\"PERM"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/hr/attendance",
+      "phase": "auth",
+      "status": 200,
+      "ms": 751,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"items\":[{\"attendance_id\":\"ATT-00001\",\"date\":\"2026-07-10\",\"employee_id\":\"EMP-001\",\"employee_name\":\"Sari Wijaya\",\"brand_id\":\"BR-001\",\"outlet_id\":\"OL-001\",\"shift_id\":\"SH-002\",\"scheduled_check_in\":\"2026-07-10T12:00:00\",\"actual_check_in\":\"2026-07-10T12:00:00\",\"scheduled_check_out\":\"2026-07-10T2"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/hr/leaves",
+      "phase": "auth",
+      "status": 200,
+      "ms": 988,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"items\":[{\"leave_id\":\"LV-00001\",\"employee_id\":\"EMP-001\",\"leave_type\":\"UNPAID_LEAVE\",\"start_date\":\"2026-06-26\",\"end_date\":\"2026-06-29\",\"total_days\":\"4\",\"reason\":\"Keperluan unpaid_leave\",\"attachment_url\":\"\",\"submitted_at\":\"2026-07-10 10:38:21\",\"approval_status\":\"APPROVED\",\"approved_by\":\"owner"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/hr/payroll",
+      "phase": "auth",
+      "status": 404,
+      "ms": 275,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/3-cduw43rio3n.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/hr/adjustments",
+      "phase": "auth",
+      "status": 200,
+      "ms": 499,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"items\":[{\"adjustment_id\":\"ADJ-00001\",\"date\":\"2026-07-01\",\"employee_id\":\"EMP-001\",\"adjustment_type\":\"CASH_ADVANCE\",\"category\":\"CASH_ADVANCE\",\"amount\":\"273079\",\"quantity\":\"1\",\"unit\":\"IDR\",\"reason\":\"Adjustment cash_advance\",\"reference_id\":\"\",\"attachment_url\":\"APPROVED\",\"approval_status\":\"owne"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/hr/roster",
+      "phase": "auth",
+      "status": 200,
+      "ms": 654,
+      "ct": "application/json",
+      "bodyPreview": "{\"data\":{\"items\":[{\"roster_id\":\"RST-00001\",\"date\":\"2026-07-10\",\"employee_id\":\"EMP-001\",\"brand_id\":\"BR-001\",\"outlet_id\":\"OL-001\",\"shift_id\":\"SH-001\",\"role\":\"staff\",\"roster_status\":\"COMPLETED\",\"replacement_employee_id\":\"\",\"swap_request_id\":\"\",\"approved_by\":\"owner\",\"notes\":\"\",\"created_at\":\"2026-07-10 1"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/auth/me",
+      "phase": "auth",
+      "status": 404,
+      "ms": 288,
+      "ct": "text/html; charset=utf-8",
+      "bodyPreview": "<!DOCTYPE html><html lang=\"id\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/3-cduw43rio3n.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "path": "/api/hr/employees",
+      "phase": "unauth-protected",
+      "status": 401,
+      "ms": 661
+    },
+    {
+      "app": "ykp-hub",
+      "path": "/",
+      "phase": "unauth-root",
+      "status": 200,
+      "ms": 529,
+      "ct": "text/html; charset=utf-8",
+      "body": "<!DOCTYPE html><html lang=\"id\" class=\"__variable_f367f3\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" href=\"/_next/static/media/e4af272ccee01ff0-s.p.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"stylesheet\" href=\"/_next/static/css/3c4169efa2556fdc.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/webpack-a8a72083fd26f4cd.js\"/><script src=\"/_next/static/chunks/fd9d1056-88c8a1669018f964.js\" async=\"\"></script><script src=\"/_next/static/chunks/117-9776bcfde68b9ed6.js\" async=\"\"></script><script src=\"/_next/static/chunks/main-app-6fca1515cee9a03c.js\" async=\"\"></script><script src=\"/_next/static/chunks/app/page-0eb76206340f238e.js\" async=\"\"></script><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"/><title>YKP ERP — Unified Dashboard</title><meta name=\"description\" content=\"Single dashboard for HR, Finance, Hermez, dan HR Pilot\"/><meta name=\"next-size-adjust\"/><script>\n(function() {\n  try {\n    var t = localStorage.getItem('ykp_hub_theme') || 'system';\n    var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);\n    if (dark) document.documentElement.classList.add('dark');\n  } catch(e) {}\n})();\n</script><script src=\"/_next/static/chunks/polyfills-42372ed130431b0a.js\" noModule=\"\"></script></head><body class=\"min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--fg))] antialiased\"><div cl",
+      "setCookie": [],
+      "location": null,
+      "headers": {
+        "csp": "frame-ancestors *",
+        "xfo": "ALLOWALL",
+        "hsts": "",
+        "xcto": ""
+      }
+    }
+  ],
+  "standards": [
+    {
+      "app": "ykp-erp-finance",
+      "check": "security-headers",
+      "csp": true,
+      "xcto": true,
+      "hsts": false,
+      "status": 200
+    },
+    {
+      "app": "ykp-erp-hermez",
+      "check": "security-headers",
+      "csp": true,
+      "xcto": true,
+      "hsts": false,
+      "status": 200
+    },
+    {
+      "app": "ykp-erp-hr",
+      "check": "security-headers",
+      "csp": true,
+      "xcto": true,
+      "hsts": false,
+      "status": 307
+    },
+    {
+      "app": "ykp-hr-v1",
+      "check": "security-headers",
+      "csp": false,
+      "xcto": false,
+      "hsts": false,
+      "status": 307
+    },
+    {
+      "app": "ykp-hub",
+      "check": "security-headers",
+      "csp": true,
+      "xcto": false,
+      "hsts": false,
+      "status": 200
+    },
+    {
+      "app": "orchestrator",
+      "check": "vitest",
+      "ok": true,
+      "exit": 0,
+      "tail": "sts/risk-manager.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/scoring.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 9\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/session-filter.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 128\u001b[2mms\u001b[22m\u001b[39m\n\u001b[90mstdout\u001b[2m | tests/mt5-mock.test.ts\n\u001b[22m\u001b[39m◇ injected env (32) from .env // tip: ⌘ override existing { override: true }\n\n \u001b[32m✓\u001b[39m tests/mt5-mock.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m18 passed\u001b[39m\u001b[22m\u001b[90m (18)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:09:19\n\u001b[2m   Duration \u001b[22m 2.84s\u001b[2m (transform 898ms, setup 0ms, collect 2.88s, tests 167ms, environment 2ms, prepare 1.34s)\u001b[22m\n\n"
+    },
+    {
+      "app": "ykp-hr-v1",
+      "check": "vitest",
+      "ok": true,
+      "exit": 0,
+      "tail": "\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/features/hr/lib/payroll.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 11\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/hermez-alerts.test.ts \u001b[2m(\u001b[22m\u001b[2m8 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 13\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/db/sheets.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/audit.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 20\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/repo.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 31\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m6 passed\u001b[39m\u001b[22m\u001b[90m (6)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m28 passed\u001b[39m\u001b[22m\u001b[90m (28)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:09:28\n\u001b[2m   Duration \u001b[22m 6.52s\u001b[2m (transform 802ms, setup 0ms, collect 12.31s, tests 94ms, environment 3ms, prepare 1.86s)\u001b[22m\n\n"
+    },
+    {
+      "app": "ykp-erp",
+      "check": "vitest",
+      "ok": false,
+      "exit": 1,
+      "tail": "\u001b[2m(\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 114\u001b[2mms\u001b[22m\u001b[39m\n \u001b[31m❯\u001b[39m apps/hr/test/attendance-smoke.test.ts \u001b[2m(\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[90m 48\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m HR summary generator (mocked)\u001b[2m > \u001b[22mreturns ok when outlet + brand exist\u001b[90m 26\u001b[2mms\u001b[22m\u001b[31m\u001b[39m\n\u001b[31m     → promise rejected \"Error: generateHrDailySummary: brand (mis…\" instead of resolving\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m2 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m16 passed\u001b[39m\u001b[22m\u001b[90m (17)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:09:37\n\u001b[2m   Duration \u001b[22m 5.72s\u001b[2m (transform 12.88s, setup 0ms, collect 12.29s, tests 174ms, environment 2ms, prepare 941ms)\u001b[22m\n\n"
+    }
+  ]
+}

@@ -1,0 +1,289 @@
+[
+  {
+    "app": "finance",
+    "label": "sidebar has 8 links",
+    "ok": true,
+    "detail": "labels: Ringkasan, POS Revenue, Costing Supplier, Petty Cash, Expense Log, Summary, Analytics, Settings",
+    "ts": "2026-07-09T09:02:17.287Z"
+  },
+  {
+    "app": "finance",
+    "label": "nav → Ringkasan",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:02:17.988Z"
+  },
+  {
+    "app": "finance",
+    "label": "nav → POS Revenue",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:02:18.591Z"
+  },
+  {
+    "app": "finance",
+    "label": "nav → Costing Supplier",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:02:19.161Z"
+  },
+  {
+    "app": "finance",
+    "label": "nav → Petty Cash",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:02:19.754Z"
+  },
+  {
+    "app": "finance",
+    "label": "nav → Expense Log",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:02:20.449Z"
+  },
+  {
+    "app": "finance",
+    "label": "nav → Summary",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:02:21.085Z"
+  },
+  {
+    "app": "finance",
+    "label": "nav → Analytics",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:02:21.647Z"
+  },
+  {
+    "app": "finance",
+    "label": "nav → Settings",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:02:22.191Z"
+  },
+  {
+    "app": "finance",
+    "label": "pc tab \"All\" click",
+    "ok": true,
+    "detail": "active=All",
+    "ts": "2026-07-09T09:02:24.519Z"
+  },
+  {
+    "app": "finance",
+    "label": "pc tab \"Debit\" click",
+    "ok": false,
+    "detail": "active=All",
+    "ts": "2026-07-09T09:02:25.125Z"
+  },
+  {
+    "app": "finance",
+    "label": "pc tab \"Kredit\" click",
+    "ok": false,
+    "detail": "active=All",
+    "ts": "2026-07-09T09:02:25.688Z"
+  },
+  {
+    "app": "finance",
+    "label": "pc tab \"Urgent\" click",
+    "ok": false,
+    "detail": "active=All",
+    "ts": "2026-07-09T09:02:26.268Z"
+  },
+  {
+    "app": "finance",
+    "label": "export PDF/CSV triggers API",
+    "ok": false,
+    "detail": "calls=",
+    "ts": "2026-07-09T09:02:57.827Z"
+  },
+  {
+    "app": "finance",
+    "label": "Tambah Expense opens dialog",
+    "ok": false,
+    "detail": "btn=1 dialog=false",
+    "ts": "2026-07-09T09:03:04.535Z"
+  },
+  {
+    "app": "finance",
+    "label": "suppliers has tabs",
+    "ok": false,
+    "detail": "count=0",
+    "ts": "2026-07-09T09:03:06.279Z"
+  },
+  {
+    "app": "finance",
+    "label": "POS page has form controls",
+    "ok": true,
+    "detail": "controls=8",
+    "ts": "2026-07-09T09:03:07.952Z"
+  },
+  {
+    "app": "finance",
+    "label": "summary has KPI/data",
+    "ok": false,
+    "detail": "",
+    "ts": "2026-07-09T09:03:11.135Z"
+  },
+  {
+    "app": "hermez",
+    "label": "sidebar has 5 links",
+    "ok": true,
+    "detail": "labels: Brief, Alerts, Config, Run Console, Telegram Test",
+    "ts": "2026-07-09T09:03:13.248Z"
+  },
+  {
+    "app": "hermez",
+    "label": "nav → Brief",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:03:14.169Z"
+  },
+  {
+    "app": "hermez",
+    "label": "nav → Alerts",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:03:15.172Z"
+  },
+  {
+    "app": "hermez",
+    "label": "nav → Config",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:03:16.180Z"
+  },
+  {
+    "app": "hermez",
+    "label": "nav → Run Console",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:03:17.131Z"
+  },
+  {
+    "app": "hermez",
+    "label": "nav → Telegram Test",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:03:18.077Z"
+  },
+  {
+    "app": "hermez",
+    "label": "run-console date input accepts value",
+    "ok": true,
+    "detail": "filled 2026-07-08",
+    "ts": "2026-07-09T09:03:20.299Z"
+  },
+  {
+    "app": "hermez",
+    "label": "Run Console trigger fires API",
+    "ok": false,
+    "detail": "resp=no-response resultVisible=false errorVisible=false clicked=true",
+    "ts": "2026-07-09T09:03:42.835Z"
+  },
+  {
+    "app": "hermez",
+    "label": "config page renders content",
+    "ok": true,
+    "detail": "",
+    "ts": "2026-07-09T09:03:45.128Z"
+  },
+  {
+    "app": "hermez",
+    "label": "alerts page renders content",
+    "ok": true,
+    "detail": "",
+    "ts": "2026-07-09T09:03:47.326Z"
+  },
+  {
+    "app": "hermez",
+    "label": "telegram-test triggers API",
+    "ok": false,
+    "detail": "resp=no-response clicked=true",
+    "ts": "2026-07-09T09:04:09.502Z"
+  },
+  {
+    "app": "hr",
+    "label": "attendance reachable from root",
+    "ok": true,
+    "detail": "finalUrl=https://ykp-erp-hr.vercel.app/attendance",
+    "ts": "2026-07-09T09:04:12.037Z"
+  },
+  {
+    "app": "hr",
+    "label": "sidebar has 6 links",
+    "ok": true,
+    "detail": "labels: Dashboard, Attendance, Payroll, Rules, Employees, Summary",
+    "ts": "2026-07-09T09:04:12.089Z"
+  },
+  {
+    "app": "hr",
+    "label": "nav → Dashboard",
+    "ok": true,
+    "detail": "307",
+    "ts": "2026-07-09T09:04:12.957Z"
+  },
+  {
+    "app": "hr",
+    "label": "nav → Attendance",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:04:13.921Z"
+  },
+  {
+    "app": "hr",
+    "label": "nav → Payroll",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:04:14.784Z"
+  },
+  {
+    "app": "hr",
+    "label": "nav → Rules",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:04:15.634Z"
+  },
+  {
+    "app": "hr",
+    "label": "nav → Employees",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:04:16.466Z"
+  },
+  {
+    "app": "hr",
+    "label": "nav → Summary",
+    "ok": true,
+    "detail": "200",
+    "ts": "2026-07-09T09:04:17.345Z"
+  },
+  {
+    "app": "hr",
+    "label": "attendance renders table+buttons",
+    "ok": true,
+    "detail": "tables=1 buttons=5",
+    "ts": "2026-07-09T09:04:20.040Z"
+  },
+  {
+    "app": "hr",
+    "label": "payroll page has content",
+    "ok": true,
+    "detail": "",
+    "ts": "2026-07-09T09:04:22.246Z"
+  },
+  {
+    "app": "hr",
+    "label": "employees page has content",
+    "ok": true,
+    "detail": "",
+    "ts": "2026-07-09T09:04:24.451Z"
+  },
+  {
+    "app": "hr",
+    "label": "rules page has content",
+    "ok": false,
+    "detail": "",
+    "ts": "2026-07-09T09:04:26.674Z"
+  }
+]

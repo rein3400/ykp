@@ -1,0 +1,138 @@
+[
+  {
+    "id": "hub-login",
+    "module": "hub",
+    "page": "/login",
+    "title": "Login via Hub form",
+    "auth": "hub-form",
+    "steps": [
+      { "do": "goto", "path": "/login" },
+      { "do": "fill", "selector": "input[autocomplete='username']", "value": "owner" },
+      { "do": "fill", "selector": "input[autocomplete='current-password']", "value": "owner123" },
+      { "do": "click", "selector": "button[type='submit']" },
+      { "do": "waitSettled", "ms": 2000 },
+      { "do": "screenshot", "name": "dashboard" }
+    ],
+    "verify": [
+      { "type": "urlMatches", "pattern": "^https://ykp-hub-production.up.railway.app/?$" },
+      { "type": "noErrorText", "selector": "p.text-destructive" }
+    ]
+  },
+  {
+    "id": "hub-sso-finance",
+    "module": "hub",
+    "page": "/",
+    "title": "SSO to Finance from Hub",
+    "auth": "hub-form",
+    "steps": [
+      { "do": "goto", "path": "/" },
+      { "do": "click", "text": "/Finance|finance/i", "timeout": 10000 },
+      { "do": "waitSettled", "ms": 3000 },
+      { "do": "screenshot", "name": "finance-via-hub" }
+    ],
+    "verify": [
+      { "type": "noErrorText", "selector": "body:has-text('Internal Server Error')" },
+      { "type": "noNetwork5xx" }
+    ]
+  },
+  {
+    "id": "hub-sso-hr",
+    "module": "hub",
+    "page": "/",
+    "title": "SSO to HR Production from Hub",
+    "auth": "hub-form",
+    "steps": [
+      { "do": "goto", "path": "/" },
+      { "do": "click", "text": "/HR|hr/i", "timeout": 10000 },
+      { "do": "waitSettled", "ms": 3000 },
+      { "do": "screenshot", "name": "hr-via-hub" }
+    ],
+    "verify": [
+      { "type": "noErrorText", "selector": "body:has-text('Internal Server Error')" },
+      { "type": "noNetwork5xx" }
+    ]
+  },
+  {
+    "id": "hub-sso-hermez",
+    "module": "hub",
+    "page": "/",
+    "title": "SSO to Hermez AI from Hub",
+    "auth": "hub-form",
+    "steps": [
+      { "do": "goto", "path": "/" },
+      { "do": "click", "text": "/Hermez|hermez/i", "timeout": 10000 },
+      { "do": "waitSettled", "ms": 3000 },
+      { "do": "screenshot", "name": "hermez-via-hub" }
+    ],
+    "verify": [
+      { "type": "noErrorText", "selector": "body:has-text('Internal Server Error')" },
+      { "type": "noNetwork5xx" }
+    ]
+  },
+  {
+    "id": "hub-theme-toggle",
+    "module": "hub",
+    "page": "/",
+    "title": "Toggle dark/light theme",
+    "auth": "hub-form",
+    "steps": [
+      { "do": "goto", "path": "/" },
+      { "do": "click", "selector": "button[aria-label*='theme' i], button:has-text('Dark'), button:has-text('Light')", "fallbackSelector": "button >> nth=0", "timeout": 5000 },
+      { "do": "waitSettled", "ms": 500 },
+      { "do": "screenshot", "name": "theme-toggled" }
+    ],
+    "verify": [
+      { "type": "noConsoleErrors" }
+    ]
+  },
+  {
+    "id": "hub-command-palette",
+    "module": "hub",
+    "page": "/",
+    "title": "Open command palette with Ctrl+K",
+    "auth": "hub-form",
+    "steps": [
+      { "do": "goto", "path": "/" },
+      { "do": "press", "key": "Control+k" },
+      { "do": "waitSettled", "ms": 500 },
+      { "do": "screenshot", "name": "cmd-palette" }
+    ],
+    "verify": [
+      { "type": "noConsoleErrors" }
+    ]
+  },
+  {
+    "id": "hub-logout",
+    "module": "hub",
+    "page": "/",
+    "title": "Logout from Hub",
+    "auth": "hub-form",
+    "steps": [
+      { "do": "goto", "path": "/" },
+      { "do": "click", "text": "/Logout|Keluar/i", "timeout": 5000 },
+      { "do": "waitSettled", "ms": 1500 },
+      { "do": "screenshot", "name": "after-logout" }
+    ],
+    "verify": [
+      { "type": "urlMatches", "pattern": "/login" }
+    ]
+  },
+  {
+    "id": "hub-login-bad-cred",
+    "module": "hub",
+    "page": "/login",
+    "title": "Login with bad credentials shows error",
+    "auth": "hub-form",
+    "steps": [
+      { "do": "goto", "path": "/login" },
+      { "do": "fill", "selector": "input[autocomplete='username']", "value": "owner" },
+      { "do": "fill", "selector": "input[autocomplete='current-password']", "value": "wrongpass" },
+      { "do": "click", "selector": "button[type='submit']" },
+      { "do": "waitSettled", "ms": 1000 },
+      { "do": "screenshot", "name": "bad-cred" }
+    ],
+    "verify": [
+      { "type": "errorTextContains", "selector": "p.text-destructive", "text": "Invalid" }
+    ]
+  }
+]

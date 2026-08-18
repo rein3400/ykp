@@ -1,0 +1,322 @@
+{
+  "ts": "2026-07-12T14:10:33.765Z",
+  "pages": [
+    {
+      "path": "/hr/lateness",
+      "status": 200,
+      "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/lateness",
+      "buttons": [
+        "Logout"
+      ],
+      "buttonCount": 1,
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Keterlambatan Rekap telat otomatis dari absensi. Total Record 30 Total Payable Minutes 640 Total Penalty Rp 4.670.000 Daftar Keterlambatan TANGGAL KARYAWAN TELAT (M) TOL",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\tests\\screenshots\\deep-verify-2026-07-12\\retest_hr_lateness.png"
+    },
+    {
+      "path": "/hr/leaves",
+      "status": 200,
+      "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/leaves",
+      "buttons": [
+        "Logout",
+        "Ajukan",
+        "Setujui",
+        "Tolak",
+        "Setujui",
+        "Tolak",
+        "Setujui",
+        "Tolak",
+        "Setujui",
+        "Tolak",
+        "Setujui",
+        "Tolak"
+      ],
+      "buttonCount": 12,
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Ajukan Izin / Cuti Karyawan Sari Wijaya Budi Santoso Citra Lestari Dewi Anggraini Hadi Pranata Lina Kusuma Rudi Hartono Maya Sari Tipe Cuti Tahunan Sakit Izin Cuti Tidak D",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\tests\\screenshots\\deep-verify-2026-07-12\\retest_hr_leaves.png"
+    },
+    {
+      "path": "/hr/payroll",
+      "status": 200,
+      "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll",
+      "buttons": [
+        "Logout"
+      ],
+      "buttonCount": 1,
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Payroll Generate, review, approve, mark paid. Generate Payroll Periode EMP-008 Total Net: KARYAWAN GAJI POKOK NET APPROVAL BAYAR AKSI BR-001 (Maya Sari) 2026-07-31 owner",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\tests\\screenshots\\deep-verify-2026-07-12\\retest_hr_payroll.png"
+    },
+    {
+      "path": "/hr/payroll/generate",
+      "status": 200,
+      "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll/generate",
+      "buttons": [
+        "Logout",
+        "Generate"
+      ],
+      "buttonCount": 2,
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Generate Payroll Periode (YYYY-MM) Generate akan: ambil semua karyawan aktif, hitung kehadiran dari tab attendance periode, sum approved adjustments (bonus/penalty/allowa",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\tests\\screenshots\\deep-verify-2026-07-12\\retest_hr_payroll_generate.png"
+    },
+    {
+      "path": "/hr/adjustments",
+      "status": 200,
+      "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/adjustments",
+      "buttons": [
+        "Logout",
+        "Simpan"
+      ],
+      "buttonCount": 2,
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Bonus, Potongan, Lembur, Kasbon Adjustment terintegrasi ke payroll periode terkait. Tambah Adjustment Karyawan Sari Wijaya Budi Santoso Citra Lestari Dewi Anggraini Hadi",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\tests\\screenshots\\deep-verify-2026-07-12\\retest_hr_adjustments.png"
+    },
+    {
+      "path": "/hr/summary",
+      "status": 200,
+      "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/summary",
+      "buttons": [
+        "Logout",
+        "Regenerate"
+      ],
+      "buttonCount": 2,
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout HR Daily Summary Summary agregat harian. Data ini dibaca oleh Hermez (read-only). Tidak ada PII. Tanggal Regenerate Funkydak Cipete — OL-001 2026-07-10 green Present: 2 ",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\tests\\screenshots\\deep-verify-2026-07-12\\retest_hr_summary.png"
+    },
+    {
+      "path": "/hr/roster",
+      "status": 200,
+      "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/roster",
+      "buttons": [
+        "Logout",
+        "Simpan"
+      ],
+      "buttonCount": 2,
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Shift & Roster Jadwal harian per outlet. Buat Roster Assign Shift Karyawan Sari Wijaya Budi Santoso Citra Lestari Dewi Anggraini Hadi Pranata Lina Kusuma Rudi Hartono Ma",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\tests\\screenshots\\deep-verify-2026-07-12\\retest_hr_roster.png"
+    },
+    {
+      "path": "/hr/employees",
+      "status": 200,
+      "url": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/employees",
+      "buttons": [
+        "Logout",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan",
+        "Nonaktifkan"
+      ],
+      "buttonCount": 9,
+      "net5xx": [],
+      "bodySnippet": "YKP HR V1 Ringkasan Karyawan Absensi Roster Keterlambatan Izin / Cuti Payroll Bonus & Potongan Summary Harian owner Owner Logout Master Karyawan Sumber data utama fungsi HR. Export CSV Import CSV + Tambah Karyawan Employee ID Nama Role Posisi Brand Outlet Gaji Pokok Tipe Status Join Aksi EMP-001 S",
+      "shot": "D:\\Users\\stefa\\Project\\YKP HERMEZ AI COMMAND CENTER\\tests\\screenshots\\deep-verify-2026-07-12\\retest_hr_employees.png"
+    }
+  ],
+  "clicks": [
+    {
+      "path": "/hr/leaves",
+      "hasApprove": true,
+      "hasReject": true,
+      "hasMarkPaid": false,
+      "labels": [
+        "Logout",
+        "Ajukan",
+        "Setujui",
+        "Tolak",
+        "Setujui",
+        "Tolak",
+        "Setujui",
+        "Tolak",
+        "Setujui",
+        "Tolak",
+        "Setujui",
+        "Tolak"
+      ]
+    },
+    {
+      "path": "/hr/leaves",
+      "dialogSelects": [
+        {
+          "name": "",
+          "count": 8,
+          "opts": [
+            "Sari Wijaya",
+            "Budi Santoso",
+            "Citra Lestari",
+            "Dewi Anggraini",
+            "Hadi Pranata",
+            "Lina Kusuma",
+            "Rudi Hartono",
+            "Maya Sari"
+          ]
+        },
+        {
+          "name": "",
+          "count": 6,
+          "opts": [
+            "Cuti Tahunan",
+            "Sakit",
+            "Izin",
+            "Cuti Tidak Dibayar",
+            "Darurat",
+            "Melahirkan"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/hr/payroll",
+      "hasApprove": false,
+      "hasReject": false,
+      "hasMarkPaid": false,
+      "labels": [
+        "Logout"
+      ]
+    },
+    {
+      "path": "/hr/payroll",
+      "generateClick": true,
+      "net": [],
+      "urlAfter": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll"
+    },
+    {
+      "path": "/hr/payroll/generate",
+      "generateClick": true,
+      "net": [
+        {
+          "url": "https://ykp-hr-v1-standalone-production.up.railway.app/api/hr/payroll/generate",
+          "status": 200
+        }
+      ],
+      "urlAfter": "https://ykp-hr-v1-standalone-production.up.railway.app/hr/payroll/generate"
+    },
+    {
+      "path": "/hr/adjustments",
+      "hasApprove": false,
+      "hasReject": false,
+      "hasMarkPaid": false,
+      "labels": [
+        "Logout",
+        "Simpan"
+      ]
+    },
+    {
+      "path": "/hr/adjustments",
+      "dialogSelects": [
+        {
+          "name": "",
+          "count": 8,
+          "opts": [
+            "Sari Wijaya",
+            "Budi Santoso",
+            "Citra Lestari",
+            "Dewi Anggraini",
+            "Hadi Pranata",
+            "Lina Kusuma",
+            "Rudi Hartono",
+            "Maya Sari"
+          ]
+        },
+        {
+          "name": "",
+          "count": 6,
+          "opts": [
+            "Bonus",
+            "Penalty",
+            "Lembur",
+            "Tunjangan",
+            "Kasbon",
+            "Reimburse"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/hr",
+      "hasLogout": true
+    },
+    {
+      "path": "/hr/attendance",
+      "clockIn": [
+        {
+          "url": "https://ykp-hr-v1-standalone-production.up.railway.app/api/hr/attendance/clock-in",
+          "status": 201,
+          "body": "{\"data\":{\"attendance_id\":\"ATT-250\",\"date\":\"2026-07-12\",\"employee_id\":\"EMP-001\",\"employee_name\":\"Sari Wijaya\",\"brand_id\":\"BR-001\",\"outlet_id\":\"OL-001\",\"shift_id\":\"\",\"scheduled_check_in\":\"\",\"actual_check_in\":\"21:11\",\"scheduled_check_out\":\"\",\"actual_check_out\":\"\",\"check_in_location\":\"\",\"check_out_locat"
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "path": "/api/hr/payroll",
+      "status": 404,
+      "body": "<!DOCTYPE html><html lang=\"id\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/3-cduw43rio3n.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/1gdoryk6w2r8v.js\"/><script src=\"/_next/static/chunks/27jktro2p5rq9.js\" async=\"\"></script><script sr"
+    },
+    {
+      "path": "/api/hr/payroll/list",
+      "status": 404,
+      "body": "<!DOCTYPE html><html lang=\"id\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/3-cduw43rio3n.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/1gdoryk6w2r8v.js\"/><script src=\"/_next/static/chunks/27jktro2p5rq9.js\" async=\"\"></script><script sr"
+    },
+    {
+      "path": "/api/hr/payroll/runs",
+      "status": 404,
+      "body": "<!DOCTYPE html><html lang=\"id\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/3-cduw43rio3n.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/1gdoryk6w2r8v.js\"/><script src=\"/_next/static/chunks/27jktro2p5rq9.js\" async=\"\"></script><script sr"
+    },
+    {
+      "path": "/api/payroll",
+      "status": 404,
+      "body": "<!DOCTYPE html><html lang=\"id\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/3-cduw43rio3n.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/1gdoryk6w2r8v.js\"/><script src=\"/_next/static/chunks/27jktro2p5rq9.js\" async=\"\"></script><script sr"
+    },
+    {
+      "path": "/api/hr/payslips",
+      "status": 404,
+      "body": "<!DOCTYPE html><html lang=\"id\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/3-cduw43rio3n.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/1gdoryk6w2r8v.js\"/><script src=\"/_next/static/chunks/27jktro2p5rq9.js\" async=\"\"></script><script sr"
+    },
+    {
+      "path": "/api/hr/summary",
+      "status": 200,
+      "body": "{\"data\":{\"items\":[{\"summary_id\":\"SUM-00001\",\"date\":\"2026-07-10\",\"brand_id\":\"BR-001\",\"brand_name\":\"Funkydak Cipete\",\"outlet_id\":\"BR-001\",\"outlet_name\":\"OL-001\",\"total_staff\":\"8\",\"scheduled_staff\":\"8\",\"staff_present\":\"2\",\"staff_late\":\"0\",\"staff_absent\":\"no\",\"staff_leave\":\"none\",\"incomplete_attendance\":\"Review roster\",\"total_late_minutes\":\"2026-07-10 10:38:21\",\"overtime_hours\":\"\",\"shift_shortage\":\"\","
+    },
+    {
+      "path": "/api/hr/lateness",
+      "status": 404,
+      "body": "<!DOCTYPE html><html lang=\"id\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/3-cduw43rio3n.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/1gdoryk6w2r8v.js\"/><script src=\"/_next/static/chunks/27jktro2p5rq9.js\" async=\"\"></script><script sr"
+    },
+    {
+      "path": "/api/hr/attendance/clock-in",
+      "status": 400,
+      "body": "{\"error\":{\"code\":\"missing_ref\",\"message\":\"employee_id not found: EMP-00001\"}}"
+    }
+  ],
+  "findings": [
+    {
+      "severity": "high",
+      "title": "/hr/payroll: no Approve button",
+      "area": "phase4-gap"
+    },
+    {
+      "severity": "high",
+      "title": "/hr/payroll: no Approve/Mark-paid button",
+      "area": "phase4-gap"
+    },
+    {
+      "severity": "high",
+      "title": "/hr/adjustments: no Approve button",
+      "area": "phase4-gap"
+    },
+    {
+      "severity": "high",
+      "title": "/hr/adjustments: no Reject button",
+      "area": "phase4-gap"
+    }
+  ]
+}

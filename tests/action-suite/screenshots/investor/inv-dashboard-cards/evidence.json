@@ -1,0 +1,45 @@
+{
+  "id": "inv-dashboard-cards",
+  "title": "View dashboard cards",
+  "module": "investor",
+  "status": "pass",
+  "startedAt": "2026-07-19T04:29:44.841Z",
+  "durationMs": 4835,
+  "stepResults": [
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "goto",
+      "target": "https://ykp-investor-v1.vercel.app/investor"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "waitSettled"
+    },
+    {
+      "phase": "steps",
+      "ok": true,
+      "name": "screenshot",
+      "path": "tests\\action-suite\\screenshots\\investor\\inv-dashboard-cards\\dashboard-cards.png"
+    }
+  ],
+  "verifyResults": [
+    {
+      "ok": true,
+      "type": "noErrorText",
+      "count": 0
+    },
+    {
+      "ok": true,
+      "type": "noNetwork5xx",
+      "fails": []
+    }
+  ],
+  "consoleErrors": [],
+  "networkFails": [],
+  "screenshots": [
+    "tests\\action-suite\\screenshots\\investor\\inv-dashboard-cards\\dashboard-cards.png"
+  ],
+  "attempts": 1
+}
