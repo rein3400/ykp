@@ -36,6 +36,10 @@ export const POST = handler(async (req: NextRequest) => {
     return badRequest(`adjustment_type must be one of: ${ADJUSTMENT_TYPES.join(', ')}`);
   }
   if (!body.qty_difference) return badRequest('qty_difference is required');
+  const qtyDiff = Number(body.qty_difference);
+  if (!Number.isFinite(qtyDiff) || qtyDiff === 0) {
+    return badRequest('qty_difference must be a non-zero number');
+  }
 
   // Fraud control: reason is mandatory for the audit trail.
   try {

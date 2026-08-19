@@ -94,6 +94,14 @@ export async function appendMovement(p: MovementParams): Promise<MovementRow> {
   if (p.direction === 'IN') {
     stockAfter = stockBefore + p.quantity;
   } else if (p.direction === 'OUT') {
+    // Prevent negative stock: an OUT that would drive stock below zero is
+    // rejected. This catches over-issue / over-transfer / over-waste before
+    // it corrupts the ledger.
+    if (p.quantity > stockBefore) {
+      throw new Error(
+        `Insufficient stock: ${p.itemId} @ ${p.locationId} has ${stockBefore}, cannot move OUT ${p.quantity}`
+      );
+    }
     stockAfter = stockBefore - p.quantity;
   } else {
     // ADJUSTMENT — can be positive or negative

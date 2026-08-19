@@ -49,9 +49,16 @@ export async function middleware(req: NextRequest) {
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
-  // Public read endpoints for Hermez (GET only)
+  // Public read endpoints for Hermez (GET only). These are sensitive
+  // inventory/audit reads — require a valid x-bot-secret (Hermez) or a
+  // session cookie. Prevents anonymous exposure of inventory data.
   if (req.method === 'GET' && PUBLIC_GET_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return NextResponse.next();
+    const botSecret = process.env.TELEGRAM_BOT_SECRET;
+    const hasBotSecret = botSecret && req.headers.get('x-bot-secret') === botSecret;
+    if (hasBotSecret) return NextResponse.next();
+    const cookie = req.cookies.get(SESSION_COOKIE)?.value;
+    if (cookie && (await verify(cookie, process.env.SESSION_SECRET ?? ''))) return NextResponse.next();
+    return NextResponse.json({ error: { code: 'unauthorized', message: 'Unauthorized' } }, { status: 401 });
   }
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;
   const secret = process.env.SESSION_SECRET ?? '';

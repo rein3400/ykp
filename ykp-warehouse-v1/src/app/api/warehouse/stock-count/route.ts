@@ -42,6 +42,7 @@ export const POST = handler(async (req: NextRequest) => {
 
   const body = (await req.json().catch(() => ({}))) as {
     count_type?: string; brand_id?: string; outlet_id?: string; location_id?: string;
+    verified_by?: string;
     evidence_urls?: unknown;
     items?: Array<{
       item_id: string; physical_stock: number; base_unit?: string;
@@ -53,6 +54,12 @@ export const POST = handler(async (req: NextRequest) => {
   if (!body.items || body.items.length === 0) return badRequest('At least one item is required');
   if (body.count_type && !COUNT_TYPES.includes(body.count_type)) {
     return badRequest(`count_type must be one of: ${COUNT_TYPES.join(', ')}`);
+  }
+
+  // Separation of duties: the counter cannot verify their own count.
+  // A second person (verified_by) must confirm the physical count.
+  if (body.verified_by && body.verified_by.trim().toLowerCase() === s.userId.trim().toLowerCase()) {
+    return badRequest('Verifier harus orang yang berbeda dari counter (TTD 2 orang).');
   }
 
   try {
@@ -81,7 +88,7 @@ export const POST = handler(async (req: NextRequest) => {
     location_id: body.location_id,
     status: 'COMPLETED',
     counted_by: s.userId,
-    verified_by: '',
+    verified_by: body.verified_by ?? '',
     approved_by: '',
     created_at: now,
     completed_at: now

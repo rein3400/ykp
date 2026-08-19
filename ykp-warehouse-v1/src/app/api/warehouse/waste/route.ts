@@ -11,6 +11,7 @@ import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 import { FraudControlError, assertReason } from '@/lib/fraud-controls';
+import { appendMovement } from '@/lib/stock-ledger';
 
 export const GET = handler(async () => {
   const s = await getSession();
@@ -70,6 +71,25 @@ export const POST = handler(async (req: NextRequest) => {
     created_at: nowTimestampWib()
   };
   await appendRows(TABS.waste, [row]);
+  // Waste reduces stock — post a WASTE movement to the ledger so inventory
+  // stays accurate. Best-effort: never breaks the request path.
+  if (qty > 0 && body.item_id) {
+    await appendMovement({
+      movementType: 'WASTE',
+      direction: 'OUT',
+      quantity: qty,
+      baseUnit: String(body.unit ?? ''),
+      unitCost,
+      itemId: String(body.item_id),
+      brandId: String(body.brand_id ?? ''),
+      outletId: String(body.outlet_id ?? ''),
+      locationId: String(body.location_id ?? ''),
+      referenceType: 'waste',
+      referenceId: id,
+      createdBy: s.userId,
+      notes: `Waste ${id}: ${String(body.reason ?? '')}`
+    }).catch((e) => console.error('[waste] ledger post failed:', e));
+  }
   if (evidenceFiles.length) {
     await appendEvidenceRows('waste', id, evidenceFiles, s.userId).catch(
       (e) => console.error('[waste] evidence append failed:', e),
