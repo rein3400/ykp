@@ -37,6 +37,7 @@ export const TABS = {
   shifts: 'master_shift',
   products: 'master_product',
   checklistTemplates: 'master_checklist_template',
+  checklistSubmissions: 'ops_checklist_submission',
   briefing: 'ops_daily_briefing',
   opening: 'ops_opening_checklist',
   kds: 'ops_kds_order',
@@ -71,6 +72,10 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   [TABS.checklistTemplates]: [
     'checklist_template_id', 'brand_id', 'outlet_id', 'checklist_type', 'department',
     'checklist_item', 'required_photo', 'target_value', 'tolerance_value', 'critical_flag', 'active_status',
+  ],
+  [TABS.checklistSubmissions]: [
+    'submission_id', 'date', 'brand_id', 'outlet_id', 'shift_id', 'checklist_type',
+    'checklist_item', 'department', 'status', 'notes', 'verified_by', 'verified_at', 'critical_flag', 'created_at',
   ],
   [TABS.briefing]: [
     'briefing_id', 'date', 'brand_id', 'brand_name', 'outlet_id', 'outlet_name',
@@ -136,7 +141,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   ],
   [TABS.auditLog]: [
     'audit_id', 'timestamp', 'actor_user_id', 'actor_role', 'action', 'entity',
-    'entity_id', 'before_value', 'after_value', 'reason', 'ip_address',
+    'entity_id', 'before_value', 'after_value', 'reason', 'ip_address', 'chain_hash',
   ],
   [TABS.hermezAlerts]: [
     'alert_id', 'date', 'severity', 'alert_type', 'title', 'message',

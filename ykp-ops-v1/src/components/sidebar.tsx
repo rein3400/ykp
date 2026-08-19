@@ -6,6 +6,7 @@ const ITEMS = [
   { label: 'Ringkasan', href: '/ops', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'staff', 'viewer'] },
   { label: 'Briefing & Shift', href: '/ops/briefing', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'viewer'] },
   { label: 'Opening Checklist', href: '/ops/opening', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'staff'] },
+  { label: 'Checklist Operasional', href: '/ops/checklist', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'staff'] },
   { label: 'KDS / Live Ops', href: '/ops/kds', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'staff'] },
   { label: 'Visual QC', href: '/ops/qc', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'staff'] },
   { label: 'Incident & Complaint', href: '/ops/incidents', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'staff'] },
