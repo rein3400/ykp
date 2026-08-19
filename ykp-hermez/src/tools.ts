@@ -13,7 +13,10 @@ async function fetchRows(url: string, timeoutMs = 6000): Promise<Row[]> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetch(url, { signal: ctrl.signal });
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: CONFIG.botSecret ? { 'x-bot-secret': CONFIG.botSecret } : {}
+    });
     if (!res.ok) return [];
     const json = (await res.json()) as { data?: { items?: Row[] } };
     return json.data?.items ?? [];

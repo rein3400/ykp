@@ -41,6 +41,8 @@ export interface MokaVarianceEntry {
 export interface MokaImportResult {
   rows: MokaParsedRow[];
   errors: MokaVarianceEntry[];
+  /** Soft warnings — row is kept but flagged for review (e.g. net_sales mismatch). */
+  warnings: MokaVarianceEntry[];
   variance_report: {
     total_input_lines: number;
     parsed_lines: number;
@@ -115,6 +117,20 @@ export function parseIdrAmount(s: string | undefined): number {
   return Number.isFinite(n) ? Math.max(0, n) : 0;
 }
 
+/**
+ * Strict IDR parse: returns null when the cell is non-numeric (so the caller
+ * can flag it as an error instead of silently treating it as 0). Empty/null
+ * still returns 0 (missing column is acceptable).
+ */
+export function parseIdrAmountStrict(s: string | undefined): number | null {
+  if (!s || !s.trim()) return 0;
+  const cleaned = s.replace(/\s+/g, '').replace(/rp/i, '').replace(/\./g, '').replace(/,/g, '');
+  const abs = cleaned.replace(/^-+/, '');
+  if (!/^\d+$/.test(abs)) return null; // non-numeric → flag
+  const n = Number.parseInt(abs, 10);
+  return Number.isFinite(n) ? Math.max(0, n) : null;
+}
+
 export function normalizeDate(s: string | undefined): string {
   if (!s) return '';
   // dd/mm/yyyy (Moka default) -> YYYY-MM-DD in WIB/local date semantics.
@@ -143,10 +159,12 @@ function normalizeHeader(h: string): string {
 export function parseMokaCsv(csvText: string): MokaImportResult {
   const rows = parseCsv(csvText);
   const errors: MokaVarianceEntry[] = [];
+  const warnings: MokaVarianceEntry[] = [];
   if (rows.length < 2) {
     return {
       rows: [],
       errors,
+      warnings,
       variance_report: { total_input_lines: 0, parsed_lines: 0, dropped_lines: 0, alias_guesses: {} }
     };
   }
@@ -183,13 +201,19 @@ export function parseMokaCsv(csvText: string): MokaImportResult {
     let grossSales: number, netSales: number, discount: number, refund: number,
       voidAmount: number, tax: number, serviceCharge: number;
     try {
-      grossSales = parseIdrAmount(raw.grossSales);
-      netSales = parseIdrAmount(raw.netSales);
-      discount = parseIdrAmount(raw.discount);
-      refund = parseIdrAmount(raw.refund);
-      voidAmount = parseIdrAmount(raw.voidAmount);
-      tax = parseIdrAmount(raw.tax);
-      serviceCharge = parseIdrAmount(raw.serviceCharge);
+      // Strict parse: non-numeric cells are flagged as errors, not silently 0.
+      const g = parseIdrAmountStrict(raw.grossSales);
+      const n = parseIdrAmountStrict(raw.netSales);
+      const d = parseIdrAmountStrict(raw.discount);
+      const r = parseIdrAmountStrict(raw.refund);
+      const v = parseIdrAmountStrict(raw.voidAmount);
+      const t = parseIdrAmountStrict(raw.tax);
+      const sc = parseIdrAmountStrict(raw.serviceCharge);
+      if (g === null || n === null || d === null || r === null || v === null || t === null || sc === null) {
+        errors.push({ row: i + 1, field: 'amount', reason: 'non-numeric amount value', raw: cells.join(',') });
+        continue;
+      }
+      grossSales = g; netSales = n; discount = d; refund = r; voidAmount = v; tax = t; serviceCharge = sc;
     } catch (parseErr) {
       errors.push({
         row: i + 1,
@@ -200,6 +224,19 @@ export function parseMokaCsv(csvText: string): MokaImportResult {
       continue;
     }
     const txCount = Number.parseInt(raw.transactionCount ?? '1', 10) || 1;
+
+    // Reconcile net_sales against its components (gross - discount - refund - tax).
+    // Moka exports sometimes have inconsistent rows; flag as a soft warning
+    // (row is kept) so finance can review — not a hard drop.
+    const expectedNet = grossSales - discount - refund - tax;
+    if (Math.abs(expectedNet - netSales) > 1) {
+      warnings.push({
+        row: i + 1,
+        field: 'net_sales',
+        reason: `net_sales (${netSales}) != gross-discount-refund-tax (${expectedNet})`,
+        raw: cells.join(',')
+      });
+    }
 
     const existing = aggregates.get(key);
     if (existing) {
@@ -246,6 +283,7 @@ export function parseMokaCsv(csvText: string): MokaImportResult {
   return {
     rows: outRows,
     errors,
+    warnings,
     variance_report: {
       total_input_lines: rows.length - 1,
       parsed_lines: outRows.length,

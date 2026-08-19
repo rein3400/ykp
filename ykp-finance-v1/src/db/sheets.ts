@@ -192,7 +192,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   [TABS.auditLog]: [
     'audit_id', 'module', 'action', 'record_type', 'record_id',
     'before_value', 'after_value', 'reason', 'user_id', 'approval_user_id',
-    'environment', 'ip_address', 'created_at'
+    'environment', 'ip_address', 'created_at', 'chain_hash'
   ],
   [TABS.telegramDeliveryLog]: [
     'delivery_id', 'source_module', 'source_reference_id', 'message_type',

@@ -24,6 +24,10 @@ export const POST = handler(async (req: NextRequest, { params }) => {
   if (!found) return notFound(`expense_id not found: ${params.id}`);
 
   const before = { ...found.row };
+  // Separation of duties: the creator cannot approve their own request.
+  if (action === 'approve' && before.created_by && before.created_by === s.userId) {
+    return forbidden('Tidak dapat menyetujui pengajuan yang kamu buat sendiri');
+  }
   const current = (before.approval_status || 'DRAFT') as ApprovalStatus;
   const to: ApprovalStatus = action === 'approve' ? 'APPROVED' : 'REJECTED';
   const r = transitionApproval(

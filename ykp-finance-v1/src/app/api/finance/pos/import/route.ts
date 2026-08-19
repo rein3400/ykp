@@ -19,9 +19,10 @@ export const POST = handler(async (req: NextRequest) => {
   if (!s) return unauthorized();
   if (!can(s.role as Role, 'import', 'pos')) return forbidden('Forbidden');
 
-  const body = (await req.json().catch(() => ({}))) as { csv?: string };
+  const body = (await req.json().catch(() => ({}))) as { csv?: string; dryRun?: boolean };
   const csv = (body.csv ?? '').trim();
   if (!csv) return badRequest('csv is required');
+  const dryRun = body.dryRun === true;
 
   const parsed = parseMokaCsv(csv);
   const [outlets, brands, existing] = await Promise.all([
@@ -88,18 +89,20 @@ export const POST = handler(async (req: NextRequest) => {
     });
   }
 
-  if (inserted.length > 0) await appendRows(TABS.posDaily, inserted);
+  if (inserted.length > 0 && !dryRun) await appendRows(TABS.posDaily, inserted);
   await logAudit({
-    module: 'finance', action: 'import', recordType: 'fin_pos_daily',
+    module: 'finance', action: dryRun ? 'import:dry-run' : 'import', recordType: 'fin_pos_daily',
     recordId: `import-${t}`,
-    afterValue: JSON.stringify({ inserted: inserted.length, skipped: skipped.length, dropped: parsed.errors.length }),
+    afterValue: JSON.stringify({ inserted: inserted.length, skipped: skipped.length, dropped: parsed.errors.length, dryRun }),
     userId: s.userId
   }).catch(() => null);
 
   return ok({
+    dryRun,
     inserted: inserted.length,
     skipped,
     errors: parsed.errors,
+    warnings: parsed.warnings,
     variance_report: parsed.variance_report
-  }, inserted.length > 0 ? 201 : 200);
+  }, inserted.length > 0 && !dryRun ? 201 : 200);
 });

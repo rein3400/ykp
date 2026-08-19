@@ -76,4 +76,13 @@ describe('approval FSM (ported from engine, keeps CANCELLED fix)', () => {
     expect(r.ok).toBe(true);
     expect(r.new_row.status).toBe('PAID');
   });
+
+  it('rejects approval of zero or negative amounts', () => {
+    const zero = transitionApproval(row({ amount: 0 }), 'PENDING', 'APPROVED', { id: 'U', role: 'owner' });
+    expect(zero.ok).toBe(false);
+    expect(zero.error).toContain('amount must be > 0');
+    const neg = transitionApproval(row({ amount: -5000 }), 'PENDING', 'APPROVED', { id: 'U', role: 'owner' });
+    expect(neg.ok).toBe(false);
+    expect(neg.error).toContain('amount must be > 0');
+  });
 });

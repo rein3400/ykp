@@ -34,6 +34,11 @@ export const POST = handler(async (req: NextRequest, { params }) => {
   const currentApproval = (before.approval_status || 'PENDING') as ApprovalStatus;
   const remaining = Number(before.unpaid_amount || 0);
 
+  // Separation of duties: the creator cannot approve/pay their own invoice.
+  if ((action === 'approve' || action === 'pay') && before.created_by && before.created_by === s.userId) {
+    return forbidden('Tidak dapat menyetujui/membayar invoice yang kamu buat sendiri');
+  }
+
   if (action === 'approve' || action === 'reject') {
     const to: ApprovalStatus = action === 'approve' ? 'APPROVED' : 'REJECTED';
     const r = transitionApproval(
