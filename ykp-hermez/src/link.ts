@@ -44,13 +44,57 @@ export function isAttendanceCommand(text: string): boolean {
   return /^\/absen$/i.test((text || '').trim());
 }
 
+export function isScheduleCommand(text: string): boolean {
+  return /^\/jadwal$/i.test((text || '').trim());
+}
+
+export function isLeaveCommand(text: string): boolean {
+  return /^\/cuti$/i.test((text || '').trim());
+}
+
+export function isStartCommand(text: string): boolean {
+  return /^\/start$/i.test((text || '').trim());
+}
+
+export function isHelpCommand(text: string): boolean {
+  return /^\/help$/i.test((text || '').trim());
+}
+
 /** Inline keyboard for the attendance menu. */
 export function attendanceKeyboard(): { text: string; callback_data: string }[][] {
   return [
     [{ text: '✅ Clock-in', callback_data: 'att:clock-in' }],
     [{ text: '🏁 Clock-out', callback_data: 'att:clock-out' }],
     [{ text: '📍 Kirim Lokasi (untuk clock-in)', callback_data: 'att:location' }],
+    [{ text: '🔙 Menu Utama', callback_data: 'main:menu' }],
   ];
+}
+
+/** Main menu keyboard for employees. */
+export function mainMenuKeyboard(): { text: string; callback_data: string }[][] {
+  return [
+    [{ text: '📍 Absen', callback_data: 'main:absen' }],
+    [{ text: '📅 Jadwal', callback_data: 'main:jadwal' }],
+    [{ text: '🏖 Cuti', callback_data: 'main:cuti' }],
+    [{ text: '👤 Profil Saya', callback_data: 'main:me' }],
+    [{ text: '❓ Bantuan', callback_data: 'main:help' }],
+  ];
+}
+
+/** Employee-facing help text (shown on /start and /help). */
+export function employeeHelpText(): string {
+  return `<b>👋 Selamat datang di YKP Telegram</b>
+
+Ketik /link KODE untuk menghubungkan akun kamu (kode didapat dari aplikasi web YKP).
+
+Menu yang tersedia:
+• 📍 <b>Absen</b> — clock-in / clock-out (bisa pakai lokasi GPS)
+• 📅 <b>Jadwal</b> — lihat shift kamu
+• 🏖 <b>Cuti</b> — ajukan cuti / izin
+• 👤 <b>Profil Saya</b> — kehadiran & cuti kamu
+• ❓ <b>Bantuan</b> — menu ini
+
+Atau ketik perintah: /absen /jadwal /cuti /me /help`;
 }
 
 /**
@@ -182,12 +226,104 @@ export async function handleMeCommand(telegramChatId: number): Promise<string> {
 }
 
 /**
+ * Self-service: return the linked user's schedule (roster) for today + next 6 days.
+ */
+export async function handleScheduleCommand(telegramChatId: number): Promise<string> {
+  if (!CONFIG.botSecret) {
+    return '⚠️ Layanan belum aktif (TELEGRAM_BOT_SECRET belum di-set). Hubungi admin.';
+  }
+  const hr = CONFIG.modules.hr;
+  try {
+    const res = await fetch(`${hr}/api/hr/telegram/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-bot-secret': CONFIG.botSecret },
+      body: JSON.stringify({ telegram_chat_id: String(telegramChatId) }),
+    });
+    const json = (await res.json().catch(() => ({}))) as {
+      data?: { employee?: { fullName?: string } | null; roster?: Record<string, string>[]; from?: string; to?: string };
+      error?: { message?: string };
+    };
+    if (res.status === 404) {
+      return '❌ Akun Telegram kamu belum dihubungkan. Login ke aplikasi, minta kode, lalu ketik /link KODE.';
+    }
+    if (!res.ok || !json.data) {
+      return `⚠️ Gagal mengambil jadwal (${json.error?.message ?? res.status}). Coba lagi nanti.`;
+    }
+    const d = json.data;
+    const name = d.employee?.fullName || 'Karyawan';
+    const roster = d.roster ?? [];
+    const lines: string[] = [];
+    lines.push(`<b>📅 Jadwal ${name}</b>`);
+    lines.push(`Periode: ${d.from ?? '-'} s/d ${d.to ?? '-'}`);
+    if (roster.length === 0) {
+      lines.push('');
+      lines.push('Belum ada jadwal shift untuk minggu ini.');
+    } else {
+      lines.push('');
+      for (const r of roster) {
+        const day = r.date || '-';
+        const shift = r.shift_name || r.shift_id || '-';
+        const time = r.start_time && r.end_time ? `${r.start_time}–${r.end_time}` : '';
+        lines.push(`• ${day}: ${shift}${time ? ` (${time})` : ''}`);
+      }
+    }
+    return lines.join('\n');
+  } catch {
+    return '⚠️ Gagal menghubungi server. Coba lagi sebentar lagi.';
+  }
+}
+
+/**
+ * Self-service: submit a leave request via Telegram.
+ * Format: /cuti <JENIS> <YYYY-MM-DD> <YYYY-MM-DD> [alasan]
+ * Example: /cuti SICK 2026-08-20 2026-08-21 Demam
+ */
+export async function handleLeaveCommand(text: string, telegramChatId: number): Promise<string> {
+  const m = (text || '').trim().match(/^\/cuti\s+([A-Z_]+)\s+(\d{4}-\d{2}-\d{2})\s+(\d{4}-\d{2}-\d{2})(?:\s+(.+))?$/i);
+  if (!m) {
+    return '❌ Format salah.\n\nCara ajukan cuti:\n<b>/cuti JENIS TANGGAL_MULAI TANGGAL_SELESAI [alasan]</b>\n\nJenis: ANNUAL_LEAVE, SICK, PERMISSION, UNPAID_LEAVE, EMERGENCY, MATERNITY, OTHER\n\nContoh: /cuti SICK 2026-08-20 2026-08-21 Demam';
+  }
+  const leaveType = m[1].toUpperCase();
+  const startDate = m[2];
+  const endDate = m[3];
+  const reason = m[4]?.trim() ?? '';
+
+  if (!CONFIG.botSecret) {
+    return '⚠️ Layanan belum aktif (TELEGRAM_BOT_SECRET belum di-set). Hubungi admin.';
+  }
+  const hr = CONFIG.modules.hr;
+  try {
+    const res = await fetch(`${hr}/api/hr/telegram/leave`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-bot-secret': CONFIG.botSecret },
+      body: JSON.stringify({ telegram_chat_id: String(telegramChatId), leave_type: leaveType, start_date: startDate, end_date: endDate, reason }),
+    });
+    const json = (await res.json().catch(() => ({}))) as {
+      data?: { leave_id?: string; total_days?: string; approval_status?: string };
+      error?: { message?: string };
+    };
+    if (res.status === 404) {
+      return '❌ Akun Telegram kamu belum dihubungkan. Login ke aplikasi, minta kode, lalu ketik /link KODE.';
+    }
+    if (!res.ok || !json.data) {
+      return `⚠️ Gagal mengajukan cuti: ${json.error?.message ?? res.status}.`;
+    }
+    const d = json.data;
+    return `✅ Cuti berhasil diajukan!\n\nID: ${d.leave_id}\nDurasi: ${d.total_days ?? '-'} hari\nStatus: ${d.approval_status ?? 'PENDING'}\n\nMenunggu persetujuan atasan.`;
+  } catch {
+    return '⚠️ Gagal menghubungi server. Coba lagi sebentar lagi.';
+  }
+}
+
+/**
  * Consume a link code against the first app that accepts it.
  * Returns a human-readable result message.
  */
 export async function handleLinkCommand(text: string, telegramChatId: number): Promise<string> {
   const m = (text || '').trim().match(/^\/link\s+([A-Z2-9]{6})$/i);
-  if (!m) return 'Format: /link KODE6KARAKTER';
+  if (!m) {
+    return '❌ Format salah.\n\nCara menghubungkan akun:\n1. Login ke aplikasi web YKP\n2. Buka menu <b>Telegram</b> → dapatkan kode 6 karakter\n3. Ketik: <b>/link KODE</b>\n\nContoh: /link ABC123';
+  }
   const code = m[1].toUpperCase();
 
   if (!CONFIG.botSecret) {

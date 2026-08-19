@@ -14,7 +14,7 @@ import { handleText, executeTool } from './brain.js';
 import { chat } from './openrouter.js';
 import { runDailyBrief } from './brief.js';
 import { evaluateRules } from './watch.js';
-import { isLinkCommand, handleLinkCommand, isMeCommand, handleMeCommand, isClockInCommand, handleClockIn, isClockOutCommand, handleClockOut, isAttendanceCommand, attendanceKeyboard } from './link.js';
+import { isLinkCommand, handleLinkCommand, isMeCommand, handleMeCommand, isClockInCommand, handleClockIn, isClockOutCommand, handleClockOut, isAttendanceCommand, attendanceKeyboard, isScheduleCommand, handleScheduleCommand, isLeaveCommand, handleLeaveCommand, isStartCommand, isHelpCommand, employeeHelpText, mainMenuKeyboard } from './link.js';
 
 const OFFSET_FILE = () => join(CONFIG.dataDir, 'offset.txt');
 
@@ -89,6 +89,26 @@ async function handleMessage(msg: TgMessage): Promise<void> {
     return;
   }
 
+  // `/jadwal` — view own schedule.
+  if (msg.text && isScheduleCommand(msg.text)) {
+    const reply = await handleScheduleCommand(fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+
+  // `/cuti` — submit a leave request.
+  if (msg.text && isLeaveCommand(msg.text)) {
+    const reply = await handleLeaveCommand(msg.text, fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+
+  // `/start` and `/help` — show the employee main menu (for ANYONE).
+  if (msg.text && (isStartCommand(msg.text) || isHelpCommand(msg.text))) {
+    await sendMessageWithKeyboard(chatId, employeeHelpText(), mainMenuKeyboard());
+    return;
+  }
+
   // A Telegram location message = clock-in with GPS (for linked staff/HOD).
   if (msg.location) {
     const reply = await handleClockIn(fromId, msg.location);
@@ -97,7 +117,7 @@ async function handleMessage(msg: TgMessage): Promise<void> {
   }
 
   if (!isOwner(msg)) {
-    await sendMessage(chatId, 'Maaf, saya hanya melayani owner YKP. 🙏\n\nKaryawan/HOD: ketik /link KODE untuk menghubungkan akun Telegram kamu, lalu /absen untuk menu absensi, /me untuk data kehadiran & cuti.');
+    await sendMessage(chatId, 'Maaf, saya hanya melayani owner YKP. 🙏\n\nKaryawan/HOD: ketik /start untuk menu, /link KODE untuk menghubungkan akun.');
     return;
   }
   try {
@@ -134,6 +154,40 @@ async function handleCallback(cb: TgCallbackQuery): Promise<void> {
   const fromId = cb.from.id;
   const data = cb.data ?? '';
   if (chatId === undefined) return;
+
+  // Main menu navigation.
+  if (data === 'main:menu') {
+    await answerCallbackQuery(cb.id, 'Menu utama');
+    await sendMessageWithKeyboard(chatId, employeeHelpText(), mainMenuKeyboard());
+    return;
+  }
+  if (data === 'main:absen') {
+    await answerCallbackQuery(cb.id, 'Menu absen');
+    await sendMessageWithKeyboard(chatId, 'Pilih aksi absensi:', attendanceKeyboard());
+    return;
+  }
+  if (data === 'main:jadwal') {
+    await answerCallbackQuery(cb.id, 'Jadwal…');
+    const reply = await handleScheduleCommand(fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+  if (data === 'main:cuti') {
+    await answerCallbackQuery(cb.id, 'Cuti…');
+    await sendMessage(chatId, 'Cara ajukan cuti:\n<b>/cuti JENIS TANGGAL_MULAI TANGGAL_SELESAI [alasan]</b>\n\nJenis: ANNUAL_LEAVE, SICK, PERMISSION, UNPAID_LEAVE, EMERGENCY, MATERNITY, OTHER\n\nContoh: /cuti SICK 2026-08-20 2026-08-21 Demam');
+    return;
+  }
+  if (data === 'main:me') {
+    await answerCallbackQuery(cb.id, 'Profil…');
+    const reply = await handleMeCommand(fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+  if (data === 'main:help') {
+    await answerCallbackQuery(cb.id, 'Bantuan');
+    await sendMessageWithKeyboard(chatId, employeeHelpText(), mainMenuKeyboard());
+    return;
+  }
 
   if (data === 'att:clock-in') {
     await answerCallbackQuery(cb.id, 'Clock-in…');

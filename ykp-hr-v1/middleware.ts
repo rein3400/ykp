@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/hr/notify/daily-brief', '/api/hr/telegram/link/consume', '/api/hr/telegram/me', '/api/hr/telegram/clock-in', '/api/hr/telegram/clock-out'];
+const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/hr/notify/daily-brief', '/api/hr/telegram/link/consume', '/api/hr/telegram/me', '/api/hr/telegram/clock-in', '/api/hr/telegram/clock-out', '/api/hr/telegram/schedule', '/api/hr/telegram/leave'];
 
 // Edge-compatible HMAC-SHA256 verify using Web Crypto API.
 // `crypto.subtle` is available in both edge runtime and Node.js 20+.
