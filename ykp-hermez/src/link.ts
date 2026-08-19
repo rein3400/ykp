@@ -60,6 +60,21 @@ export function isHelpCommand(text: string): boolean {
   return /^\/help$/i.test((text || '').trim());
 }
 
+/**
+ * Deep-link: Telegram sends `/start <KODE>` when a user taps a
+ * `t.me/<bot>?start=<KODE>` link. This lets staff connect WITHOUT typing
+ * `/link` manually — they just tap the button in the web app.
+ */
+export function isStartLinkCommand(text: string): boolean {
+  return /^\/start\s+[A-Z2-9]{6}$/i.test((text || '').trim());
+}
+
+/** Extract the 6-char code from `/start KODE`. */
+export function startLinkCode(text: string): string | null {
+  const m = (text || '').trim().match(/^\/start\s+([A-Z2-9]{6})$/i);
+  return m ? m[1].toUpperCase() : null;
+}
+
 /** Inline keyboard for the attendance menu. */
 export function attendanceKeyboard(): { text: string; callback_data: string }[][] {
   return [
@@ -348,6 +363,38 @@ export async function handleLinkCommand(text: string, telegramChatId: number): P
         return `❌ Kode tidak valid atau sudah kedaluwarsa. Minta kode baru dari aplikasi, lalu coba lagi.`;
       }
       // 401/other — try next module.
+    } catch {
+      // network error — try next module
+    }
+  }
+  return '⚠️ Gagal menghubungkan akun. Coba lagi sebentar lagi, atau hubungi admin.';
+}
+
+/**
+ * Deep-link handler: `/start KODE` (from t.me/<bot>?start=KODE).
+ * Same consume logic as /link, but returns a success message that invites
+ * the user to tap the main menu — no typing required.
+ */
+export async function handleStartLink(text: string, telegramChatId: number): Promise<string> {
+  const code = startLinkCode(text);
+  if (!code) return '❌ Kode tidak ditemukan. Buka aplikasi web YKP → menu Telegram → tap tombol untuk menghubungkan.';
+  if (!CONFIG.botSecret) {
+    return '⚠️ Link belum aktif (TELEGRAM_BOT_SECRET belum di-set). Hubungi admin.';
+  }
+  for (const mod of LINK_MODULES) {
+    try {
+      const res = await fetch(`${mod.baseUrl}${mod.consumePath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-bot-secret': CONFIG.botSecret },
+        body: JSON.stringify({ code, telegram_chat_id: String(telegramChatId) }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { data?: { userId?: string }; error?: { message?: string } };
+      if (res.ok && json.data?.userId) {
+        return `✅ Akun Telegram kamu berhasil dihubungkan! 🎉\n\nSekarang kamu bisa absen, lihat jadwal, dan ajukan cuti langsung dari sini.`;
+      }
+      if (res.status === 400) {
+        return `❌ Kode tidak valid atau sudah kedaluwarsa. Buka aplikasi web YKP → menu Telegram → tap tombol untuk dapat kode baru.`;
+      }
     } catch {
       // network error — try next module
     }

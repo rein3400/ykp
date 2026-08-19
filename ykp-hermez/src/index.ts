@@ -14,7 +14,7 @@ import { handleText, executeTool } from './brain.js';
 import { chat } from './openrouter.js';
 import { runDailyBrief } from './brief.js';
 import { evaluateRules } from './watch.js';
-import { isLinkCommand, handleLinkCommand, isMeCommand, handleMeCommand, isClockInCommand, handleClockIn, isClockOutCommand, handleClockOut, isAttendanceCommand, attendanceKeyboard, isScheduleCommand, handleScheduleCommand, isLeaveCommand, handleLeaveCommand, isStartCommand, isHelpCommand, employeeHelpText, mainMenuKeyboard } from './link.js';
+import { isLinkCommand, handleLinkCommand, isMeCommand, handleMeCommand, isClockInCommand, handleClockIn, isClockOutCommand, handleClockOut, isAttendanceCommand, attendanceKeyboard, isScheduleCommand, handleScheduleCommand, isLeaveCommand, handleLeaveCommand, isStartCommand, isHelpCommand, employeeHelpText, mainMenuKeyboard, isStartLinkCommand, handleStartLink } from './link.js';
 
 const OFFSET_FILE = () => join(CONFIG.dataDir, 'offset.txt');
 
@@ -61,6 +61,10 @@ async function handleMessage(msg: TgMessage): Promise<void> {
   if (msg.text && isLinkCommand(msg.text)) {
     const reply = await handleLinkCommand(msg.text, fromId);
     await sendMessage(chatId, reply);
+    // After a successful link, show the main menu so the user can tap.
+    if (reply.startsWith('✅')) {
+      await sendMessageWithKeyboard(chatId, 'Pilih menu:', mainMenuKeyboard());
+    }
     return;
   }
 
@@ -100,6 +104,17 @@ async function handleMessage(msg: TgMessage): Promise<void> {
   if (msg.text && isLeaveCommand(msg.text)) {
     const reply = await handleLeaveCommand(msg.text, fromId);
     await sendMessage(chatId, reply);
+    return;
+  }
+
+  // Deep-link: `/start KODE` (from t.me/<bot>?start=KODE) — connect without typing.
+  if (msg.text && isStartLinkCommand(msg.text)) {
+    const reply = await handleStartLink(msg.text, fromId);
+    await sendMessage(chatId, reply);
+    // After a successful link, show the main menu so the user can tap.
+    if (reply.startsWith('✅')) {
+      await sendMessageWithKeyboard(chatId, 'Pilih menu:', mainMenuKeyboard());
+    }
     return;
   }
 
