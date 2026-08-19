@@ -91,6 +91,7 @@ export const POST = handler(async (req) => {
     outlet_id: parsed.data.outlet_id,
     employee_id: parsed.data.employee_id || '',
     active_status: parsed.data.active_status,
+    must_change_password: 'true',
     created_at: now,
     last_login_at: ''
   };
@@ -139,6 +140,7 @@ export const PUT = handler(async (req) => {
   };
   if (parsed.data.password) {
     updated.password_hash = await hashPassword(parsed.data.password);
+    updated.must_change_password = 'true';
   }
 
   await updateRow(TABS.users, found.rowNumber, updated);

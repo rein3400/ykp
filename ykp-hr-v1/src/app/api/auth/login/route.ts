@@ -32,12 +32,15 @@ export const POST = handler(async (req) => {
     }).catch(() => null);
   }
 
+  const mustChangePassword = found.row.must_change_password === 'true';
+
   await setSession({
     userId: found.row.user_id,
     username: found.row.username,
     role: found.row.role,
     brandId: found.row.brand_id || undefined,
-    outletId: found.row.outlet_id || undefined
+    outletId: found.row.outlet_id || undefined,
+    mustChangePassword
   });
   await logAudit({
     actorUserId: found.row.user_id,
@@ -46,5 +49,5 @@ export const POST = handler(async (req) => {
     entity: 'session',
     entityId: found.row.user_id
   });
-  return ok({ userId: found.row.user_id, role: found.row.role });
+  return ok({ userId: found.row.user_id, role: found.row.role, mustChangePassword });
 });

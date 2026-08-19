@@ -42,7 +42,12 @@ export function LoginForm() {
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? 'Username atau password salah');
       }
-      router.push('/hr');
+      const j = await r.json().catch(() => ({}));
+      if (j?.data?.mustChangePassword) {
+        router.push('/change-password');
+      } else {
+        router.push('/hr');
+      }
       router.refresh();
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Login gagal');

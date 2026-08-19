@@ -65,6 +65,7 @@ const TAB = {
 function seed(): Record<string, Record<string, string>[]> {
   const ownerPw = createHash('sha256').update('owner123').digest('hex');
   const hrPw = createHash('sha256').update('hradmin123').digest('hex');
+  const sha = (p: string) => createHash('sha256').update(p).digest('hex');
   const t = now();
   const tw = wibTimestamp();
   const today = wibDate(0);
@@ -195,8 +196,16 @@ function seed(): Record<string, Record<string, string>[]> {
     ],
     // ── users: owner (legacy sha256 → bcrypt migration) + hr_admin ──
     [TAB.users]: [
-      { user_id: 'USR-001', username: 'owner', password_hash: ownerPw, role: 'owner', brand_id: '', outlet_id: '', department: '', employee_id: '', telegram_id: '', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-002', username: 'hradmin', password_hash: hrPw, role: 'hr_admin', brand_id: '', outlet_id: '', department: '', employee_id: '', telegram_id: '', active_status: 'active', created_at: t, last_login_at: '' }
+      { user_id: 'USR-001', username: 'owner', password_hash: ownerPw, role: 'owner', brand_id: '', outlet_id: '', department: '', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'false', created_at: t, last_login_at: '' },
+      { user_id: 'USR-002', username: 'hradmin', password_hash: hrPw, role: 'hr_admin', brand_id: '', outlet_id: '', department: '', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'false', created_at: t, last_login_at: '' },
+      // ── trial accounts (one per division) — must_change_password=true ──
+      { user_id: 'USR-003', username: 'superadmin', password_hash: sha('superadmin123'), role: 'super_admin', brand_id: '', outlet_id: '', department: 'Super Admin', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'true', created_at: t, last_login_at: '' },
+      { user_id: 'USR-004', username: 'finance', password_hash: sha('finance123'), role: 'finance_admin', brand_id: '', outlet_id: '', department: 'Finance Admin', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'true', created_at: t, last_login_at: '' },
+      { user_id: 'USR-005', username: 'brandmgr', password_hash: sha('brandmgr123'), role: 'brand_manager', brand_id: 'BR-001', outlet_id: '', department: 'Brand Manager', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'true', created_at: t, last_login_at: '' },
+      { user_id: 'USR-006', username: 'outletmgr', password_hash: sha('outletmgr123'), role: 'outlet_manager', brand_id: 'BR-001', outlet_id: 'OL-001', department: 'Outlet Manager', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'true', created_at: t, last_login_at: '' },
+      { user_id: 'USR-007', username: 'supervisor', password_hash: sha('supervisor123'), role: 'supervisor', brand_id: 'BR-001', outlet_id: 'OL-001', department: 'Supervisor', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'true', created_at: t, last_login_at: '' },
+      { user_id: 'USR-008', username: 'employee', password_hash: sha('employee123'), role: 'employee', brand_id: 'BR-001', outlet_id: 'OL-001', department: 'Employee', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'true', created_at: t, last_login_at: '' },
+      { user_id: 'USR-009', username: 'viewer', password_hash: sha('viewer123'), role: 'viewer', brand_id: '', outlet_id: '', department: 'Viewer', employee_id: '', telegram_id: '', active_status: 'active', must_change_password: 'true', created_at: t, last_login_at: '' }
     ],
     // ── audit_log: empty (filled at runtime) ────────────────────
     [TAB.auditLog]: [],

@@ -10,6 +10,7 @@
     "sheets:bootstrap": "tsx scripts/bootstrap-sheets.ts",
     "sheets:smoke": "tsx scripts/sheets-smoke.ts",
     "sheets:seed-user": "tsx scripts/seed-user.ts",
+    "sheets:seed-trial": "tsx scripts/seed-trial-users.ts",
     "test": "vitest run"
   },
   "dependencies": {

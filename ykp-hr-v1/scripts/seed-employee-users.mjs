@@ -92,6 +92,7 @@ async function main() {
       brand_id: brandId,
       outlet_id: outletId,
       active_status: "active",
+      must_change_password: "true",
       created_at: now,
       last_login_at: "",
     });
@@ -105,7 +106,7 @@ async function main() {
   // Get next row
   const appendResp = await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: "users!A2:I2",
+    range: "users!A2:M2",
     valueInputOption: "RAW",
     requestBody: { values: newRows.map((r) => Object.values(r)) },
   });

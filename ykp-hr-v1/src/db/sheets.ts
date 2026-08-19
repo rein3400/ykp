@@ -358,6 +358,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'employee_id',
     'telegram_id',
     'active_status',
+    'must_change_password',
     'created_at',
     'last_login_at'
   ],
@@ -372,7 +373,8 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'before_value',
     'after_value',
     'reason',
-    'ip_address'
+    'ip_address',
+    'chain_hash'
   ],
   [TABS.hermezAlerts]: [
     'alert_id',

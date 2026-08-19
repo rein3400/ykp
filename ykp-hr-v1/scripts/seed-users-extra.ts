@@ -42,6 +42,7 @@ async function main() {
       employee_id: '',
       telegram_id: '',
       active_status: 'active',
+      must_change_password: 'true',
       created_at: now,
       last_login_at: '',
     }));

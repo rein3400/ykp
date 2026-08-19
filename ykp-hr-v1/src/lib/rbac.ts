@@ -110,7 +110,8 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     summary: ['view', 'generate', 'export'],
     audit: ['view'],
     rule: ['view', 'create', 'update'],
-    master: ['view', 'create', 'update']
+    master: ['view', 'create', 'update'],
+    user: ['view', 'create', 'update']
   },
   finance_admin: {
     payroll: ['view', 'export', 'mark_paid'],
