@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@ykp/ui";
+import { todayWib } from "@ykp/engine/client";
 
 interface RunResult {
   brief_id: string;
@@ -31,7 +32,9 @@ const POLL_MS = 2000;
 const MAX_POLLS = 60; // 2 minutes
 
 export default function RunConsolePage() {
-  const [date, setDate] = React.useState<string>(() => new Date().toISOString().slice(0, 10));
+  // Asia/Jakarta date — never use UTC toISOString (hydration mismatch +
+// wrong day between 00:00-07:00 WIB). todayWib is pure Intl, SSR-safe.
+const [date, setDate] = React.useState<string>(() => todayWib());
   const [submitting, setSubmitting] = React.useState(false);
   const [job, setJob] = React.useState<RunJob | null>(null);
   const [error, setError] = React.useState<string | null>(null);

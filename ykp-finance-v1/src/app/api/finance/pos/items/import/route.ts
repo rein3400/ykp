@@ -12,15 +12,26 @@ import { nowTimestampWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
 import { parseMokaItemsCsv } from '@/lib/moka-items-importer';
+import { fetchSheetCsv } from '@/lib/sheet-import';
 
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
   if (!can(s.role as Role, 'import', 'pos')) return forbidden('Forbidden');
 
-  const body = (await req.json().catch(() => ({}))) as { csv?: string };
-  const csv = (body.csv ?? '').trim();
-  if (!csv) return badRequest('csv is required');
+  const body = (await req.json().catch(() => ({}))) as { csv?: string; sheet_url?: string };
+  let csv = (body.csv ?? '').trim();
+  let sheetTitle = '';
+  if (!csv && body.sheet_url) {
+    try {
+      const fetched = await fetchSheetCsv(body.sheet_url);
+      csv = fetched.csv;
+      sheetTitle = fetched.title;
+    } catch (e) {
+      return badRequest(e instanceof Error ? e.message : 'Gagal membaca Google Sheet');
+    }
+  }
+  if (!csv) return badRequest('csv or sheet_url is required');
 
   const parsed = parseMokaItemsCsv(csv);
   const [outlets, brands, existing] = await Promise.all([
@@ -80,6 +91,8 @@ export const POST = handler(async (req: NextRequest) => {
     inserted: inserted.length,
     skipped,
     errors: parsed.errors,
-    variance_report: parsed.variance_report
+    variance_report: parsed.variance_report,
+    source: sheetTitle ? 'google_sheet' : 'csv',
+    sheet_title: sheetTitle
   });
 });

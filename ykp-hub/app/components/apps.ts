@@ -95,26 +95,41 @@ export function findApp(id: AppId | null): AppDef | undefined {
 }
 
 /**
- * Apps whose login is a demo role-picker (POST /api/auth/login {role})
- * with a GET SSO bridge (/api/auth/login?role=X&redirect=/ → cookie → 302).
- * finance/hr/hermez (ykp-erp) support it, and ops (ykp-ops-v1) now exposes a
- * GET SSO bridge too. The remaining local YKP family (hr-v1/warehouse/
- * investor) uses real username/password auth backed by Google Sheets user
- * tabs, so those open the app root and the user logs in there manually.
+ * Apps that expose a GET SSO bridge:
+ *   /api/auth/login?role=<hubRole>&token=<ERP_SSO_SECRET>&redirect=/
+ * minting a session cookie and 302-redirecting into the app.
+ *
+ *   - finance (ykp-erp-finance): ERP demo SSO, token-gated, role mint.
+ *   - owner   (ykp-erp-hermez, "Owner Command"): ERP demo SSO, token-gated,
+ *             needs SUPER_ADMIN → see SSO_ROLE override below.
+ *   - ops     (ykp-ops-v1): GET SSO bridge, maps hub role onto owner/staff
+ *             (no shared token; role mapping only).
+ *
+ * NOT here (manual username/password, no GET SSO bridge):
+ *   - hr       (ykp-hr-v1 Sheets): POST-only bcrypt login against Sheets
+ *              users tab — there is no /api/auth/login GET handler, so an SSO
+ *              link would 404/401. Hub opens the app root; user logs in.
+ *   - warehouse, investor (Sheets apps): same — manual login.
  */
-export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["finance", "hr", "ops"]);
+export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["finance", "owner", "ops"]);
 
 /**
- * Per-app SSO role override. hermez needs SUPER_ADMIN for config/brief APIs.
+ * Per-app SSO role override. Hermez (Owner Command) config/brief APIs
+ * require SUPER_ADMIN, so we override the role regardless of the hub role.
  */
-export const SSO_ROLE: Partial<Record<AppId, string>> = {};
+export const SSO_ROLE: Partial<Record<AppId, string>> = {
+  owner: "SUPER_ADMIN",
+};
 
 /**
  * Build the URL to open an app from Hub so the user lands authenticated.
  * Apps in ROLE_SSO_APPS get the SSO bridge URL; others get the app base URL.
+ * The ERP demo SSO bridge requires `ERP_SSO_SECRET` as a token to prevent
+ * unauthenticated role minting.
  */
 export function ssoUrl(app: AppDef, role: string): string {
   if (!ROLE_SSO_APPS.has(app.id)) return app.url;
   const r = encodeURIComponent(SSO_ROLE[app.id] ?? role ?? "OWNER");
-  return `${app.url}/api/auth/login?role=${r}&redirect=/`;
+  const token = encodeURIComponent(process.env.NEXT_PUBLIC_ERP_SSO_SECRET ?? "");
+  return `${app.url}/api/auth/login?role=${r}&token=${token}&redirect=/`;
 }

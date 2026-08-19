@@ -122,8 +122,10 @@ export default function TelegramBotPage() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Catatan: bot jalan di proses worker container (auto-start saat deploy). Tombol
-            Start/Stop mengontrol instance dari proses web ini.
+            Catatan: worker container dedicated belum di-deploy di prod. Klik
+            &quot;Start polling&quot; untuk jalankan bot dialog in-process di web
+            service (valid untuk demo; restart container akan stop lagi).
+            Whitelist: OWNER_CHAT_ID (comma-list) + OWNER_USER_IDS (DM owner).
           </p>
         </CardContent>
       </Card>

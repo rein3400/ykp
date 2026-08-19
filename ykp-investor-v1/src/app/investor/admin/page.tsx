@@ -1,4 +1,4 @@
-import { readTab, readFinanceTab, TABS } from '@/db/sheets';
+import { readTab, readTabSafe, readFinanceTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import AdminClient from './admin-client';
@@ -11,11 +11,11 @@ export default async function AdminPage() {
   if (session.role !== 'owner') redirect('/investor');
 
   const [investors, shareholding, documents, users, dividends] = await Promise.all([
-    readTab<Record<string, string>>(TABS.investors),
-    readTab<Record<string, string>>(TABS.shareholding),
-    readTab<Record<string, string>>(TABS.documents),
-    readTab<Record<string, string>>(TABS.users),
-    readTab<Record<string, string>>(TABS.dividend)
+    readTabSafe<Record<string, string>>(TABS.investors),
+    readTabSafe<Record<string, string>>(TABS.shareholding),
+    readTabSafe<Record<string, string>>(TABS.documents),
+    readTabSafe<Record<string, string>>(TABS.users),
+    readTabSafe<Record<string, string>>(TABS.dividend)
   ]);
   let brands: Record<string, string>[] = [];
   try {

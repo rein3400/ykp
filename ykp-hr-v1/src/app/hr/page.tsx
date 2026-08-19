@@ -45,6 +45,31 @@ export default async function HrOverview() {
   const today = todayWib();
   const recent = latestSummary.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30);
 
+  // Scope server-side so non-admin roles never receive out-of-scope data,
+  // even if the client filter is bypassed.
+  const role = session.role;
+  let scopedEmployees = employees;
+  let scopedOutlets = outlets;
+  let scopedAttendance = attendance;
+  let scopedLeaves = leaves;
+  let scopedRosters = rosters;
+  let scopedSummary = recent;
+  if (role === 'outlet_manager' || role === 'supervisor') {
+    scopedEmployees = employees.filter((e) => e.outlet_id === session.outletId);
+    scopedOutlets = outlets.filter((o) => o.outlet_id === session.outletId);
+    scopedSummary = recent.filter((s) => s.outlet_id === session.outletId);
+  } else if (role === 'brand_manager') {
+    scopedEmployees = employees.filter((e) => e.brand_id === session.brandId);
+    scopedOutlets = outlets.filter((o) => o.brand_id === session.brandId);
+    scopedSummary = recent.filter((s) => s.brand_id === session.brandId);
+  } else if (role === 'employee') {
+    // Employee sees only their own outlet's aggregate (self-only attendance
+    // is enforced at the API; the overview is read-only scope).
+    scopedEmployees = session.outletId ? employees.filter((e) => e.outlet_id === session.outletId) : [];
+    scopedOutlets = session.outletId ? outlets.filter((o) => o.outlet_id === session.outletId) : [];
+    scopedSummary = session.outletId ? recent.filter((s) => s.outlet_id === session.outletId) : [];
+  }
+
   return (
     <div className='space-y-6'>
       <div>
@@ -53,13 +78,13 @@ export default async function HrOverview() {
       </div>
 
       <HrOverviewClient
-        employees={employees}
-        attendance={attendance}
-        leaves={leaves}
-        rosters={rosters}
+        employees={scopedEmployees}
+        attendance={scopedAttendance}
+        leaves={scopedLeaves}
+        rosters={scopedRosters}
         brands={brands}
-        outlets={outlets}
-        recentSummary={recent}
+        outlets={scopedOutlets}
+        recentSummary={scopedSummary}
         today={today}
         sessionBrandId={session.brandId ?? ''}
         sessionOutletId={session.outletId ?? ''}

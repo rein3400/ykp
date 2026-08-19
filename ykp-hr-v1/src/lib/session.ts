@@ -48,6 +48,8 @@ export interface SessionUser {
   brandId?: string;
   outletId?: string;
   mustChangePassword?: boolean;
+  /** Linked employee_id (master_employee). Used for EMPLOYEE self-only RBAC. */
+  employeeId?: string;
 }
 
 export async function setSession(user: SessionUser): Promise<void> {
@@ -57,7 +59,7 @@ export async function setSession(user: SessionUser): Promise<void> {
   store.set('ykp_hr_session', token, {
     httpOnly: true,
     sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === "production" && (process.env.HTTPS === "true" || process.env.FORCE_SECURE_COOKIE === "true"),
     path: '/',
     maxAge: 24 * 3600
   });
@@ -77,7 +79,8 @@ export async function getSession(): Promise<SessionUser | null> {
     role: (payload.role as string)?.toLowerCase() as string,
     brandId: payload.brandId as string | undefined,
     outletId: payload.outletId as string | undefined,
-    mustChangePassword: payload.mustChangePassword === true
+    mustChangePassword: payload.mustChangePassword === true,
+    employeeId: payload.employeeId as string | undefined
   };
 }
 

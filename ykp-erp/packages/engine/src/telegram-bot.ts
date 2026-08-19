@@ -69,10 +69,28 @@ async function tgCall<T>(token: string, method: string, body: Record<string, unk
   }
 }
 
-/** True when the incoming chat is the configured owner chat/group. */
+/**
+ * Resolve the full allowlist of chat ids. Mirrors the standalone worker
+ * (bot-worker.mjs:27-34): OWNER_CHAT_ID may be a single id or a
+ * comma-separated list (e.g. "-5437367893,5721500978"); OWNER_USER_IDS
+ * adds extra allowed ids so the owner can DM the bot directly in addition
+ * to the group. The configured chat (from hermez_config UI or env) is the
+ * primary id and is always included.
+ */
+function resolveAllowedChats(allowed: string): Set<string> {
+  const ids = [
+    ...(allowed || "").split(","),
+    ...(process.env.OWNER_USER_IDS || "").split(","),
+  ]
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return new Set(ids);
+}
+
+/** True when the incoming chat is the configured owner chat/group (or an owner DM). */
 function isAllowedChat(chatId: number | string, allowed: string): boolean {
   if (!allowed) return false;
-  return String(chatId) === String(allowed).trim();
+  return resolveAllowedChats(allowed).has(String(chatId));
 }
 
 function fmtIdr(n: number): string {

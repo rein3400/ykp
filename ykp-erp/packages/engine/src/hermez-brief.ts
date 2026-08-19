@@ -505,6 +505,12 @@ function composeBriefText(ctx: {
   const totalExpense = finRows.reduce((acc, r) => acc + r.expense, 0);
   const totalNetProfit = finRows.reduce((acc, r) => acc + r.netProfitEstimate, 0);
   const totalStaff = hrRows.reduce((acc, r) => acc + r.totalStaff, 0);
+  // staffPresent is its own column (present includes late arrivals — izin/sakit/
+  // cuti count as present per hr-summary.ts, only status="absent" is true absence).
+  // Do NOT derive present as totalStaff - staffLate: that wrongly excludes late
+  // arrivals who are still present (e.g. 55 staff, 4 late → 51/55 was wrong;
+  // the correct figure is the stored staffPresent, e.g. 49/55).
+  const staffPresent = hrRows.reduce((acc, r) => acc + (r.staffPresent ?? 0), 0);
   const staffLate = hrRows.reduce((acc, r) => acc + r.staffLate, 0);
 
   const lines = [
@@ -513,7 +519,7 @@ function composeBriefText(ctx: {
     `Revenue hari ini: ${formatIdr(totalRevenue)}`,
     `Expense hari ini: ${formatIdr(totalExpense)}`,
     `Net profit estimate: ${formatIdr(totalNetProfit)}`,
-    `Kehadiran: ${totalStaff - staffLate}/${totalStaff} (terlambat ${staffLate})`,
+    `Kehadiran: ${staffPresent}/${totalStaff} (terlambat ${staffLate})`,
     ``,
     `Alert aktif: ${firedAlerts.length}${hasCritical ? " — TERDAPAT KRITIS" : ""}`,
     ...firedAlerts.map((a) => `- [${a.severity.toUpperCase()}] ${a.outlet || "global"}: ${a.message}`),

@@ -54,7 +54,11 @@ async function fetchFinanceViaHttp(): Promise<FinanceTotals | null> {
     const loginRes = await fetch(`${base}/api/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({ role: 'OWNER', id: 'investor-svc' }),
+      // Finance ERP login is gated by ERP_SSO_SECRET (security cutover
+      // 2026-07-21, commit 1243c84). The shared secret must be set on the
+      // Investor Vercel env with the same value as Finance Railway, else
+      // the cross-read returns 401 and the dashboard shows Rp 0.
+      body: JSON.stringify({ role: 'OWNER', id: 'investor-svc', password: process.env.ERP_SSO_SECRET ?? '' }),
       signal: AbortSignal.timeout(8000),
       cache: 'no-store',
     });

@@ -70,6 +70,7 @@ Thumbs.db
 .claude/
 .playwright-mcp/
 .playwright-cache/
+.playwright-cli/
 .workflow/tmp/
 *.lock
 
