@@ -13,6 +13,7 @@ const ITEMS = [
   { label: 'Waste & Stock', href: '/ops/waste', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'staff'] },
   { label: 'Analytics', href: '/ops/analytics', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'viewer'] },
   { label: 'AI Assistant', href: '/ops/ai-assistant', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'viewer'] },
+  { label: 'Telegram', href: '/ops/telegram', roles: ['owner', 'ops_admin', 'brand_manager', 'outlet_manager', 'supervisor', 'staff', 'viewer'] },
 ];
 
 const ROLE_LABELS: Record<string, string> = {

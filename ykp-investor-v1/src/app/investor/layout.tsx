@@ -8,7 +8,8 @@ const NAV = [
   { href: '/investor/portfolio', label: 'Portfolio' },
   { href: '/investor/capital', label: 'Capital' },
   { href: '/investor/dividend', label: 'Dividend' },
-  { href: '/investor/returns', label: 'Returns' }
+  { href: '/investor/returns', label: 'Returns' },
+  { href: '/investor/telegram', label: 'Telegram' }
 ];
 
 export default function InvestorLayout({ children }: { children: React.ReactNode }) {

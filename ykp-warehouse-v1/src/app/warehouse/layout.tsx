@@ -44,7 +44,8 @@ const NAV_GROUPS = [
       { href: '/warehouse/alerts', label: 'Alerts' },
       { href: '/warehouse/actions', label: 'Actions' },
       { href: '/warehouse/summary', label: 'Summary' },
-      { href: '/warehouse/dashboard', label: 'Dashboard' }
+      { href: '/warehouse/dashboard', label: 'Dashboard' },
+      { href: '/warehouse/telegram', label: 'Telegram' }
     ]
   }
 ];
