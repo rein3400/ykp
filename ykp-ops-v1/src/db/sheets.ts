@@ -155,7 +155,11 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 };
 
 function quoteTab(name: string): string {
-  return `'${name.replace(/'/g, "''")}'`;
+  // Quote only when the tab name needs it (spaces/special chars). Quoting a
+  // plain alphanumeric+underscore name (e.g. `ops_closing`) produces a
+  // malformed range like `'ops_closing'!A1` that Google rejects with
+  // "Unable to parse range" — same behavior as the working warehouse layer.
+  return /^[A-Za-z0-9_]+$/.test(name) ? name : `'${name.replace(/'/g, "''")}'`;
 }
 
 function columnLetter(n: number): string {
@@ -178,12 +182,17 @@ export async function readTab<T extends Record<string, string> = Record<string, 
   const end = columnLetter(headers.length);
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: getSpreadsheetId(),
-    range: `${quoteTab(tab)}!A2:${end}`,
+    range: `${quoteTab(tab)}!A1:${end}`,
   });
   const rows = res.data.values ?? [];
-  return rows.map((r) => {
+  if (rows.length < 2) return [];
+  const headerRow = rows[0] as string[];
+  // Map by the ACTUAL sheet header row, not by TAB_HEADERS position, so a
+  // column added later (e.g. chain_hash) or reordered in the sheet doesn't
+  // silently misalign every read (input "saves" but reads back empty/wrong).
+  return rows.slice(1).map((r) => {
     const obj: Record<string, string> = {};
-    headers.forEach((h, i) => {
+    headerRow.forEach((h, i) => {
       obj[h] = r[i] != null ? String(r[i]) : '';
     });
     return obj as T;
