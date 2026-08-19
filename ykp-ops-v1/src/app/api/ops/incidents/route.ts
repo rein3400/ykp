@@ -9,6 +9,7 @@ import { todayWib, nowTimestampWib } from '@/lib/format';
 import { aiHealth } from '@/lib/ai';
 import { analyzeIncident, type IncidentAiInput } from '@/lib/ai-incident';
 import { getOutletName } from '@/lib/repo';
+import { pushAlertNotification } from '@/lib/telegram';
 
 export const GET = handler(async () => {
   const s = await getSession();
@@ -86,5 +87,18 @@ export const POST = handler(async (req: NextRequest) => {
     entityId: id,
     afterValue: JSON.stringify(row),
   }).catch(() => null);
+
+  // Push HIGH/CRITICAL incidents to Telegram (owner broadcast by default;
+  // can be scoped to HODs via recipient selector).
+  await pushAlertNotification('ops', {
+    alertId: id,
+    alertType: row.incident_type,
+    severity: row.severity,
+    title: row.title,
+    message: row.description,
+    outletName: outlet.row.outlet_name,
+    date: row.date,
+  });
+
   return ok(row, 201);
 });

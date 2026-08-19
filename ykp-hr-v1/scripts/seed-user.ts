@@ -28,6 +28,9 @@ async function main(): Promise<void> {
       role: 'OWNER',
       brand_id: '',
       outlet_id: '',
+      department: '',
+      employee_id: '',
+      telegram_id: '',
       active_status: 'active',
       created_at: now,
       last_login_at: ''

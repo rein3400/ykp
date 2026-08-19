@@ -45,6 +45,8 @@ export const CONFIG = {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
+  /** Shared secret the bot uses to authenticate link-consume calls to the apps. */
+  botSecret: env('TELEGRAM_BOT_SECRET'),
   openRouterKey: env('OPENROUTER_API_KEY'),
   /** Chat model — tool-use capable. Override via OPENROUTER_MODEL. */
   model: env('OPENROUTER_MODEL', 'anthropic/claude-sonnet-4'),

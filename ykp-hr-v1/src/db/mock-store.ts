@@ -195,8 +195,8 @@ function seed(): Record<string, Record<string, string>[]> {
     ],
     // ── users: owner (legacy sha256 → bcrypt migration) + hr_admin ──
     [TAB.users]: [
-      { user_id: 'USR-001', username: 'owner', password_hash: ownerPw, role: 'owner', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-002', username: 'hradmin', password_hash: hrPw, role: 'hr_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' }
+      { user_id: 'USR-001', username: 'owner', password_hash: ownerPw, role: 'owner', brand_id: '', outlet_id: '', department: '', employee_id: '', telegram_id: '', active_status: 'active', created_at: t, last_login_at: '' },
+      { user_id: 'USR-002', username: 'hradmin', password_hash: hrPw, role: 'hr_admin', brand_id: '', outlet_id: '', department: '', employee_id: '', telegram_id: '', active_status: 'active', created_at: t, last_login_at: '' }
     ],
     // ── audit_log: empty (filled at runtime) ────────────────────
     [TAB.auditLog]: [],

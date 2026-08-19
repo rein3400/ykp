@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 // Keep cookie name inline — do NOT import from session.ts (Node crypto breaks Edge Runtime).
 const SESSION_COOKIE = 'ykp_investor_session';
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/investor/notify/daily-brief'];
+const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/investor/notify/daily-brief', '/api/investor/telegram/link/consume'];
 
 async function verify(token: string, secret: string): Promise<boolean> {
   const parts = token.split('.');

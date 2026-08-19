@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 // Keep cookie name inline — do NOT import from session.ts (Node crypto breaks Edge Runtime).
 const SESSION_COOKIE = 'ykp_finance_session';
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/finance/notify/daily-brief'];
+const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/finance/notify/daily-brief', '/api/finance/telegram/link/consume'];
 // Public read endpoints for the Hermez / owner hub layer (GET only;
 // mutations on these resources stay session-protected)
 const PUBLIC_GET_PREFIXES = [

@@ -88,7 +88,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   ],
   [TABS.users]: [
     'user_id', 'username', 'password_hash', 'role',
-    'investor_id', 'active_status', 'created_at', 'last_login_at'
+    'investor_id', 'department', 'telegram_id', 'active_status', 'created_at', 'last_login_at'
   ],
   [TABS.auditLog]: [
     'audit_id', 'timestamp', 'actor_user_id', 'actor_role', 'action',

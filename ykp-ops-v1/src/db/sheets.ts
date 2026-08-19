@@ -50,6 +50,7 @@ export const TABS = {
   users: 'ops_users',
   auditLog: 'ops_audit_log',
   hermezAlerts: 'ops_hermes_alert_log',
+  telegramDeliveryLog: 'ops_telegram_delivery_log',
 } as const;
 
 export type TabName = (typeof TABS)[keyof typeof TABS];
@@ -131,7 +132,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   ],
   [TABS.users]: [
     'user_id', 'username', 'password_hash', 'role', 'brand_id', 'outlet_id',
-    'active_status', 'created_at', 'last_login_at',
+    'department', 'employee_id', 'telegram_id', 'active_status', 'created_at', 'last_login_at',
   ],
   [TABS.auditLog]: [
     'audit_id', 'timestamp', 'actor_user_id', 'actor_role', 'action', 'entity',
@@ -140,6 +141,11 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   [TABS.hermezAlerts]: [
     'alert_id', 'date', 'severity', 'alert_type', 'title', 'message',
     'outlet_id', 'status', 'created_at',
+  ],
+  [TABS.telegramDeliveryLog]: [
+    'delivery_id', 'source_module', 'source_reference_id', 'message_type',
+    'recipient', 'message_id', 'status', 'retry_count', 'sent_at',
+    'error_message', 'created_at',
   ],
 };
 

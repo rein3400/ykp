@@ -354,6 +354,9 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'role',
     'brand_id',
     'outlet_id',
+    'department',
+    'employee_id',
+    'telegram_id',
     'active_status',
     'created_at',
     'last_login_at'

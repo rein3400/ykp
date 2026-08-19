@@ -13,12 +13,21 @@ export interface TgMessage {
   caption?: string;
   voice?: { file_id: string; duration: number; mime_type?: string };
   photo?: { file_id: string; width: number; height: number }[];
+  location?: { latitude: number; longitude: number };
   date: number;
+}
+
+export interface TgCallbackQuery {
+  id: string;
+  from: { id: number; first_name?: string; username?: string };
+  message?: TgMessage;
+  data?: string;
 }
 
 interface TgUpdate {
   update_id: number;
   message?: TgMessage;
+  callback_query?: TgCallbackQuery;
 }
 
 const API = () => `https://api.telegram.org/bot${CONFIG.botToken}`;
@@ -40,13 +49,59 @@ export async function pollUpdates(offset: number, timeoutSec = 30): Promise<TgUp
     return await api<TgUpdate[]>('getUpdates', {
       offset,
       timeout: timeoutSec,
-      allowed_updates: ['message']
+      allowed_updates: ['message', 'callback_query']
     });
   } catch (e) {
     // Network hiccup: caller backs off and retries.
     console.error('[telegram] poll error:', e instanceof Error ? e.message : e);
     return [];
   }
+}
+
+/** Send text (HTML) with an inline keyboard (array of button rows). */
+export async function sendMessageWithKeyboard(
+  chatId: number,
+  text: string,
+  buttons: { text: string; callback_data: string }[][]
+): Promise<void> {
+  if (DRY_RUN) {
+    console.log(`\n[DRY-RUN telegram → ${chatId}]\n${text}\n[buttons: ${JSON.stringify(buttons)}]\n`);
+    return;
+  }
+  await api('sendMessage', {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: buttons }
+  });
+}
+
+/** Show a reply keyboard with a "Share Location" button (request_location). */
+export async function sendLocationPrompt(chatId: number, text: string): Promise<void> {
+  if (DRY_RUN) {
+    console.log(`\n[DRY-RUN telegram → ${chatId}]\n${text}\n[reply keyboard: Share Location]\n`);
+    return;
+  }
+  await api('sendMessage', {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+    reply_markup: {
+      keyboard: [[{ text: '📍 Kirim Lokasi Saya', request_location: true }]],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    }
+  });
+}
+
+/** Acknowledge an inline button press (clears the loading spinner). */
+export async function answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
+  if (DRY_RUN) return;
+  await api('answerCallbackQuery', {
+    callback_query_id: callbackQueryId,
+    ...(text ? { text } : {})
+  }).catch(() => undefined);
 }
 
 /** Send text (HTML), chunked to Telegram's 4096-char limit. */

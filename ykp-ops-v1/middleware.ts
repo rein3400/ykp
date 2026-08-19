@@ -11,7 +11,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Here we only require a well-formed session cookie (3 JWT segments).
  * Server components and API routes still call getSession() for real auth.
  */
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout'];
+const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/ops/telegram/link/consume'];
 
 /** Origins allowed to embed Ops in an iframe (the Hub portal). */
 const HUB_ORIGINS = (process.env.HUB_ORIGINS ?? 'https://ykp-hub-production.up.railway.app')

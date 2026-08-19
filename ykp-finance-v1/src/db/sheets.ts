@@ -187,7 +187,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   // ── Auth + audit ─────────────────────────────────────────────
   [TABS.users]: [
     'user_id', 'username', 'password_hash', 'role', 'brand_id', 'outlet_id',
-    'active_status', 'created_at', 'last_login_at'
+    'department', 'telegram_id', 'active_status', 'created_at', 'last_login_at'
   ],
   [TABS.auditLog]: [
     'audit_id', 'module', 'action', 'record_type', 'record_id',

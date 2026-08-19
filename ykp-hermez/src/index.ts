@@ -9,11 +9,12 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CONFIG, DRY_RUN, todayWib, wibHourMinute } from './config.js';
-import { pollUpdates, sendMessage, sendToOwners, downloadFile, getMe, type TgMessage } from './telegram.js';
+import { pollUpdates, sendMessage, sendToOwners, downloadFile, getMe, sendMessageWithKeyboard, sendLocationPrompt, answerCallbackQuery, type TgMessage, type TgCallbackQuery } from './telegram.js';
 import { handleText, executeTool } from './brain.js';
 import { chat } from './openrouter.js';
 import { runDailyBrief } from './brief.js';
 import { evaluateRules } from './watch.js';
+import { isLinkCommand, handleLinkCommand, isMeCommand, handleMeCommand, isClockInCommand, handleClockIn, isClockOutCommand, handleClockOut, isAttendanceCommand, attendanceKeyboard } from './link.js';
 
 const OFFSET_FILE = () => join(CONFIG.dataDir, 'offset.txt');
 
@@ -54,8 +55,49 @@ async function transcribeVoice(fileId: string): Promise<string> {
 
 async function handleMessage(msg: TgMessage): Promise<void> {
   const chatId = msg.chat.id;
+  const fromId = msg.from?.id ?? msg.chat.id;
+
+  // `/link <code>` is allowed for ANYONE (staff/HOD linking their Telegram).
+  if (msg.text && isLinkCommand(msg.text)) {
+    const reply = await handleLinkCommand(msg.text, fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+
+  // `/me` self-service for linked staff/HOD (their own HR data).
+  if (msg.text && isMeCommand(msg.text)) {
+    const reply = await handleMeCommand(fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+
+  // `/clock-in` / `/clock-out` for linked staff/HOD.
+  if (msg.text && isClockInCommand(msg.text)) {
+    const reply = await handleClockIn(fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+  if (msg.text && isClockOutCommand(msg.text)) {
+    const reply = await handleClockOut(fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+
+  // `/absen` shows the attendance menu (inline buttons).
+  if (msg.text && isAttendanceCommand(msg.text)) {
+    await sendMessageWithKeyboard(chatId, 'Pilih aksi absensi:', attendanceKeyboard());
+    return;
+  }
+
+  // A Telegram location message = clock-in with GPS (for linked staff/HOD).
+  if (msg.location) {
+    const reply = await handleClockIn(fromId, msg.location);
+    await sendMessage(chatId, reply);
+    return;
+  }
+
   if (!isOwner(msg)) {
-    await sendMessage(chatId, 'Maaf, saya hanya melayani owner YKP. 🙏');
+    await sendMessage(chatId, 'Maaf, saya hanya melayani owner YKP. 🙏\n\nKaryawan/HOD: ketik /link KODE untuk menghubungkan akun Telegram kamu, lalu /absen untuk menu absensi, /me untuk data kehadiran & cuti.');
     return;
   }
   try {
@@ -85,6 +127,32 @@ async function handleMessage(msg: TgMessage): Promise<void> {
     console.error('[hermez] message handling failed:', e);
     await sendMessage(chatId, '⚠️ Ada gangguan di sistem saya. Coba lagi sebentar lagi.').catch(() => undefined);
   }
+}
+
+async function handleCallback(cb: TgCallbackQuery): Promise<void> {
+  const chatId = cb.message?.chat.id;
+  const fromId = cb.from.id;
+  const data = cb.data ?? '';
+  if (chatId === undefined) return;
+
+  if (data === 'att:clock-in') {
+    await answerCallbackQuery(cb.id, 'Clock-in…');
+    const reply = await handleClockIn(fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+  if (data === 'att:clock-out') {
+    await answerCallbackQuery(cb.id, 'Clock-out…');
+    const reply = await handleClockOut(fromId);
+    await sendMessage(chatId, reply);
+    return;
+  }
+  if (data === 'att:location') {
+    await answerCallbackQuery(cb.id, 'Kirim lokasi kamu');
+    await sendLocationPrompt(chatId, '📍 Kirim lokasi kamu untuk clock-in dengan deteksi GPS. Tekan tombol di bawah.');
+    return;
+  }
+  await answerCallbackQuery(cb.id, 'Perintah tidak dikenal');
 }
 
 async function scheduler(state: { lastBriefDate: string; lastWatchRun: number }): Promise<void> {
@@ -142,6 +210,7 @@ async function main(): Promise<void> {
     for (const u of updates) {
       offset = u.update_id + 1;
       if (u.message) void handleMessage(u.message);
+      if (u.callback_query) void handleCallback(u.callback_query);
     }
     await saveOffset(offset);
   }

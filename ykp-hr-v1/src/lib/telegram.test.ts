@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  shouldPushAlert, shouldNotifyNewAlert, formatAlertMessage, composeHrDailyBrief
+  shouldPushAlert, shouldNotifyNewAlert, formatAlertMessage, composeHrDailyBrief,
+  createLinkCode, consumeLinkCode, resolveRecipients
 } from '@/lib/telegram';
 
 describe('shouldPushAlert', () => {
@@ -78,5 +79,36 @@ describe('composeHrDailyBrief', () => {
     expect(text).toContain('Outlets: 0');
     expect(text).not.toContain('Major Issues');
     expect(text).not.toContain('CRITICAL/HIGH ALERTS');
+  });
+});
+
+describe('createLinkCode / consumeLinkCode', () => {
+  it('generates a 6-char code and binds chat id to user', async () => {
+    const code = createLinkCode('USR-001');
+    expect(code).toMatch(/^[A-Z2-9]{6}$/);
+    const userId = await consumeLinkCode(code, '551234001');
+    expect(userId).toBe('USR-001');
+  });
+  it('rejects an invalid code', async () => {
+    const userId = await consumeLinkCode('ZZZZZZ', '551234001');
+    expect(userId).toBeNull();
+  });
+  it('rejects a code after it is consumed once', async () => {
+    const code = createLinkCode('USR-002');
+    await consumeLinkCode(code, '551234002');
+    const again = await consumeLinkCode(code, '551234003');
+    expect(again).toBeNull();
+  });
+});
+
+describe('resolveRecipients', () => {
+  it('returns a raw chat id as-is', async () => {
+    expect(await resolveRecipients('551234001')).toEqual(['551234001']);
+  });
+  it('returns [] for empty selector', async () => {
+    expect(await resolveRecipients('')).toEqual([]);
+  });
+  it('returns [] for an unknown user', async () => {
+    expect(await resolveRecipients('user:USR-NOPE')).toEqual([]);
   });
 });

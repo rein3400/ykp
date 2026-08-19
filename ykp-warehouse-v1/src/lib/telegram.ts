@@ -6,7 +6,7 @@
  * Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
  * If not configured, messages are queued with status FAILED (no crash).
  */
-import { appendRows, readTab, updateRow, TABS } from '@/db/sheets';
+import { appendRows, readTab, updateRow, findRow, TABS } from '@/db/sheets';
 import { nowTimestampWib, formatDateWib } from './format';
 import { nextSequentialIdSync } from './repo';
 
@@ -14,79 +14,167 @@ export interface TelegramMessage {
   sourceModule: string;
   sourceReferenceId: string;
   messageType: string;
+  /**
+   * Recipient selector. One of:
+   *  - raw chat id (e.g. "551234001") — direct send
+   *  - "user:<user_id>" — resolve telegram_id from the users tab
+   *  - "role:<role>" — fan out to every active user with that role that has a telegram_id
+   *  - "dept:<department>" — fan out to every active user in that department that has a telegram_id
+   *  - "" — fall back to TELEGRAM_CHAT_ID (owner broadcast)
+   */
   recipient: string;
   text: string;
 }
 
+/**
+ * Resolve a recipient selector to concrete Telegram chat ids.
+ * Never throws — a missing/unresolvable target resolves to [].
+ */
+export async function resolveRecipients(recipient: string): Promise<string[]> {
+  const r = (recipient || '').trim();
+  if (!r) return [];
+  if (r.startsWith('user:')) {
+    const userId = r.slice(5).trim();
+    if (!userId) return [];
+    const u = await findRow(TABS.users, 'user_id', userId).catch(() => null);
+    const tid = u?.row.telegram_id?.trim();
+    return tid ? [tid] : [];
+  }
+  if (r.startsWith('role:')) {
+    const role = r.slice(5).trim().toLowerCase();
+    if (!role) return [];
+    const users = await readTab<Record<string, string>>(TABS.users).catch(() => []);
+    return users
+      .filter((u) => (u.role || '').toLowerCase() === role && (u.active_status || 'active') === 'active')
+      .map((u) => u.telegram_id?.trim())
+      .filter((t): t is string => Boolean(t));
+  }
+  if (r.startsWith('dept:')) {
+    const dept = r.slice(5).trim().toLowerCase();
+    if (!dept) return [];
+    const users = await readTab<Record<string, string>>(TABS.users).catch(() => []);
+    return users
+      .filter((u) => (u.department || '').toLowerCase() === dept && (u.active_status || 'active') === 'active')
+      .map((u) => u.telegram_id?.trim())
+      .filter((t): t is string => Boolean(t));
+  }
+  if (r.startsWith('hod:')) {
+    const dept = r.slice(4).trim().toLowerCase();
+    if (!dept) return [];
+    const users = await readTab<Record<string, string>>(TABS.users).catch(() => []);
+    return users
+      .filter((u) =>
+        (u.department || '').toLowerCase() === dept &&
+        (u.active_status || 'active') === 'active' &&
+        HOD_ROLES.has((u.role || '').toLowerCase())
+      )
+      .map((u) => u.telegram_id?.trim())
+      .filter((t): t is string => Boolean(t));
+  }
+  // Raw chat id.
+  return [r];
+}
+
+/** Roles treated as head-of-department for `hod:<dept>` routing. */
+const HOD_ROLES = new Set(['hod', 'outlet_manager', 'supervisor', 'brand_manager', 'manager']);
+
 export async function sendTelegram(
   msg: TelegramMessage,
-): Promise<{ deliveryId: string; status: string; error?: string; messageId?: string }> {
+): Promise<{ deliveryId: string; status: string; error?: string; messageId?: string; sent?: number; failed?: number }> {
   const deliveryId = nextSequentialIdSync('TDL');
   const now = nowTimestampWib();
   // Strip BOM / whitespace G�� Vercel env set via Windows PowerShell pipe can inject U+FEFF.
   const clean = (v: string | undefined) => (v ?? '').replace(/^﻿/, '').trim();
   const token = clean(process.env.TELEGRAM_BOT_TOKEN);
-  const chatId = clean(msg.recipient) || clean(process.env.TELEGRAM_CHAT_ID);
 
-  if (!token || !chatId) {
-    const error = `TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured (token=${token ? 'set' : 'unset'}, chat=${chatId ? 'set' : 'unset'})`;
-    await appendRows(TABS.telegramDeliveryLog, [{
+  const logDelivery = (chatId: string, status: string, messageId: string, errorMessage: string, sentAt: string) =>
+    appendRows(TABS.telegramDeliveryLog, [{
       delivery_id: deliveryId,
       source_module: msg.sourceModule,
       source_reference_id: msg.sourceReferenceId,
       message_type: msg.messageType,
       recipient: chatId ?? '',
-      message_id: '',
-      status: 'FAILED',
-      retry_count: '0',
-      sent_at: '',
-      error_message: error,
-      created_at: now
-    }]).catch(() => null);
-    return { deliveryId, status: 'FAILED', error };
-  }
-
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: msg.text, parse_mode: 'HTML' })
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.description || 'Telegram API error');
-
-    const messageId = String(data.result?.message_id ?? '');
-    await appendRows(TABS.telegramDeliveryLog, [{
-      delivery_id: deliveryId,
-      source_module: msg.sourceModule,
-      source_reference_id: msg.sourceReferenceId,
-      message_type: msg.messageType,
-      recipient: chatId,
       message_id: messageId,
-      status: 'SENT',
+      status,
       retry_count: '0',
-      sent_at: now,
-      error_message: '',
+      sent_at: sentAt,
+      error_message: errorMessage,
       created_at: now
     }]).catch(() => null);
-    return { deliveryId, status: 'SENT', messageId };
-  } catch (e) {
-    const error = e instanceof Error ? e.message : 'Unknown error';
-    await appendRows(TABS.telegramDeliveryLog, [{
-      delivery_id: deliveryId,
-      source_module: msg.sourceModule,
-      source_reference_id: msg.sourceReferenceId,
-      message_type: msg.messageType,
-      recipient: chatId,
-      message_id: '',
-      status: 'FAILED',
-      retry_count: '0',
-      sent_at: '',
-      error_message: error,
-      created_at: now
-    }]).catch(() => null);
-    return { deliveryId, status: 'FAILED', error };
+
+  if (!token) {
+    const error = 'TELEGRAM_BOT_TOKEN not configured';
+    await logDelivery(msg.recipient || '', 'FAILED', '', error, '');
+    return { deliveryId, status: 'FAILED', error, sent: 0, failed: 1 };
   }
+
+  // Resolve recipients. Empty selector → owner broadcast chat id.
+  let chatIds = await resolveRecipients(msg.recipient);
+  if (chatIds.length === 0 && !msg.recipient) {
+    const fallback = clean(process.env.TELEGRAM_CHAT_ID);
+    if (fallback) chatIds = [fallback];
+  }
+  if (chatIds.length === 0) {
+    const error = 'no resolvable recipient';
+    await logDelivery(msg.recipient || '', 'FAILED', '', error, '');
+    return { deliveryId, status: 'FAILED', error, sent: 0, failed: 1 };
+  }
+
+  let sent = 0;
+  let failed = 0;
+  let lastMessageId = '';
+  let lastError = '';
+  for (const chatId of chatIds) {
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: msg.text, parse_mode: 'HTML' })
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.description || 'Telegram API error');
+      const messageId = String(data.result?.message_id ?? '');
+      await logDelivery(chatId, 'SENT', messageId, '', now);
+      sent++;
+      lastMessageId = messageId;
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : 'Unknown error';
+      await logDelivery(chatId, 'FAILED', '', lastError, '');
+      failed++;
+    }
+  }
+  if (failed === 0) return { deliveryId, status: 'SENT', messageId: lastMessageId, sent, failed };
+  if (sent === 0) return { deliveryId, status: 'FAILED', error: lastError, sent, failed };
+  return { deliveryId, status: 'PARTIAL', error: lastError, messageId: lastMessageId, sent, failed };
+}
+
+// ── Telegram identity linking (P0) ────────────────────────────────────
+const CODE_TTL_MS = 10 * 60_000;
+const pendingCodes = new Map<string, { userId: string; expiresAt: number }>();
+
+/** Generate a fresh 6-char link code bound to a user id. */
+export function createLinkCode(userId: string): string {
+  const code = Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
+  pendingCodes.set(code, { userId, expiresAt: Date.now() + CODE_TTL_MS });
+  for (const [k, v] of pendingCodes) if (v.expiresAt < Date.now()) pendingCodes.delete(k);
+  return code;
+}
+
+/** Consume a link code and bind the Telegram chat id to the user. */
+export async function consumeLinkCode(code: string, telegramChatId: string): Promise<string | null> {
+  const entry = pendingCodes.get((code || '').trim().toUpperCase());
+  if (!entry || entry.expiresAt < Date.now()) return null;
+  pendingCodes.delete(code.trim().toUpperCase());
+  const user = await findRow(TABS.users, 'user_id', entry.userId).catch(() => null);
+  if (!user) return null;
+  await updateRow(TABS.users, user.rowNumber, { ...user.row, telegram_id: telegramChatId }).catch(() => null);
+  return entry.userId;
+}
+
+/** Look up the telegram chat id bound to a user id. */
+export async function getTelegramIdForUser(userId: string): Promise<string> {
+  const u = await findRow(TABS.users, 'user_id', userId).catch(() => null);
+  return u?.row.telegram_id?.trim() ?? '';
 }
 
 /** Compose daily brief text from a summary row + alert rows. Pure; per brief §23.1. */

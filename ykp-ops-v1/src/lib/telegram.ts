@@ -1,15 +1,15 @@
 /**
- * Telegram Reporting for Investor. Sends only HIGH/CRITICAL alerts + daily brief.
- * Logs every delivery to telegram_delivery_log.
+ * Telegram Reporting for Operational V1.
+ * Sends HIGH/CRITICAL alerts + daily brief. Logs every delivery to
+ * ops_telegram_delivery_log.
  *
  * Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
  * If not configured, messages are logged with status FAILED (no crash).
- * A Telegram failure NEVER breaks the request path: every caller-facing
- * helper here resolves without throwing.
+ * A Telegram failure NEVER breaks the request path.
  */
-import { randomBytes } from 'crypto';
 import { appendRows, readTab, findRow, updateRow, TABS } from '@/db/sheets';
-import { nowTimestampWib, formatIdr } from './format';
+import { nowTimestampWib } from './format';
+import { nextSequentialIdSync } from './repo';
 
 export interface TelegramMessage {
   sourceModule: string;
@@ -21,6 +21,7 @@ export interface TelegramMessage {
    *  - "user:<user_id>" — resolve telegram_id from the users tab
    *  - "role:<role>" — fan out to every active user with that role that has a telegram_id
    *  - "dept:<department>" — fan out to every active user in that department that has a telegram_id
+   *  - "hod:<department>" — fan out to active HOD-level users in that department
    *  - "" — fall back to TELEGRAM_CHAT_ID (owner broadcast)
    */
   recipient: string;
@@ -35,13 +36,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Race-free unique ID of shape TDL-{ts36}{rand6}. */
-function nextDeliveryId(): string {
-  const ts = Date.now().toString(36).toUpperCase();
-  const rand = randomBytes(3).toString('hex').toUpperCase();
-  return `TDL-${ts}${rand}`;
-}
-
 async function postToTelegram(token: string, chatId: string, text: string): Promise<string> {
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
@@ -52,6 +46,9 @@ async function postToTelegram(token: string, chatId: string, text: string): Prom
   if (!data.ok) throw new Error(data.description || 'Telegram API error');
   return String(data.result?.message_id ?? '');
 }
+
+/** Roles treated as head-of-department for `hod:<dept>` routing. */
+const HOD_ROLES = new Set(['hod', 'outlet_manager', 'supervisor', 'brand_manager', 'manager']);
 
 /**
  * Resolve a recipient selector to concrete Telegram chat ids.
@@ -102,15 +99,12 @@ export async function resolveRecipients(recipient: string): Promise<string[]> {
   return [r];
 }
 
-/** Roles treated as head-of-department for `hod:<dept>` routing. */
-const HOD_ROLES = new Set(['hod', 'outlet_manager', 'supervisor', 'brand_manager', 'manager']);
-
 /**
  * Send a message to one or more recipients (fan-out). Logs every delivery to
- * telegram_delivery_log. Never throws — a Telegram failure resolves to FAILED.
+ * ops_telegram_delivery_log. Never throws — a Telegram failure resolves to FAILED.
  */
 export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: string; status: string; sent: number; failed: number }> {
-  const deliveryId = nextDeliveryId();
+  const deliveryId = nextSequentialIdSync('TDL');
   const now = nowTimestampWib();
   const token = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -189,7 +183,7 @@ export async function consumeLinkCode(code: string, telegramChatId: string): Pro
   pendingCodes.delete(code.trim().toUpperCase());
   const user = await findRow(TABS.users, 'user_id', entry.userId).catch(() => null);
   if (!user) return null;
-  await updateRow(TABS.users, user.rowNumber, { ...user.row, telegram_id: telegramChatId }).catch(() => null);
+  await updateRow(TABS.users, user.rowIndex, { ...user.row, telegram_id: telegramChatId }).catch(() => null);
   return entry.userId;
 }
 
@@ -202,24 +196,6 @@ export async function getTelegramIdForUser(userId: string): Promise<string> {
 /** Only HIGH/CRITICAL alerts are pushed (never MEDIUM/LOW). */
 export function shouldPushAlert(severity: string): boolean {
   return severity === 'HIGH' || severity === 'CRITICAL';
-}
-
-/** Dedupe decision: push only newly created alerts, never re-upserted ones. */
-export function shouldNotifyNewAlert(isNewlyCreated: boolean, severity: string): boolean {
-  return isNewlyCreated && shouldPushAlert(severity);
-}
-
-/**
- * Delivery-log dedupe for the cron-time alert push (investor has no internal
- * alert-creation site, so "newly created" is decided against prior delivery
- * attempts): true when an ALERT delivery for this alert was already logged
- * (SENT or FAILED — failed deliveries are not retried to avoid log storms).
- */
-export function alertAlreadyDelivered(deliveries: Record<string, string>[], alertId: string): boolean {
-  return deliveries.some(
-    (d) => d.source_reference_id === alertId && d.message_type === 'ALERT' &&
-      (d.status === 'SENT' || d.status === 'FAILED')
-  );
 }
 
 export interface AlertPushInput {
@@ -260,35 +236,4 @@ export async function pushAlertNotification(sourceModule: string, a: AlertPushIn
   } catch {
     // sendTelegram already logs the failure; swallow to protect the request path.
   }
-}
-
-/** Compose the investor daily brief from an investor_daily_summary row + alerts. Pure. */
-export function composeInvestorDailyBrief(
-  date: string,
-  summary: Record<string, string> | null,
-  alerts: Record<string, string>[]
-): string {
-  const s = summary ?? {};
-  const highCritical = alerts.filter(
-    (a) => shouldPushAlert(a.severity) && a.status !== 'CLOSED' && a.status !== 'RESOLVED'
-  );
-
-  const lines: string[] = [];
-  lines.push('<b>YKP INVESTOR DAILY BRIEF</b>');
-  lines.push(date);
-  lines.push('');
-  lines.push(`Total Revenue: ${formatIdr(s.total_revenue)}`);
-  lines.push(`Total Profit: ${formatIdr(s.total_profit)}`);
-  lines.push(`Total Capital: ${formatIdr(s.total_capital)}`);
-  lines.push(`Active Investors: ${s.active_investors || '0'}`);
-  lines.push(`Dividend Declared: ${formatIdr(s.dividend_declared)}`);
-  if (s.growth_pct) lines.push(`Growth: ${s.growth_pct}%`);
-  if (highCritical.length > 0) {
-    lines.push('');
-    lines.push('<b>CRITICAL/HIGH ALERTS:</b>');
-    for (const a of highCritical.slice(0, 5)) {
-      lines.push(`• ${a.message} (${a.severity})`);
-    }
-  }
-  return lines.join('\n');
 }
