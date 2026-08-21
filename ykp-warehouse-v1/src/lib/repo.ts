@@ -66,7 +66,11 @@ export function nextSequentialIdSync(prefix: string): string {
   return `${prefix}-${ts}${rand}`;
 }
 
-/** Scan tab for highest existing PREFIX-NNN. Returns next number. */
+/**
+ * @deprecated UNSAFE under concurrency — scans for the highest existing
+ * PREFIX-NNN and returns max+1 with no lock; concurrent calls collide on the
+ * same N. Use `nextSequentialIdSync` for any ID written to sheets.
+ */
 export async function nextNumericSeq(tab: keyof typeof TABS, keyCol: string, prefix: string): Promise<number> {
   const rows = await readTab<Record<string, string>>(TABS[tab]);
   let maxN = 0;
@@ -81,6 +85,12 @@ export async function nextNumericSeq(tab: keyof typeof TABS, keyCol: string, pre
   return maxN + 1;
 }
 
+/**
+ * @deprecated UNSAFE under concurrency — scans max+1 with no lock; two
+ * concurrent calls return the same N. Use `nextSequentialIdSync` (race-free
+ * ts+random) instead. Retained only for read-only analytics; do NOT use for
+ * IDs written to sheets.
+ */
 export async function nextSequentialId(
   tab: keyof typeof TABS,
   keyCol: string,

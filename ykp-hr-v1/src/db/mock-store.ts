@@ -195,8 +195,8 @@ function seed(): Record<string, Record<string, string>[]> {
     ],
     // ── users: owner (legacy sha256 → bcrypt migration) + hr_admin ──
     [TAB.users]: [
-      { user_id: 'USR-001', username: 'owner', password_hash: ownerPw, role: 'owner', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' },
-      { user_id: 'USR-002', username: 'hradmin', password_hash: hrPw, role: 'hr_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '' }
+      { user_id: 'USR-001', username: 'owner', password_hash: ownerPw, role: 'owner', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '', employee_id: 'EMP-001' },
+      { user_id: 'USR-002', username: 'hradmin', password_hash: hrPw, role: 'hr_admin', brand_id: '', outlet_id: '', active_status: 'active', created_at: t, last_login_at: '', employee_id: 'EMP-012' }
     ],
     // ── audit_log: empty (filled at runtime) ────────────────────
     [TAB.auditLog]: [],
@@ -217,6 +217,12 @@ let store: Record<string, Record<string, string>[]> | null = null;
 function getStore() {
   if (!store) store = seed();
   return store;
+}
+
+/** Test-only helper: drop the in-memory store so the next access re-seeds.
+ *  Production code never calls this; the Sheets path does not use the mock. */
+export function resetMockStore(): void {
+  store = null;
 }
 
 export function isMockMode(): boolean {

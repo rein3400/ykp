@@ -23,11 +23,21 @@ export const GET = handler(async (req: NextRequest) => {
 
   // Auto-mark overdue — only OPEN (not IN_PROGRESS / WAITING_APPROVAL),
   // otherwise Start → IN_PROGRESS is immediately flipped back to OVERDUE
-  // and looks like a silent no-op in the UI.
+  // and looks like a silent no-op in the UI. Persist the transition so a
+  // later PUT reads the real status (previously the sheet row stayed OPEN
+  // while the API returned OVERDUE).
   const today = formatDateWib(new Date());
-  for (const r of rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
     if (r.due_date && r.due_date < today && r.status === 'OPEN') {
-      r.status = 'OVERDUE';
+      const updated = { ...r, status: 'OVERDUE', updated_at: nowTimestampWib() };
+      rows[i] = updated;
+      await updateRow(TABS.actionTracker, i + 2, updated).catch(() => null);
+      await logAudit({
+        module: 'warehouse', action: 'overdue', recordType: 'action',
+        recordId: r.action_id, beforeValue: JSON.stringify(r),
+        afterValue: JSON.stringify(updated), userId: 'system'
+      }).catch(() => null);
     }
   }
 

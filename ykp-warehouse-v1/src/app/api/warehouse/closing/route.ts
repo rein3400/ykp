@@ -51,7 +51,8 @@ export const POST = handler(async (req: NextRequest) => {
     actual_stock: String(actual),
     difference: String(diff),
     diff_pct: diffPct,
-    status: Math.abs(Number(diffPct)) > 5 ? 'ALERT' : 'OK',
+    // Owner SOP (fraud-controls): selisih stok > 2% wajib ALERT (was hardcoded 5%).
+    status: Math.abs(Number(diffPct)) > 2 ? 'ALERT' : 'OK',
     created_at: nowTimestampWib()
   };
   await appendRows(TABS.legacyClosing, [row]);

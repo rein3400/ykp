@@ -1,0 +1,96 @@
+TITLE: YKP Owner Command
+H1: Keuangan — 20 Agu 2026
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+MODE MOCK aktif — YKP_OWNER_MOCK=true, semua data adalah data demo bawaan. Login demo: owner / owner123.
+Keuangan — 20 Agu 2026
+Mock
+
+Revenue hari ini
+
+Rp24.137.267
+
+Gross sales
+
+Rp25.102.758
+
+Total expense
+
+Rp8.485.477
+
+Estimasi Surplus Kas
+
+Rp15.651.789
+
+Posisi kas (est.)
+
+Rp15.576.790
+
+Outstanding supplier
+
+Rp9.000.000
+
+Selisih kas
+
+-Rp75.000
+
+Transaksi
+
+411
+
+AOV
+
+Rp58.728
+
+MoM revenue
+
+—
+
+Per outlet
+Semua brand
+Funkydak
+Laju Kopi
+Sekarpizza
+Suburbuns
+Uncle Masala
+Semua outlet
+Funkydak Cipete
+Funkydak Kemang
+Laju Kopi Bintaro
+Sekarpizza Demangan
+Sekarpizza Seturan
+Suburbuns Depok
+Uncle Masala Tebet
+7 outlet
+OUTLET	REVENUE	EXPENSE	EST. SURPLUS	UNPAID SUPPLIER	SELISIH KAS	TRANSAKSI	AOV
+Funkydak Cipete	Rp5.200.000	Rp1.820.000	Rp3.380.000	Rp1.200.000	Rp0	100	Rp52.000
+Funkydak Kemang	Rp4.587.899	Rp1.743.402	Rp2.844.497	Rp0	Rp0	83	Rp55.276
+Sekarpizza Demangan	Rp3.683.473	Rp1.178.711	Rp2.504.762	Rp1.900.000	Rp0	64	Rp57.554
+Sekarpizza Seturan	Rp2.844.487	Rp995.571	Rp1.848.917	Rp0	Rp0	47	Rp60.521
+Suburbuns Depok	Rp2.754.163	Rp1.046.582	Rp1.707.581	Rp2.600.000	-Rp75.000	43	Rp64.050
+Laju Kopi Bintaro	Rp2.410.801	Rp771.456	Rp1.639.344	Rp0	Rp0	36	Rp66.967
+Uncle Masala Tebet	Rp2.656.444	Rp929.755	Rp1.726.688	Rp3.300.000	Rp0	38	Rp69.906
+
+Sumber: Modul Keuangan (fin_daily_summary) · update 21:45
+
+Breakdown & detail
+
+Breakdown metode pembayaran, aging supplier, dan detail POS tersedia di modul Keuangan (endpoint publik summary tidak mengekspos rincian tersebut):
+
+POS & pembayaran ↗
+Supplier & aging ↗
+Ringkasan modul ↗

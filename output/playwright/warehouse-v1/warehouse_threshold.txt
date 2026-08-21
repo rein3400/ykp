@@ -1,0 +1,63 @@
+TITLE: YKP Warehouse V1
+H1: Inventory Threshold
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Inventory Threshold
+
+Batas warning/high/critical per item/lokasi untuk alert engine.
+
++ Tambah Threshold
+Tipe	Item	Lokasi	Warning	High	Critical	Unit
+WASTE_DAILY_VALUE	Daging Sapi Sirloin	Kitchen Funkydak Cipete	200000	500000	1000000	IDR
+WASTE_DAILY_VALUE	Daging Sapi Sirloin	Kitchen Funkydak Cipete	360000	900000	1800000	IDR
+WASTE_DAILY_VALUE	Ayam Fillet	Kitchen Funkydak Cipete	110000	275000	550000	IDR
+WASTE_DAILY_VALUE	Salmon Fillet	Kitchen Funkydak Cipete	640000	1600000	3200000	IDR
+WASTE_DAILY_VALUE	Keju Mozzarella	Kitchen Funkydak Cipete	290000	725000	1450000	IDR
+WASTE_DAILY_VALUE	Kopi Arabica Bean	Kitchen Funkydak Cipete	440000	1100000	2200000	IDR
+WASTE_DAILY_VALUE	Udang Vaname	Kitchen Funkydak Cipete	220000	550000	1100000	IDR
+WASTE_DAILY_VALUE	Daging Kambing	Kitchen Funkydak Cipete	280000	700000	1400000	IDR
+WASTE_DAILY_VALUE	Whipping Cream	Kitchen Funkydak Cipete	170000	425000	850000	IDR
+WASTE_DAILY_VALUE	Basil Fresh	Kitchen Funkydak Cipete	16000	40000	80000	IDR
+WASTE_DAILY_VALUE	Susu Full Cream	Kitchen Funkydak Cipete	36000	90000	180000	IDR
+WASTE_DAILY_VALUE	Ikan Tenggiri	Kitchen Funkydak Cipete	190000	475000	950000	IDR

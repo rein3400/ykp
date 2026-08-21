@@ -1,0 +1,64 @@
+[
+  {
+    "app": "hermez",
+    "page": "/",
+    "status": "PASS",
+    "note": "Hermez",
+    "url": "https://hermez.oseedigital.tech/"
+  },
+  {
+    "app": "hermez",
+    "page": "/actions",
+    "status": "FAIL",
+    "note": "",
+    "error": "blank"
+  },
+  {
+    "app": "hermez",
+    "page": "/alerts",
+    "status": "FAIL",
+    "note": "",
+    "error": "blank"
+  },
+  {
+    "app": "hermez",
+    "page": "/config",
+    "status": "FAIL",
+    "note": "",
+    "error": "blank"
+  },
+  {
+    "app": "hermez",
+    "page": "/run",
+    "status": "FAIL",
+    "note": "",
+    "error": "error page"
+  },
+  {
+    "app": "hermez",
+    "page": "/telegram-bot",
+    "status": "FAIL",
+    "note": "",
+    "error": "error page"
+  },
+  {
+    "app": "hermez",
+    "page": "/telegram-test",
+    "status": "FAIL",
+    "note": "",
+    "error": "error page"
+  },
+  {
+    "app": "hermez",
+    "page": "/warehouse",
+    "status": "FAIL",
+    "note": "",
+    "error": "error page"
+  },
+  {
+    "app": "hub",
+    "page": "/",
+    "status": "PASS",
+    "note": "dashboard rendered"
+  }
+]

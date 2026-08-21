@@ -1,0 +1,70 @@
+TITLE: YKP Warehouse V1
+H1: Warehouse Overview
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Warehouse Overview
+
+Sistem Kontrol Bahan Baku — snapshot harian.
+
+ITEM AKTIF
+
+25 item
+
+ITEM DI BAWAH MIN
+
+25 item
+
+WASTE HARI INI
+
+0 item
+
+OPNAME HARI INI
+
+Belum
+
+VARIANCE > 5%
+
+0 item
+
+Generated 2026-08-20 16:59:03

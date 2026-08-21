@@ -1,0 +1,20 @@
+TITLE: YKP Owner Command
+H1: Penjualan per Item
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+Penjualan per Item
+Modul Keuangan tidak bisa dihubungi. Cek /owner/health.

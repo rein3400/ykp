@@ -1,0 +1,44 @@
+--- LOCAL ykp-hr-v1/src/db/sheets.ts
++++ VPS ykp-hr-v1/src/db/sheets.ts
+@@ -70,7 +70,10 @@
+   // Hermez alert log (brief §11)
+   hermezAlerts: 'hermes_alert_log',
+   // Telegram delivery log (notification wiring)
+-  telegramDeliveryLog: 'telegram_delivery_log'
++  telegramDeliveryLog: 'telegram_delivery_log',
++  telegramLinkCodes: 'telegram_link_codes',
++  investorUsers: 'master_investor_users',
++  opsUsers: 'master_ops_users'
+ } as const;
+ 
+ export type TabName = (typeof TABS)[keyof typeof TABS];
+@@ -347,6 +350,9 @@
+     'recommended_action',
+     'created_at'
+   ],
++  [TABS.telegramLinkCodes]: ['code', 'user_id', 'expires_at', 'telegram_chat_id', 'consumed_at', 'created_at', 'division'],
++  [TABS.investorUsers]: ['user_id', 'username', 'role', 'telegram_id', 'active_status'],
++  [TABS.opsUsers]: ['user_id', 'username', 'role', 'telegram_id', 'active_status'],
+   [TABS.users]: [
+     'user_id',
+     'username',
+@@ -360,7 +366,8 @@
+     'active_status',
+     'must_change_password',
+     'created_at',
+-    'last_login_at'
++    'last_login_at',
++    'employee_id'
+   ],
+   [TABS.auditLog]: [
+     'audit_id',
+@@ -373,7 +380,8 @@
+     'before_value',
+     'after_value',
+     'reason',
+-    'ip_address'
++    'ip_address',
++    'chain_hash'
+   ],
+   [TABS.hermezAlerts]: [
+     'alert_id',

@@ -16,6 +16,7 @@ export interface ApprovalRow {
   amount: number;
   status: ApprovalStatus;
   approvedBy?: string | null;
+  createdBy?: string | null;
   brandId?: string;
   outletId?: string;
 }
@@ -94,6 +95,12 @@ export function transitionApproval(
     return fail(`transition ${fromStatus}->${toStatus} not allowed`);
   }
   if (toStatus === 'APPROVED' || toStatus === 'PAID') {
+    // Segregation of duties: the person who created the row cannot approve
+    // or pay it themselves, regardless of role. This closes the self-approve
+    // fraud vector on expenses and petty cash.
+    if (row.createdBy && actor.id === row.createdBy) {
+      return fail(`approver (${actor.id}) cannot approve a row they created (${row.createdBy}): segregation of duties`);
+    }
     if (!canApproveAmount(row.entity, row.amount, actor.role)) {
       return fail(`role ${actor.role} cannot approve amount ${row.amount} for entity ${row.entity}`);
     }

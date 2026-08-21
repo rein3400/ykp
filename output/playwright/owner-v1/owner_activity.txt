@@ -1,0 +1,20 @@
+TITLE: YKP Owner Command
+H1: Aktivitas
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+Aktivitas
+Mode mock aktif — audit trail tidak tersedia.

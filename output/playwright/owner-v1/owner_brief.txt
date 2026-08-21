@@ -1,0 +1,65 @@
+TITLE: YKP Owner Command
+H1: Daily Brief — 20 Agu 2026
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+MODE MOCK aktif — YKP_OWNER_MOCK=true, semua data adalah data demo bawaan. Login demo: owner / owner123.
+Daily Brief — 20 Agu 2026
+RED
+6 alert terbuka
+Salin Brief
+YKP Daily Brief - 20 Agu 2026
+Level: RED
+
+[Finance]
+- Total revenue: Rp24.137.267
+- Total expense: Rp8.485.477
+- Estimasi surplus kas: Rp15.651.789
+- Unpaid supplier: Rp9.000.000
+
+[HR]
+- Total staff: 34 | Present: 33 | Late: 6 | Absent: 1
+- Shift shortage: 1
+
+[Warehouse]
+- Nilai inventori: Rp88.900.000
+- Stok kritis: 5 | Near expiry: 7 | Expired: 1
+- Purchase recommendation pending: 3 (Rp3.250.000)
+
+[Ops]
+- Outlet siap: 6/7 | Checklist: 96%
+- Insiden: 5 (berat: 1)
+- Selisih kas: -Rp75.000
+
+[Investor]
+- Revenue: Rp24.137.267 | Profit: Rp15.651.789 | Dividend declared: Rp45.000.000
+
+[Alerts] (6)
+- [critical] 3 item stok kritis di Funkydak Cipete (ayam fillet, tepung, minyak)
+- [warning] Selisih kas -Rp75.000 di Suburbuns Depok saat closing
+- [warning] Kompor mati saat jam makan malam di Laju Kopi Bintaro
+- [warning] Kekurangan 1 orang shift malam di Sekarpizza Seturan
+- [warning] 4 item mendekati kedaluwarsa di Uncle Masala Tebet (< 3 hari)
+- [info] Selisih opname Rp320.000 belum terjelaskan di Sekarpizza Demangan
+
+[Action besok]
+- Audit closing kas Suburbuns Depok
+- Briefing SPV absensi Sekarpizza Seturan
+- Approve purchase recommendation Funkydak Cipete
+- Panggil teknisi kompor Laju Kopi Bintaro
+- Panggil teknisi kompor Laju Kopi Bintaro (SPV Laju Kopi)
+
+Format Hermez (plain text, siap Telegram). Read-only — pengiriman Telegram dijalankan worker Hermez terpisah, bukan dashboard ini.

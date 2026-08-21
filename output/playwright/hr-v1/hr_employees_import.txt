@@ -1,0 +1,27 @@
+TITLE: YKP HR V1
+H1: Import Karyawan dari CSV
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Import Karyawan dari CSV
+Upload & Import
+Format CSV
+
+Header: full_name,role,position,brand_id,outlet_id,basic_salary,salary_type,employment_status,join_date
+
+Wajib: full_name, outlet_id, basic_salary. brand_id default BR-001 jika kosong.

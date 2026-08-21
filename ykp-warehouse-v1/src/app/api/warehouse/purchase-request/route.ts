@@ -11,6 +11,7 @@ import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
+import { FraudControlError, assertNotSelfApproval } from '@/lib/fraud-controls';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -159,9 +160,22 @@ export const PUT = handler(async (req: NextRequest) => {
     if (found.row.status !== 'SUBMITTED' && found.row.status !== 'DRAFT') {
       return badRequest(`Cannot approve from status ${found.row.status}`);
     }
+    // Fraud control: segregation of duties — requester cannot approve own PR.
+    try {
+      assertNotSelfApproval(found.row.requested_by, s.userId, 'purchase_request');
+    } catch (e) {
+      if (e instanceof FraudControlError) return badRequest(e.message);
+      throw e;
+    }
     newStatus = 'APPROVED';
   } else if (body.action === 'reject') {
     if (!can(s.role as Role, 'approve', 'purchase_request')) return unauthorized('Forbidden');
+    try {
+      assertNotSelfApproval(found.row.requested_by, s.userId, 'purchase_request');
+    } catch (e) {
+      if (e instanceof FraudControlError) return badRequest(e.message);
+      throw e;
+    }
     newStatus = 'REJECTED';
   } else if (body.action === 'order') {
     if (!can(s.role as Role, 'update', 'purchase_request')) return unauthorized('Forbidden');

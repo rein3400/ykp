@@ -54,9 +54,10 @@ export const POST = handler(async (req) => {
   // Staff can only correct own attendance (unless manager+)
   const isManager = can(session.role as Role, 'approve', 'attendance') ||
     can(session.role as Role, 'update', 'attendance');
-  if (!isManager && found.row.employee_id && session.userId) {
-    // allow if same employee linked — soft check via username match not available;
-    // managers always allowed; staff create request
+  if (!isManager) {
+    if (session.employeeId !== found.row.employee_id) {
+      return forbidden('Hanya bisa koreksi absen sendiri');
+    }
   }
 
   const now = nowTimestampWib();
@@ -91,9 +92,9 @@ export const POST = handler(async (req) => {
     entity: 'attendance_correction',
     entityId: correctionId,
     beforeValue: JSON.stringify({
-      clock_in: found.row.clock_in,
-      clock_out: found.row.clock_out,
-      status: found.row.status
+      actual_check_in: found.row.actual_check_in,
+      actual_check_out: found.row.actual_check_out,
+      attendance_status: found.row.attendance_status
     }),
     afterValue: JSON.stringify(body),
     reason: body.reason
@@ -146,18 +147,30 @@ export const PUT = handler(async (req) => {
     return ok({ attendance_id: body.attendance_id, status: 'REJECTED' });
   }
 
-  // Approve: apply corrected values
+  // Approve: apply corrected values to the attendance row.
+  // Attendance headers are actual_check_in / actual_check_out /
+  // attendance_status / check_in_photo_url / check_out_photo_url / latitude /
+  // longitude — NOT clock_in/clock_out/photo_url/status. Writing the wrong
+  // names silently lost corrections.
+  const ctype = (found.row.correction_type ?? 'BOTH').toUpperCase();
   const updated = {
     ...found.row,
-    clock_in: found.row.corrected_clock_in || found.row.clock_in,
-    clock_out: found.row.corrected_clock_out || found.row.clock_out,
-    status: found.row.corrected_status || found.row.status,
+    actual_check_in:
+      ctype === 'CLOCK_IN' || ctype === 'BOTH'
+        ? found.row.corrected_clock_in || found.row.actual_check_in
+        : found.row.actual_check_in,
+    actual_check_out:
+      ctype === 'CLOCK_OUT' || ctype === 'BOTH'
+        ? found.row.corrected_clock_out || found.row.actual_check_out
+        : found.row.actual_check_out,
+    attendance_status: found.row.corrected_status || found.row.attendance_status,
+    check_in_photo_url: found.row.correction_photo_url || found.row.check_in_photo_url || '',
+    check_out_photo_url: found.row.correction_photo_url || found.row.check_out_photo_url || '',
+    latitude: found.row.correction_latitude || found.row.latitude || '',
+    longitude: found.row.correction_longitude || found.row.longitude || '',
     correction_status: 'APPROVED',
     correction_approved_by: session.userId,
-    correction_approved_at: now,
-    photo_url: found.row.correction_photo_url || found.row.photo_url || '',
-    latitude: found.row.correction_latitude || found.row.latitude || '',
-    longitude: found.row.correction_longitude || found.row.longitude || ''
+    correction_approved_at: now
   };
   await updateRow(TABS.attendance, found.rowNumber, updated);
 
@@ -166,14 +179,14 @@ export const PUT = handler(async (req) => {
     action: 'approve', entity: 'attendance_correction',
     entityId: found.row.correction_id || body.attendance_id,
     beforeValue: JSON.stringify({
-      clock_in: found.row.clock_in,
-      clock_out: found.row.clock_out,
-      status: found.row.status
+      actual_check_in: found.row.actual_check_in,
+      actual_check_out: found.row.actual_check_out,
+      attendance_status: found.row.attendance_status
     }),
     afterValue: JSON.stringify({
-      clock_in: updated.clock_in,
-      clock_out: updated.clock_out,
-      status: updated.status
+      actual_check_in: updated.actual_check_in,
+      actual_check_out: updated.actual_check_out,
+      attendance_status: updated.attendance_status
     }),
     reason: body.reason || found.row.correction_reason || ''
   });

@@ -99,27 +99,28 @@ export function findApp(id: AppId | null): AppDef | undefined {
  *   /api/auth/login?role=<hubRole>&token=<ERP_SSO_SECRET>&redirect=/
  * minting a session cookie and 302-redirecting into the app.
  *
- *   - finance (ykp-erp-finance): ERP demo SSO, token-gated, role mint.
- *   - owner   (ykp-erp-hermez, "Owner Command"): ERP demo SSO, token-gated,
- *             needs SUPER_ADMIN → see SSO_ROLE override below.
- *   - ops     (ykp-ops-v1): GET SSO bridge, maps hub role onto owner/staff
- *             (no shared token; role mapping only).
+ *   - ops (ykp-ops-v1): GET SSO bridge, maps hub role onto owner/staff
+ *             (token-gated by ERP_SSO_SECRET; role mapping only).
  *
- * NOT here (manual username/password, no GET SSO bridge):
+ * NOT here (manual username/password, POST-only login — no GET SSO bridge):
+ *   - owner   (ykp-owner-v1): POST-only, proxies credentials to HR as IdP
+ *              (or mock owner/owner123 when HR unreachable). Hub opens the
+ *              app root; user logs in manually.
+ *   - finance (ykp-finance-v1): POST-only bcrypt login against Sheets users
+ *              tab. Hub opens the app root; user logs in manually.
  *   - hr       (ykp-hr-v1 Sheets): POST-only bcrypt login against Sheets
  *              users tab — there is no /api/auth/login GET handler, so an SSO
  *              link would 404/401. Hub opens the app root; user logs in.
  *   - warehouse, investor (Sheets apps): same — manual login.
  */
-export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["finance", "owner", "ops"]);
+export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["ops"]);
 
 /**
- * Per-app SSO role override. Hermez (Owner Command) config/brief APIs
- * require SUPER_ADMIN, so we override the role regardless of the hub role.
+ * Per-app SSO role override. Reserved for future apps whose config/brief
+ * APIs require a specific role regardless of the hub role. Currently empty
+ * because only ops is in ROLE_SSO_APPS and it maps hub roles internally.
  */
-export const SSO_ROLE: Partial<Record<AppId, string>> = {
-  owner: "SUPER_ADMIN",
-};
+export const SSO_ROLE: Partial<Record<AppId, string>> = {};
 
 /**
  * Build the URL to open an app from Hub so the user lands authenticated.

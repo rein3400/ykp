@@ -1,0 +1,87 @@
+TITLE: YKP Owner Command
+H1: SDM — 20 Agu 2026
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+MODE MOCK aktif — YKP_OWNER_MOCK=true, semua data adalah data demo bawaan. Login demo: owner / owner123.
+SDM — 20 Agu 2026
+Mock
+
+Hadir / Terjadwal
+
+33/34
+
+Telat
+
+6
+
+Absen
+
+1
+
+Cuti
+
+1
+
+Kekurangan shift
+
+1
+
+Isu payroll
+
+0
+
+Keterlambatan tertinggi
+Suburbuns Depok
+2 orang · 48 mnt
+Funkydak Kemang
+2 orang · 30 mnt
+Laju Kopi Bintaro
+1 orang · 27 mnt
+Kehadiran per outlet
+Semua brand
+Funkydak
+Laju Kopi
+Sekarpizza
+Suburbuns
+Uncle Masala
+Semua outlet
+Funkydak Cipete
+Funkydak Kemang
+Laju Kopi Bintaro
+Sekarpizza Demangan
+Sekarpizza Seturan
+Suburbuns Depok
+Uncle Masala Tebet
+7 outlet
+OUTLET	TERJADWAL	HADIR	TELAT	ABSEN	CUTI	KURANG SHIFT	MENIT TELAT	LEMBUR (JAM)
+Funkydak Cipete	4	4	0	0	0	0	0	3
+Funkydak Kemang	5	5	2	0	0	0	30	0
+Sekarpizza Demangan	6	6	0	0	1	0	0	0
+Sekarpizza Seturan	4	4	1	0	0	1	21	0
+Suburbuns Depok	5	4	2	1	0	0	48	0
+Laju Kopi Bintaro	6	6	1	0	0	0	27	0
+Uncle Masala Tebet	4	4	0	0	0	0	0	0
+
+Sumber: Modul SDM (hr_daily_summary) · update 21:40
+
+Payroll & detail
+
+Status periode payroll dan koreksi absensi dikelola di modul SDM:
+
+Payroll ↗
+Absensi ↗
+Keterlambatan ↗

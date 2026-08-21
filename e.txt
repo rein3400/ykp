@@ -1,0 +1,1308 @@
+Finance
+- Tambahan Kategori expense :
+1. Perlengkapan Dapur
+2. ⁠Peralatan Kantor
+3. ⁠Ongkir/ Parkir
+4. ⁠Komunikasi
+5. ⁠Maintainance
+6. ⁠Iuran Bulanan
+7. ⁠Sosial/ Donasi
+8. ⁠Peralatan dan Perlengkapan Kebersihan
+9. ⁠Event
+- Tambahkan Kolom Qty
+- Warehouse to finance
+Purchase request langsung rejected tanpa ada notif request approval dari finance
+- finance to warehouse 
+Purchase request blm masuk ke pembelian supplier/ invoice supplier
+HR
+Menu Tambah Rule
+- Parameter toleransi keterlambatan
+- ⁠parameter nominal potongan keterlambatan
+- ⁠parameter over time
+- ⁠parameter nominal over time
+- ⁠aksi
+- ⁠parameter bonus
+- ⁠parameter insentif hari besar
+Ops V1
+- Tambahan menu Closing Checklist
+Warehouse
+- tambahan fitur Recipe
+- ⁠belum ada setting untuk item sales ke pengurangan atau perubahan stok di warehouse
+# BRIEF REVISI DEVELOPER — WAREHOUSE, KITCHEN STOCK & RECIPE/BOM
+
+## Untuk: Om Leo
+
+## Project: YKP ERP — Warehouse & Inventory Control
+
+### 1. Tujuan Revisi
+
+Pada modul Warehouse yang sekarang, perlu ditambahkan struktur **Kitchen Stock** dan **Recipe/BOM Engine**.
+
+Tujuannya supaya sistem tidak hanya tahu:
+
+* barang masuk gudang,
+* barang keluar gudang,
+* dan stok fisik,
+
+tetapi juga bisa mengetahui:
+
+* berapa bahan yang dipindahkan ke kitchen,
+* berapa bahan yang seharusnya terpakai berdasarkan penjualan,
+* berapa sisa stok teoritis di kitchen,
+* berapa stok fisik sebenarnya,
+* berapa waste,
+* dan berapa selisih stok yang belum dapat dijelaskan.
+
+---
+
+# 2. Struktur Inventory Harus Multi-Brand
+
+Sistem harus tetap satu ERP pusat, tetapi inventory dipisahkan berdasarkan:
+
+**YKP Group
+→ Brand
+→ Outlet
+→ Location
+→ Item**
+
+Contoh:
+
+YKP
+→ Funkydak
+→ Outlet Demangan
+→ Main Warehouse
+→ Ayam Fillet
+
+YKP
+→ Funkydak
+→ Outlet Demangan
+→ Kitchen
+→ Ayam Fillet
+
+YKP
+→ Sekarpizza
+→ Outlet A
+→ Kitchen
+→ Mozzarella
+
+Stok antar-brand dan antar-outlet **tidak boleh bercampur**.
+
+Master item boleh global jika item sama, tetapi saldo stok harus selalu memiliki:
+
+* brand_id
+* outlet_id
+* location_id
+
+---
+
+# 3. Kitchen Stock Tetap Masuk Modul Warehouse
+
+Tidak perlu membuat ERP Kitchen terpisah hanya untuk inventory.
+
+**Kitchen Stock menjadi salah satu inventory location di dalam Warehouse Module.**
+
+Contoh lokasi:
+
+* Central Warehouse
+* Outlet Warehouse
+* Kitchen
+* Bar
+* Chiller
+* Freezer
+* Dry Storage
+
+Dengan demikian transfer barang menjadi:
+
+**Warehouse Stock
+→ Transfer Stock
+→ Kitchen Stock**
+
+Bukan:
+
+**Warehouse
+→ langsung Recipe**
+
+Recipe tidak menyimpan stok.
+
+Recipe hanya menjadi rumus pemakaian bahan.
+
+---
+
+# 4. Contoh Workflow Transfer ke Kitchen
+
+Contoh:
+
+Gudang memiliki:
+
+Ayam Fillet = 50 kg
+
+Kitchen meminta:
+
+20 kg
+
+Setelah transfer:
+
+Warehouse Stock:
+30 kg
+
+Kitchen Stock:
+20 kg
+
+Untuk perhitungan internal, semua quantity dikonversi ke **base unit**.
+
+Contoh:
+
+20 kg
+= 20.000 gram
+
+Kitchen Stock sebenarnya menyimpan:
+
+20.000 gram
+
+Walaupun UI tetap boleh menampilkan:
+
+20 kg
+
+Hal ini penting supaya pemakaian resep dapat dihitung sampai satuan kecil.
+
+---
+
+# 5. Unit Conversion Wajib
+
+Setiap item harus memiliki:
+
+* purchase_unit
+* base_unit
+* conversion_factor
+
+Contoh:
+
+Ayam:
+
+* Purchase Unit = kg
+* Base Unit = gram
+* 1 kg = 1.000 gram
+
+Minyak:
+
+* Purchase Unit = liter
+* Base Unit = ml
+* 1 liter = 1.000 ml
+
+Bun:
+
+* Purchase Unit = pack
+* Base Unit = pcs
+* 1 pack = 12 pcs
+
+Semua calculation engine menggunakan **base unit**.
+
+---
+
+# 6. Tambahkan Recipe / BOM Module
+
+Recipe harus dibuat per:
+
+* Brand
+* Menu
+* Recipe Version
+
+Contoh:
+
+Brand:
+Funkydak
+
+Menu:
+Chicken Burger
+
+Recipe:
+
+* Ayam Fillet = 150 gram
+* Bun = 1 pcs
+* Sauce = 30 gram
+* Cheese = 1 slice
+
+Table utama:
+
+`recipe_master`
+
+Field minimal:
+
+* recipe_id
+* brand_id
+* menu_id
+* recipe_version
+* yield_qty
+* effective_date
+* active_status
+* approved_by
+
+Detail:
+
+`recipe_detail`
+
+Field:
+
+* recipe_detail_id
+* recipe_id
+* item_id
+* qty_required
+* unit
+* qty_in_base_unit
+* waste_factor
+* notes
+
+---
+
+# 7. Recipe Harus Versioning
+
+Recipe lama jangan ditimpa.
+
+Contoh:
+
+Recipe V1:
+Ayam = 150 gram
+
+Recipe V2:
+Ayam = 140 gram
+
+Jika recipe berubah, buat version baru.
+
+Tujuannya supaya penjualan periode lama tetap dihitung menggunakan recipe yang berlaku pada tanggal tersebut.
+
+Status:
+
+* DRAFT
+* ACTIVE
+* INACTIVE
+
+---
+
+# 8. POS Menjadi Trigger Pemakaian Teoritis
+
+Alurnya:
+
+**POS Sales
+→ Menu Terjual
+→ Recipe/BOM
+→ Theoretical Usage
+→ Kitchen Stock Theoretical**
+
+Contoh:
+
+Terjual:
+
+100 Chicken Burger
+
+Recipe:
+
+150 gram ayam / burger
+
+Maka:
+
+100 × 150 gram
+= 15.000 gram
+
+Theoretical Usage:
+
+15 kg ayam
+
+Jadi POS **tidak langsung mengurangi stok gudang**.
+
+POS digunakan untuk menghitung **pemakaian teoritis dari Kitchen Stock**.
+
+---
+
+# 9. Tiga Angka Stok yang Perlu Dibedakan
+
+## A. Book Stock
+
+Berdasarkan transaksi inventory.
+
+Contoh:
+
+Kitchen menerima:
+20 kg ayam
+
+Tidak ada transaksi lain.
+
+Book Stock Kitchen:
+20 kg
+
+---
+
+## B. Theoretical Stock
+
+Berdasarkan resep dan POS.
+
+Kitchen menerima:
+20 kg
+
+Pemakaian teoritis berdasarkan POS:
+18,5 kg
+
+Maka:
+
+Theoretical Stock:
+1,5 kg
+
+---
+
+## C. Physical Stock
+
+Hasil staff benar-benar timbang saat stock opname.
+
+Misalnya:
+
+Physical Stock:
+1,2 kg
+
+Berarti:
+
+Theoretical:
+1,5 kg
+
+Physical:
+1,2 kg
+
+Variance:
+-0,3 kg
+
+atau:
+
+-300 gram
+
+---
+
+# 10. Jangan Langsung Disebut Bahan Hilang
+
+Jika Physical Stock berbeda dengan Theoretical Stock, gunakan status:
+
+**UNEXPLAINED STOCK VARIANCE**
+
+Contoh:
+
+Theoretical Stock:
+1.500 gram
+
+Physical Stock:
+1.200 gram
+
+Unexplained Variance:
+-300 gram
+
+Jangan langsung menulis:
+
+“300 gram hilang.”
+
+Sistem perlu memeriksa:
+
+* Waste
+* Transfer
+* Stock Issue
+* Receiving
+* Adjustment
+* Salah timbang
+* Salah input
+* Portion variance
+
+Baru setelah investigasi dapat diklasifikasikan:
+
+* EXPLAINED
+* WASTE
+* INPUT_ERROR
+* PORTION_VARIANCE
+* TRANSFER_ERROR
+* RECEIVING_ERROR
+* CONFIRMED_LOSS
+
+---
+
+# 11. Stock Opname Kitchen
+
+Kitchen harus memiliki stock opname sendiri.
+
+Minimal untuk bahan kritikal dilakukan:
+
+* Daily closing
+  atau
+* per shift
+
+Data yang ditampilkan:
+
+* Item
+* Opening Kitchen Stock
+* Transfer In
+* Transfer Out
+* Waste
+* Theoretical Usage
+* Theoretical Closing Stock
+* Physical Closing Stock
+* Variance Qty
+* Variance %
+* Variance Value
+* Status
+* Recount
+* Notes
+* PIC
+
+---
+
+# 12. Waste Harus Dipisahkan dari Variance
+
+Waste bukan otomatis sama dengan variance.
+
+Contoh:
+
+Kitchen menerima:
+20 kg
+
+Theoretical usage:
+18 kg
+
+Waste tercatat:
+0,5 kg
+
+Maka expected stock:
+
+1,5 kg
+
+Jika physical:
+
+1,2 kg
+
+Berarti unexplained variance hanya:
+
+0,3 kg
+
+Bukan:
+
+0,8 kg
+
+Waste harus memiliki:
+
+* item
+* qty
+* unit
+* reason
+* photo
+* PIC
+* approval
+
+---
+
+# 13. Workflow Lengkap yang Diinginkan
+
+Alur utamanya:
+
+**Supplier / Central Warehouse**
+↓
+**Warehouse Stock**
+↓
+**Transfer Stock**
+↓
+**Kitchen Stock**
+↓
+**POS Sales**
+↓
+**Recipe / BOM Engine**
+↓
+**Theoretical Usage**
+↓
+**Theoretical Kitchen Stock**
+↓
+**Physical Stock Opname**
+↓
+**Variance Detection**
+↓
+**Rules Engine**
+↓
+**Hermez**
+↓
+**Telegram Alert / Daily Brief**
+↓
+**Action Tracker**
+
+---
+
+# 14. Hubungan dengan Purchase Recommendation
+
+Purchase Recommendation jangan hanya melihat stok Warehouse.
+
+Sistem perlu melihat kebutuhan secara keseluruhan:
+
+* Warehouse Stock
+* Kitchen Stock
+* Incoming Purchase
+* Pending Transfer
+* Average Usage
+* Days of Cover
+* Supplier Lead Time
+
+Contoh:
+
+Warehouse:
+5 kg
+
+Kitchen:
+3 kg
+
+Total Available:
+8 kg
+
+Average Usage:
+6 kg/hari
+
+Days of Cover:
+1,3 hari
+
+Supplier Lead Time:
+2 hari
+
+Maka:
+
+**STOCKOUT RISK**
+
+Sistem harus menyarankan pembelian.
+
+---
+
+# 15. Telegram Alert
+
+Sistem bisa di-setting untuk mengirim report ke Telegram.
+
+Tidak perlu mengirim semua transaksi.
+
+Hanya kirim:
+
+* Stockout Risk
+* Purchase Required
+* High Waste
+* High Variance
+* Near Expiry
+* Transfer Discrepancy
+* Receiving Discrepancy
+* Stock Opname belum selesai
+* Action overdue
+
+Contoh:
+
+YKP STOCK ALERT
+Funkydak — Demangan
+
+AYAM FILLET
+
+Warehouse Stock:
+5 kg
+
+Kitchen Stock:
+3 kg
+
+Days of Cover:
+1,3 hari
+
+Supplier Lead Time:
+2 hari
+
+Status:
+CRITICAL — STOCKOUT RISK
+
+Suggested Purchase:
+20 kg
+
+Action:
+Purchasing konfirmasi order hari ini.
+
+---
+
+# 16. Telegram Kitchen Variance Alert
+
+Contoh:
+
+KITCHEN STOCK VARIANCE
+
+Funkydak — Closing Shift Malam
+
+Item:
+Ayam Fillet
+
+Kitchen Transfer:
+20 kg
+
+Theoretical Usage:
+18,5 kg
+
+Theoretical Closing:
+1,5 kg
+
+Physical Closing:
+1,2 kg
+
+Unexplained Variance:
+-300 gram
+
+Estimated Value:
+RpXX.XXX
+
+Status:
+WARNING
+
+Action:
+Supervisor lakukan recount dan cek waste log.
+
+---
+
+# 17. Hermez Workflow
+
+Hermez tidak menghitung raw stock.
+
+Inventory Engine yang menghitung:
+
+* Book Stock
+* Theoretical Usage
+* Theoretical Stock
+* Physical Stock
+* Variance
+* Days of Cover
+* Reorder Point
+* Suggested Purchase
+
+Rules Engine menentukan:
+
+* apakah normal,
+* warning,
+* high,
+* critical.
+
+Hermez kemudian:
+
+* membaca summary,
+* menjelaskan masalah,
+* mengurutkan prioritas,
+* membuat rekomendasi,
+* membuat Telegram brief,
+* membuat action item.
+
+---
+
+# 18. Summary untuk Hermez
+
+Tambahkan / lengkapi:
+
+`warehouse_daily_summary`
+
+Minimal berisi:
+
+* date
+* brand
+* outlet
+* warehouse_stock_value
+* kitchen_stock_value
+* low_stock_count
+* stockout_risk_count
+* purchase_recommendation_count
+* suggested_purchase_value
+* theoretical_usage_value
+* waste_value
+* variance_item_count
+* unexplained_variance_value
+* near_expiry_count
+* pending_transfer_count
+* open_action_count
+* major_inventory_issue
+* recommended_action
+
+---
+
+# 19. Kitchen Summary
+
+Disarankan juga membuat:
+
+`kitchen_inventory_daily_summary`
+
+Field:
+
+* date
+* brand_id
+* outlet_id
+* total_transfer_in
+* theoretical_usage_value
+* physical_stock_value
+* waste_value
+* variance_value
+* variance_item_count
+* high_variance_item
+* major_issue
+* recommended_action
+
+Ini yang nanti dibaca Hermez untuk report kitchen.
+
+---
+
+# 20. Prinsip Penting untuk Developer
+
+1. Kitchen Stock tetap bagian dari Warehouse/Inventory Module.
+2. Kitchen menjadi location tersendiri.
+3. Stok wajib dipisahkan per brand dan outlet.
+4. Recipe bukan tempat menyimpan stok.
+5. Recipe hanya rumus penggunaan bahan.
+6. POS memicu theoretical usage.
+7. Theoretical usage mengurangi theoretical kitchen stock.
+8. Physical stock berasal dari stock opname manusia.
+9. Physical vs theoretical menghasilkan variance.
+10. Variance tidak otomatis berarti kehilangan.
+11. Waste harus dicatat terpisah.
+12. Semua quantity dihitung menggunakan base unit.
+13. Stock ledger tidak boleh hard delete.
+14. Semua adjustment wajib audit trail.
+15. Hermez membaca summary dan alert, bukan menghitung saldo dasar.
+
+---
+
+# 21. Acceptance Test Sederhana
+
+Developer wajib bisa mendemokan kasus berikut:
+
+### Case Test
+
+Warehouse memiliki:
+50 kg ayam.
+
+Transfer ke Kitchen:
+20 kg.
+
+Hasil:
+
+Warehouse:
+30 kg.
+
+Kitchen:
+20.000 gram.
+
+POS mencatat:
+100 Chicken Burger.
+
+Recipe:
+150 gram ayam per burger.
+
+Theoretical Usage:
+15.000 gram.
+
+Theoretical Kitchen Stock:
+5.000 gram.
+
+Waste:
+500 gram.
+
+Expected Closing:
+4.500 gram.
+
+Physical Stock Opname:
+4.200 gram.
+
+Maka:
+
+Unexplained Variance:
+-300 gram.
+
+Sistem harus:
+
+1. menampilkan Book Stock,
+2. menampilkan Theoretical Usage,
+3. menampilkan Physical Stock,
+4. menghitung Variance,
+5. tidak langsung menyebut “hilang”,
+6. membuat alert jika melewati tolerance,
+7. mengirim alert ke Hermez,
+8. Hermez membuat Telegram report,
+9. membuat action recount untuk Supervisor.
+
+Jika flow ini berhasil, struktur Kitchen Stock + Recipe Engine sudah benar.
+
+---
+
+# 22. One-Liner untuk Developer
+
+**Tambahkan Kitchen Stock sebagai inventory location di Warehouse Module, lalu hubungkan POS → Recipe/BOM → Theoretical Usage → Kitchen Stock → Stock Opname → Variance → Hermez → Telegram. Semua stok harus multi-brand, multi-outlet, memakai base unit, dan variance tidak boleh langsung dianggap kehilangan.**
+# TAMBAHAN BRIEF DEVELOPER — POS ITEM SALES MAPPING KE RECIPE/BOM
+
+## Tujuan
+
+Karena Moka/POS memiliki data **Item Sales**, Warehouse Module perlu memiliki layer mapping agar penjualan menu bisa diterjemahkan menjadi pemakaian bahan baku teoritis di Kitchen Stock.
+
+POS **tidak boleh langsung mengurangi stok gudang**.
+
+Alur yang benar:
+
+**POS / Moka Item Sales
+→ POS Item Mapping
+→ Master Menu ERP
+→ Recipe/BOM Aktif
+→ Theoretical Usage
+→ Kitchen Stock Theoretical
+→ Stock Opname
+→ Variance
+→ Hermez / Telegram Alert**
+
+---
+
+## 1. POS Item Mapping Wajib
+
+Nama item di POS bisa berbeda dengan nama menu di ERP.
+
+Contoh:
+
+Di Moka:
+`FDK Chicken Burger Reg`
+
+Di ERP:
+`Chicken Burger`
+
+Maka perlu tabel mapping khusus.
+
+Table:
+
+`pos_menu_mapping`
+
+Field minimal:
+
+* mapping_id
+* pos_source
+* pos_item_id
+* pos_item_name
+* brand_id
+* outlet_id
+* menu_id
+* menu_name
+* mapping_type
+* multiplier
+* active_status
+* effective_date
+* created_by
+* updated_by
+* created_at
+* updated_at
+
+---
+
+## 2. Mapping Type
+
+Minimal support:
+
+* DIRECT
+* BUNDLE
+* VARIANT
+* ADD_ON
+* MANUAL_REVIEW
+
+### DIRECT
+
+1 item POS = 1 menu ERP.
+
+Contoh:
+
+POS:
+Chicken Burger
+
+ERP:
+Chicken Burger
+
+Multiplier:
+1
+
+---
+
+### VARIANT
+
+Item POS memiliki size/variant berbeda dan bisa memiliki recipe berbeda.
+
+Contoh:
+
+* Pizza Small
+* Pizza Medium
+* Pizza Large
+
+Masing-masing bisa diarahkan ke menu/recipe yang berbeda.
+
+---
+
+### BUNDLE
+
+Satu transaksi POS mewakili beberapa menu.
+
+Contoh:
+
+Paket Hemat A
+
+Isi:
+
+* 1 Chicken Burger
+* 1 Fries
+* 1 Drink
+
+Saat Paket Hemat A terjual 10:
+
+Sistem harus menghasilkan theoretical usage dari:
+
+* 10 Chicken Burger
+* 10 Fries
+* 10 Drink
+
+Jangan membuat satu recipe fiktif jika bundle sebenarnya terdiri dari beberapa menu production.
+
+---
+
+### ADD_ON
+
+Add-on harus bisa ditambahkan ke pemakaian recipe.
+
+Contoh:
+
+Chicken Burger
+
+* Extra Cheese
+
+Jika extra cheese terjual 5:
+
+Theoretical usage cheese harus bertambah sesuai recipe add-on.
+
+---
+
+## 3. Theoretical Usage Calculation
+
+Contoh:
+
+POS Item Sales:
+
+Chicken Burger:
+100 pcs
+
+Mapping:
+
+Chicken Burger POS
+→ Master Menu Chicken Burger
+
+Recipe aktif:
+
+* Ayam Fillet = 150 gram
+* Bun = 1 pcs
+* Sauce = 30 gram
+* Cheese = 1 slice
+
+Maka sistem menghitung:
+
+Ayam:
+100 × 150 gram
+= 15.000 gram
+
+Bun:
+100 × 1
+= 100 pcs
+
+Sauce:
+100 × 30 gram
+= 3.000 gram
+
+Cheese:
+100 × 1
+= 100 slice
+
+Hasil masuk ke:
+
+`warehouse_theoretical_usage`
+
+Bukan langsung menjadi stock movement gudang.
+
+---
+
+## 4. Recipe Version Harus Mengikuti Tanggal Penjualan
+
+Saat menghitung Item Sales, sistem harus mengambil Recipe/BOM yang aktif pada tanggal transaksi.
+
+Contoh:
+
+Recipe V1:
+150 gram ayam
+berlaku sampai 15 Agustus
+
+Recipe V2:
+140 gram ayam
+berlaku mulai 16 Agustus
+
+Penjualan tanggal 14 Agustus harus memakai Recipe V1.
+
+Penjualan tanggal 17 Agustus harus memakai Recipe V2.
+
+Jangan selalu memakai recipe terbaru untuk menghitung data historis.
+
+---
+
+## 5. Outlet dan Brand Mapping
+
+Setiap POS item sales harus membawa minimal:
+
+* brand_id
+* outlet_id
+* transaction_date
+* pos_item_id
+* qty_sold
+
+Karena item dengan nama sama bisa memiliki recipe berbeda antarbrand.
+
+Contoh:
+
+Chicken Burger Funkydak
+
+tidak otomatis sama recipe dengan:
+
+Chicken Burger brand lain.
+
+Recipe wajib memiliki konteks brand.
+
+---
+
+## 6. Kitchen Location Mapping
+
+Setiap POS outlet perlu diarahkan ke Kitchen Stock Location yang benar.
+
+Table:
+
+`pos_location_mapping`
+
+Field:
+
+* mapping_id
+* pos_outlet_id
+* brand_id
+* outlet_id
+* kitchen_location_id
+* active_status
+
+Contoh:
+
+Moka Outlet:
+Funkydak Demangan
+
+→ ERP Outlet:
+Funkydak Demangan
+
+→ Inventory Location:
+Funkydak Demangan — Kitchen
+
+Dengan demikian theoretical usage mengurangi **Kitchen Theoretical Stock outlet tersebut**, bukan kitchen brand lain.
+
+---
+
+## 7. Unmapped POS Item
+
+Jika POS mengirim item yang belum memiliki mapping:
+
+Jangan diabaikan.
+
+Masukkan ke:
+
+`pos_unmapped_item_queue`
+
+Tampilkan alert:
+
+**UNMAPPED POS ITEM**
+
+Contoh:
+
+POS Item:
+PROMO BURGER 8.8
+
+Qty Sold:
+23
+
+Status:
+Belum terhubung ke Master Menu.
+
+Action:
+Admin harus menentukan mapping sebelum theoretical usage hari tersebut dianggap lengkap.
+
+Hermez juga perlu diberi indikator:
+
+`unmapped_pos_item_count`
+
+---
+
+## 8. Validation
+
+Sebelum daily theoretical usage dianggap selesai, sistem wajib memeriksa:
+
+* Semua POS item sudah mapped.
+* Recipe aktif tersedia.
+* Recipe detail tidak kosong.
+* Semua ingredient memiliki base unit.
+* Unit conversion valid.
+* Outlet sudah mapped ke kitchen location.
+* Quantity sales tidak negatif tanpa alasan.
+* Refund/void diperlakukan dengan benar.
+* Data import tidak duplicate.
+
+---
+
+## 9. Refund dan Void
+
+Item yang:
+
+* VOID
+* CANCELLED
+
+tidak boleh dihitung sebagai pemakaian teoritis.
+
+Refund perlu dibedakan:
+
+Jika barang sudah diproduksi tetapi customer refund:
+pemakaian bahan tetap bisa terjadi.
+
+Jika transaksi dibatalkan sebelum produksi:
+pemakaian teoritis tidak perlu dihitung.
+
+Untuk V1, minimal simpan:
+
+* transaction_status
+* production_status jika tersedia
+* refund_qty
+* void_qty
+
+Jika tidak bisa menentukan status produksi, masukkan ke review/exception agar tidak dihitung secara buta.
+
+---
+
+## 10. Daily Processing Flow
+
+Setiap closing:
+
+1. Import / sync Item Sales Moka.
+2. Validasi duplicate transaction.
+3. Mapping POS item ke menu.
+4. Cari Recipe/BOM aktif.
+5. Hitung theoretical usage.
+6. Assign ke Kitchen Location.
+7. Simpan ke `warehouse_theoretical_usage`.
+8. Hitung theoretical closing stock.
+9. Bandingkan dengan Physical Stock Opname.
+10. Hitung variance.
+11. Rules engine menentukan severity.
+12. Hermez membaca hasil.
+13. Telegram mengirim exception penting.
+
+---
+
+## 11. Tambahan untuk warehouse_daily_summary
+
+Tambahkan field:
+
+* pos_sales_item_count
+* mapped_pos_item_count
+* unmapped_pos_item_count
+* recipe_missing_count
+* theoretical_usage_value
+* theoretical_usage_completed_status
+* kitchen_variance_value
+
+Status:
+
+* COMPLETE
+* PARTIAL
+* FAILED
+
+Jika masih ada item belum mapped atau recipe belum tersedia:
+
+`theoretical_usage_completed_status = PARTIAL`
+
+Hermez harus memberi tahu owner/admin bahwa analisis variance belum sepenuhnya valid.
+
+---
+
+## 12. Acceptance Test
+
+Developer wajib demo minimal skenario berikut:
+
+### Case 1 — Direct Menu
+
+POS:
+100 Chicken Burger
+
+Recipe:
+150 gram ayam
+
+Output:
+15.000 gram theoretical ayam.
+
+---
+
+### Case 2 — Variant
+
+POS:
+10 Pizza Large
+
+Mapping:
+Pizza Large → Recipe Pizza Large
+
+Output memakai recipe Large, bukan recipe Small.
+
+---
+
+### Case 3 — Bundle
+
+POS:
+10 Paket Hemat
+
+Bundle:
+
+* Burger 1
+* Fries 1
+
+Output:
+
+* 10 Burger theoretical usage
+* 10 Fries theoretical usage
+
+---
+
+### Case 4 — Add-On
+
+POS:
+5 Extra Cheese
+
+Output:
+Theoretical cheese bertambah sesuai add-on recipe.
+
+---
+
+### Case 5 — Unmapped Item
+
+POS:
+Promo Mystery Box
+
+Tidak ada mapping.
+
+Output:
+
+* Tidak dihitung diam-diam.
+* Masuk unmapped queue.
+* Muncul alert.
+* Daily theoretical status menjadi PARTIAL.
+
+---
+
+### Case 6 — Multi Outlet
+
+POS Funkydak Outlet A:
+100 Burger
+
+POS Funkydak Outlet B:
+50 Burger
+
+Pemakaian teoritis harus masuk ke Kitchen Stock outlet masing-masing.
+
+Tidak boleh bercampur.
+
+---
+
+## One-Liner Developer
+
+**Tambahkan POS Item Sales Mapping sebagai layer wajib antara Moka/POS dan Recipe/BOM. Item Sales harus dipetakan ke Master Menu, menggunakan Recipe Version yang aktif pada tanggal transaksi, lalu menghasilkan Theoretical Usage pada Kitchen Stock sesuai brand, outlet, dan kitchen location. POS tidak boleh langsung mengurangi stok gudang.**

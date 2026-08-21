@@ -1,14 +1,22 @@
 /**
  * Supplier cost row: PATCH (edit fields / record partial payment), DELETE
  * (finance_admin+, audited). Approve-payment lives in ./approve-payment.
+ *
+ * Bug #3: PATCH is an unguarded read-modify-write; `add_payment` and the
+ * editable fields are now written via `guardedUpdateRow` (optimistic
+ * concurrency on `updated_at`) so two concurrent PATCHes cannot silently
+ * lose a payment or a field edit.
+ * Bug #5: `unit_price`/`qty` are normalized to finite non-negative integer
+ * IDR (parseIdr strips Rp/./,) and NaN is rejected instead of stored.
  */
 import { NextRequest } from 'next/server';
 import { findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, unauthorized, badRequest, notFound, handler, forbidden } from '@/lib/http';
+import { ok, unauthorized, badRequest, notFound, handler, forbidden, conflict } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
-import { nowTimestampWib } from '@/lib/format';
+import { nowTimestampWib, parseIdr } from '@/lib/format';
 import { can, type Role } from '@/lib/rbac';
+import { guardedUpdateRow, ConcurrentUpdateError } from '@/lib/concurrency';
 
 const EDITABLE = [
   'date_order', 'description', 'category', 'qty', 'unit', 'unit_price',
@@ -30,10 +38,21 @@ export const PATCH = handler(async (req: NextRequest, { params }) => {
   for (const k of EDITABLE) {
     if (body[k] !== undefined) next[k] = body[k];
   }
+  // Bug #5: validate/normalize money + qty to finite non-negative integer IDR.
+  if (body.unit_price !== undefined) {
+    const up = parseIdr(body.unit_price);
+    if (!Number.isFinite(up)) return badRequest('unit_price must be a finite number');
+    next.unit_price = String(Math.max(0, Math.trunc(up)));
+  }
+  if (body.qty !== undefined) {
+    const q = parseIdr(body.qty);
+    if (!Number.isFinite(q)) return badRequest('qty must be a finite number');
+    next.qty = String(Math.max(0, Math.trunc(q)));
+  }
   // Record an additional payment (partial allowed, Revisi #6)
   if (body.add_payment !== undefined) {
-    const add = Math.trunc(Number(body.add_payment) || 0);
-    if (add <= 0) return badRequest('add_payment must be > 0');
+    const add = Math.trunc(parseIdr(body.add_payment));
+    if (!Number.isFinite(add) || add <= 0) return badRequest('add_payment must be > 0');
     const total = Number(next.total_amount || 0);
     const paid = Math.min(total, Number(next.paid_amount || 0) + add);
     next.paid_amount = String(paid);
@@ -45,7 +64,14 @@ export const PATCH = handler(async (req: NextRequest, { params }) => {
   }
   next.updated_at = nowTimestampWib();
 
-  await updateRow(TABS.supplierCost, found.rowNumber, next);
+  // Bug #3: guard the read-modify-write so a concurrent PATCH/`add_payment`
+  // that moved updated_at does not silently lose the payment or field edit.
+  try {
+    await guardedUpdateRow(TABS.supplierCost, 'costing_id', params.id, found, next);
+  } catch (e) {
+    if (e instanceof ConcurrentUpdateError) return conflict(e.message);
+    throw e;
+  }
   await logAudit({
     module: 'finance', action: 'update', recordType: 'fin_supplier_cost',
     recordId: params.id, beforeValue: JSON.stringify(before), afterValue: JSON.stringify(next),

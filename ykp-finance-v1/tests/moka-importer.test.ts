@@ -26,10 +26,13 @@ describe('parseIdrAmount', () => {
 
 describe('parseMokaCsv', () => {
   it('parses headers, dd/mm/yyyy dates, and aggregates per (date, outlet)', () => {
+    // Bug #10: gross_sales/discount/refund are OUTLET-WIDE totals repeated on
+    // every method row; they are taken from the FIRST row only (anti
+    // double-count). net_sales is per-method and summed into settlement.
     const csv = [
       'Tanggal,Outlet,Gross Sales,Net Sales,Discount,Refund,Void,Payment Method,Transaction Count',
-      '02/07/2026,Funkydak Cipete,Rp 5.000.000,Rp 4.800.000,Rp 100.000,0,Rp 100.000,Cash,80',
-      '02/07/2026,Funkydak Cipete,Rp 1.000.000,Rp 1.000.000,0,0,0,QRIS,20'
+      '02/07/2026,Funkydak Cipete,Rp 6.000.000,Rp 4.800.000,Rp 100.000,0,Rp 100.000,Cash,80',
+      '02/07/2026,Funkydak Cipete,Rp 6.000.000,Rp 1.000.000,Rp 100.000,0,Rp 100.000,QRIS,20'
     ].join('\n');
     const r = parseMokaCsv(csv);
     expect(r.errors).toHaveLength(0);

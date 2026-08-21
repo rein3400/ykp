@@ -49,8 +49,58 @@ export async function pollUpdates(offset: number, timeoutSec = 30): Promise<TgUp
   }
 }
 
+/** Strip malformed HTML that Telegram can't parse.
+ *  Telegram supports a strict subset: <b>, <i>, <u>, <s>, <strong>, <em>, <ins>, <strike>, <del>,
+ *  <span>, <tg-spoiler>, <a href="...">, <pre>, <code>, <br>.
+ *  Any `<` that's NOT part of one of these tags breaks parse_mode=HTML. */
+function escapeHtmlTags(text: string): string {
+  return text
+    // Escape all `<` and `>` first
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Restore whitelisted valid tags
+    .replace(/&lt;(\/?)(b|strong|i|em|u|ins|s|strike|del|span|tg-spoiler|pre|code|br)(\s[^&]*?)?&gt;/gi, '<$1$2$3>')
+    .replace(/&lt;a(\s+href=&quot;.*?&quot;[^&]*?)?&gt;(.*?)&lt;\/a&gt;/gi, '<a$1>$2</a>');
+}
+
 /** Send text (HTML), chunked to Telegram's 4096-char limit. */
 export async function sendMessage(chatId: number, text: string): Promise<void> {
+  const chunks: string[] = [];
+  let rest = escapeHtmlTags(text);
+  while (rest.length > CONFIG.telegramChunk) {
+    let cut = rest.lastIndexOf('\n', CONFIG.telegramChunk);
+    if (cut < CONFIG.telegramChunk / 2) cut = CONFIG.telegramChunk;
+    chunks.push(rest.slice(0, cut));
+    rest = rest.slice(cut).trimStart();
+  }
+  chunks.push(rest);
+
+  for (const chunk of chunks) {
+    if (DRY_RUN) {
+      console.log(`\n[DRY-RUN telegram → ${chatId}]\n${chunk}\n`);
+      continue;
+    }
+    try {
+      await api('sendMessage', {
+        chat_id: chatId,
+        text: chunk,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
+      });
+    } catch (e) {
+      // If HTML parsing still fails, fall back to plain text
+      console.warn('[telegram] HTML parse failed, falling back to plain text:', e instanceof Error ? e.message : e);
+      await api('sendMessage', {
+        chat_id: chatId,
+        text: chunk,
+        disable_web_page_preview: true
+      });
+    }
+  }
+}
+
+/** Send plain text (no parse_mode) — for LLM replies that may contain
+ *  markdown/HTML-ish characters. Chunked to Telegram's 4096-char limit. */
+export async function sendMessagePlain(chatId: number, text: string): Promise<void> {
   const chunks: string[] = [];
   let rest = text;
   while (rest.length > CONFIG.telegramChunk) {
@@ -69,7 +119,6 @@ export async function sendMessage(chatId: number, text: string): Promise<void> {
     await api('sendMessage', {
       chat_id: chatId,
       text: chunk,
-      parse_mode: 'HTML',
       disable_web_page_preview: true
     });
   }

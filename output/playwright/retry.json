@@ -1,0 +1,58 @@
+[
+  {
+    "app": "finance-v1",
+    "page": "/finance/expenses",
+    "status": "PASS",
+    "note": "Pengeluaran",
+    "interaction": "click \"+ Tambah Expense\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/suppliers",
+    "status": "PASS",
+    "note": "Master Supplier",
+    "interaction": "click \"+ Tambah Supplier\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/threshold",
+    "status": "PASS",
+    "note": "Inventory Threshold",
+    "interaction": "click \"+ Tambah Threshold\"",
+    "error": ""
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor",
+    "status": "PASS",
+    "note": "Investor Dashboard",
+    "interaction": "",
+    "error": ""
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor/portfolio",
+    "status": "PASS",
+    "note": "Portfolio / Cap Table",
+    "interaction": "",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/gudang",
+    "status": "PASS",
+    "note": "Gudang — 20 Agu 2026",
+    "interaction": "",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/checklist",
+    "status": "FAIL",
+    "note": "",
+    "interaction": "",
+    "error": "server error page"
+  }
+]

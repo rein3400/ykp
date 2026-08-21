@@ -1,0 +1,66 @@
+TITLE: YKP Owner Command
+H1: Investor — 20 Agu 2026
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+MODE MOCK aktif — YKP_OWNER_MOCK=true, semua data adalah data demo bawaan. Login demo: owner / owner123.
+Investor — 20 Agu 2026
+Mock
+
+Total revenue
+
+Rp24.137.267
+
+Total profit
+
+Rp15.651.789
+
+Total kapital
+
+Rp750.000.000
+
+Investor aktif
+
+6
+
+Dividend declared
+
+Rp45.000.000
+
+Growth
+
+8.4%
+
+Performa per brand (hari ini, dari ringkasan Keuangan)
+Funkydak
+Revenue Rp9.787.899Surplus Rp6.224.497
+Sekarpizza
+Revenue Rp6.527.960Surplus Rp4.353.679
+Suburbuns
+Revenue Rp2.754.163Surplus Rp1.707.581
+Laju Kopi
+Revenue Rp2.410.801Surplus Rp1.639.344
+Uncle Masala
+Revenue Rp2.656.444Surplus Rp1.726.688
+
+Sumber: Modul Investor (inv_summary) + Keuangan (fin_daily_summary) · update 22:00
+
+Total seluruh outlet: revenue Rp24.137.267 · Estimasi Surplus Kas Rp15.651.789. Dividen paid vs declared dikelola di modul Investor.
+
+Detail
+Portfolio ↗
+Dividend ↗
+Returns ↗

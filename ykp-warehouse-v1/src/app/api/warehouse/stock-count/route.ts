@@ -11,7 +11,7 @@ import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
-import { bookStock } from '@/lib/stock-ledger';
+import { bookStock, appendMovement } from '@/lib/stock-ledger';
 import { evalStockVariance, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
@@ -181,6 +181,27 @@ export const POST = handler(async (req: NextRequest) => {
           }]).catch(() => null);
         }
       }
+    }
+
+    // Reconcile book stock to the physical count: post a COUNT_ADJUSTMENT
+    // movement for the variance (physical - book). Previously the count was
+    // marked COMPLETED but book stock never reconciled → permanent drift.
+    if (varianceQty !== 0) {
+      await appendMovement({
+        movementType: 'COUNT_ADJUSTMENT',
+        direction: 'ADJUSTMENT',
+        quantity: varianceQty,
+        baseUnit: it.base_unit || master?.base_unit || '',
+        unitCost: 0,
+        itemId: it.item_id,
+        brandId: body.brand_id ?? '',
+        outletId: body.outlet_id ?? '',
+        locationId: body.location_id,
+        referenceType: 'stock_count',
+        referenceId: countId,
+        createdBy: s.userId,
+        notes: `Stock count ${countId} reconciliation`
+      }).catch((e) => console.error('[stock_count] adjustment ledger failed:', e));
     }
   }
   await appendRows(TABS.stockCountItem, detailRows);

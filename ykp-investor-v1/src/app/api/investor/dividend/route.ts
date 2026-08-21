@@ -19,13 +19,21 @@ export const POST = handler(async (req: NextRequest) => {
   if (!s) return unauthorized();
   if (s.role !== 'owner') return forbidden('Only owner can declare dividend');
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
+  // Validate required fields + numeric amount (integer IDR — invariant §2).
+  const investorId = (body.investor_id ?? '').trim();
+  const period = (body.period ?? '').trim();
+  if (!investorId) return badRequest('investor_id wajib diisi');
+  if (!period) return badRequest('period wajib diisi');
+  const rawAmount = body.amount ?? '';
+  if (!/^-?\d+$/.test(rawAmount)) return badRequest('amount harus integer IDR (mis. "500000")');
+  const amount = Number(rawAmount);
   const id = nextSequentialIdSync('DVD');
   const status = body.status === 'paid' ? 'paid' : 'declared';
   const row = {
     dividend_id: id,
-    investor_id: body.investor_id ?? '',
-    period: body.period ?? '',
-    amount: body.amount ?? '0',
+    investor_id: investorId,
+    period,
+    amount: String(amount),
     status,
     declared_at: nowTimestampWib(),
     paid_at: status === 'paid' ? nowTimestampWib() : '',

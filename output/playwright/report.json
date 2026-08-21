@@ -1,0 +1,650 @@
+[
+  {
+    "app": "hr-v1",
+    "page": "/hr",
+    "status": "PASS",
+    "note": "HR Overview",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/attendance",
+    "status": "PASS",
+    "note": "Absensi",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/employees",
+    "status": "PASS",
+    "note": "Master Karyawan",
+    "interaction": "click button \"Nonaktifkan\"",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/employees/new",
+    "status": "PASS",
+    "note": "Tambah Karyawan",
+    "interaction": "fill first input",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/employees/import",
+    "status": "PASS",
+    "note": "Import Karyawan dari CSV",
+    "interaction": "click button \"Upload & Import\"",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/lateness",
+    "status": "PASS",
+    "note": "Keterlambatan",
+    "interaction": "click button \"Setujui\"",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/leaves",
+    "status": "PASS",
+    "note": "YKP HR V1",
+    "interaction": "click button \"Ajukan\"",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/payroll",
+    "status": "PASS",
+    "note": "Payroll",
+    "interaction": "click button \"Tandai Dibayar\"",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/payroll/generate",
+    "status": "PASS",
+    "note": "Generate Payroll",
+    "interaction": "fill first input",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/roster",
+    "status": "PASS",
+    "note": "Shift & Roster",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/summary",
+    "status": "PASS",
+    "note": "HR Daily Summary",
+    "interaction": "fill first input",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/telegram",
+    "status": "PASS",
+    "note": "Hubungkan Telegram",
+    "interaction": "click button \"Dapatkan Kode\"",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/users",
+    "status": "PASS",
+    "note": "User & Role Management",
+    "interaction": "click button \"+ Tambah User\"",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/hr/adjustments",
+    "status": "PASS",
+    "note": "Bonus, Potongan, Lembur, Kasbon",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "hr-v1",
+    "page": "/change-password",
+    "status": "PASS",
+    "note": "Ganti Password",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance",
+    "status": "PASS",
+    "note": "Ringkasan Finance",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/analytics",
+    "status": "PASS",
+    "note": "Analitik",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/summary",
+    "status": "PASS",
+    "note": "Laporan Harian",
+    "interaction": "fill first input",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/pos",
+    "status": "PASS",
+    "note": "Pendapatan POS",
+    "interaction": "click button \"Validasi Settlement\"",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/suppliers",
+    "status": "PASS",
+    "note": "Pembelian Supplier",
+    "interaction": "click button \"+ Tambah Invoice\"",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/petty-cash",
+    "status": "PASS",
+    "note": "Kas Kecil",
+    "interaction": "click button \"+ Catat Transaksi\"",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/expenses",
+    "status": "FAIL",
+    "note": "",
+    "interaction": "click button \"+ Tambah Expense\"",
+    "error": "error page detected"
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/closing-cash",
+    "status": "PASS",
+    "note": "Closing Kas",
+    "interaction": "click button \"+ Catat Closing\"",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/alerts",
+    "status": "PASS",
+    "note": "Finance Alerts",
+    "interaction": "click button \"ack\"",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/actions",
+    "status": "PASS",
+    "note": "Action Tracker",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/settings",
+    "status": "PASS",
+    "note": "Pengaturan",
+    "interaction": "click button \"Threshold Config\"",
+    "error": ""
+  },
+  {
+    "app": "finance-v1",
+    "page": "/finance/telegram",
+    "status": "PASS",
+    "note": "Hubungkan Telegram",
+    "interaction": "click button \"Dapatkan Kode\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse",
+    "status": "PASS",
+    "note": "Warehouse Overview",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/items",
+    "status": "PASS",
+    "note": "Master Item",
+    "interaction": "click button \"+ Tambah Item\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/locations",
+    "status": "PASS",
+    "note": "Master Location",
+    "interaction": "click button \"+ Tambah Lokasi\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/suppliers",
+    "status": "FAIL",
+    "note": "",
+    "interaction": "click button \"+ Tambah Supplier\"",
+    "error": "error page detected"
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/categories",
+    "status": "PASS",
+    "note": "Master Item Category",
+    "interaction": "click button \"+ Tambah Kategori\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/unit-conversion",
+    "status": "PASS",
+    "note": "Unit Conversion",
+    "interaction": "click button \"+ Tambah Konversi\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/threshold",
+    "status": "FAIL",
+    "note": "",
+    "interaction": "click button \"+ Tambah Threshold\"",
+    "error": "error page detected"
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/penerimaan",
+    "status": "PASS",
+    "note": "Receiving / Penerimaan Barang",
+    "interaction": "click button \"+ Receiving Baru\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/pemakaian",
+    "status": "PASS",
+    "note": "F3 — Bon Pemakaian Dapur",
+    "interaction": "click button \"+ Bon Pemakaian\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/transfer",
+    "status": "PASS",
+    "note": "Transfer Stock",
+    "interaction": "click button \"+ Transfer Baru\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/waste",
+    "status": "PASS",
+    "note": "F4 — Waste / Kerusakan",
+    "interaction": "click button \"+ Catat Waste\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/opname",
+    "status": "PASS",
+    "note": "Stock Opname",
+    "interaction": "click button \"+ Stock Opname Baru\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/ledger",
+    "status": "PASS",
+    "note": "Stock Movement Ledger",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/expiry",
+    "status": "PASS",
+    "note": "Expiry Monitoring",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/purchase-recommendation",
+    "status": "PASS",
+    "note": "Purchase Recommendation",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/purchase-request",
+    "status": "PASS",
+    "note": "Purchase Request",
+    "interaction": "click button \"Buat PR dari 0 CRITICAL/HIGH Rec\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/alerts",
+    "status": "PASS",
+    "note": "Alerts",
+    "interaction": "click button \"ACK\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/actions",
+    "status": "PASS",
+    "note": "Action Tracker",
+    "interaction": "click button \"Start\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/summary",
+    "status": "PASS",
+    "note": "Warehouse Daily Summary",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/dashboard",
+    "status": "PASS",
+    "note": "Dashboard Kontrol Bahan Baku",
+    "interaction": "fill first input",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/telegram",
+    "status": "PASS",
+    "note": "Hubungkan Telegram",
+    "interaction": "click button \"Dapatkan Kode\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/stok",
+    "status": "PASS",
+    "note": "F2 — Kartu Stok Gudang",
+    "interaction": "click button \"Filter\"",
+    "error": ""
+  },
+  {
+    "app": "warehouse-v1",
+    "page": "/warehouse/closing",
+    "status": "PASS",
+    "note": "F5 — Stock Opname Harian (Closing)",
+    "interaction": "click button \"+ Catat Closing\"",
+    "error": ""
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor",
+    "status": "FAIL",
+    "note": "",
+    "interaction": "(no safe interactive element)",
+    "error": "error page detected"
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor/portfolio",
+    "status": "FAIL",
+    "note": "",
+    "interaction": "(no safe interactive element)",
+    "error": "error page detected"
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor/capital",
+    "status": "PASS",
+    "note": "Capital Movements",
+    "interaction": "click button \"+ Catat Capital\"",
+    "error": ""
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor/dividend",
+    "status": "PASS",
+    "note": "Dividend",
+    "interaction": "click button \"+ Declare Dividend\"",
+    "error": ""
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor/returns",
+    "status": "PASS",
+    "note": "Returns / ROI",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor/telegram",
+    "status": "PASS",
+    "note": "Hubungkan Telegram",
+    "interaction": "click button \"Dapatkan Kode\"",
+    "error": ""
+  },
+  {
+    "app": "investor-v1",
+    "page": "/investor/admin",
+    "status": "PASS",
+    "note": "Admin Investor",
+    "interaction": "click button \"+ Investor Baru\"",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops",
+    "status": "PASS",
+    "note": "Ringkasan Operational",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/briefing",
+    "status": "PASS",
+    "note": "Briefing & Shift Board",
+    "interaction": "click button \"Publish Briefing\"",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/opening",
+    "status": "PASS",
+    "note": "Opening Checklist",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/checklist",
+    "status": "PASS",
+    "note": "This page couldn’t load",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/kds",
+    "status": "PASS",
+    "note": "KDS / Live Ops",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/qc",
+    "status": "PASS",
+    "note": "Visual QC Scoring",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/incidents",
+    "status": "PASS",
+    "note": "Incident & Complaint",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/closing",
+    "status": "PASS",
+    "note": "Closing Reconciliation",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/waste",
+    "status": "PASS",
+    "note": "Waste & Stock Issue",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/analytics",
+    "status": "PASS",
+    "note": "Analytics & Configurations",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/ai-assistant",
+    "status": "PASS",
+    "note": "AI Assistant",
+    "interaction": "click button \"Kirim\"",
+    "error": ""
+  },
+  {
+    "app": "ops-v1",
+    "page": "/ops/telegram",
+    "status": "PASS",
+    "note": "Hubungkan Telegram",
+    "interaction": "click button \"Dapatkan Kode\"",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner",
+    "status": "PASS",
+    "note": "Command Center",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/activity",
+    "status": "PASS",
+    "note": "Aktivitas",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/brief",
+    "status": "PASS",
+    "note": "Daily Brief — 20 Agu 2026",
+    "interaction": "click button \"Salin Brief\"",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/bukti",
+    "status": "PASS",
+    "note": "Bukti Foto",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/gudang",
+    "status": "FAIL",
+    "note": "",
+    "interaction": "select option index 1",
+    "error": "error page detected"
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/health",
+    "status": "PASS",
+    "note": "Health Modul",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/investor",
+    "status": "PASS",
+    "note": "Investor — 20 Agu 2026",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/keuangan",
+    "status": "PASS",
+    "note": "Keuangan — 20 Agu 2026",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/operasional",
+    "status": "PASS",
+    "note": "Operasional — 20 Agu 2026",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/penjualan",
+    "status": "PASS",
+    "note": "Penjualan per Item",
+    "interaction": "(no safe interactive element)",
+    "error": ""
+  },
+  {
+    "app": "owner-v1",
+    "page": "/owner/sdm",
+    "status": "PASS",
+    "note": "SDM — 20 Agu 2026",
+    "interaction": "select option index 1",
+    "error": ""
+  },
+  {
+    "app": "hub",
+    "page": "/",
+    "status": "PASS",
+    "note": "YKP ERP",
+    "interaction": "click button \"Preview\"",
+    "error": ""
+  }
+]

@@ -1,14 +1,19 @@
 /**
  * Approve / reject a petty-cash row (urgent entries arrive as PENDING).
  * RBAC: finance_admin+ with amount tiers from lib/approval.
+ *
+ * Optimistic-concurrency guard: the row's `updated_at` is re-checked before
+ * the write; a concurrent double-approve cannot both succeed silently.
  */
 import { NextRequest } from 'next/server';
-import { findRow, updateRow, TABS } from '@/db/sheets';
+import { findRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, unauthorized, badRequest, notFound, handler, forbidden } from '@/lib/http';
+import { ok, unauthorized, badRequest, notFound, handler, forbidden, conflict } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
+import { nowTimestampWib } from '@/lib/format';
 import { canApprove, type Role } from '@/lib/rbac';
 import { transitionApproval, type ApprovalStatus } from '@/lib/approval';
+import { guardedUpdateRow, ConcurrentUpdateError } from '@/lib/concurrency';
 
 export const POST = handler(async (req: NextRequest, { params }) => {
   const s = await getSession();
@@ -27,7 +32,7 @@ export const POST = handler(async (req: NextRequest, { params }) => {
   const to: ApprovalStatus = action === 'approve' ? 'APPROVED' : 'REJECTED';
   const amount = Number(before.credit_out || before.debit_topup || 0);
   const r = transitionApproval(
-    { id: params.id, entity: 'petty_cash', amount, status: current },
+    { id: params.id, entity: 'petty_cash', amount, status: current, createdBy: before.created_by ?? null },
     current, to, { id: s.userId, role: s.role }
   );
   if (!r.ok) return badRequest(r.error ?? 'transition not allowed');
@@ -35,9 +40,15 @@ export const POST = handler(async (req: NextRequest, { params }) => {
   const next = {
     ...before,
     approval_status: to,
-    approved_by: action === 'approve' ? s.userId : ''
+    approved_by: action === 'approve' ? s.userId : '',
+    updated_at: nowTimestampWib()
   };
-  await updateRow(TABS.pettyCash, found.rowNumber, next);
+  try {
+    await guardedUpdateRow(TABS.pettyCash, 'petty_id', params.id, found, next);
+  } catch (e) {
+    if (e instanceof ConcurrentUpdateError) return conflict(e.message);
+    throw e;
+  }
   await logAudit({
     module: 'finance', action: `approve:${action}`, recordType: 'fin_petty_cash',
     recordId: params.id, beforeValue: JSON.stringify(before), afterValue: JSON.stringify(next),

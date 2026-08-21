@@ -1,7 +1,8 @@
 # YKP Hermez
 
-Owner's AI assistant on Telegram. Free-form Indonesian chat over **all** YKP
-module data (finance, warehouse, ops, HR, investor) — read-only by doctrine.
+Owner + department-head AI assistant on Telegram. Free-form Indonesian chat
+over **all** YKP module data (finance, warehouse, ops, HR, investor) —
+read-only by doctrine.
 
 ## What it does
 
@@ -9,22 +10,29 @@ module data (finance, warehouse, ops, HR, investor) — read-only by doctrine.
 - **Commands**: `/today /sales /margin /stok /sdm /alert /audit /foto /help`
 - **AI daily brief** at 22:05 WIB: anomalies + recommendations (not template text)
 - **Watch rules**: "kabari kalau margin geprek < 30%" — evaluated every 30 min
-- **Photo Q&A**: send a struk/weigh-in photo, Hermez analyzes it
-- **Voice notes**: transcribed (lite model), then answered
 - Every Q&A logged to `data/chat-log.jsonl`
+
+## Access control
+
+- **Owner** (whitelist `TELEGRAM_OWNER_IDS`) sees everything.
+- **Department heads** (`hr_admin`, `finance_admin`, `brand_manager`,
+  `outlet_manager`, `supervisor`) are resolved via the HR app's public
+  `/api/hr/telegram-actor` endpoint and see only their brand/outlet.
+- Everyone else gets a polite refusal.
 
 ## Architecture
 
 ```
 Telegram (long poll) → src/index.ts → src/brain.ts (agent loop)
-    → OpenRouter (tool_use) → src/tools.ts
+    → Ollama Cloud (tool_use) → src/tools.ts
     → module PUBLIC endpoints (same ones the owner dashboard uses)
 ```
 
 - No webhook/public URL needed (long polling).
 - **Read-only**: no tool ever mutates company data. Watch rules write only
   to Hermez's own `data/` dir.
-- Owner whitelist via `TELEGRAM_OWNER_IDS`; everyone else gets a refusal.
+- LLM: `deepseek-v4-flash` via Ollama Cloud (text + tool calling; no
+  vision/audio — voice/photo get a polite "not supported" reply).
 
 ## Setup
 
@@ -38,13 +46,12 @@ Required env:
 
 | Var | Value |
 |---|---|
-| `TELEGRAM_BOT_TOKEN` | Same bot as the module alert pushes (united bot) |
+| `TELEGRAM_BOT_TOKEN` | A **dedicated** bot token (do NOT reuse the absen bot — webhook vs long-poll conflict) |
 | `TELEGRAM_OWNER_IDS` | Comma-separated numeric Telegram user IDs (from @userinfobot) |
-| `OPENROUTER_API_KEY` | OpenRouter key |
+| `LLM_API_KEY` | Ollama Cloud key |
+| `LLM_BASE_URL` | `https://ollama.com/v1` |
+| `LLM_MODEL` | `deepseek-v4-flash` |
 | `YKP_*_URL` | Module base URLs (same as owner app) |
-
-Optional: `OPENROUTER_MODEL` (default `anthropic/claude-sonnet-4`),
-`OPENROUTER_LITE_MODEL` (voice transcription, default `google/gemini-2.0-flash-001`).
 
 ## Run
 
@@ -72,3 +79,4 @@ Env vars: the service auto-loads `.env` from its working directory
 - Watch rules + chat offset + chat log live in `data/` (gitignored).
 - Modules must be reachable at the `YKP_*_URL`s; dead modules degrade to
   "data not available" answers instead of crashing the chat.
+

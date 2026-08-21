@@ -1,0 +1,42 @@
+TITLE: YKP Hermez
+H1: Hermez
+
+YKP
+
+Hermez
+
+AI Command Center
+
+Ringkasan Harian
+Peringatan
+Actions
+Warehouse
+Konfigurasi
+Jalankan
+Tes Telegram
+Bot Telegram
+
+Peringatan
+
+Alert Log
+
+Alert otomatis dari 7 trigger Hermez. Perubahan status hanya via owner/manager.
+
+Filter
+Semua severity
+Warning
+Critical
+Semua status
+Open
+Acknowledged
+Resolved
+Semua env
+DEMO
+TESTING
+PRODUCTION
+TANGGAL	OUTLET	TYPE	SEVERITY	MESSAGE	STATUS	ENV	ACTION
+2026-08-16	Laju Kopi Bintaro	Petty Cash Anomaly	WARNING	Petty cash pengeluaran mendekati batas harian di Laju Kopi Bintaro	Open	PRODUCTION	Ubah
+2026-08-16	Suburbuns Depok	Cash Diff	CRITICAL	Selisih kas -Rp75.000 saat closing di Suburbuns Depok	Open	PRODUCTION	Ubah
+2026-08-16	Funkydak Cipete	Late Staff	CRITICAL	3 staf telat hadir > 30 menit di Funkydak Cipete	Open	PRODUCTION	Ubah
+2026-08-15	Uncle Masala Tebet	High Expense	WARNING	Biaya operasional melampaui rata-rata 7 hari di Uncle Masala Tebet	Resolved	PRODUCTION	Ubah
+2026-08-15	Sekarpizza Seturan	Supplier Overdue	WARNING	Invoice jatuh tempo supplier PT Dairy Prima di Sekarpizza Seturan	Ack	PRODUCTION	Ubah

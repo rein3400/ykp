@@ -1,0 +1,87 @@
+TITLE: YKP Warehouse V1
+H1: Action Tracker
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Action Tracker
+
+Auto-created dari HIGH/CRITICAL alerts. PIC + deadline + escalation.
+
+All Status
+OPEN
+IN_PROGRESS
+WAITING_APPROVAL
+DONE
+CANCELLED
+OVERDUE
+Title	Item	Priority	Assigned	Due	Status	Action
+Claim Kopi Arabica Bean discrepancy	Kopi Arabica Bean	HIGH	USR-MEGA-002	2026-06-16	DONE	
+Claim Ayam Fillet discrepancy	Ayam Fillet	HIGH	USR-MEGA-002	2026-06-16	DONE	
+Claim Udang Vaname discrepancy	Udang Vaname	HIGH	USR-MEGA-002	2026-06-16	DONE	
+Claim Udang Vaname discrepancy	Udang Vaname	HIGH	USR-MEGA-002	2026-06-17	DONE	
+Claim Ikan Tenggiri discrepancy	Ikan Tenggiri	HIGH	USR-MEGA-002	2026-06-17	DONE	
+Claim Saus Tomat Kaleng discrepancy	Saus Tomat Kaleng	HIGH	USR-MEGA-002	2026-06-19	DONE	
+Claim Whipping Cream discrepancy	Whipping Cream	HIGH	USR-MEGA-002	2026-06-19	DONE	
+Claim Kentang French Fries discrepancy	Kentang French Fries	HIGH	USR-MEGA-002	2026-06-20	DONE	
+Claim Kentang French Fries discrepancy	Kentang French Fries	HIGH	USR-MEGA-002	2026-06-20	DONE	
+Claim Garam Dapur discrepancy	Garam Dapur	HIGH	USR-MEGA-002	2026-06-21	DONE	
+Claim Lada Hitam Bubuk discrepancy	Lada Hitam Bubuk	HIGH	USR-MEGA-002	2026-06-22	DONE	
+Claim Tomat Cherry discrepancy	Tomat Cherry	HIGH	USR-MEGA-002	2026-06-22	DONE	
+Claim Saus Tomat Kaleng discrepancy	Saus Tomat Kaleng	HIGH	USR-MEGA-002	2026-06-22	DONE	
+Claim Susu Full Cream discrepancy	Susu Full Cream	HIGH	USR-MEGA-002	2026-06-24	DONE	
+Claim Tepung Terigu discrepancy	Tepung Terigu	HIGH	USR-MEGA-002	2026-06-25	DONE	
+Claim Whipping Cream discrepancy	Whipping Cream	HIGH	USR-MEGA-002	2026-06-27	DONE	
+Claim Lada Hitam Bubuk discrepancy	Lada Hitam Bubuk	HIGH	USR-MEGA-002	2026-06-28	DONE	
+Claim Daging Kambing discrepancy	Daging Kambing	HIGH	USR-MEGA-002	2026-06-28	DONE	
+Claim Garam Dapur discrepancy	Garam Dapur	HIGH	USR-MEGA-002	2026-06-30	DONE	
+Claim Lada Hitam Bubuk discrepancy	Lada Hitam Bubuk	HIGH	USR-MEGA-002	2026-07-01	DONE	
+Claim Ikan Tenggiri discrepancy	Ikan Tenggiri	HIGH	USR-MEGA-002	2026-07-01	DONE	
+Claim Ikan Tenggiri discrepancy	Ikan Tenggiri	HIGH	USR-MEGA-002	2026-07-02	DONE	
+Claim Cokelat Couverture discrepancy	Cokelat Couverture	HIGH	USR-MEGA-002	2026-07-02	DONE	
+Claim Tepung Terigu discrepancy	Tepung Terigu	HIGH	USR-MEGA-002	2026-07-02	DONE	
+Claim Gula Pasir discrepancy	Gula Pasir	HIGH	USR-MEGA-002	2026-07-03	DONE	
+Claim Minyak Goreng discrepancy	Minyak Goreng	HIGH	USR-MEGA-002	2026-07-05	DONE	
+Claim Tomat Cherry discrepancy	Tomat Cherry	HIGH	USR-MEGA-002	2026-07-06	DONE	
+Claim Lada Hitam Bubuk discrepancy	Lada Hitam Bubuk	HIGH	USR-MEGA-002	2026-07-06	DONE	
+Claim Butter Unsalted discrepancy	Butter Unsalted	HIGH	USR-MEGA-002	2026-07-07	DONE	
+Claim Keju Mozzarella discrepancy	Keju Mozzarella	HIGH	USR

@@ -1,0 +1,114 @@
+TITLE: YKP Warehouse V1
+H1: Warehouse Daily Summary
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Warehouse Daily Summary
+
+Ringkasan harian untuk Hermez & owner.
+
+Regenerate Hari Ini
+Tanggal	Item Tracked	Di Bawah Min	Waste Count	Waste Value	Closing?	Selisih > Tol	Major Issue
+2026-06-16				368.999			Low stock protein + receiving discrepancy
+2026-06-16				90.016			
+2026-06-16				217.596			Low stock protein + receiving discrepancy
+2026-06-16				99.835			
+2026-06-16				417.343			
+2026-06-17				417.827			
+2026-06-17				80.255			
+2026-06-17				189.777			
+2026-06-17				213.087			
+2026-06-17				377.684			
+2026-06-18				172.958			Low stock protein + receiving discrepancy
+2026-06-18				149.932			Low stock protein + receiving discrepancy
+2026-06-18				341.057			Low stock protein + receiving discrepancy
+2026-06-18				344.537			
+2026-06-18				305.485			
+2026-06-19				169.915			Low stock protein + receiving discrepancy
+2026-06-19				267.478			
+2026-06-19				80.029			Low stock protein + receiving discrepancy
+2026-06-19				154.937			
+2026-06-19				390.686			
+2026-06-20				255.058			Low stock protein + receiving discrepancy
+2026-06-20				176.415			Low stock protein + receiving discrepancy
+2026-06-20				348.963			
+2026-06-20				83.291			
+2026-06-20				124.521			Low stock protein + receiving discrepancy
+2026-06-21				304.707			Low stock protein + receiving discrepancy
+2026-06-21				384.512			
+2026-06-21				202.549			
+2026-06-21				327.323			
+2026-06-21				436.685			Low stock protein + receiving discrepancy
+2026-06-22				86.175			
+2026-06-22				293.378			Low stock protein + receiving discrepancy
+2026-06-22				183.179			
+2026-06-22				130.366			Low stock protein + receiving discrepancy
+2026-06-22				351.684			
+2026-06-23				327.619			
+2026-06-23				220.553			
+2026-06-23				321.968			
+2026-06-23				142.644			Low stock protein + receiving discrepancy
+2026-06-23				175.618			
+2026-06-24				187.008			
+2026-06-24				200.331			Low stock protein + receiving discrepancy
+2026-06-24				53.012			
+2026-06-24				373.251			
+2026-06-24				292.167			
+2026-06-25				433.869			
+2026-06-25				304.253			
+2026-06-25				73.837			Low stock protein + receiving discrepancy
+2026-06-25				442.979			
+2026-06-25				51.511			
+2026-06-26				94.401			
+2026-06-26				271.070			Low stock protein + receiving discrepancy
+2026-06-26				388.173			
+2026-06-26				281.650			
+2026-06-26				294.750			
+2026-06-27				235.317			
+2026-06-27				383.242			Low stock protein + receiving discrepancy
+2026-06-27				306.783			
+2026-06-27				354.779			
+2026-06-27				374.694			Low stock protein + receiving discrepancy
+2026-06-28				275.513			Low stock protein + receiving discrepancy
+2026-06-28				185.526			Low stock protein + receiving discrepancy
+2026-06-28				123.504			Low stock protein + receiving discrepa

@@ -1,0 +1,29 @@
+TITLE: YKP Hermez
+H1: Hermez
+
+YKP
+
+Hermez
+
+AI Command Center
+
+Ringkasan Harian
+Peringatan
+Actions
+Warehouse
+Konfigurasi
+Jalankan
+Tes Telegram
+Bot Telegram
+
+Warehouse
+
+Warehouse Summary
+
+Read-only dari ykp-warehouse-v1. Hermez tidak mengubah stock ledger.
+
+Warehouse belum terhubung: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+Set env WAREHOUSE_SUMMARY_URL / pastikan warehouse running di :3005.
+HIGH/CRITICAL Alerts (OPEN)
+
+Tidak ada alert HIGH/CRITICAL open.

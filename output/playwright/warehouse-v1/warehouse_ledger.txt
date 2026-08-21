@@ -1,0 +1,133 @@
+TITLE: YKP Warehouse V1
+H1: Stock Movement Ledger
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Stock Movement Ledger
+
+Auto immutable. Semua transaksi stok tercatat otomatis. Tidak bisa dihapus — hanya reversal.
+
+Semua Item
+Daging Sapi Sirloin
+Ayam Fillet
+Salmon Fillet
+Keju Mozzarella
+Minyak Goreng
+Gula Pasir
+Kopi Arabica Bean
+Butter Unsalted
+Udang Vaname
+Cokelat Couverture
+Daging Kambing
+Whipping Cream
+Tepung Terigu
+Telur Ayam
+Bawang Bombay
+Tomat Cherry
+Basil Fresh
+Garam Dapur
+Lada Hitam Bubuk
+Saus Tomat Kaleng
+Box Takeaway M
+Cup 12oz
+Susu Full Cream
+Ikan Tenggiri
+Kentang French Fries
+Semua Lokasi
+Gudang Pusat Funkydak
+Kitchen Funkydak Cipete
+Chiller Funkydak Cipete
+Dry Storage Funkydak Cipete
+Gudang Pusat Sekarpizza
+Gudang Pusat Suburbuns
+Gudang Pusat Laju Kopi
+Gudang Pusat Uncle Masala
+OUTLET WAREHOUSE Funkydak Cipete
+KITCHEN Funkydak Cipete
+CHILLER Funkydak Cipete
+DRY STORAGE Funkydak Cipete
+OUTLET WAREHOUSE Funkydak Kemang
+KITCHEN Funkydak Kemang
+CHILLER Funkydak Kemang
+DRY STORAGE Funkydak Kemang
+OUTLET WAREHOUSE Sekarpizza Senopati
+KITCHEN Sekarpizza Senopati
+CHILLER Sekarpizza Senopati
+DRY STORAGE Sekarpizza Senopati
+OUTLET WAREHOUSE Sekarpizza BSD
+KITCHEN Sekarpizza BSD
+CHILLER Sekarpizza BSD
+DRY STORAGE Sekarpizza BSD
+OUTLET WAREHOUSE Suburbuns SCBD
+KITCHEN Suburbuns SCBD
+CHILLER Suburbuns SCBD
+DRY STORAGE Suburbuns SCBD
+OUTLET WAREHOUSE Laju Kopi Menteng
+KITCHEN Laju Kopi Menteng
+CHILLER Laju Kopi Menteng
+DRY STORAGE Laju Kopi Menteng
+OUTLET WAREHOUSE Uncle Masala Blok M
+KITCHEN Uncle Masala Blok M
+CHILLER Uncle Masala Blok M
+DRY STORAGE Uncle Masala Blok M
+Semua Tipe
+OPENING BALANCE
+RECEIPT
+ISSUE
+TRANSFER IN
+TRANSFER OUT
+WASTE
+RETURN IN
+RETURN OUT
+COUNT ADJUSTMENT
+REVERSAL
+PRODUCTION IN
+PRODUCTION OUT
+Waktu	Item	Lokasi	Tipe	Arah	Qty	Unit Cost	Total	Before	After	Ref
+2026-07-15 14:53:49	Daging Sapi Sirloin	Kitchen Funkydak Cipete	OPENING BALANCE	IN	5 kg	175.000	875.000	0	5	smoke_test/
+2026-06-27 9:35:00	Daging Kambing	OUTLET WAREHOUSE Funkydak Cipete	RECEIPT	IN	10 kg	140.000	1.400.000	84	94	receiving/MEGA-RCV-0244
+2026-06-27 8:35:00	Ayam Fillet	OUTLET WAREHOUSE Funkydak Cipete	RECEIPT	IN	33 kg	55.000	1.815.000	18.570.000.000.000.000	21.870.000.000.000.000	receiving/MEGA-RCV-0243
+2026-06-27 11:35:00	Lada Hitam Bubuk	OUTLET WAREHOUSE Funkydak Cipete	RECEIPT	IN	2 kg	120.000	240.000	3	5	receiving/MEGA-RCV-0246
+2026-06-27 10:35:00	Whipping Cream	OUTLET WAREHOUSE Funkydak Cipete	RECEIPT	IN	11 liter	85.000	935.000	42	53	receiving/MEGA-RCV-0245
+2026-06-27 10:00:00	Minyak Goreng	OUTLET WAREHOUSE Funkydak Cipete	ISSUE	OUT	6 liter	18.000	108.000	0	0	stock_issue/MEGA-ISU-0329
+2026-06-26 9:35:00	Ayam Fillet	OUTLET WAREHOUSE Funkydak Cipete	RECEIPT	IN	34 kg	55.000	1.870.000	15.460.000.000.000.000	18.860.000.000.000.000	receiving/MEG

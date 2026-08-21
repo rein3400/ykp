@@ -1,0 +1,83 @@
+TITLE: YKP Finance V1
+H1: Pendapatan POS
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Pendapatan POS
+
+Pendapatan harian outlet dari Moka/POS. Net Sales = Gross − Discount − Refund − Void.
+
+Validasi Settlement
+Import CSV Moka
+Import Item CSV
++ Tambah Transaksi
+Brand
+Semua Brand
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Dari Tanggal
+Sampai Tanggal
+
+GROSS SALES
+
+Rp 0
+
+NET SALES
+
+Rp 0
+
+TRANSAKSI / AOV
+
+0 / Rp 0
+
+SELISIH SETTLEMENT
+
+✓ Cocok
+
+Belum ada transaksi POS.
+Import CSV Moka atau tambah transaksi manual untuk memulai.
+
+Import CSV Moka
+Tambah Transaksi

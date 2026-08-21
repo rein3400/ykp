@@ -1,0 +1,53 @@
+TITLE: YKP Finance V1
+H1: Finance Alerts
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Finance Alerts
+
+Dibuat otomatis saat regenerate laporan harian. HIGH/CRITICAL otomatis membuat action di Action Tracker.
+
+Severity
+Semua
+LOW
+MEDIUM
+HIGH
+CRITICAL
+Status
+Semua
+OPEN
+ACK
+RESOLVED
+
+Alert Log (1)
+
+Tanggal	Outlet	Tipe	Pesan	Severity	Status	
+2026-07-31	Sekarpizza Demangan	SETTLEMENT_MISMATCH	Selisih settlement 26453299 di Sekarpizza Demangan: total metode pembayaran tidak sama dengan net sales (toleransi 10000).	MEDIUM	OPEN	
+ack
+resolve

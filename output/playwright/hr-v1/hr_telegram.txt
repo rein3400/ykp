@@ -1,0 +1,29 @@
+TITLE: YKP HR V1
+H1: Hubungkan Telegram
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Hubungkan Telegram
+
+Hubungkan akun Telegram kamu agar bisa absen, lihat jadwal, dan ajukan cuti langsung dari Telegram.
+
+1. Dapatkan kode
+
+Tekan tombol di bawah untuk membuat kode koneksi.
+
+Dapatkan Kode

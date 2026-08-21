@@ -11,12 +11,12 @@ const insertSchema = z.object({
   employee_id: z.string().min(1),
   adjustment_type: z.enum(['BONUS', 'PENALTY', 'OVERTIME', 'ALLOWANCE', 'CASH_ADVANCE', 'REIMBURSEMENT', 'OTHER']),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  amount: z.coerce.number().min(0),
+  amount: z.coerce.number().min(0).int(),
   reason: z.string().default(''),
   payroll_period: z.string().regex(/^\d{4}-\d{2}$/),
   // Revisi item 13 — bukti/attachment wajib untuk REIMBURSEMENT & recommended for others
   attachment_url: z.string().default(''),
-  quantity: z.coerce.number().min(0).default(1),
+  quantity: z.coerce.number().min(0).int().default(1),
   unit: z.string().default('')
 });
 

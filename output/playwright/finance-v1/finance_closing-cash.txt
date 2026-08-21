@@ -1,0 +1,75 @@
+TITLE: YKP Finance V1
+H1: Closing Kas
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Closing Kas
+
+Hitung kas fisik vs sistem setiap malam. Selisih ≥ Rp50.000 memicu alert HIGH.
+
++ Catat Closing
+Brand
+Semua Brand
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Dari Tanggal
+Sampai Tanggal
+
+CLOSING TERCATAT
+
+0
+
+DENGAN SELISIH
+
+0
+
+TOTAL |SELISIH|
+
+Rp 0
+
+Belum ada closing kas.
+Catat hitungan kas fisik pertama untuk mulai rekonsiliasi harian.
+
+Catat Closing

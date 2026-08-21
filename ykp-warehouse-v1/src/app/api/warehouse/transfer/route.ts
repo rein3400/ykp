@@ -15,6 +15,7 @@ import { appendMovement } from '@/lib/stock-ledger';
 import { evalTransferDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
+import { FraudControlError, assertNotSelfApproval } from '@/lib/fraud-controls';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -145,6 +146,13 @@ export const PUT = handler(async (req: NextRequest) => {
     if (header.status !== 'REQUESTED' && header.status !== 'DRAFT') {
       return badRequest(`Cannot approve from status ${header.status}`);
     }
+    // Fraud control: segregation of duties — requester cannot approve own transfer.
+    try {
+      assertNotSelfApproval(header.requested_by, s.userId, 'transfer');
+    } catch (e) {
+      if (e instanceof FraudControlError) return badRequest(e.message);
+      throw e;
+    }
     const updated = { ...header, status: 'APPROVED', approved_by: s.userId, updated_at: now };
     await updateRow(TABS.transfer, found.rowNumber, updated);
     await logAudit({
@@ -161,7 +169,12 @@ export const PUT = handler(async (req: NextRequest) => {
 
     // Update item dispatched_qty + post TRANSFER_OUT
     for (const it of items) {
-      const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.requested_qty);
+      const qtyRaw = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.requested_qty);
+      // Fraud control: reject negative/NaN qty (negative-stock inversion).
+      if (!Number.isFinite(qtyRaw) || qtyRaw < 0) {
+        return badRequest(`Invalid qty for item ${it.item_id}: must be a finite non-negative number`);
+      }
+      const qty = qtyRaw;
       const itemFound = await findRow(TABS.transferItem, 'transfer_item_id', it.transfer_item_id);
       if (itemFound) {
         await updateRow(TABS.transferItem, itemFound.rowNumber, {
@@ -209,7 +222,12 @@ export const PUT = handler(async (req: NextRequest) => {
 
     let hasDiscrepancy = false;
     for (const it of items) {
-      const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.dispatched_qty);
+      const qtyRaw = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.dispatched_qty);
+      // Fraud control: reject negative/NaN qty (negative-stock inversion).
+      if (!Number.isFinite(qtyRaw) || qtyRaw < 0) {
+        return badRequest(`Invalid qty for item ${it.item_id}: must be a finite non-negative number`);
+      }
+      const qty = qtyRaw;
       const dispatched = Number(it.dispatched_qty);
       const discrepancy = qty - dispatched;
       if (discrepancy !== 0) hasDiscrepancy = true;
@@ -295,6 +313,11 @@ export const PUT = handler(async (req: NextRequest) => {
     }
     const updated = { ...header, status: 'CANCELLED', updated_at: now };
     await updateRow(TABS.transfer, found.rowNumber, updated);
+    await logAudit({
+      module: 'warehouse', action: 'cancel', recordType: 'transfer',
+      recordId: body.transfer_id, beforeValue: JSON.stringify(header),
+      afterValue: JSON.stringify(updated), userId: s.userId
+    }).catch(() => null);
     return ok(updated);
   }
 

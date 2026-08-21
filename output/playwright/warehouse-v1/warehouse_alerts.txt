@@ -1,0 +1,214 @@
+TITLE: YKP Warehouse V1
+H1: Alerts
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Alerts
+
+14 alert types per brief §19. HIGH/CRITICAL → auto action.
+
+All Severity
+INFO
+LOW
+MEDIUM
+HIGH
+CRITICAL
+All Status
+OPEN
+ACKNOWLEDGED
+IN_PROGRESS
+RESOLVED
+CLOSED
+IGNORED
+RECEIVING DISCREPANCYCRITICAL2026-07-24 10:17:50
+ACK
+Resolve
+Ignore
+
+Receiving discrepancy: ITM-003
+
+condition: DAMAGED; variance: accepted 12 vs ordered 0 (100.0%)
+
+Action: Claim to supplier today
+
+RECEIVING DISCREPANCYCRITICAL2026-07-24 10:17:45
+ACK
+Resolve
+Ignore
+
+Receiving discrepancy: ITM-003
+
+condition: DAMAGED; variance: accepted 12 vs ordered 0 (100.0%)
+
+Action: Claim to supplier today
+
+RECEIVING DISCREPANCYCRITICAL2026-07-24 10:17:42
+ACK
+Resolve
+Ignore
+
+Receiving discrepancy: ITM-003
+
+condition: DAMAGED; variance: accepted 12 vs ordered 0 (100.0%)
+
+Action: Claim to supplier today
+
+RECEIVING DISCREPANCYMEDIUM2026-07-15 9:05:00
+ACKNOWLEDGED
+
+Receiving discrepancy: Basil Fresh
+
+Ordered 36, accepted 34, condition GOOD
+
+Action: Claim to supplier
+
+RECEIVING DISCREPANCYMEDIUM2026-07-15 9:05:00
+ACKNOWLEDGED
+
+Receiving discrepancy: Tomat Cherry
+
+Ordered 10, accepted 8, condition GOOD
+
+Action: Claim to supplier
+
+RECEIVING DISCREPANCYMEDIUM2026-07-15 9:05:00
+ACK
+Resolve
+Ignore
+
+Receiving discrepancy: Daging Kambing
+
+Ordered 7, accepted 5, condition GOOD
+
+Action: Claim to supplier
+
+LOW STOCKHIGH2026-07-15 10:30:00
+RESOLVED
+
+Low stock: Kopi Arabica Bean
+
+Available 4.699999999999999 kg at Funkydak Cipete (min 5)
+
+Action: Create purchase recommendation
+
+LOW STOCKHIGH2026-07-15 10:30:00
+ACK
+Resolve
+Ignore
+
+Low stock: Butter Unsalted
+
+Available 1 kg at Funkydak Cipete (min 5)
+
+Action: Create purchase recommendation
+
+STOCKOUT RISKCRITICAL2026-07-15 10:30:00
+ACK
+Resolve
+Ignore
+
+Stockout: Keju Mozzarella
+
+Available 0 kg at Funkydak Cipete (min 4)
+
+Action: Create purchase recommendation
+
+STOCKOUT RISKCRITICAL2026-07-15 10:30:00
+IGNORED
+
+Stockout: Keju Mozzarella
+
+Available 0 kg at Funkydak Cipete (min 4)
+
+Action: Create purchase recommendation
+
+STOCKOUT RISKCRITICAL2026-07-15 10:30:00
+ACK
+Resolve
+Ignore
+
+Stockout: Udang Vaname
+
+Available 0 kg at Sekarpizza BSD (min 4)
+
+Action: Create purchase recommendation
+
+RECEIVING DISCREPANCYHIGH2026-07-14 9:05:00
+ACK
+Resolve
+Ignore
+
+Receiving discrepancy: Tepung Terigu
+
+Ordered 33, accepted 32, condition DAMAGED
+
+Action: Claim to supplier
+
+RECEIVING DISCREPANCYMEDIUM2026-07-14 9:05:00
+ACK
+Resolve
+Ignore
+
+Receiving discrepancy: Tepung Terigu
+
+Ordered 30, accepted 28, condition GOOD
+
+Action: Claim to supplier
+
+STOCKOUT RISKCRITICAL2026-07-14 10:30:00
+ACK
+Resolve
+Ignore
+
+Stockout: Cokelat Couverture
+
+Available 0 kg at Funkydak Cipete (min 3)
+
+Action: Create purchase recommendation
+
+LOW STOCKHIGH2026-07-14 10:30:00
+ACK
+Resolve
+Ignore
+
+Low 

@@ -1,0 +1,58 @@
+TITLE: YKP Warehouse V1
+H1: Purchase Recommendation
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Purchase Recommendation
+
+Reorder point, days of cover, suggested purchase. Brief §10.
+
+Generate Recommendations
+Priority	Item	Available	Days Cover	Reorder	Suggested	Est. Value	Supplier	Reason
+CRITICAL	Salmon Fillet	0	0	5	16 kg	5.120.000	PT Laut Segar	Days of cover < lead time
+CRITICAL	Keju Mozzarella	0	0	8	16 kg	2.320.000	Dairy Fresh Indo	Days of cover < lead time
+CRITICAL	Kopi Arabica Bean	—	1,3	13,5	21 kg	4.620.000	CV Bahan Kering Jaya	Days of cover < lead time
+CRITICAL	Kopi Arabica Bean	—	2,4	13,5	15 kg	3.300.000	CV Bahan Kering Jaya	Days of cover < lead time
+CRITICAL	Udang Vaname	0	0	5	16 kg	1.760.000	PT Laut Segar	Days of cover < lead time
+MEDIUM	Daging Sapi Sirloin	14	2,8	13	15 kg	2.700.000	PT Daging Nusantara	Available <= reorder point
+MEDIUM	Keju Mozzarella	11,6	3,9	8	4 kg	580.000	Dairy Fresh Indo	Available <= reorder point

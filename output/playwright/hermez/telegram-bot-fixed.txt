@@ -1,0 +1,39 @@
+TITLE: YKP Hermez
+H1: Hermez
+
+YKP
+
+Hermez
+
+AI Command Center
+
+Ringkasan Harian
+Peringatan
+Actions
+Warehouse
+Konfigurasi
+Jalankan
+Tes Telegram
+Bot Telegram
+
+Bot Telegram
+
+Telegram Bot
+
+Bot dialog dua arah: /brief /omzet /hr /alerts /sop + tanya AI bebas. Credentials dari Konfigurasi → Integrasi.
+
+Status Bot
+berhenti
+Mode
+stopped
+Started
+-
+Messages handled
+0
+Last update id
+0
+Start polling
+Stop
+Refresh
+
+Catatan: worker container dedicated belum di-deploy di prod. Klik "Start polling" untuk jalankan bot dialog in-process di web service (valid untuk demo; restart container akan stop lagi). Whitelist: OWNER_CHAT_ID (comma-list) + OWNER_USER_IDS (DM owner).

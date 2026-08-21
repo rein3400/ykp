@@ -13,6 +13,7 @@ import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } fro
 import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
+import { FraudControlError, assertNotSelfApproval } from '@/lib/fraud-controls';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -66,6 +67,18 @@ export const POST = handler(async (req: NextRequest) => {
   const issueId = nextSequentialIdSync('ISU');
   const today = formatDateWib(new Date());
 
+  const requestedBy = body.requested_by ?? s.userId;
+  const issuedBy = body.issued_by ?? s.userId;
+  // Fraud control: segregation of duties — the person who requested the issue
+  // cannot be the one who issues it. Brief permits auto-approve for internal
+  // issues, but SoD is the fraud-control gate.
+  try {
+    assertNotSelfApproval(requestedBy, issuedBy, 'stock_issue');
+  } catch (e) {
+    if (e instanceof FraudControlError) return badRequest(e.message);
+    throw e;
+  }
+
   const header: Record<string, string> = {
     issue_id: issueId,
     issue_number: issueId,
@@ -76,8 +89,8 @@ export const POST = handler(async (req: NextRequest) => {
     source_location_id: body.source_location_id,
     destination_location_id: body.destination_location_id ?? '',
     issue_type: body.issue_type ?? 'SHIFT_ISSUE',
-    requested_by: body.requested_by ?? s.userId,
-    issued_by: body.issued_by ?? s.userId,
+    requested_by: requestedBy,
+    issued_by: issuedBy,
     received_by: body.received_by ?? '',
     approval_status: 'APPROVED',
     notes: body.notes ?? '',

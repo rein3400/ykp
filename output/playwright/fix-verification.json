@@ -1,0 +1,58 @@
+[
+  {
+    "app": "ops-v1",
+    "page": "/ops/checklist",
+    "status": "PASS",
+    "note": "Checklist Operasional",
+    "error": ""
+  },
+  {
+    "app": "hermez",
+    "page": "/actions",
+    "status": "PASS",
+    "note": "Hermez",
+    "error": ""
+  },
+  {
+    "app": "hermez",
+    "page": "/alerts",
+    "status": "PASS",
+    "note": "Hermez",
+    "error": ""
+  },
+  {
+    "app": "hermez",
+    "page": "/config",
+    "status": "PASS",
+    "note": "Hermez",
+    "error": ""
+  },
+  {
+    "app": "hermez",
+    "page": "/run",
+    "status": "PASS",
+    "note": "Hermez",
+    "error": ""
+  },
+  {
+    "app": "hermez",
+    "page": "/telegram-bot",
+    "status": "PASS",
+    "note": "Hermez",
+    "error": ""
+  },
+  {
+    "app": "hermez",
+    "page": "/telegram-test",
+    "status": "PASS",
+    "note": "Hermez",
+    "error": ""
+  },
+  {
+    "app": "hermez",
+    "page": "/warehouse",
+    "status": "PASS",
+    "note": "",
+    "error": ""
+  }
+]

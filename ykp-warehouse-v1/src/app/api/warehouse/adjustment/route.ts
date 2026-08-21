@@ -36,6 +36,10 @@ export const POST = handler(async (req: NextRequest) => {
     return badRequest(`adjustment_type must be one of: ${ADJUSTMENT_TYPES.join(', ')}`);
   }
   if (!body.qty_difference) return badRequest('qty_difference is required');
+  // Invariant §2: integer IDR; reject non-numeric so NaN never reaches the ledger.
+  if (!Number.isFinite(Number(body.qty_difference))) {
+    return badRequest('qty_difference must be a finite number');
+  }
 
   // Fraud control: reason is mandatory for the audit trail.
   try {
@@ -117,6 +121,10 @@ export const PUT = handler(async (req: NextRequest) => {
 
   if (newStatus === 'APPROVED') {
     const qtyDiff = Number(found.row.qty_difference);
+    // Guard: never post a non-finite quantity to the ledger (corrupts the chain).
+    if (!Number.isFinite(qtyDiff)) {
+      return badRequest('qty_difference is not a finite number — cannot post to ledger');
+    }
     await appendMovement({
       movementType: 'COUNT_ADJUSTMENT',
       direction: 'ADJUSTMENT',

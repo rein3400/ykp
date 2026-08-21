@@ -7,7 +7,7 @@ import { findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { ok, unauthorized, badRequest, notFound, handler, forbidden } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
-import { nowTimestampWib } from '@/lib/format';
+import { nowTimestampWib, parseIdr } from '@/lib/format';
 import { can, type Role } from '@/lib/rbac';
 
 const EDITABLE = [
@@ -29,7 +29,14 @@ export const PATCH = handler(async (req: NextRequest, { params }) => {
   for (const k of EDITABLE) {
     if (body[k] !== undefined) next[k] = body[k];
   }
-  if (next.amount !== undefined && Number(next.amount) <= 0) return badRequest('amount must be > 0');
+  // Bug #5: normalize amount to finite integer IDR (parseIdr strips Rp/./,).
+  // The old `Number(next.amount) <= 0` check passed NaN (NaN <= 0 is false),
+  // letting "Rp 1.000.000" be stored verbatim and read as 0 downstream.
+  if (body.amount !== undefined) {
+    const amt = parseIdr(body.amount);
+    if (!Number.isFinite(amt) || amt <= 0) return badRequest('amount must be > 0');
+    next.amount = String(Math.trunc(amt));
+  }
   next.updated_at = nowTimestampWib();
 
   await updateRow(TABS.expense, found.rowNumber, next);

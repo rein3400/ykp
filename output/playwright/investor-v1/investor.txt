@@ -1,0 +1,54 @@
+TITLE: YKP Investor V1
+H1: Investor Dashboard
+
+YKP Investor
+
+owner · owner
+
+Dashboard
+Portfolio
+Capital
+Dividend
+Returns
+Telegram
+Admin
+Logout
+Investor Dashboard
+
+Snapshot multi-brand untuk owner & investor.
+
+Regenerate Summary
+
+ACTIVE INVESTORS
+
+12 investor
+
+TOTAL CAPITAL INJECTED
+
+Rp 6.248.000.000
+
+CAPITAL WITHDRAWN
+
+Rp 1.748.000.000
+
+NET CAPITAL
+
+Rp 4.500.000.000
+
+TOTAL REVENUE (FIN)
+
+Rp 0
+
+TOTAL PROFIT (FIN)
+
+Rp 0
+
+DIVIDEND PAID
+
+Rp 4.425.267.000
+
+BRANDS TRACKED
+
+19 holding
+
+Generated 2026-08-20 17:06:34 · Finance source: sheets (10 rows)

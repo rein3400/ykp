@@ -1,0 +1,150 @@
+TITLE: YKP ERP — Unified Dashboard
+H1: YKP ERP
+
+YKP ERP
+
+Unified Dashboard
+
+Cari module…
+⌘K
+OW
+owner
+Owner
+Logout
+Selamat sore, owner 👋
+
+Pilih module di bawah atau tekan ⌘K untuk cari.
+
+All systems operational
+· 6/6 online
+Updated 17.04.46
+Online
+Owner Command
+
+Cross-module read-only overview
+
+PING
+39ms
+ROWS
+—
+LAST
+never
+owner.oseedigital.tech
+Buka
+Preview
+Online
+HR
+
+Attendance, employees, roster
+
+PING
+697ms
+ROWS
+2.495
+LAST
+never
+hr-v1.oseedigital.tech
+Buka
+Preview
+Online
+Finance
+
+POS, expenses, petty cash, daily summary
+
+PING
+34ms
+ROWS
+—
+LAST
+never
+finance.oseedigital.tech
+Buka
+Preview
+Online
+Warehouse
+
+Stock, receiving, usage, waste
+
+PING
+22ms
+ROWS
+—
+LAST
+never
+warehouse.oseedigital.tech
+Buka
+Preview
+Online
+Investor
+
+Portfolio, capital, dividends
+
+PING
+643ms
+ROWS
+—
+LAST
+never
+investor.oseedigital.tech
+Buka
+Preview
+Online
+Ops
+
+Daily operations, incidents, actions
+
+PING
+575ms
+ROWS
+—
+LAST
+never
+ops.oseedigital.tech
+Buka
+Preview
+System Status
+
+Latency timeseries · 30s refresh
+
+Refresh
+Owner Command
+owner.oseedigital.tech
+39ms
+Online
+HR
+hr-v1.oseedigital.tech
+697ms
+Online
+Finance
+finance.oseedigital.tech
+34ms
+Online
+Warehouse
+warehouse.oseedigital.tech
+22ms
+Online
+Investor
+investor.oseedigital.tech
+643ms
+Online
+Ops
+ops.oseedigital.tech
+575ms
+Online
+YKP ERP
+
+Unified dashboard for the local YKP family: Owner, HR, Finance, Warehouse, Investor, Ops.
+
+Modules
+Owner Command
+HR
+Finance
+Warehouse
+Investor
+Ops
+Build
+
+v0.1.0 · 2026-08-20
+Repository ↗
+
+© YKP Developer · Made with care for the pilot launch.

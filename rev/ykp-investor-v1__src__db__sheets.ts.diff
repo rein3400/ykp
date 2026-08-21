@@ -1,0 +1,20 @@
+--- LOCAL ykp-investor-v1/src/db/sheets.ts
++++ VPS ykp-investor-v1/src/db/sheets.ts
+@@ -57,7 +57,8 @@
+   // ── Photo/document attachments (Drive-backed) + MOU + share history ──
+   attachments: 'investor_attachments',
+   documents: 'investor_documents',
+-  shareHistory: 'investor_share_history'
++  shareHistory: 'investor_share_history',
++  telegramLinkCodes: 'telegram_link_codes',
+ } as const;
+ export type TabName = (typeof TABS)[keyof typeof TABS];
+ 
+@@ -86,6 +87,7 @@
+     'summary_id', 'date', 'total_revenue', 'total_profit', 'total_capital',
+     'active_investors', 'dividend_declared', 'growth_pct', 'created_at'
+   ],
++  [TABS.telegramLinkCodes]: ['code', 'user_id', 'expires_at', 'telegram_chat_id', 'consumed_at', 'created_at', 'division'],
+   [TABS.users]: [
+     'user_id', 'username', 'password_hash', 'role',
+     'investor_id', 'active_status', 'created_at', 'last_login_at'

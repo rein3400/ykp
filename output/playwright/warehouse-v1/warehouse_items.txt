@@ -1,0 +1,76 @@
+TITLE: YKP Warehouse V1
+H1: Master Item
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Master Item
+
+32 kolom per brief §8.1 — item_type, unit, supplier, stok, lead time, expiry, criticality.
+
++ Tambah Item
+Kode	Nama	Kategori	Unit	Avg Harga	Min/Safety/Max	Reorder	Lead Time	Criticality
+ITM-001	Daging Sapi Sirloin	Protein	kg	175.000	5/3/25	13	2 h	CRITICAL
+ITM-002	Ayam Fillet	Protein	kg	53.000	10/5/40	27	2 h	CRITICAL
+ITM-003	Salmon Fillet	Protein	kg	315.000	3/2/12	8	2 h	HIGH
+ITM-004	Keju Mozzarella	Dairy	kg	142.000	4/2/15	8	2 h	HIGH
+ITM-005	Minyak Goreng	Dry Goods	liter	17.500	20/10/60	30	1 h	MEDIUM
+ITM-006	Gula Pasir	Dry Goods	kg	13.800	15/8/50	23	1 h	MEDIUM
+ITM-007	Kopi Arabica Bean	Dry Goods	kg	215.000	5/3/20	10	3 h	HIGH
+ITM-008	Butter Unsalted	Dairy	kg	92.000	5/3/15	9	2 h	MEDIUM
+ITM-009	Udang Vaname	Protein	kg	108.000	4/2/15	8	2 h	HIGH
+ITM-010	Cokelat Couverture	Dry Goods	kg	160.000	3/2/10	6	3 h	MEDIUM
+ITM-011	Daging Kambing	Protein	kg	135.800	4/2/15	7	2 h	HIGH
+ITM-012	Whipping Cream	Dairy	liter	82.450	6/3/18	11	2 h	HIGH
+ITM-013	Tepung Terigu	Dry Goods	kg	11.640	25/15/80	27	1 h	MEDIUM
+ITM-014	Telur Ayam	Protein	kg	27.160	10/5/30	11	1 h	MEDIUM
+ITM-015	Bawang Bombay	Produce	kg	21.340	8/4/25	9	1 h	LOW
+ITM-016	Tomat Cherry	Produce	kg	43.650	3/2/10	4	1 h	MEDIUM
+ITM-017	Basil Fresh	Produce	ikat	7.760	10/5/30	13	1 h	HIGH
+ITM-018	Garam Dapur	Spice & Seasoning	kg	4.850	5/3/20	5	2 h	LOW
+ITM-019	Lada Hitam Bubuk	Spice & Seasoning	kg	116.400	1/0.5/5	1	3 h	LOW
+ITM-020	Saus Tomat Kaleng	Dry Goods	kg	33.950	8/4/25	12	2 h	MEDIUM
+ITM-021	Box Takeaway M	Packaging	pcs	1.455	200/100/1000	340	3 h	MEDIUM
+ITM-022	Cup 12oz	Packaging	pcs	776	300/150/1500	510	3 h	MEDIUM
+ITM-023	Susu Full Cream	Dairy	liter	17.460	15/8/40	18	1 h	HIGH
+ITM-024	Ikan Tenggiri	Seafood	kg	92.150	5/2/15	5	1 h	HIGH
+ITM-025	Kentang French Fries	Dry Goods	kg	40.740	10/5/40	21	2 h	MEDIUM

@@ -23,7 +23,7 @@ const insertSchema = z.object({
   brand_id: z.string().min(1),
   outlet_id: z.string().min(1),
   supervisor_id: z.string().default(''),
-  basic_salary: z.coerce.number().min(0).default(0),
+  basic_salary: z.coerce.number().min(0).int().default(0),
   salary_type: z.string().default('MONTHLY'),
   employment_status: z.string().default('PROBATION'),
   contract_type: z.string().default(''),

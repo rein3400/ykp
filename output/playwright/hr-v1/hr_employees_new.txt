@@ -1,0 +1,59 @@
+TITLE: YKP HR V1
+H1: Tambah Karyawan
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Tambah Karyawan
+Nama Lengkap *
+Nama Panggilan
+Gender
+Laki-laki
+Perempuan
+Role
+Staff
+Supervisor
+Outlet Manager
+Brand Manager
+Posisi
+Brand *
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet ID *
+Telepon
+Email
+Gaji Pokok (Rp) *
+Tipe Gaji
+Bulanan
+Harian
+Per Shift
+Per Jam
+Status Kerja
+Probation
+Kontrak
+Tetap
+Tanggal Masuk *
+Bank
+No Rekening
+Atas Nama
+Simpan
+Batal
+
+Catatan: data rekening bank hanya bisa diliat HR Admin/Owner/Finance. Perubahan rekening wajib approval + audit log.

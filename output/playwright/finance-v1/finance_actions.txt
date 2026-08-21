@@ -1,0 +1,46 @@
+TITLE: YKP Finance V1
+H1: Action Tracker
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Action Tracker
+
+Tindak lanjut alert HIGH/CRITICAL dengan PIC dan deadline.
+
+Status
+Semua
+OPEN
+IN_PROGRESS
+WAITING_APPROVAL
+DONE
+CANCELLED
+OVERDUE
+
+Belum ada action.
+Action dibuat otomatis dari alert HIGH/CRITICAL saat regenerate laporan harian.

@@ -1,0 +1,208 @@
+TITLE: YKP Investor V1
+H1: Admin Investor
+
+YKP Investor
+
+owner · owner
+
+Dashboard
+Portfolio
+Capital
+Dividend
+Returns
+Telegram
+Admin
+Logout
+Admin Investor
+
+Tambah akun investor dengan MOU, atur persen bagi hasil per brand, dan buat proposal dividen otomatis.
+
++ Investor Baru
+INVESTOR	LOGIN	BAGI HASIL	MOU
+
+
+YKP Owner
+
+founder · active · gabung 2024-01-01
+
+	—	
+Funkydak:
+55%
+Simpan
+Sekarpizza:
+40%
+Simpan
+Suburbuns:
+50%
+Simpan
+Laju Kopi:
+45%
+Simpan
+Uncle Masala:
+60%
+Simpan
+	—
+
+
+PT Modal Maju
+
+institutional · active · gabung 2023-06-15
+
+	investor_inst	
+Funkydak:
+30%
+Simpan
+Sekarpizza:
+20%
+Simpan
+	—
+
+
+Andi Wijaya
+
+individual · active · gabung 2023-09-01
+
+	investor1	
+Funkydak:
+10%
+Simpan
+	—
+
+
+Sari Capital Partners
+
+institutional · active · gabung 2024-01-20
+
+	—	
+Funkydak:
+10%
+Simpan
+Uncle Masala:
+25%
+Simpan
+	—
+
+
+Budi Santoso
+
+individual · active · gabung 2024-03-10
+
+	investor2	
+Funkydak:
+5%
+Simpan
+	—
+
+
+CV Nusantara Ventures
+
+angel · active · gabung 2024-05-05
+
+	—	
+Sekarpizza:
+25%
+Simpan
+Uncle Masala:
+15%
+Simpan
+	—
+
+
+Rina Kusuma
+
+individual · active · gabung 2024-07-12
+
+	—	
+Sekarpizza:
+15%
+Simpan
+	—
+
+
+Family Office Pratama
+
+family_office · active · gabung 2024-09-01
+
+	—	
+Suburbuns:
+30%
+Simpan
+	—
+
+
+Joko Prasetyo
+
+individual · active · gabung 2025-01-15
+
+	—	
+Suburbuns:
+20%
+Simpan
+	—
+
+
+PT Investasi Bahari
+
+institutional · active · gabung 2025-04-01
+
+	—	
+Laju Kopi:
+30%
+Simpan
+	—
+
+
+Maya Putri
+
+individual · active · gabung 2025-06-20
+
+	—	
+Laju Kopi:
+15%
+Simpan
+	—
+
+
+Seed Fund Asia
+
+vc · active · gabung 2025-08-08
+
+	—	
+Laju Kopi:
+10%
+Simpan
+	—
+
+Proposal dividen otomatis (profit brand × % bagi hasil)
+
+Buat Proposal
+PERIODE	INVESTOR	JUMLAH	STATUS	AKSI
+2025-Q4-BR-005	YKP Owner	Rp18.502.000	PAID	
+2025-Q4-BR-005	Sari Capital Partners	Rp17.547.000	PAID	
+2025-Q4-BR-005	CV Nusantara Ventures	Rp6.153.000	PAID	
+2025-Q4-BR-004	YKP Owner	Rp57.193.000	PAID	
+2025-Q4-BR-004	PT Investasi Bahari	Rp33.570.000	PAID	
+2025-Q4-BR-004	Maya Putri	Rp23.805.000	PAID	
+2025-Q4-BR-004	Seed Fund Asia	Rp10.600.000	PAID	
+2025-Q4-BR-003	YKP Owner	Rp56.888.000	PAID	
+2025-Q4-BR-003	Family Office Pratama	Rp19.772.000	PAID	
+2025-Q4-BR-003	Joko Prasetyo	Rp34.838.000	PAID	
+2025-Q4-BR-002	YKP Owner	Rp119.866.000	PAID	
+2025-Q4-BR-002	CV Nusantara Ventures	Rp78.493.000	PAID	
+2025-Q4-BR-002	PT Modal Maju	Rp24.821.000	PAID	
+2025-Q4-BR-002	Rina Kusuma	Rp36.101.000	PAID	
+2025-Q4-BR-001	YKP Owner	Rp157.880.000	PAID	
+2025-Q4-BR-001	PT Modal Maju	Rp78.118.000	PAID	
+2025-Q4-BR-001	Andi Wijaya	Rp20.735.000	PAID	
+2025-Q4-BR-001	Sari Capital Partners	Rp19.582.000	PAID	
+2025-Q4-BR-001	Budi Santoso	Rp19.661.000	PAID	
+2025-Q3-BR-005	YKP Owner	Rp46.909.000	PAID	
+2025-Q3-BR-005	Sari Capital Partners	Rp15.189.000	PAID	
+2025-Q3-BR-005	CV Nusantara Ventures	Rp4.874.000	PAID	
+2025-Q3-BR-004	YKP Owner	Rp66.648.000	PAID	
+2025-Q3-BR-004	PT Investasi Bahari	Rp17.773.000	PAID	
+2025-Q3-BR-004	Maya Putri	Rp6.298.000	PAID	
+2025-Q3-BR-004	Seed Fund Asia	Rp6.459.000	PAID	
+2025-Q3-BR-003	YKP Owner	Rp82.246.000	PAID	
+2025-Q3-BR-003	Family Office Pratama	Rp35.420.000	PAID	
+2025-

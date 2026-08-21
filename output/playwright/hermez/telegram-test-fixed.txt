@@ -1,0 +1,26 @@
+TITLE: YKP Hermez
+H1: Hermez
+
+YKP
+
+Hermez
+
+AI Command Center
+
+Ringkasan Harian
+Peringatan
+Actions
+Warehouse
+Konfigurasi
+Jalankan
+Tes Telegram
+Bot Telegram
+
+Tes Telegram
+
+Telegram Test
+
+Kirim pesan test ke group Telegram (OWNER_CHAT_ID) via engine.sendTelegramMessage.
+
+Pesan
+Kirim

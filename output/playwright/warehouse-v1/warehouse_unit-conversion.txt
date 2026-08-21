@@ -1,0 +1,58 @@
+TITLE: YKP Warehouse V1
+H1: Unit Conversion
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Unit Conversion
+
+Konversi antar satuan: 1 carton = 10 kg, 1 kg = 1000 gram, dll.
+
++ Tambah Konversi
+Item	Dari	Ke	Faktor
+Daging Sapi Sirloin	kg	gram	1000
+Minyak Goreng	liter	ml	1000
+Daging Sapi Sirloin	kg	gram	1000
+Minyak Goreng	liter	ml	1000
+Tepung Terigu	sak	kg	25
+Box Takeaway M	pack	pcs	50
+Cup 12oz	sleeve	pcs	50

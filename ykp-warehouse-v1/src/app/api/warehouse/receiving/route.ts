@@ -12,9 +12,10 @@ import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertSupplier, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
-import { appendMovement } from '@/lib/stock-ledger';
+import { appendMovement, upsertBatchStockOnReceipt } from '@/lib/stock-ledger';
 import { evalReceivingDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
+import { findOpenAlert } from '@/lib/alert-dedupe';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 import { FraudControlError, assertReceivingVerification, checkReceivingThreeWay } from '@/lib/fraud-controls';
 
@@ -59,6 +60,15 @@ export const POST = handler(async (req: NextRequest) => {
   };
 
   if (!body.items || body.items.length === 0) return badRequest('At least one item is required');
+
+  // Fraud control: qty_accepted must never exceed qty_delivered (more accepted
+  // than delivered is a silent over-receipt / shrinkage vector).
+  for (const it of body.items) {
+    const accepted = it.qty_accepted ?? it.qty_delivered;
+    if (Number(accepted) > Number(it.qty_delivered ?? 0)) {
+      return badRequest(`qty_accepted (${accepted}) cannot exceed qty_delivered (${it.qty_delivered ?? 0}) for item ${it.item_id}`);
+    }
+  }
 
   // Hard gate: photo proof (weight/measurement) is mandatory per owner directive.
   // Accept EITHER an attachments-tab photo (photo_attachment_id) OR evidence
@@ -208,6 +218,22 @@ export const POST = handler(async (req: NextRequest) => {
         createdBy: s.userId,
         notes: `Receiving ${receivingId}`
       }).catch((e) => console.error('[receiving] ledger post failed:', e));
+
+      // Keep batch_stock in sync with this receipt so FEFO/expiry monitoring
+      // and inventory valuation are not stale after a receipt. Only applies
+      // when the receiving line carries a batch_number.
+      if (it.batch_number) {
+        await upsertBatchStockOnReceipt({
+          itemId: it.item_id,
+          locationId: body.destination_location_id,
+          batchNumber: it.batch_number,
+          expiryDate: it.expiry_date,
+          qtyAccepted,
+          unit: it.unit,
+          unitCost: it.unit_price || 0,
+          createdBy: s.userId
+        }).catch((e) => console.error('[receiving] batch_stock upsert failed:', e));
+      }
     }
 
     // Create alert on discrepancy — severity escalated by owner thresholds:
@@ -240,6 +266,11 @@ export const POST = handler(async (req: NextRequest) => {
             alert.message = `${alert.message}; variance: ${t.check.messages.join('; ')}`;
           }
         }
+        // Dedupe: do not create a second OPEN alert for the same
+        // (item_id, alert_type, reference_id). Reuse the existing one.
+        const refId = alert.referenceId ?? receivingId;
+        const existing = await findOpenAlert(alert.itemId ?? it.item_id, alert.alertType, refId).catch(() => null);
+        if (existing) continue;
         const alertId = nextSequentialIdSync('ALR');
         const alertRow: Record<string, string> = {
           alert_id: alertId,

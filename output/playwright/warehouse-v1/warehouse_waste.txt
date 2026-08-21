@@ -1,0 +1,122 @@
+TITLE: YKP Warehouse V1
+H1: F4 — Waste / Kerusakan
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+F4 — Waste / Kerusakan
+
+WAJIB FOTO. Tanpa foto = tidak diakui sebagai waste (jadi tanggung jawab PIC).
+
++ Catat Waste
+Tanggal	Item	Qty	Alasan	Foto	Est. Loss	PIC
+2026-06-16	Butter Unsalted	2.3 kg	MEGA PORTION_ERROR	
+	218.500	USR-MEGA-006
+2026-06-16	Keju Mozzarella	1.8 kg	MEGA PORTION_ERROR	
+	261.000	USR-MEGA-006
+2026-06-16	Daging Sapi Sirloin	2.8 kg	MEGA SPILL	
+	504.000	USR-MEGA-006
+2026-06-16	Butter Unsalted	0.5 kg	MEGA OVERPRODUCTION	
+	47.500	USR-MEGA-006
+2026-06-16	Cokelat Couverture	0.7 kg	MEGA SPILL	
+	115.500	USR-MEGA-006
+2026-06-16	Salmon Fillet	0.8 kg	MEGA QC_REJECT	
+	256.000	USR-MEGA-006
+2026-06-16	Salmon Fillet	3 kg	MEGA EXPIRED	
+	960.000	USR-MEGA-006
+2026-06-16	Minyak Goreng	0.5 liter	MEGA PORTION_ERROR	
+	9.000	USR-MEGA-006
+2026-06-16	Minyak Goreng	1.7 liter	MEGA QC_REJECT	
+	30.600	USR-MEGA-006
+2026-06-16	Gula Pasir	1.6 kg	MEGA QC_REJECT	
+	22.400	USR-MEGA-006
+2026-06-16	Salmon Fillet	0.5 kg	MEGA EXPIRED	
+	160.000	USR-MEGA-006
+2026-06-17	Ayam Fillet	0.5 kg	MEGA EXPIRED	
+	27.500	USR-MEGA-006
+2026-06-17	Kopi Arabica Bean	1.7 kg	MEGA QC_REJECT	
+	374.000	USR-MEGA-006
+2026-06-17	Cokelat Couverture	0.8 kg	MEGA SPILL	
+	132.000	USR-MEGA-006
+2026-06-17	Salmon Fillet	0.5 kg	MEGA EXPIRED	
+	160.000	USR-MEGA-006
+2026-06-17	Cokelat Couverture	2.7 kg	MEGA QC_REJECT	
+	445.500	USR-MEGA-006
+2026-06-17	Keju Mozzarella	1 kg	MEGA PORTION_ERROR	
+	145.000	USR-MEGA-006
+2026-06-17	Gula Pasir	2.1 kg	MEGA EXPIRED	
+	29.400	USR-MEGA-006
+2026-06-17	Gula Pasir	2.6 kg	MEGA QC_REJECT	
+	36.400	USR-MEGA-006
+2026-06-17	Udang Vaname	2.3 kg	MEGA PORTION_ERROR	
+	253.000	USR-MEGA-006
+2026-06-18	Butter Unsalted	2.1 kg	MEGA SPOILED	
+	199.500	USR-MEGA-006
+2026-06-18	Salmon Fillet	0.5 kg	MEGA EXPIRED	
+	160.000	USR-MEGA-006
+2026-06-18	Daging Sapi Sirloin	2.7 kg	MEGA QC_REJECT	
+	486.000	USR-MEGA-006
+2026-06-18	Keju Mozzarella	0.8 kg	MEGA SPOILED	
+	116.000	USR-MEGA-006
+2026-06-18	Ayam Fillet	2.6 kg	MEGA PORTION_ERROR	
+	143.000	USR-MEGA-006
+2026-06-18	Cokelat Couverture	2.3 kg	MEGA PORTION_ERROR	
+	379.500	USR-MEGA-006
+2026-06-18	Butter Unsalted	2.6 kg	MEGA EXPIRED	
+	247.000	USR-MEGA-006
+2026-06-18	Udang Vaname	1.2 kg	MEGA SPOILED	
+	132.000	USR-MEGA-006
+2026-06-18	Kopi Arabica Bean	0.7 kg	MEGA OVERPRODUCTION	
+	154.000	USR-MEGA-006
+2026-06-18	Minyak Goreng	1.3 liter	MEGA SPOILED	
+	23.400	USR-MEGA-006
+2026-06-19	Keju Mozzarella	0.7 kg	MEGA EXPIRED	
+	101.500	USR-MEGA-006
+2026-06-19	Minyak Goreng	1.9 liter	MEGA QC_REJECT	
+	34.200	USR-MEGA-006
+2026-06-19	Salmon Fillet	1.8 kg	MEGA PORTION_ERROR	
+	576.000	USR-MEGA-006
+2026-06-19	Butter Unsalted	0.5 kg	MEGA OVERPRODUCTION	
+	47.500	USR-MEGA-006
+2026-06-19	Minyak Goreng	2.4 liter	MEGA OVERPRODUCTION	
+	43.200	USR-MEGA-006
+2026-06-19	Ud

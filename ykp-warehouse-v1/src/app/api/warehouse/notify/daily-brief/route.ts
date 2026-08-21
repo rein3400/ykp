@@ -17,7 +17,9 @@ export const POST = handler(async (req: NextRequest) => {
 
   const summaries = await readTab<Record<string, string>>(TABS.dailySummary);
   const today = todayWib();
-  const summary = summaries.find((r) => r.date === today) ?? summaries[summaries.length - 1];
+  // No fallback to a stale summary: previously the last appended row was used
+  // when today's summary was missing, sending days-old KPIs as "today's" brief.
+  const summary = summaries.find((r) => r.date === today);
   if (!summary) return ok({ status: 'SKIPPED', reason: `no daily summary for ${today}` });
 
   const baseText = await buildDailyBrief('YKP Warehouse', summary);

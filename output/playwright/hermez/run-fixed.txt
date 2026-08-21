@@ -1,0 +1,27 @@
+TITLE: YKP Hermez
+H1: Hermez
+
+YKP
+
+Hermez
+
+AI Command Center
+
+Ringkasan Harian
+Peringatan
+Actions
+Warehouse
+Konfigurasi
+Jalankan
+Tes Telegram
+Bot Telegram
+
+Jalankan
+
+Run Console
+
+Trigger generateBriefForDate manual. Hanya super-admin.
+
+Trigger
+Tanggal (WIB)
+Generate brief

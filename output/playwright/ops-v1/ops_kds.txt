@@ -1,0 +1,33 @@
+TITLE: YKP Operational V1
+H1: KDS / Live Ops
+
+YKP Ops V1
+Ringkasan
+Briefing & Shift
+Opening Checklist
+Checklist Operasional
+KDS / Live Ops
+Visual QC
+Incident & Complaint
+Closing
+Waste & Stock
+Analytics
+AI Assistant
+Telegram
+owner
+Owner
+Logout
+KDS / Live Ops
+
+Antrean order statis V1. Timer serving dihitung manual.
+
+Queued
+0
+Cooking
+0
+Over SLA
+0
+Mock: submit test order
+Orders
+
+Belum ada order. POST /api/ops/kds untuk seed order uji.

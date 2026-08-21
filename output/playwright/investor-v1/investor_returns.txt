@@ -1,0 +1,32 @@
+TITLE: YKP Investor V1
+H1: Returns / ROI
+
+YKP Investor
+
+owner · owner
+
+Dashboard
+Portfolio
+Capital
+Dividend
+Returns
+Telegram
+Admin
+Logout
+Returns / ROI
+
+Return on investment per investor (dividen vs capital masuk).
+
+Investor	Capital In	Capital Out	Net Capital	Dividend Paid	ROI %
+YKP Owner	Rp 318.000.000	Rp 0	Rp 318.000.000	Rp 1.969.859.000	619.5%
+PT Modal Maju	Rp 488.000.000	Rp 197.000.000	Rp 291.000.000	Rp 503.559.000	103.2%
+Andi Wijaya	Rp 1.385.000.000	Rp 134.000.000	Rp 1.251.000.000	Rp 139.233.000	10.1%
+Sari Capital Partners	Rp 858.000.000	Rp 171.000.000	Rp 687.000.000	Rp 198.629.000	23.2%
+Budi Santoso	Rp 158.000.000	Rp 0	Rp 158.000.000	Rp 70.385.000	44.5%
+CV Nusantara Ventures	Rp 675.000.000	Rp 195.000.000	Rp 480.000.000	Rp 442.411.000	65.5%
+Rina Kusuma	Rp 0	Rp 0	Rp 0	Rp 167.502.000	0%
+Family Office Pratama	Rp 629.000.000	Rp 206.000.000	Rp 423.000.000	Rp 224.544.000	35.7%
+Joko Prasetyo	Rp 506.000.000	Rp 148.000.000	Rp 358.000.000	Rp 151.831.000	30.0%
+PT Investasi Bahari	Rp 559.000.000	Rp 310.000.000	Rp 249.000.000	Rp 173.334.000	31.0%
+Maya Putri	Rp 470.000.000	Rp 206.000.000	Rp 264.000.000	Rp 60.820.000	12.9%
+Seed Fund Asia	Rp 201.000.000	Rp 181.000.000	Rp 20.000.000	Rp 31.433.000	15.6%

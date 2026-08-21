@@ -1,0 +1,217 @@
+TITLE: YKP Finance V1
+H1: Ringkasan Finance
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Ringkasan Finance
+
+Pusat kontrol uang YKP — semua angka dalam Rupiah (IDR), timezone Asia/Jakarta.
+
+Brand
+Semua Brand
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Dari Tanggal
+Sampai Tanggal
+Bulan
+Payment Method
+Semua Metode
+Cash
+QRIS
+Card
+Transfer
+Marketplace
+
+NET SALES
+
+Rp 0
+
+Gross Rp 0
+
+TOTAL EXPENSE
+
+Rp 0
+
+PEMBELIAN SUPPLIER
+
+Rp 0
+
+Dibayar Rp 0
+
+KAS KECIL KELUAR
+
+Rp 0
+
+ESTIMASI SURPLUS KAS
+
+Rp 0
+
+Bukan net profit — COGS aktual belum tersedia
+
+GROUP CASH POSITION
+
+Rp 0
+
+Kas fisik + saldo kas kecil
+
+OUTSTANDING SUPPLIER
+
+Rp 0
+
+Accounts Payable
+
+MOM GROWTH
+
+-100.0%
+
+Net sales vs bulan lalu
+
+CASH INFLOW
+
+Rp 0
+
+Settlement POS
+
+CASH OUTFLOW
+
+Rp 0
+
+Supplier dibayar + expense + kas kecil
+
+TRANSAKSI
+
+0
+
+AOV Rp 0
+
+REFUND
+
+Rp 0
+
+VOID
+
+Rp 0
+
+TOP SUPPLIER
+
+—
+
+Spend terbesar periode ini
+
+TOP EXPENSE CATEGORY
+
+—
+
+Kategori biaya terbesar
+
+Trend Net Sales 14 Hari
+
+Semua outlet dalam scope filter
+
+08-07
+0rb
+08-08
+0rb
+08-09
+0rb
+08-10
+0rb
+08-11
+0rb
+08-12
+0rb
+08-13
+0rb
+08-14
+0rb
+08-15
+0rb
+08-16
+0rb
+08-17
+0rb
+08-18
+0rb
+08-19
+0rb
+08-20
+0rb
+
+Breakdown Payment Method
+
+Total settlement per metode dalam periode
+
+Cash
+Rp 0
+QRIS
+Rp 0
+Card
+Rp 0
+Transfer
+Rp 0
+Marketplace
+Rp 0
+
+Outstanding Supplier (AP)
+
+Tagihan belum lunas, terbesar dulu
+
+Tidak ada tagihan outstanding. Semua supplier lunas. ✅
+
+Alert Terbaru
+
+Dari finance rules engine (belum resolved)
+
+Settlement POS tidak cocok Sekarpizza Demangan
+
+2026-07-31 · Sekarpizza Demangan
+
+MEDIUM
+
+Transaksi POS Terbaru
+
+15 baris terakhir dalam periode
+
+Tanggal	Outlet	Gross	Net	Refund	Void	Trx	AOV	Selisih Settlement

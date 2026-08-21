@@ -1,0 +1,79 @@
+TITLE: YKP Warehouse V1
+H1: Dashboard Kontrol Bahan Baku
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Dashboard Kontrol Bahan Baku
+
+KPI mingguan per Excel Dashboard. Diisi tiap Senin pagi oleh Manager Outlet.
+
+KPI MINGGU INI
+
+KPI	Target	Aktual	Status
+Selisih stok rata-rata harian per item	≤ 2%	0.0%	OK
+Food cost % vs sales	28% – 35%	N/A (butuh POS)	N/A
+Waste ratio (% dari pemakaian)	≤ 2%	35.3%	ALERT
+Akurasi penerimaan barang	100%	100%	OK
+Compliance form F1–F5	100%	80%	ALERT
+Total nilai selisih minggu ini (Rp)	Rp 0	Rp 0	OK
+Jumlah audit/movement minggu ini	≥ 1×	999	OK
+
+3 TEMUAN UTAMA MINGGU INI
+
+1. Waste ratio 35.3% melebihi target ≤2%
+
+3 RENCANA AKSI MINGGU DEPAN
+
+1. Review root cause waste dan preventive action PIC outlet
+
+Tanggal Closing Tercatat (7 terakhir):
+
+Belum ada closing.
+
+Aturan Emas
+
+Tidak ada tanda tangan = barang tidak diterima.
+Tidak ada bon F3 = bahan tidak boleh keluar dari gudang.
+Tidak ada foto F4 = waste tidak diakui (jadi tanggung jawab PIC).
+Tidak ada closing F5 = outlet tidak boleh buka besok.
+Selisih > 5% per item = wajib investigasi 24 jam (unexplained stock variance dulu, bukan LOST).

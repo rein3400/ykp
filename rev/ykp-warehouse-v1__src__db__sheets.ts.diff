@@ -1,0 +1,20 @@
+--- LOCAL ykp-warehouse-v1/src/db/sheets.ts
++++ VPS ykp-warehouse-v1/src/db/sheets.ts
+@@ -99,7 +99,8 @@
+   legacyWaste: 'f4_waste',
+   legacyClosing: 'f5_closing',
+   legacyDashboard: 'dashboard',
+-  legacyAlerts: 'hermes_alert_log'
++  legacyAlerts: 'hermes_alert_log',
++  telegramLinkCodes: 'telegram_link_codes',
+ } as const;
+ 
+ export type TabName = (typeof TABS)[keyof typeof TABS];
+@@ -297,6 +298,7 @@
+     'error_message', 'created_at'
+   ],
+   // ── Auth + audit ─────────────────────────────────────────────
++  [TABS.telegramLinkCodes]: ['code', 'user_id', 'expires_at', 'telegram_chat_id', 'consumed_at', 'created_at', 'division'],
+   [TABS.users]: [
+     'user_id', 'username', 'password_hash', 'role', 'brand_id', 'outlet_id',
+     'department', 'employee_id', 'telegram_id', 'active_status',

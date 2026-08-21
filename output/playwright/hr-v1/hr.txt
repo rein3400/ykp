@@ -1,0 +1,95 @@
+TITLE: YKP HR V1
+H1: HR Overview
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+HR Overview
+
+Snapshot harian untuk owner, HR admin, manager.
+
+Brand
+Semua Brand
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Periode
+Hari ini
+7 hari terakhir
+30 hari terakhir
+TOTAL KARYAWAN AKTIF
+21
+HADIR (2026-08-20)
+0
+TELAT
+0
+ABSEN / ALPHA
+21
+IZIN / CUTI AKTIF
+0
+BELUM CHECKOUT
+0
+SHIFT SHORTAGE
+0
+HR Daily Summary (30 hari terakhir)
+Tanggal	Brand	Outlet	Hadir	Telat	Absen	Telat (min)	Issue	Action
+2026-07-19	Funkydak	Funkydak Cipete	18	0	2	0	-	-
+2026-07-18	Funkydak	Funkydak Cipete	19	2	1	30	-	-
+2026-07-17	Funkydak	Funkydak Cipete	20	1	0	15	-	-
+2026-07-16	Funkydak	Funkydak Cipete	18	1	2	15	-	-
+2026-07-15	Funkydak	Funkydak Cipete	0	0	0	0	8 payroll issue pending	HR review payroll
+2026-07-15	Funkydak	Funkydak Kemang	0	0	0	0	-	-
+2026-07-15	Funkydak	Funkydak Senopati	0	0	0	0	-	-
+2026-07-15	Sekarpizza	Sekarpizza Senopati	0	0	0	0	-	-
+2026-07-15	Sekarpizza	Sekarpizza Kemang	0	0	0	0	-	-
+2026-07-15	Suburbuns	Suburbuns Senayan	0	0	0	0	-	-
+2026-07-15	Suburbuns	Suburbuns Pondok Indah	0	0	0	0	-	-
+2026-07-15	Laju Kopi	Laju Kopi Senopati	0	0	0	0	-	-
+2026-07-15	Laju Kopi	Laju Kopi Cikini	0	0	0	0	-	-
+2026-07-15	Uncle Masala	Uncle Masala Kemang	0	0	0	0	-	-
+2026-07-15	Funkydak	Smoke Test Outlet	0	0	0	0	-	-
+2026-07-15	Funkydak	Funkydak Cipete	19	2	1	30	-	-
+2026-07-14	Funkydak	Funkydak Cipete	18	1	2	15	-	-
+2026-07-13	Funkydak	Funkydak Cipete	19	2	1	30	-	-
+2026-07-12	Funkydak	Funkydak Cipete	18	0	2	0	-	-
+2026-07-11	Funkydak	Funkydak Cipete	20	1	0	15	-	-
+2026-07-10	Funkydak Cipete	OL-001	2	0	no	2026-07-10 10:38:21	-	-
+2026-07-10	Funkydak	Funkydak Cipete	20	2	0	30	-	-
+2026-07-09	Funkydak Cipete	OL-001	1	2	yes	2026-07-10 10:38:21	-	-
+2026-07-09	Funkydak	Funkydak Cipete	19	2	1	30	-	-
+2026-07-08	Funkydak Cipete	OL-001	2	2	yes	2026-07-10 10:38:21	-	-
+2026-07-08	Funkydak	Funkydak Cipete	19	0	1	0	-	-
+2026-07-07	Funkydak Cipete	OL-001	1	1	no	2026-07-10 10:38:21	-	-
+2026-07-07	Funkydak	Funkydak Cipete	20	0	0	0	-	-
+2026-07-06	Funkydak Cipete	OL-001	0	1	no	2026-07-10 10:38:21	-	-
+2026-07-06	Funkydak	Funkydak Cipete	20	1	0	15	-	-
+Generated 2026-08-20 16:56:26 · scope: all / all

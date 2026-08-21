@@ -8,8 +8,9 @@ import { getSession } from '@/lib/session';
 import { ok, list, unauthorized, badRequest, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
-import { nextSequentialIdSync } from '@/lib/repo';
+import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
+import { appendMovement } from '@/lib/stock-ledger';
 import { FraudControlError, assertReason } from '@/lib/fraud-controls';
 
 export const GET = handler(async () => {
@@ -37,9 +38,25 @@ export const POST = handler(async (req: NextRequest) => {
     if (e instanceof FraudControlError) return badRequest(e.message);
     throw e;
   }
+  // Invariant §2: money is integer IDR; validate finite on input.
+  const unitCostRaw = Number(body.estimated_unit_cost || body.buy_price || 0);
+  const qtyRaw = Number(body.qty || 0);
+  if (!Number.isFinite(qtyRaw) || qtyRaw < 0) return badRequest('qty must be a finite non-negative number');
+  if (!Number.isFinite(unitCostRaw) || unitCostRaw < 0) return badRequest('estimated_unit_cost must be a finite non-negative number');
+  const unitCost = Math.round(unitCostRaw);
+  const qty = Math.round(qtyRaw);
+  const itemId = String(body.item_id ?? '');
+  const locationId = String(body.location_id ?? '');
+  if (!itemId || !locationId) return badRequest('item_id and location_id are required for waste');
+  try {
+    await assertItem(itemId);
+    await assertLocation(locationId);
+  } catch (e) {
+    if (e instanceof MissingRefError) return badRequest(e.message);
+    throw e;
+  }
+
   const id = nextSequentialIdSync('WST');
-  const unitCost = Number(body.estimated_unit_cost || body.buy_price || 0);
-  const qty = Number(body.qty || 0);
   const row: Record<string, string> = {
     waste_id: id,
     waste_number: id,
@@ -47,9 +64,9 @@ export const POST = handler(async (req: NextRequest) => {
     time: String(body.time ?? formatTimeWib(new Date())),
     brand_id: String(body.brand_id ?? ''),
     outlet_id: String(body.outlet_id ?? ''),
-    location_id: String(body.location_id ?? ''),
+    location_id: locationId,
     shift_id: String(body.shift_id ?? body.shift ?? ''),
-    item_id: String(body.item_id ?? ''),
+    item_id: itemId,
     menu_id: String(body.menu_id ?? ''),
     batch_reference: String(body.batch_reference ?? ''),
     qty: String(qty),
@@ -70,6 +87,23 @@ export const POST = handler(async (req: NextRequest) => {
     created_at: nowTimestampWib()
   };
   await appendRows(TABS.waste, [row]);
+  // Post a WASTE OUT movement so book stock decreases (previously waste never
+  // reduced book stock → permanent ledger vs physical drift).
+  await appendMovement({
+    movementType: 'WASTE',
+    direction: 'OUT',
+    quantity: qty,
+    baseUnit: String(body.unit ?? ''),
+    unitCost,
+    itemId,
+    brandId: String(body.brand_id ?? ''),
+    outletId: String(body.outlet_id ?? ''),
+    locationId,
+    referenceType: 'waste',
+    referenceId: id,
+    createdBy: s.userId,
+    notes: `Waste ${id}: ${String(body.reason ?? '')}`
+  }).catch((e) => console.error('[waste] ledger post failed:', e));
   if (evidenceFiles.length) {
     await appendEvidenceRows('waste', id, evidenceFiles, s.userId).catch(
       (e) => console.error('[waste] evidence append failed:', e),

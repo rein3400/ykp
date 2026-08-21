@@ -1,0 +1,45 @@
+--- LOCAL ykp-ops-v1/src/db/sheets.ts
++++ VPS ykp-ops-v1/src/db/sheets.ts
+@@ -37,6 +37,7 @@
+   shifts: 'master_shift',
+   products: 'master_product',
+   checklistTemplates: 'master_checklist_template',
++  checklistSubmissions: 'ops_checklist_submission',
+   briefing: 'ops_daily_briefing',
+   opening: 'ops_opening_checklist',
+   kds: 'ops_kds_order',
+@@ -50,6 +51,8 @@
+   users: 'ops_users',
+   auditLog: 'ops_audit_log',
+   hermezAlerts: 'ops_hermes_alert_log',
++  telegramDeliveryLog: 'ops_telegram_delivery_log',
++  telegramLinkCodes: 'ops_telegram_link_code',
+ } as const;
+ 
+ export type TabName = (typeof TABS)[keyof typeof TABS];
+@@ -70,6 +73,11 @@
+   [TABS.checklistTemplates]: [
+     'checklist_template_id', 'brand_id', 'outlet_id', 'checklist_type', 'department',
+     'checklist_item', 'required_photo', 'target_value', 'tolerance_value', 'critical_flag', 'active_status',
++  ],
++  [TABS.checklistSubmissions]: [
++    'submission_id', 'date', 'brand_id', 'outlet_id', 'shift_id',
++    'checklist_type', 'department', 'checklist_item', 'status',
++    'notes', 'critical_flag', 'photo_url', 'submitted_by', 'submitted_at',
+   ],
+   [TABS.briefing]: [
+     'briefing_id', 'date', 'brand_id', 'brand_name', 'outlet_id', 'outlet_name',
+@@ -140,6 +148,13 @@
+   [TABS.hermezAlerts]: [
+     'alert_id', 'date', 'severity', 'alert_type', 'title', 'message',
+     'outlet_id', 'status', 'created_at',
++  ],
++  [TABS.telegramDeliveryLog]: [
++    'delivery_id', 'source_module', 'source_reference_id',
++    'chat_id', 'status', 'message_id', 'error_message', 'sent_at',
++  ],
++  [TABS.telegramLinkCodes]: [
++    'code', 'chat_id', 'employee_id', 'consumed_at', 'created_at',
+   ],
+ };
+ 

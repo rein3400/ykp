@@ -28,7 +28,9 @@ export const POST = handler(async (req: NextRequest) => {
   const text = buildFinanceDailyBrief(
     date,
     summaries.filter((s) => s.date === date),
-    alerts.filter((a) => a.status === 'OPEN' || a.status === 'ACK')
+    // Bug #11: scope alerts to the brief date so stale OPEN/ACK alerts from
+    // weeks ago do not leak into the "daily" brief.
+    alerts.filter((a) => (a.status === 'OPEN' || a.status === 'ACK') && (a.date ?? '') === date)
   );
   const result = await sendTelegram({
     sourceModule: 'finance',

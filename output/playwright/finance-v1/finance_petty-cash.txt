@@ -1,0 +1,106 @@
+TITLE: YKP Finance V1
+H1: Kas Kecil
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Kas Kecil
+
+Saldo berjalan per akun kas kecil. Running Balance = Saldo Awal + Debit − Kredit.
+
++ Catat Transaksi
+Brand
+Semua Brand
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Dari Tanggal
+Sampai Tanggal
+Akun Kas Kecil
+Semua Akun
+Kas Kecil Funkydak Cipete
+Kas Kecil Funkydak Kemang
+Kas Kecil Sekarpizza Demangan
+Kas Kecil Sekarpizza Seturan
+Kas Kecil Suburbuns Depok
+Kas Kecil Laju Kopi Bintaro
+Kas Kecil Uncle Masala Tebet
+Tipe
+Semua
+Top Up
+Pengeluaran
+Urgent
+
+SALDO AWAL BULAN
+
+Rp 7.000.000
+
+TOTAL TOP UP
+
+Rp 0
+
+TOTAL PENGELUARAN
+
+Rp 0
+
+SALDO BERJALAN
+
+Rp 7.000.000
+
+Posisi Per Akun
+
+Opening → Top-up → Cash Out → Running → Physical vs Difference
+
+Akun	Outlet	Opening	Top Up	Cash Out	Running	Fisik	Selisih	Closing
+Kas Kecil Funkydak Cipete	OL-001	Rp 1.000.000	Rp 0	Rp 0	Rp 1.000.000	—	✓	OK
+Kas Kecil Funkydak Kemang	OL-002	Rp 1.000.000	Rp 0	Rp 0	Rp 1.000.000	—	✓	OK
+Kas Kecil Sekarpizza Demangan	OL-003	Rp 1.000.000	Rp 0	Rp 0	Rp 1.000.000	—	✓	OK
+Kas Kecil Sekarpizza Seturan	OL-004	Rp 1.000.000	Rp 0	Rp 0	Rp 1.000.000	—	✓	OK
+Kas Kecil Suburbuns Depok	OL-005	Rp 1.000.000	Rp 0	Rp 0	Rp 1.000.000	—	✓	OK
+Kas Kecil Laju Kopi Bintaro	OL-006	Rp 1.000.000	Rp 0	Rp 0	Rp 1.000.000	—	✓	OK
+Kas Kecil Uncle Masala Tebet	OL-007	Rp 1.000.000	Rp 0	Rp 0	Rp 1.000.000	—	✓	OK
+
+Belum ada transaksi kas kecil.
+Catat top up atau pengeluaran pertama.
+
+Catat Transaksi

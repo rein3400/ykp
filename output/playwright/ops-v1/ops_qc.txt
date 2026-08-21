@@ -1,0 +1,50 @@
+TITLE: YKP Operational V1
+H1: Visual QC Scoring
+
+YKP Ops V1
+Ringkasan
+Briefing & Shift
+Opening Checklist
+Checklist Operasional
+KDS / Live Ops
+Visual QC
+Incident & Complaint
+Closing
+Waste & Stock
+Analytics
+AI Assistant
+Telegram
+owner
+Owner
+Logout
+Visual QC Scoring
+
+Score manual. AI vision = second opinion only (V1.1).
+
+Input QC
+
+AI vision = second opinion only. Final decision tetap reviewer.
+
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+APPEARANCE
+COLOR
+PORTION
+TEMPERATURE
+TEXTURE
+PACKAGING
+CLEANLINESS
+Foto produk
+Simpan QC
+Riwayat QC
+
+Belum ada QC.

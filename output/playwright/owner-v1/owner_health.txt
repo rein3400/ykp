@@ -1,0 +1,38 @@
+TITLE: YKP Owner Command
+H1: Health Modul
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+MODE MOCK aktif — YKP_OWNER_MOCK=true, semua data adalah data demo bawaan. Login demo: owner / owner123.
+Health Modul
+MODUL	STATUS	PING	SUMMARY TERAKHIR	RECORD COUNT	BASE URL	ERROR
+Keuangan	
+Mock
+	—	20 Agu 2026	98	localhost:3003 ↗	
+SDM	
+Mock
+	—	20 Agu 2026	98	localhost:3002 ↗	
+Gudang	
+Mock
+	—	20 Agu 2026	96	localhost:3005 ↗	
+Operasional	
+Mock
+	—	20 Agu 2026	97	localhost:3007 ↗	
+Investor	
+Mock
+	—	20 Agu 2026	1	localhost:3006 ↗	
+
+Record count dari endpoint publik /summary/count tiap modul. Ping diukur saat fetch summary (timeout 4 detik).

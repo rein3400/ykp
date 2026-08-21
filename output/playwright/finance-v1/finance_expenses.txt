@@ -1,0 +1,101 @@
+TITLE: YKP Finance V1
+H1: Pengeluaran
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Pengeluaran
+
+Expense operasional non-supplier. Di atas Rp500.000 wajib approval.
+
++ Tambah Expense
+Brand
+Semua Brand
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Dari Tanggal
+Sampai Tanggal
+Kategori
+Semua Kategori
+Sewa
+Gaji
+Listrik
+Air
+Internet
+Gas
+Maintenance
+Marketing
+Transport
+Packaging
+Refund
+Diskon
+Peralatan
+Operational Mendadak
+Other
+Payment Method
+Semua Metode
+Cash
+QRIS
+Kartu Debit/Kredit
+Transfer Bank
+Marketplace (GoFood/GrabFood/ShopeeFood)
+Approval
+Semua
+PENDING
+APPROVED
+REJECTED
+CANCELLED
+
+TOTAL EXPENSE PERIODE
+
+Rp 0
+
+KATEGORI TERBESAR
+
+—
+
+Belum ada expense.
+Catat pengeluaran pertama untuk mulai tracking biaya operasional.
+
+Tambah Expense

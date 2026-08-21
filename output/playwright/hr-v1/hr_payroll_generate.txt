@@ -1,0 +1,26 @@
+TITLE: YKP HR V1
+H1: Generate Payroll
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Generate Payroll
+Periode (YYYY-MM)
+
+Generate akan: ambil semua karyawan aktif, hitung kehadiran dari tab attendance periode, sum approved adjustments (bonus/penalty/allowance/kasbon), dan hitung payroll via engine. Status awal: DRAFT → PENDING untuk approval.
+
+Generate

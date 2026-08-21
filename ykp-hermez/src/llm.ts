@@ -1,6 +1,11 @@
 /**
- * OpenRouter chat-completions client (OpenAI-compatible), tool-use loop support.
- * Model + key from env. Throws on HTTP error; caller (brain) decides retries.
+ * Ollama Cloud chat-completions client (OpenAI-compatible), tool-use loop
+ * support. Model + key from env. Throws on HTTP error; caller (brain)
+ * decides retries.
+ *
+ * deepseek-v4-flash is a reasoning model: it returns a `reasoning` field
+ * (chain of thought) alongside the final `content`. We keep only `content`
+ * and `tool_calls` — reasoning is never sent back to the user.
  */
 import { CONFIG } from './config.js';
 
@@ -20,8 +25,7 @@ export interface ChatMessage {
 
 export type ContentPart =
   | { type: 'text'; text: string }
-  | { type: 'image_url'; image_url: { url: string } }
-  | { type: 'input_audio'; input_audio: { data: string; format: string } };
+  | { type: 'image_url'; image_url: { url: string } };
 
 export interface ToolSpec {
   type: 'function';
@@ -42,14 +46,12 @@ export async function chat(
   tools?: ToolSpec[],
   model: string = CONFIG.model
 ): Promise<ChatResult> {
-  if (!CONFIG.openRouterKey) throw new Error('OPENROUTER_API_KEY not set');
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  if (!CONFIG.llmApiKey) throw new Error('LLM_API_KEY not set');
+  const res = await fetch(`${CONFIG.llmBaseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${CONFIG.openRouterKey}`,
-      'HTTP-Referer': 'https://github.com/rein3400/ykp',
-      'X-Title': 'YKP Hermez'
+      Authorization: `Bearer ${CONFIG.llmApiKey}`
     },
     body: JSON.stringify({
       model,
@@ -59,14 +61,14 @@ export async function chat(
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`OpenRouter HTTP ${res.status}: ${text.slice(0, 300)}`);
+    throw new Error(`LLM HTTP ${res.status}: ${text.slice(0, 300)}`);
   }
   const json = (await res.json()) as {
     choices?: { message?: { content?: string | null; tool_calls?: ToolCall[] } }[];
     error?: { message?: string };
   };
-  if (json.error) throw new Error(`OpenRouter: ${json.error.message ?? 'unknown error'}`);
+  if (json.error) throw new Error(`LLM: ${json.error.message ?? 'unknown error'}`);
   const msg = json.choices?.[0]?.message;
-  if (!msg) throw new Error('OpenRouter: empty response');
+  if (!msg) throw new Error('LLM: empty response');
   return { content: msg.content ?? '', toolCalls: msg.tool_calls ?? [] };
 }

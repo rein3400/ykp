@@ -203,13 +203,14 @@ export function parseMokaCsv(csvText: string): MokaImportResult {
 
     const existing = aggregates.get(key);
     if (existing) {
-      existing.grossSales += grossSales;
+      // Bug #10: gross_sales/discount/refund/void/tax/service_charge are
+      // OUTLET-WIDE totals in the Moka export and are repeated on every
+      // method row. Summing them across method rows double-counts. Take them
+      // from the FIRST row only; net_sales is per-method so it is still
+      // summed (it feeds the settlement buckets). ASSUMPTION: the export
+      // repeats outlet-wide gross/discount/refund per method row. If a future
+      // export shape splits gross per method, this must be revisited.
       existing.netSales += netSales;
-      existing.discount += discount;
-      existing.refund += refund;
-      existing.voidAmount += voidAmount;
-      existing.tax += tax;
-      existing.serviceCharge += serviceCharge;
       existing.transactionCount += txCount;
       if (bucket) existing.settlement[bucket] += netSales;
     } else {

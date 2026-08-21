@@ -1,0 +1,60 @@
+TITLE: YKP Warehouse V1
+H1: Master Supplier
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Master Supplier
+
+Supplier dengan lead time, minimum order, dan info bank.
+
++ Tambah Supplier
+Kode	Nama	Kategori	Kontak	Lead Time	Min Order	Delivery Day
+SUP-001	SUP-001		protein	2 h	500.000	3
+SUP-002	SUP-002		dry	1 h	300.000	2
+SUP-003	SUP-SEA		seafood	1 h	500.000	2
+SUP-004	SUP-DAI		dairy	2 h	500.000	3
+SUP-005	SUP-VEG		produce	1 h	500.000	2
+SUP-006	SUP-PKG		packaging	3 h	500.000	4
+SUP-007	SUP-SPICE		spice	2 h	500.000	3
+SUP-008	SUP-OIL		oil	1 h	500.000	2
+SUP-MRYDKFBA1B4DD1	SUP-SPICE		Spice	1 h	-	3

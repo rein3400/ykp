@@ -11,6 +11,7 @@ import { logAudit } from '@/lib/audit';
 import { nowTimestampWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertPettyCashAccount } from '@/lib/repo';
 import { can, scopeFilter, type Role } from '@/lib/rbac';
+import { isInactiveStatus } from '@/lib/fin-summary';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -51,10 +52,14 @@ export const POST = handler(async (req: NextRequest) => {
   if (!body.account_id) return badRequest('account_id is required');
   const debit = Math.max(0, Math.trunc(Number(body.debit_topup) || 0));
   const credit = Math.max(0, Math.trunc(Number(body.credit_out) || 0));
-  if ((debit === 0 && credit === 0) || (debit > 0 && credit > 0)) {
-    return badRequest('Isi salah satu: debit_topup (top up) atau credit_out (pengeluaran)');
+  const hasPhysical = body.physical_cash !== undefined && body.physical_cash !== '';
+  // Bug #8: closing/physical-count rows (PC-CLOSE-*) have debit==0 && credit==0
+  // with a physical_cash value; the schema and /balance expect them. Allow that
+  // combination when physical_cash is provided.
+  if ((debit === 0 && credit === 0 && !hasPhysical) || (debit > 0 && credit > 0)) {
+    return badRequest('Isi salah satu: debit_topup (top up) atau credit_out (pengeluaran), atau physical_cash (closing)');
   }
-  if (!body.description) return badRequest('description is required');
+  if (!body.description && !hasPhysical) return badRequest('description is required');
 
   try {
     await assertPettyCashAccount(body.account_id);
@@ -73,14 +78,29 @@ export const POST = handler(async (req: NextRequest) => {
   const outlet = outlets.find((o) => o.outlet_id === account?.outlet_id);
   const brand = brands.find((b) => b.brand_id === (account?.brand_id || outlet?.brand_id));
 
-  // Running balance per account (Revisi #7) — brand + outlet + account + tanggal
+  // Running balance per account (Revisi #7) — brand + outlet + account + tanggal.
+  // Bug #6: tiebreak by petty_id (ts-based, monotonic) instead of created_at
+  // (WIB-second precision) so two rows in the same second are ordered deterministically.
   const last = pettyRows
     .filter((p) => p.account_id === body.account_id)
-    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || (a.created_at ?? '').localeCompare(b.created_at ?? ''))
+    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || (a.petty_id ?? '').localeCompare(b.petty_id ?? ''))
     .at(-1);
   const prevBalance = Number(last?.running_balance || account?.opening_balance || 0);
   const newBalance = prevBalance + debit - credit;
   if (newBalance < 0) return badRequest(`Saldo kas kecil tidak cukup (saldo ${prevBalance}, keluar ${credit})`);
+
+  // Bug #7: enforce per-account daily_limit from fin_petty_cash_account. Sum
+  // today's credit_out (excluding CANCELLED/REJECTED) and reject if the new
+  // credit would exceed the limit.
+  const dailyLimit = Number(account?.daily_limit || 0);
+  if (dailyLimit > 0 && credit > 0) {
+    const spentToday = pettyRows
+      .filter((p) => p.account_id === body.account_id && p.date === body.date && !isInactiveStatus(p.approval_status))
+      .reduce((sum, p) => sum + Number(p.credit_out || 0), 0);
+    if (spentToday + credit > dailyLimit) {
+      return badRequest(`Pengeluaran kas kecil hari ini melebihi daily_limit (limit ${dailyLimit}, sudah keluar ${spentToday}, keluar ${credit})`);
+    }
+  }
 
   const id = nextSequentialIdSync('PC');
   const row: Record<string, string> = {
@@ -98,7 +118,7 @@ export const POST = handler(async (req: NextRequest) => {
     debit_topup: String(debit),
     credit_out: String(credit),
     running_balance: String(newBalance),
-    physical_cash: '',
+    physical_cash: body.physical_cash ?? '',
     cash_difference: '',
     closing_status: '',
     cash_on_hand_status: 'OK',

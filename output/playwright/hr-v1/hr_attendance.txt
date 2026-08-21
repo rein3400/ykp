@@ -1,0 +1,113 @@
+TITLE: YKP HR V1
+H1: Absensi
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Absensi
+
+Check-in / check-out harian. Tanggal hari ini: 2026-08-20
+
+Karyawan
+Budi Santoso
+Citra Lestari
+Dewi Anggraini
+Hadi Pranata
+Lina Kusuma
+Rudi Hartono
+Maya Sari
+Budi Santoso
+Dewi Wijaya
+Joko Kusuma
+Maya Pratama
+Hadi Sari
+Tuti Dewi
+Fajar Santoso
+Yuni Wijaya
+Hendra Kusuma
+Ayu Pratama
+Jaya Sari
+Kartini Dewi
+Demo Test Karyawan
+VPS Test Employee
+Tanggal
+Check In (HH:mm)
+Check Out (HH:mm)
+Status
+PRESENT
+LATE
+ABSENT
+LEAVE
+SICK
+OFF
+INCOMPLETE
+MANUAL_CORRECTION
+Catatan
+Simpan Absensi
+Riwayat
+Tanggal	Karyawan	In	Out	Status	Telat (m)	OT (m)	Aksi
+2026-07-23	Dewi Anggraini	-	-	ABSENT	0	0	Clock in
+2026-07-23	Sari Wijaya A Updated	-	17:05	PRESENT	0	0	
+2026-07-19	Ayu Pratama	14:00	-	PRESENT	0	0	
+2026-07-19	Budi Santoso	20:00	-	PRESENT	0	0	
+2026-07-19	Budi Santoso	14:05	-	PRESENT	5	0	
+2026-07-19	Citra Lestari	14:00	-	PRESENT	0	0	
+2026-07-19	Dewi Anggraini	15:00	-	PRESENT	0	0	
+2026-07-19	Dewi Wijaya	15:00	-	PRESENT	0	0	
+2026-07-19	Fajar Santoso	14:00	-	PRESENT	0	0	
+2026-07-19	Hadi Pranata	20:00	-	PRESENT	0	0	
+2026-07-19	Hadi Sari	15:00	-	PRESENT	0	0	
+2026-07-19	Hendra Kusuma	20:00	-	PRESENT	0	0	
+2026-07-19	Jaya Sari	15:00	-	PRESENT	0	0	
+2026-07-19	Joko Kusuma	20:00	-	PRESENT	0	0	
+2026-07-19	Kartini Dewi	20:00	-	PRESENT	0	0	
+2026-07-19	Lina Kusuma	14:00	-	PRESENT	0	0	
+2026-07-19	Maya Pratama	14:00	-	PRESENT	0	0	
+2026-07-19	Maya Sari	20:00	-	PRESENT	0	0	
+2026-07-19	Rudi Hartono	15:24	-	LATE	24	0	
+2026-07-19	Sari Wijaya	15:00	-	PRESENT	0	0	
+2026-07-19	Tuti Dewi	20:00	-	PRESENT	0	0	
+2026-07-19	Yuni Wijaya	15:00	-	PRESENT	0	0	
+2026-07-18	Ayu Pratama	14:03	-	PRESENT	3	0	
+2026-07-18	Budi Santoso	20:00	-	PRESENT	0	0	
+2026-07-18	Budi Santoso	14:00	-	PRESENT	0	0	
+2026-07-18	Citra Lestari	14:00	-	PRESENT	0	0	
+2026-07-18	Dewi Anggraini	15:00	-	PRESENT	0	0	
+2026-07-18	Dewi Wijaya	15:00	-	PRESENT	0	0	
+2026-07-18	Fajar Santoso	14:00	-	PRESENT	0	0	
+2026-07-18	Hadi Pranata	20:00	-	PRESENT	0	0	
+2026-07-18	Hadi Sari	15:00	-	PRESENT	0	0	
+2026-07-18	Hendra Kusuma	20:00	-	PRESENT	0	0	
+2026-07-18	Jaya Sari	15:00	-	PRESENT	0	0	
+2026-07-18	Joko Kusuma	20:00	-	PRESENT	0	0	
+2026-07-18	Kartini Dewi	20:00	-	PRESENT	0	0	
+2026-07-18	Lina Kusuma	14:00	-	PRESENT	0	0	
+2026-07-18	Maya Pratama	14:00	-	PRESENT	0	0	
+2026-07-18	Maya Sari	20:00	-	PRESENT	0	0	
+2026-07-18	Rudi Hartono	15:00	-	PRESENT	0	0	
+2026-07-18	Sari Wijaya	-	-	ABSENT	0	0	Clock in
+2026-07-18	Sari Wijaya	15:00	-	PRESENT	0	0	
+2026-07-18	Tuti Dewi	20:00	-	EARLY_LEAVE	0	0	
+2026-07-18	Yuni Wijaya	15:00	-	PRESENT	0	0	
+2026-07-17	Ayu Pratama	14:15	-	LATE	15	0	
+2026-07-17	Budi Santoso	20:00	-	PRESENT	0	0	
+2026-07-17	Budi Santoso	14:00	-	PRESENT	0	0	
+2026-07-17	Citra Lestari	14:00	-	PRESENT	0	0	
+2026-07-17	Dewi Anggraini	15:00	-	PRESENT	0	0	
+2026-07-17	Dewi Wijaya	15:00	-	PRESENT	0	0	
+2026-07-17	Fajar Santoso	14:00	-	PRESENT	0	0	
+2026-07-17	Hadi Pranata	20:00	-	PRESENT	0	0	

@@ -1,0 +1,39 @@
+TITLE: YKP Investor V1
+H1: Portfolio / Cap Table
+
+YKP Investor
+
+owner · owner
+
+Dashboard
+Portfolio
+Capital
+Dividend
+Returns
+Telegram
+Admin
+Logout
+Portfolio / Cap Table
+
+Kepemilikan saham per investor per brand.
+
+Investor	Brand	Share %	Value	Valuation Date
+YKP Owner	Funkydak	55%	Rp 5.500.000.000	2026-07-08
+PT Modal Maju	Funkydak	30%	Rp 2.000.000.000	2026-08-07
+Andi Wijaya	Funkydak	10%	Rp 1.000.000.000	2026-07-08
+Sari Capital Partners	Funkydak	10%	Rp 1.000.000.000	2026-07-08
+Budi Santoso	Funkydak	5%	Rp 500.000.000	2026-07-08
+YKP Owner	Sekarpizza	40%	Rp 3.200.000.000	2026-07-08
+CV Nusantara Ventures	Sekarpizza	25%	Rp 2.000.000.000	2026-07-08
+PT Modal Maju	Sekarpizza	20%	Rp 1.600.000.000	2026-07-08
+Rina Kusuma	Sekarpizza	15%	Rp 1.200.000.000	2026-07-08
+YKP Owner	Suburbuns	50%	Rp 2.500.000.000	2026-07-08
+Family Office Pratama	Suburbuns	30%	Rp 1.500.000.000	2026-07-08
+Joko Prasetyo	Suburbuns	20%	Rp 1.000.000.000	2026-07-08
+YKP Owner	Laju Kopi	45%	Rp 1.800.000.000	2026-07-08
+PT Investasi Bahari	Laju Kopi	30%	Rp 1.200.000.000	2026-07-08
+Maya Putri	Laju Kopi	15%	Rp 600.000.000	2026-07-08
+Seed Fund Asia	Laju Kopi	10%	Rp 400.000.000	2026-07-08
+YKP Owner	Uncle Masala	60%	Rp 1.200.000.000	2026-07-08
+Sari Capital Partners	Uncle Masala	25%	Rp 500.000.000	2026-07-08
+CV Nusantara Ventures	Uncle Masala	15%	Rp 300.000.000	2026-07-08

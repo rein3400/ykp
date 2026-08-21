@@ -1,15 +1,20 @@
 /**
  * Approve / reject an expense (amount > Rp500.000 arrives as PENDING).
  * RBAC: finance_admin+ with amount tiers from lib/approval.
+ *
+ * Optimistic-concurrency guard: the row's `updated_at` is re-checked before
+ * the write; a concurrent double-approve that read the same PENDING row cannot
+ * both succeed silently — the second returns 409.
  */
 import { NextRequest } from 'next/server';
-import { findRow, updateRow, TABS } from '@/db/sheets';
+import { findRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, unauthorized, badRequest, notFound, handler, forbidden } from '@/lib/http';
+import { ok, unauthorized, badRequest, notFound, handler, forbidden, conflict } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib } from '@/lib/format';
 import { canApprove, type Role } from '@/lib/rbac';
 import { transitionApproval, type ApprovalStatus } from '@/lib/approval';
+import { guardedUpdateRow, ConcurrentUpdateError } from '@/lib/concurrency';
 
 export const POST = handler(async (req: NextRequest, { params }) => {
   const s = await getSession();
@@ -27,7 +32,7 @@ export const POST = handler(async (req: NextRequest, { params }) => {
   const current = (before.approval_status || 'DRAFT') as ApprovalStatus;
   const to: ApprovalStatus = action === 'approve' ? 'APPROVED' : 'REJECTED';
   const r = transitionApproval(
-    { id: params.id, entity: 'expense', amount: Number(before.amount || 0), status: current },
+    { id: params.id, entity: 'expense', amount: Number(before.amount || 0), status: current, createdBy: before.created_by ?? null },
     current, to, { id: s.userId, role: s.role }
   );
   if (!r.ok) return badRequest(r.error ?? 'transition not allowed');
@@ -38,7 +43,14 @@ export const POST = handler(async (req: NextRequest, { params }) => {
     approved_by: action === 'approve' ? s.userId : '',
     updated_at: nowTimestampWib()
   };
-  await updateRow(TABS.expense, found.rowNumber, next);
+  // Guard against a lost update: if another approve raced ahead, the version
+  // field will have moved and this call returns 409 instead of overwriting.
+  try {
+    await guardedUpdateRow(TABS.expense, 'expense_id', params.id, found, next);
+  } catch (e) {
+    if (e instanceof ConcurrentUpdateError) return conflict(e.message);
+    throw e;
+  }
   await logAudit({
     module: 'finance', action: `approve:${action}`, recordType: 'fin_expense',
     recordId: params.id, beforeValue: JSON.stringify(before), afterValue: JSON.stringify(next),

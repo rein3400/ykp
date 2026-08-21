@@ -57,6 +57,10 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/api/hr/audit') && req.method === 'GET') {
     return NextResponse.next();
   }
+  // Hermez AI chat bot: resolve Telegram chat id → RBAC actor (GET only)
+  if (pathname.startsWith('/api/hr/telegram-actor') && req.method === 'GET') {
+    return NextResponse.next();
+  }
   const cookie = req.cookies.get('ykp_hr_session')?.value;
   const secret = process.env.SESSION_SECRET ?? '';
   if (!cookie || !(await verify(cookie, secret))) {

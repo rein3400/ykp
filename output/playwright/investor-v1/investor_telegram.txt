@@ -1,0 +1,24 @@
+TITLE: YKP Investor V1
+H1: Hubungkan Telegram
+
+YKP Investor
+
+owner · owner
+
+Dashboard
+Portfolio
+Capital
+Dividend
+Returns
+Telegram
+Admin
+Logout
+Hubungkan Telegram
+
+Hubungkan akun Telegram kamu agar bisa menerima notifikasi dan bertanya ke Hermez.
+
+1. Dapatkan kode
+
+Tekan tombol di bawah untuk membuat kode koneksi.
+
+Dapatkan Kode

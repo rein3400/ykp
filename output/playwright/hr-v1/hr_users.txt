@@ -1,0 +1,218 @@
+TITLE: YKP HR V1
+H1: User & Role Management
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+User & Role Management
+
+Kelola user, role, dan scope brand/outlet. Revisi item 26.
+
++ Tambah User
+ID	Username	Role	Brand	Outlet	Status	Aksi
+U-001	owner	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	—	—	active	Deactivate
+U-EMP-1	sari.emp1	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+U-EMP-2	budi.emp2	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+U-EMP-3	citra.emp3	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+U-EMP-4	dewi.emp4	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+U-EMP-5	hadi.emp5	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+U-EMP-6	lina.emp6	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+U-EMP-7	rudi.emp7	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+U-EMP-8	maya.emp8	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+USR-MEGA-001	wh_admin	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	—	—	active	Deactivate
+USR-MEGA-002	purchasing	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	—	—	active	Deactivate
+USR-MEGA-003	fkd_mgr	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	—	active	Deactivate
+USR-MEGA-004	cipete_pic	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+USR-MEGA-005	kitchen_lead	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+USR-MEGA-006	staff1	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	Funkydak	Funkydak Cipete	active	Deactivate
+USR-MEGA-007	viewer	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	—	—	active	Deactivate
+USR-MEGA-008	finance	
+owner
+super_admin
+hr_admin
+finance_admin
+brand_manager
+outlet_manager
+supervisor
+employee
+viewer
+	—	—	active	Deactivate
+USR-INV-002	investor1	
+owner
+super_admin
+hr_admin
+finance_admin

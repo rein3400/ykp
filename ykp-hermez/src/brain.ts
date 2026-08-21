@@ -5,9 +5,10 @@
 import { appendFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CONFIG, todayWib, nowWib, daysAgoWib } from './config.js';
-import { chat, type ChatMessage, type ToolSpec } from './openrouter.js';
+import { chat, type ChatMessage, type ToolSpec } from './llm.js';
 import { TOOL_SPECS, TOOL_HANDLERS } from './tools.js';
 import { addRule, deleteRule, listRules } from './watch.js';
+import type { Scope } from './actor.js';
 
 const SYSTEM_PROMPT = `Kamu adalah HERMEZ, asisten AI pribadi owner YKP (grup F&B Indonesia, beberapa brand & outlet).
 Kamu mengerti SELURUH data perusahaan lewat tools yang tersedia: keuangan, penjualan per item (Moka POS), margin dari resep gudang, stok/inventori, SDM/kehadiran, operasional outlet, investor, audit trail semua aksi user, dan foto bukti.
@@ -21,7 +22,8 @@ ATURAN:
 - Kalau ada anomali (lonjakan/penurunan drastis, selisih kas, margin aneh), tunjukkan eksplisit.
 - Hari ini: ${todayWib()} (WIB). Untuk "kemarin" pakai ${daysAgoWib(1)}, "minggu ini" pakai ${daysAgoWib(7)} s/d hari ini.
 - Kamu BOLEH membuat watch rule kalau owner minta dipantau ("kabari kalau..."). Gunakan create_watch_rule.
-- Kamu TIDAK BISA mengubah data perusahaan (read-only). Tolak sopan kalau diminta mengubah/menghapus data.`;
+- Kamu TIDAK BISA mengubah data perusahaan (read-only). Tolak sopan kalau diminta mengubah/menghapus data.
+- Jawab dengan TEKS POLOS saja. JANGAN pakai markdown (**bold**, ## heading) atau HTML (<b>, <i>).`;
 
 // ── Memory (per chat, TTL) ───────────────────────────────────────────
 
@@ -81,7 +83,7 @@ const WATCH_SPECS: ToolSpec[] = [
 
 // ── Tool execution ───────────────────────────────────────────────────
 
-export async function executeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+export async function executeTool(name: string, args: Record<string, unknown>, scope: Scope = {}): Promise<unknown> {
   if (name === 'create_watch_rule') {
     return addRule({
       metric: args.metric as 'margin_item_pct',
@@ -95,7 +97,7 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
   if (name === 'delete_watch_rule') return { deleted: await deleteRule(String(args.id ?? '')) };
   const handler = TOOL_HANDLERS[name];
   if (!handler) return { error: `unknown tool: ${name}` };
-  return handler(args);
+  return handler(args, scope);
 }
 
 const ALL_SPECS = [...TOOL_SPECS, ...WATCH_SPECS];
@@ -106,7 +108,7 @@ const MAX_ITERATIONS = 6;
 
 type ChatFn = typeof chat;
 
-export async function agentLoop(messages: ChatMessage[], chatFn: ChatFn = chat): Promise<string> {
+export async function agentLoop(messages: ChatMessage[], chatFn: ChatFn = chat, scope: Scope = {}): Promise<string> {
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const result = await chatFn(messages, ALL_SPECS);
     if (result.toolCalls.length === 0) return result.content;
@@ -114,7 +116,7 @@ export async function agentLoop(messages: ChatMessage[], chatFn: ChatFn = chat):
     for (const tc of result.toolCalls) {
       let out: unknown;
       try {
-        out = await executeTool(tc.function.name, JSON.parse(tc.function.arguments || '{}'));
+        out = await executeTool(tc.function.name, JSON.parse(tc.function.arguments || '{}'), scope);
       } catch (e) {
         out = { error: e instanceof Error ? e.message : 'tool error' };
       }
@@ -143,29 +145,32 @@ const COMMANDS: Record<string, string> = {
   '/help': 'Tampilkan daftar perintah dan contoh pertanyaan yang bisa dijawab.'
 };
 
-const HELP_TEXT = `<b>HERMEZ — Asisten AI Owner</b>
+const HELP_TEXT = `HERMEZ — Asisten AI Owner
 
 Tanya apa saja (bahasa bebas):
 • "gimana cabang Cipete minggu ini?"
 • "margin ayam geprek bulan ini?"
 • "ada yang aneh gak hari ini?"
 • "siapa yang ubah data kemarin?"
-• "kabari kalau margin geprek < 30%"
+• "kabari kalau margin geprek di bawah 30%"
 
 Perintah cepat:
 /today /sales /margin /stok /sdm /alert /audit /foto /help
 
-Kirim <b>foto</b> untuk saya analisis, atau <b>voice note</b> untuk bicara.`;
+Kirim foto untuk saya analisis.`;
 
 // ── Entry point ──────────────────────────────────────────────────────
 
-export async function handleText(chatId: number, text: string, imageBase64?: string): Promise<string> {
+export async function handleText(chatId: number, text: string, imageBase64?: string, scope: Scope = {}): Promise<string> {
   const trimmed = text.trim();
   if (trimmed === '/start' || trimmed === '/help') return HELP_TEXT;
 
   const history = getMemory(chatId);
+  const scopeNote = scope.brandId || scope.outletId
+    ? `\n- AKSES TERBATAS: kamu hanya boleh menjawab data untuk ${scope.outletId ? `outlet ${scope.outletId}` : `brand ${scope.brandId}`}. Jangan sebut data brand/outlet lain.`
+    : '';
   const messages: ChatMessage[] = [
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: SYSTEM_PROMPT + scopeNote },
     ...history
   ];
 
@@ -178,7 +183,11 @@ export async function handleText(chatId: number, text: string, imageBase64?: str
     : prompt;
 
   messages.push({ role: 'user', content });
-  const reply = await agentLoop(messages);
+  // Vision input needs a vision-capable model (minimax-m3 via Ollama Cloud).
+  const chatFn: ChatFn = imageBase64
+    ? (m, t) => chat(m, t, CONFIG.visionModel)
+    : chat;
+  const reply = await agentLoop(messages, chatFn, scope);
 
   setMemory(chatId, [
     ...history,

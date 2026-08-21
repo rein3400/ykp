@@ -22,7 +22,7 @@ export const POST = handler(async (req: NextRequest) => {
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   const outlet = await readTab(TABS.outlets).then((rows) => rows.find((r) => r.outlet_id === body.outlet_id));
   if (!outlet) return badRequest('outlet not found');
-  const target = Number(body.target_seconds || 180);
+  const target = body.target_seconds != null && body.target_seconds !== '' ? Number(body.target_seconds) : 180;
   const serve = Number(body.serving_seconds || 0);
   let sla = 'OK';
   if (serve > target * 2) sla = 'CRITICAL_DELAY';

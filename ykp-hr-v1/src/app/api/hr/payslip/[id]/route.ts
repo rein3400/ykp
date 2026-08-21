@@ -21,8 +21,10 @@ export const GET = handler(async (req, { params }) => {
   if (!payroll) return notFound('Payroll not found');
   const row = payroll.row;
 
-  // Role-based access: self can only view own
-  const isSelf = session.role === 'employee' && session.userId === row.employee_id;
+  // Role-based access: self can only view own. session.employeeId is the
+  // linked EMP- id (set at login from users.employee_id); session.userId is
+  // USR- and never equals row.employee_id (EMP-), so the old check always 403'd.
+  const isSelf = session.role === 'employee' && session.employeeId === row.employee_id;
   const isPrivileged = ['owner', 'super_admin', 'hr_admin', 'finance_admin'].includes(session.role);
   if (!isSelf && !isPrivileged) return forbidden();
 

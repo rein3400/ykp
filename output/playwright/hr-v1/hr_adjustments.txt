@@ -1,0 +1,90 @@
+TITLE: YKP HR V1
+H1: Bonus, Potongan, Lembur, Kasbon
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Bonus, Potongan, Lembur, Kasbon
+
+Adjustment terintegrasi ke payroll periode terkait.
+
+Tambah Adjustment
+Karyawan
+Budi Santoso
+Citra Lestari
+Dewi Anggraini
+Hadi Pranata
+Lina Kusuma
+Rudi Hartono
+Maya Sari
+Budi Santoso
+Dewi Wijaya
+Joko Kusuma
+Maya Pratama
+Hadi Sari
+Tuti Dewi
+Fajar Santoso
+Yuni Wijaya
+Hendra Kusuma
+Ayu Pratama
+Jaya Sari
+Kartini Dewi
+Demo Test Karyawan
+VPS Test Employee
+Tipe
+Bonus
+Penalty
+Lembur
+Tunjangan
+Kasbon
+Reimburse
+Tanggal
+Amount (Rp)
+Periode Payroll (YYYY-MM)
+Alasan
+URL Bukti (opsional)
+Upload dulu ke Drive/WhatsApp → salin link-nya ke sini. Belum ada upload file langsung di form.
+Simpan
+Daftar
+TANGGAL	KARYAWAN	TIPE	AMOUNT	PERIODE	ALASAN	STATUS	AKSI
+2026-07-01	EMP-001	CASH_ADVANCE	273079	system	Adjustment cash_advance	owner	—
+2026-06-29	EMP-001	ALLOWANCE	264488	system	Adjustment allowance	owner	—
+2026-06-23	EMP-001	REIMBURSEMENT	136931	system	Adjustment reimbursement	owner	—
+2026-07-05	EMP-002	OVERTIME	597562	system	Adjustment overtime	owner	—
+2026-06-23	EMP-002	PENALTY	253991	system	Datang telat 30 menit	owner	—
+2026-06-26	EMP-002	CASH_ADVANCE	132789	system	Adjustment cash_advance	owner	—
+2026-06-24	EMP-003	CASH_ADVANCE	204724	system	Adjustment cash_advance	owner	—
+2026-07-10	EMP-003	CASH_ADVANCE	251846	system	Adjustment cash_advance	owner	—
+2026-06-26	EMP-003	REIMBURSEMENT	221687	system	Adjustment reimbursement	owner	—
+2026-07-04	EMP-004	BONUS	926757	system	Adjustment bonus	owner	—
+2026-07-09	EMP-004	CASH_ADVANCE	229412	system	Adjustment cash_advance	owner	—
+2026-06-11	EMP-004	REIMBURSEMENT	183258	system	Adjustment reimbursement	owner	—
+2026-06-27	EMP-005	PENALTY	178436	system	Datang telat 30 menit	owner	—
+2026-07-08	EMP-005	OVERTIME	476825	system	Adjustment overtime	owner	—
+2026-06-15	EMP-005	PENALTY	57128	system	Datang telat 30 menit	owner	—
+2026-07-02	EMP-006	CASH_ADVANCE	220930	system	Adjustment cash_advance	owner	—
+2026-06-27	EMP-006	PENALTY	81425	system	Datang telat 30 menit	owner	—
+2026-06-17	EMP-006	BONUS	557433	system	Adjustment bonus	owner	—
+2026-07-01	EMP-007	PENALTY	187010	system	Datang telat 30 menit	owner	—
+2026-07-02	EMP-007	OVERTIME	242057	system	Adjustment overtime	owner	—
+2026-06-14	EMP-007	REIMBURSEMENT	272158	system	Adjustment reimbursement	owner	—
+2026-07-05	EMP-008	REIMBURSEMENT	54072	system	Adjustment reimbursement	owner	—
+2026-06-23	EMP-008	OVERTIME	170676	system	Adjustment overtime	owner	—
+2026-06-12	EMP-008	ALLOWANCE	133938	system	Adjustment allowance	owner	—
+2026-07-24	EMP-002	BONUS	500000	2026-07	lembur : 7day 2 shift berturut turut : 5day handling complaint dengan bagus	PENDING	
+Setujui
+Tolak

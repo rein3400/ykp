@@ -1,0 +1,50 @@
+TITLE: YKP HR V1
+H1: Master Karyawan
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Master Karyawan
+
+Sumber data utama fungsi HR.
+
+Export CSV
+Import CSV
++ Tambah Karyawan
+Employee ID	Nama	Role	Posisi	Brand	Outlet	Gaji Pokok	Tipe	Status	Join	Aksi
+EMP-001	Sari Wijaya A Updated	staff	Barista	Funkydak	Funkydak Cipete	Rp 4.500.000	MONTHLY	PERMANENT	2024-03-15	Edit
+EMP-002	Budi Santoso	staff	Kitchen	Funkydak	Funkydak Cipete	Rp 4.500.000	MONTHLY	PERMANENT	2024-04-01	EditNonaktifkan
+EMP-003	Citra Lestari	supervisor	Shift Leader	Funkydak	Funkydak Cipete	Rp 5.500.000	MONTHLY	PERMANENT	2023-11-20	EditNonaktifkan
+EMP-004	Dewi Anggraini	outlet_manager	Outlet Manager	Funkydak	Funkydak Cipete	Rp 7.500.000	MONTHLY	PERMANENT	2023-08-10	EditNonaktifkan
+EMP-005	Hadi Pranata	staff	Cashier	Funkydak	Funkydak Cipete	Rp 4.200.000	MONTHLY	PERMANENT	2024-05-12	EditNonaktifkan
+EMP-006	Lina Kusuma	staff	Server	Funkydak	Funkydak Cipete	Rp 4.200.000	MONTHLY	PERMANENT	2024-06-01	EditNonaktifkan
+EMP-007	Rudi Hartono	staff	Barista	Funkydak	Funkydak Cipete	Rp 4.500.000	MONTHLY	PERMANENT	2024-07-15	EditNonaktifkan
+EMP-008	Maya Sari	staff	Kitchen	Funkydak	Funkydak Cipete	Rp 4.500.000	MONTHLY	PERMANENT	2024-08-01	EditNonaktifkan
+EMP-009	Demo Test Karyawan	staff	-	Funkydak	Funkydak Cipete	Rp 4.500.000	MONTHLY	PROBATION	2026-07-01	EditNonaktifkan
+EMP-010	VPS Test Employee	staff	-	Funkydak	Funkydak Cipete	Rp 5.000.000	MONTHLY	PROBATION	2026-08-19	EditNonaktifkan
+MEGA-EMP-0001	Budi Santoso	admin	Head Chef	Funkydak	Funkydak Cipete	Rp 4.000.000	MONTHLY	PERMANENT	2026-01-20	EditNonaktifkan
+MEGA-EMP-0002	Dewi Wijaya	supervisor	Cook	Funkydak	Funkydak Cipete	Rp 4.500.000	MONTHLY	PERMANENT	2026-01-10	EditNonaktifkan
+MEGA-EMP-0003	Joko Kusuma	staff	Waitress	Funkydak	Funkydak Cipete	Rp 5.000.000	MONTHLY	PERMANENT	2025-12-31	EditNonaktifkan
+MEGA-EMP-0004	Maya Pratama	finance_admin	Cashier	Funkydak	Funkydak Cipete	Rp 5.500.000	MONTHLY	PERMANENT	2025-12-21	EditNonaktifkan
+MEGA-EMP-0005	Hadi Sari	admin	Barista	Funkydak	Funkydak Cipete	Rp 6.000.000	MONTHLY	PERMANENT	2025-12-11	EditNonaktifkan
+MEGA-EMP-0006	Tuti Dewi	supervisor	Supervisor	Funkydak	Funkydak Cipete	Rp 6.500.000	MONTHLY	PERMANENT	2025-12-01	EditNonaktifkan
+MEGA-EMP-0007	Fajar Santoso	staff	Admin	Funkydak	Funkydak Cipete	Rp 4.000.000	MONTHLY	PERMANENT	2025-11-21	EditNonaktifkan
+MEGA-EMP-0008	Yuni Wijaya	finance_admin	Finance Staff	Funkydak	Funkydak Cipete	Rp 4.500.000	MONTHLY	PERMANENT	2025-11-11	EditNonaktifkan
+MEGA-EMP-0009	Hendra Kusuma	admin	Head Chef	Funkydak	Funkydak Cipete	Rp 5.000.000	MONTHLY	PERMANENT	2025-11-01	EditNonaktifkan
+MEGA-EMP-0010	Ayu Pratama	supervisor	Cook	Funkydak	Funkydak Cipete	Rp 5.500.000	MONTHLY	PERMANENT	2025-10-22	EditNonaktifkan
+MEGA-EMP-0011	Jaya Sari	staff	Waitress	Funkydak	Funkydak Cipete	Rp 6.000.000	MONTHLY	PERMANENT	2025-10-12	EditNonaktifkan
+MEGA-EMP-0012	Kartini Dewi	finance_admin	Cashier	Funkydak	Funkydak Cipete	Rp 6.

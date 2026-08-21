@@ -1,0 +1,56 @@
+TITLE: YKP Warehouse V1
+H1: Stock Opname
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Stock Opname
+
+Book vs Physical. Unexplained variance sebelum confirmed loss. Brief §17.
+
++ Stock Opname Baru
+ID	Tanggal	Tipe	Lokasi	Status	Counted By
+MEGA-CNT-0001	2026-06-17	WEEKLY	OUTLET WAREHOUSE Funkydak Cipete	COMPLETED	USR-MEGA-004
+MEGA-CNT-0002	2026-06-24	WEEKLY	OUTLET WAREHOUSE Funkydak Cipete	COMPLETED	USR-MEGA-004
+MEGA-CNT-0003	2026-07-01	WEEKLY	OUTLET WAREHOUSE Funkydak Cipete	COMPLETED	USR-MEGA-004
+MEGA-CNT-0004	2026-07-08	WEEKLY	OUTLET WAREHOUSE Funkydak Cipete	COMPLETED	USR-MEGA-004
+MEGA-CNT-0005	2026-07-15	WEEKLY	OUTLET WAREHOUSE Funkydak Cipete	COMPLETED	USR-MEGA-004

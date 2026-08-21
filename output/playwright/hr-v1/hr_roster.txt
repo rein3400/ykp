@@ -1,0 +1,60 @@
+TITLE: YKP HR V1
+H1: Shift & Roster
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Shift & Roster
+
+Jadwal harian per outlet.
+
+Buat Roster
+Assign Shift
+Karyawan
+Budi Santoso
+Citra Lestari
+Dewi Anggraini
+Hadi Pranata
+Lina Kusuma
+Rudi Hartono
+Maya Sari
+Budi Santoso
+Dewi Wijaya
+Joko Kusuma
+Maya Pratama
+Hadi Sari
+Tuti Dewi
+Fajar Santoso
+Yuni Wijaya
+Hendra Kusuma
+Ayu Pratama
+Jaya Sari
+Kartini Dewi
+Demo Test Karyawan
+VPS Test Employee
+Shift
+Pagi (07:00–15:00)
+Siang (12:00–20:00)
+Split (10:00–14:00)
+Malam (20:00–04:00)
+Tanggal
+Catatan
+Simpan
+Roster Hari Ini (2026-08-20)
+Belum ada roster untuk hari ini.
+Upcoming Roster (20 berikutnya)
+Tidak ada jadwal ke depan.

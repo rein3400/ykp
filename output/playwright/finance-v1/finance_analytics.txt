@@ -1,0 +1,291 @@
+TITLE: YKP Finance V1
+H1: Analitik
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Analitik
+
+Trend dan perbandingan lintas brand/outlet dalam periode terpilih.
+
+Brand
+Semua Brand
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Dari Tanggal
+Sampai Tanggal
+
+Revenue Trend
+
+Net sales harian
+
+08-07
+0rb
+08-08
+0rb
+08-09
+0rb
+08-10
+0rb
+08-11
+0rb
+08-12
+0rb
+08-13
+0rb
+08-14
+0rb
+08-15
+0rb
+08-16
+0rb
+08-17
+0rb
+08-18
+0rb
+08-19
+0rb
+08-20
+0rb
+
+Expense Trend
+
+Expense + supplier cost + kas kecil harian
+
+08-07
+0rb
+08-08
+0rb
+08-09
+0rb
+08-10
+0rb
+08-11
+0rb
+08-12
+0rb
+08-13
+0rb
+08-14
+0rb
+08-15
+0rb
+08-16
+0rb
+08-17
+0rb
+08-18
+0rb
+08-19
+0rb
+08-20
+0rb
+
+Supplier Trend
+
+Pembelian supplier harian
+
+08-07
+0rb
+08-08
+0rb
+08-09
+0rb
+08-10
+0rb
+08-11
+0rb
+08-12
+0rb
+08-13
+0rb
+08-14
+0rb
+08-15
+0rb
+08-16
+0rb
+08-17
+0rb
+08-18
+0rb
+08-19
+0rb
+08-20
+0rb
+
+Payment Method Breakdown
+
+Settlement per metode
+
+Cash
+Rp 0
+QRIS
+Rp 0
+Card
+Rp 0
+Transfer
+Rp 0
+Marketplace
+Rp 0
+
+AOV Trend
+
+Average order value harian
+
+08-07
+0rb
+08-08
+0rb
+08-09
+0rb
+08-10
+0rb
+08-11
+0rb
+08-12
+0rb
+08-13
+0rb
+08-14
+0rb
+08-15
+0rb
+08-16
+0rb
+08-17
+0rb
+08-18
+0rb
+08-19
+0rb
+08-20
+0rb
+
+Refund / Void Trend
+
+Refund + void harian
+
+08-07
+0rb
+08-08
+0rb
+08-09
+0rb
+08-10
+0rb
+08-11
+0rb
+08-12
+0rb
+08-13
+0rb
+08-14
+0rb
+08-15
+0rb
+08-16
+0rb
+08-17
+0rb
+08-18
+0rb
+08-19
+0rb
+08-20
+0rb
+
+Unpaid Supplier Aging
+
+Outstanding per umur jatuh tempo
+
+Belum jatuh tempo
+Rp 0
+1–7 hari
+Rp 0
+8–14 hari
+Rp 0
+15–30 hari
+Rp 0
+>30 hari
+Rp 0
+
+Kontribusi Brand
+
+Net sales per brand
+
+Perbandingan Outlet
+
+Net sales (label kanan: estimasi surplus kas)
+
+Funkydak Cipete
+0rb
+Funkydak Kemang
+0rb
+Sekarpizza Demangan
+0rb
+Sekarpizza Senopati
+0rb
+Sekarpizza Kemang
+0rb
+Suburbuns Senayan
+0rb
+Suburbuns Pondok Indah
+0rb
+Laju Kopi Senopati
+0rb
+Laju Kopi Cikini
+0rb
+Uncle Masala Kemang
+0rb
+Smoke Test Outlet
+0rb
+
+Cost Ratio
+
+(Expense + supplier cost + kas kecil) / net sales periode
+
+0%
+
+Biaya Rp 0 vs net sales Rp 0. Rasio >100% berarti estimasi surplus kas negatif.

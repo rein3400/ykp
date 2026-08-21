@@ -1,0 +1,39 @@
+TITLE: YKP Operational V1
+H1: Ringkasan Operational
+
+YKP Ops V1
+Ringkasan
+Briefing & Shift
+Opening Checklist
+Checklist Operasional
+KDS / Live Ops
+Visual QC
+Incident & Complaint
+Closing
+Waste & Stock
+Analytics
+AI Assistant
+Telegram
+owner
+Owner
+Logout
+Ringkasan Operational
+
+Kondisi outlet hari ini — siap dibaca Hermez.
+
+Summary rows
+0
+Open incidents
+0
+Orders over SLA
+0
+Opening items
+0
+Opening
+KDS
+Incidents
+Closing
+Waste
+Daily Summary (latest)
+
+Belum ada summary. Generate dari Analytics atau POST /api/ops/summary/regenerate.

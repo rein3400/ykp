@@ -1,0 +1,84 @@
+TITLE: YKP Warehouse V1
+H1: Master Location
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Master Location
+
+Lokasi penyimpanan: gudang pusat, outlet, kitchen, chiller, freezer, dry storage.
+
++ Tambah Lokasi
+Kode	Nama	Brand	Outlet	Tipe	Parent
+FKD-CW	Gudang Pusat Funkydak	Funkydak	-	CENTRAL WAREHOUSE	-
+FKD-KIT	Kitchen Funkydak Cipete	Funkydak	Funkydak Cipete	KITCHEN	LOC-001
+FKD-CHL	Chiller Funkydak Cipete	Funkydak	Funkydak Cipete	CHILLER	LOC-001
+FKD-DRY	Dry Storage Funkydak Cipete	Funkydak	Funkydak Cipete	DRY STORAGE	LOC-001
+SKP-CW	Gudang Pusat Sekarpizza	Sekarpizza	-	CENTRAL WAREHOUSE	-
+SBN-CW	Gudang Pusat Suburbuns	Suburbuns	-	CENTRAL WAREHOUSE	-
+LJK-CW	Gudang Pusat Laju Kopi	Laju Kopi	-	CENTRAL WAREHOUSE	-
+UMS-CW	Gudang Pusat Uncle Masala	Uncle Masala	-	CENTRAL WAREHOUSE	-
+FKD-01-OW	OUTLET WAREHOUSE Funkydak Cipete	Funkydak	Funkydak Cipete	OUTLET WAREHOUSE	-
+FKD-01-KIT	KITCHEN Funkydak Cipete	Funkydak	Funkydak Cipete	KITCHEN	-
+FKD-01-CHL	CHILLER Funkydak Cipete	Funkydak	Funkydak Cipete	CHILLER	-
+FKD-01-DRY	DRY STORAGE Funkydak Cipete	Funkydak	Funkydak Cipete	DRY STORAGE	-
+FKD-02-OW	OUTLET WAREHOUSE Funkydak Kemang	Funkydak	Funkydak Kemang	OUTLET WAREHOUSE	-
+FKD-02-KIT	KITCHEN Funkydak Kemang	Funkydak	Funkydak Kemang	KITCHEN	-
+FKD-02-CHL	CHILLER Funkydak Kemang	Funkydak	Funkydak Kemang	CHILLER	-
+FKD-02-DRY	DRY STORAGE Funkydak Kemang	Funkydak	Funkydak Kemang	DRY STORAGE	-
+SKP-01-OW	OUTLET WAREHOUSE Sekarpizza Senopati	Sekarpizza	Sekarpizza Demangan	OUTLET WAREHOUSE	-
+SKP-01-KIT	KITCHEN Sekarpizza Senopati	Sekarpizza	Sekarpizza Demangan	KITCHEN	-
+SKP-01-CHL	CHILLER Sekarpizza Senopati	Sekarpizza	Sekarpizza Demangan	CHILLER	-
+SKP-01-DRY	DRY STORAGE Sekarpizza Senopati	Sekarpizza	Sekarpizza Demangan	DRY STORAGE	-
+SKP-02-OW	OUTLET WAREHOUSE Sekarpizza BSD	Sekarpizza	Sekarpizza Senopati	OUTLET WAREHOUSE	-
+SKP-02-KIT	KITCHEN Sekarpizza BSD	Sekarpizza	Sekarpizza Senopati	KITCHEN	-
+SKP-02-CHL	CHILLER Sekarpizza BSD	Sekarpizza	Sekarpizza Senopati	CHILLER	-
+SKP-02-DRY	DRY STORAGE Sekarpizza BSD	Sekarpizza	Sekarpizza Senopati	DRY STORAGE	-
+SBN-01-OW	OUTLET WAREHOUSE Suburbuns SCBD	Suburbuns	Sekarpizza Kemang	OUTLET WAREHOUSE	-
+SBN-01-KIT	KITCHEN Suburbuns SCBD	Suburbuns	Sekarpizza Kemang	KITCHEN	-
+SBN-01-CHL	CHILLER Suburbuns SCBD	Suburbuns	Sekarpizza Kemang	CHILLER	-
+SBN-01-DRY	DRY STORAGE Suburbuns SCBD	Suburbuns	Sekarpizza Kemang	DRY STORAGE	-
+LJK-01-OW	OUTLET WAREHOUSE Laju Kopi Menteng	Laju Kopi	Suburbuns Senayan	OUTLET WAREHOUSE	-
+LJK-01-KIT	KITCHEN Laju Kopi Menteng	Laju Kopi	Suburbuns Senayan	KITCHEN	-
+LJK-01-CHL	CHILLER Laju Kopi Menteng	Laju Kopi	Suburbuns Senayan	CHILLER	-
+LJK-01-DRY	DRY STORAGE Laju Kopi Menteng	Laju Kopi	Suburbuns Senayan	DRY STORAGE	-
+UMS-01-OW	OUTLET WAREHOUSE Uncle Masala Blok M	Uncle Masala	Suburbuns 

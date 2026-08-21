@@ -3,7 +3,6 @@
  * Aggregates opening, KDS, QC, incidents, closing, waste, stock issues.
  */
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
-import { nextSequentialIdSync } from '@/lib/repo';
 import { getBrandName, getOutletName } from '@/lib/repo';
 import { todayWib, formatIdr } from '@/lib/format';
 
@@ -16,7 +15,6 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
   const closingRows = await readTab(TABS.closing);
   const wasteRows = await readTab(TABS.waste);
   const stockRows = await readTab(TABS.stockIssues);
-  const briefingRows = await readTab(TABS.briefing);
 
   const outlets = (await readTab(TABS.outlets)).filter((o) =>
     (!opts?.brandId || o.brand_id === opts.brandId) &&
@@ -70,10 +68,16 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
 
     const stockIssues = stockRows.filter((r) => r.date === date && r.outlet_id === outletId);
 
-    const staffBrief = briefingRows.filter((r) => r.date === date && r.outlet_id === outletId);
-    const scheduledStaff = 2; // seed baseline; later derived from roster
-    const actualStaff = staffBrief.length > 0 ? Number(staffBrief[0].staffing_warning || 0) + scheduledStaff : scheduledStaff;
-    const shortage = Math.max(0, scheduledStaff - actualStaff);
+    // Staffing: scheduledStaff / actualStaff cannot be derived reliably.
+    // master_shift is a shift *template* (not a per-date roster), and
+    // briefing.staffing_warning is free-text warning prose, not a headcount.
+    // No per-date roster/assignment data exists in this codebase, so we emit
+    // empty strings (= null in the sheet) instead of fabricating numbers.
+    // Downstream briefs (Hermez/owner) will show staff as "n/a" rather than a
+    // wrong count; shift_shortage likewise becomes empty.
+    const scheduledStaff = '';
+    const actualStaff = '';
+    const shortage = '';
 
     const issues: string[] = [];
     if (openCritical > 0) issues.push(`${openCritical} opening critical`);
@@ -123,7 +127,15 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
     if (existing) {
       await updateRow(TABS.summary, existing.rowIndex, row);
     } else {
-      row.summary_id = nextSequentialIdSync('SUM');
+      // summary_id is already `${outletId}-${date}` (set above); keep it so the
+      // findRow idempotency lookup at line 89 matches on regenerate. The old
+      // code overwrote it with nextSequentialIdSync('SUM') → "OPS-YYYYMMDD-NNN",
+      // which never matched the `${outletId}-${date}` lookup key, so every
+      // regenerate appended a duplicate. NOTE: this changes the summary_id
+      // format from "OPS-YYYYMMDD-NNN" to "${outletId}-${date}". No consumer
+      // parses the ID — Hermez/Hub read via /api/ops/summary (URL/path), and
+      // the analytics client uses summary_id only as a React key + exact
+      // findRow match in ai-insight.
       await appendRows(TABS.summary, [row]);
     }
     summaries.push(row);

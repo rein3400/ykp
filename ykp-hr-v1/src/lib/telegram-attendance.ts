@@ -58,7 +58,10 @@ export async function sendTelegramText(
       text,
       parse_mode: 'HTML',
       reply_markup: replyMarkup
-    })
+    }),
+    // 10s cap so a hanging Telegram API can't stall the webhook to the
+    // platform timeout (the webhook must return 200 fast to Telegram).
+    signal: AbortSignal.timeout(10000)
   });
   const data = (await res.json().catch(() => ({}))) as { ok?: boolean; result?: { message_id?: number } };
   if (!data.ok) return null;

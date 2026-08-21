@@ -8,7 +8,7 @@ import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { ok, list, unauthorized, badRequest, handler, forbidden, missingRef } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
-import { nowTimestampWib } from '@/lib/format';
+import { nowTimestampWib, parseIdr } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertOutlet } from '@/lib/repo';
 import { can, scopeFilter, type Role } from '@/lib/rbac';
 import { isInactiveStatus, num } from '@/lib/fin-summary';
@@ -66,9 +66,19 @@ export const POST = handler(async (req: NextRequest) => {
   const prev = closings
     .filter((c) => c.outlet_id === body.outlet_id && c.date < body.date)
     .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))[0];
-  const opening = body.opening_cash !== undefined && body.opening_cash !== ''
-    ? Math.trunc(Number(body.opening_cash))
-    : Number(prev?.physical_cash || 0);
+  let opening: number;
+  if (body.opening_cash !== undefined && body.opening_cash !== '') {
+    // Bug #4: parseIdr strips Rp/./, so "Rp 500.000" → 500000 (not NaN). A
+    // value with no digits at all (e.g. "abc") is rejected rather than
+    // silently coerced to 0, which previously corrupted expected_cash.
+    const raw = body.opening_cash;
+    if (!/\d/.test(raw)) return badRequest('opening_cash must be a finite number');
+    const parsed = parseIdr(raw);
+    if (!Number.isFinite(parsed)) return badRequest('opening_cash must be a finite number');
+    opening = Math.trunc(parsed);
+  } else {
+    opening = Number(prev?.physical_cash || 0);
+  }
 
   const posCash = pos
     .filter((p) => p.date === body.date && p.outlet_id === body.outlet_id)

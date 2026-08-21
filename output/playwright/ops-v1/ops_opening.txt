@@ -1,0 +1,42 @@
+TITLE: YKP Operational V1
+H1: Opening Checklist
+
+YKP Ops V1
+Ringkasan
+Briefing & Shift
+Opening Checklist
+Checklist Operasional
+KDS / Live Ops
+Visual QC
+Incident & Complaint
+Closing
+Waste & Stock
+Analytics
+AI Assistant
+Telegram
+owner
+Owner
+Logout
+Opening Checklist
+
+Cek kesiapan outlet sebelum buka.
+
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Pagi
+Siang
+Split
+Malam
+Submit Opening Checklist
+Riwayat Opening
+
+Belum ada opening checklist.

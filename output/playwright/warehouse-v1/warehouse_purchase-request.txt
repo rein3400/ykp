@@ -1,0 +1,53 @@
+TITLE: YKP Warehouse V1
+H1: Purchase Request
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+Purchase Request
+
+Ubah recommendation jadi permintaan pembelian. Finance kelola invoice/payment. Brief §11.
+
+Buat PR dari 0 CRITICAL/HIGH Rec
+ID	Tanggal	Priority	Est. Value	Status	Aksi
+PRQ-MRQ6BRFI73EB70	2026-07-18	HIGH	17.120.000	APPROVED	
+Order

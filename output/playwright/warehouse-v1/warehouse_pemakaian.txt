@@ -1,0 +1,54 @@
+TITLE: YKP Warehouse V1
+H1: F3 — Bon Pemakaian Dapur
+
+YKP Warehouse
+
+owner · owner
+
+TESTING
+
+OVERVIEW
+
+Overview
+
+MASTER DATA
+
+Master Item
+Lokasi
+Supplier
+Kategori
+Unit Conversion
+Threshold
+
+TRANSAKSI
+
+Receiving
+Stock Issue
+Transfer
+Waste
+Stock Opname
+Stock Ledger
+Expiry
+
+PURCHASE
+
+Recommendation
+Request
+
+ALERT & SUMMARY
+
+Alerts
+Actions
+Summary
+Dashboard
+Telegram
+Logout
+F3 — Bon Pemakaian Dapur
+
+Tiap kali bahan keluar dari gudang outlet wajib dicatat. Tidak ada bon = bahan tidak boleh keluar.
+
+Mode legacy — halaman ini memakai alur lama (F-form) dan hanya disediakan untuk migrasi. Gunakan alur baru: Stock Issue (header+detail) — menu Transaksi › Stock Issue.
++ Bon Pemakaian
+Tanggal	Outlet	Item	Qty Keluar	Untuk	Diminta	Disetujui
+2026-07-22 20:25	OUT-SMOKE-1783654408467	Daging Sapi Sirloin	1 1kg	a	b	c
+2026-07-24 10:19	OL-001	Minyak Goreng	15 liter	onion rings	magnis	adel

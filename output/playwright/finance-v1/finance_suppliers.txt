@@ -1,0 +1,95 @@
+TITLE: YKP Finance V1
+H1: Pembelian Supplier
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Pembelian Supplier
+
+Costing supplier: invoice, approval, pembayaran parsial, jatuh tempo.
+
++ Tambah Invoice
+Brand
+Semua Brand
+Funkydak
+Sekarpizza
+Suburbuns
+Laju Kopi
+Uncle Masala
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+Dari Tanggal
+Sampai Tanggal
+Status Bayar
+Semua Status
+UNPAID
+PARTIAL
+PAID
+OVERDUE
+CANCELLED
+Cari
+
+TOTAL
+
+Rp 0
+
+DIBAYAR
+
+Rp 0
+
+BELUM DIBAYAR
+
+Rp 0
+
+OVERDUE 1-7 HARI
+
+Rp 0
+
+8-14 HARI
+
+Rp 0
+
+>14 HARI
+
+Rp 0
+
+Belum ada pembelian supplier.
+Tambah invoice pertama untuk mulai tracking costing.
+
+Tambah Invoice

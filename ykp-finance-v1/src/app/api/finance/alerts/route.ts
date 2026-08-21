@@ -32,5 +32,16 @@ export const GET = handler(async (req: NextRequest) => {
     && (!scope.outletId || r.outlet_id === scope.outletId)
   );
   rows.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '') || (b.created_at ?? '').localeCompare(a.created_at ?? ''));
+  // Bug #14: redact assignment/resolution PII for unauthenticated callers
+  // (same reason audit redacts before/after values). Authenticated callers
+  // keep full rows per RBAC scoping above.
+  if (!s) {
+    const REDACT = ['assigned_to', 'action_taken', 'resolved_at'] as const;
+    rows = rows.map((r) => {
+      const c: Record<string, string> = { ...r };
+      for (const f of REDACT) c[f] = '[REDACTED]';
+      return c;
+    });
+  }
   return list(rows);
 });

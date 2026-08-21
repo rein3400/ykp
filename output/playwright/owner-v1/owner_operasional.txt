@@ -1,0 +1,74 @@
+TITLE: YKP Owner Command
+H1: Operasional — 20 Agu 2026
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+MODE MOCK aktif — YKP_OWNER_MOCK=true, semua data adalah data demo bawaan. Login demo: owner / owner123.
+Operasional — 20 Agu 2026
+Mock
+
+Outlet siap
+
+6/7
+
+Checklist rata-rata
+
+96%
+
+Insiden (berat)
+
+5 (1)
+
+Selisih kas total
+
+-Rp75.000
+
+Action terbuka
+
+2
+
+Per outlet
+Semua brand
+Funkydak
+Laju Kopi
+Sekarpizza
+Suburbuns
+Uncle Masala
+Semua outlet
+Funkydak Cipete
+Funkydak Kemang
+Laju Kopi Bintaro
+Sekarpizza Demangan
+Sekarpizza Seturan
+Suburbuns Depok
+Uncle Masala Tebet
+7 outlet
+OUTLET	OPENING	CHECKLIST %	INSIDEN	INSIDEN BERAT	KOMPLAIN	CLOSING	SELISIH KAS
+Funkydak Cipete	READY	100	1	0	0	CLOSED	Rp0
+Funkydak Kemang	READY	100	0	0	0	CLOSED	Rp0
+Sekarpizza Demangan	READY	100	0	0	1	CLOSED	Rp0
+Sekarpizza Seturan	READY	100	1	0	0	CLOSED	Rp0
+Suburbuns Depok	READY	100	0	0	0	CLOSED	-Rp75.000
+Laju Kopi Bintaro	READY	100	2	1	0	CLOSED	Rp0
+Uncle Masala Tebet	LATE	70	1	0	0	OPEN	Rp0
+
+Sumber: Modul Operasional (ops_daily_summary) · update 21:55
+
+Detail
+Insiden ↗
+Opening checklist ↗
+Closing ↗
+Actions ↗

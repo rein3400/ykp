@@ -1,0 +1,20 @@
+TITLE: YKP Owner Command
+H1: Bukti Foto
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+Bukti Foto
+Mode mock aktif — galeri bukti tidak tersedia.

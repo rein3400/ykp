@@ -31,7 +31,7 @@ export const HUB_MODULES = [
     name: "Owner Command",
     desc: "Cross-module read-only overview",
     envVar: "NEXT_PUBLIC_YKP_OWNER_URL",
-    defaultUrl: "https://ykp-erp-hermez-production.up.railway.app",
+    defaultUrl: "https://owner.oseedigital.tech",
     probePath: "/login",
     probeReturnsCount: false
   },
@@ -40,7 +40,7 @@ export const HUB_MODULES = [
     name: "HR",
     desc: "Attendance, employees, roster",
     envVar: "NEXT_PUBLIC_YKP_HR_URL",
-    defaultUrl: "https://ykp-hr-v1-standalone-production.up.railway.app",
+    defaultUrl: "https://hr-v1.oseedigital.tech",
     probePath: "/api/hr/summary/count",
     probeReturnsCount: true
   },
@@ -49,8 +49,8 @@ export const HUB_MODULES = [
     name: "Finance",
     desc: "POS, expenses, petty cash, daily summary",
     envVar: "NEXT_PUBLIC_YKP_FINANCE_URL",
-    defaultUrl: "https://ykp-erp-finance-production.up.railway.app",
-    probePath: "/api/fin/summary",
+    defaultUrl: "https://finance-v1.oseedigital.tech",
+    probePath: "/login",
     probeReturnsCount: false
   },
   {
@@ -58,8 +58,8 @@ export const HUB_MODULES = [
     name: "Warehouse",
     desc: "Stock, receiving, usage, waste",
     envVar: "NEXT_PUBLIC_YKP_WAREHOUSE_URL",
-    defaultUrl: "https://ykp-warehouse-v1.vercel.app",
-    probePath: "/api/warehouse/summary",
+    defaultUrl: "https://warehouse.oseedigital.tech",
+    probePath: "/login",
     probeReturnsCount: false
   },
   {
@@ -67,7 +67,7 @@ export const HUB_MODULES = [
     name: "Investor",
     desc: "Portfolio, capital, dividends",
     envVar: "NEXT_PUBLIC_YKP_INVESTOR_URL",
-    defaultUrl: "https://ykp-investor-v1.vercel.app",
+    defaultUrl: "https://investor.oseedigital.tech",
     probePath: "/api/investor/summary",
     probeReturnsCount: false
   },
@@ -76,7 +76,7 @@ export const HUB_MODULES = [
     name: "Ops",
     desc: "Daily operations, incidents, actions",
     envVar: "NEXT_PUBLIC_YKP_OPS_URL",
-    defaultUrl: "https://ykp-ops-v1.vercel.app",
+    defaultUrl: "https://ops.oseedigital.tech",
     probePath: "/api/ops/summary",
     probeReturnsCount: false
   }

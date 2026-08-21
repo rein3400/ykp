@@ -1,0 +1,25 @@
+TITLE: YKP Operational V1
+H1: AI Assistant
+
+YKP Ops V1
+Ringkasan
+Briefing & Shift
+Opening Checklist
+Checklist Operasional
+KDS / Live Ops
+Visual QC
+Incident & Complaint
+Closing
+Waste & Stock
+Analytics
+AI Assistant
+Telegram
+owner
+Owner
+Logout
+AI Assistant
+
+Tanya seputar operasional, KPI, cara pakai modul, atau troubleshooting.
+
+Contoh: "Apa yang harus dilakukan kalau serving time melebihi 180 detik?" atau "Jelaskan bedanya status NEEDS_REVIEW dan FAIL di QC."
+Kirim

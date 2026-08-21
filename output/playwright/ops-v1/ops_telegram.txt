@@ -1,0 +1,28 @@
+TITLE: YKP Operational V1
+H1: Hubungkan Telegram
+
+YKP Ops V1
+Ringkasan
+Briefing & Shift
+Opening Checklist
+Checklist Operasional
+KDS / Live Ops
+Visual QC
+Incident & Complaint
+Closing
+Waste & Stock
+Analytics
+AI Assistant
+Telegram
+owner
+Owner
+Logout
+Hubungkan Telegram
+
+Hubungkan akun Telegram kamu agar bisa menerima notifikasi dan bertanya ke Hermez.
+
+1. Dapatkan kode
+
+Tekan tombol di bawah untuk membuat kode koneksi.
+
+Dapatkan Kode

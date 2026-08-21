@@ -1,0 +1,103 @@
+TITLE: YKP Finance V1
+H1: Laporan Harian
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Laporan Harian
+
+fin_daily_summary — satu baris per outlet per tanggal. Dibaca oleh Orchestration Layer & Hermez AI.
+
+⟳ Generate / Regenerate
+Tanggal
+Outlet
+Semua Outlet
+Funkydak Cipete
+Funkydak Kemang
+Sekarpizza Demangan
+Sekarpizza Senopati
+Sekarpizza Kemang
+Suburbuns Senayan
+Suburbuns Pondok Indah
+Laju Kopi Senopati
+Laju Kopi Cikini
+Uncle Masala Kemang
+Smoke Test Outlet
+
+Tidak ada summary untuk 2026-08-20 — menampilkan 2026-07-31. Klik Generate untuk membuat.
+
+NET SALES
+
+Rp 132.588.099
+
+EXPENSE
+
+Rp 0
+
+SUPPLIER COST
+
+Rp 0
+
+KAS KECIL
+
+Rp 0
+
+ESTIMASI SURPLUS KAS
+
++Rp 132.588.099
+
+UNPAID SUPPLIER
+
+Rp 0
+
+Summary per Outlet — 2026-07-31
+
+10 outlet · kolom sesuai kontrak Hermez (blueprint §9.2)
+
+Outlet	Gross	Net	Trx	AOV	Supplier	Kas Kecil	Expense	Unpaid	Selisih Kas	Estimasi Surplus	Issue	Rekomendasi
+Funkydak Cipete	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+Funkydak Kemang	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+Sekarpizza Demangan	Rp 132.827.499	Rp 132.588.099	1361	Rp 97.420	Rp 0	Rp 0	Rp 0	Rp 0	✓	+Rp 132.588.099	settlement_mismatch	Rekonsiliasi tender POS vs net sales; cek breakdown metode pembayaran.
+Sekarpizza Senopati	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+Sekarpizza Kemang	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+Suburbuns Senayan	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+Suburbuns Pondok Indah	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+Laju Kopi Senopati	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+Laju Kopi Cikini	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+Uncle Masala Kemang	Rp 0	Rp 0	0	Rp 0	Rp 0	Rp 0	Rp 0	Rp 0	✓	Rp 0	none	—
+
+Alert Hari Ini (1)
+
+Dibuat otomatis oleh finance rules engine saat regenerate
+
+Settlement POS tidak cocok Sekarpizza Demangan
+
+Sekarpizza Demangan · SETTLEMENT_MISMATCH
+
+MEDIUM
+OPEN

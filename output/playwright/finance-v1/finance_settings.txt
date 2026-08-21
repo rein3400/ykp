@@ -1,0 +1,137 @@
+TITLE: YKP Finance V1
+H1: Pengaturan
+
+YKP Finance
+
+owner · owner
+
+TESTING
+
+RINGKASAN
+
+Ringkasan
+Analitik
+Laporan Harian
+
+TRANSAKSI
+
+Pendapatan POS
+Pembelian Supplier
+Kas Kecil
+Pengeluaran
+Closing Kas
+
+KONTROL
+
+Alert
+Action Tracker
+Pengaturan
+Telegram
+Logout
+Anda login dengan akun default owner/owner123. Ganti password sebelum pilot production.
+Pengaturan
+
+Master data & konfigurasi threshold untuk finance rules engine.
+
+Threshold Config
+Brand
+Outlet
+Supplier
+Kategori Expense
+Payment Method
+Akun Kas Kecil
+
+Threshold Config
+
+Dipakai oleh finance rules engine saat regenerate. Semua perubahan tercatat di audit log.
+
++ Tambah Threshold
+Nama Aturan	Penjelasan	Nilai	Satuan	Severity	Scope	Aktif	Terakhir Diubah	
+
+
+Peringatan Selisih Kas
+
+cash_difference_warning
+
+	Alert HIGH jika selisih kas fisik vs sistem sama atau lebih dari nilai ini.	Rp 50.000	IDR	HIGH	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Selisih Kas Kritis
+
+cash_difference_critical
+
+	Alert CRITICAL untuk selisih kas sangat besar. Wajib audit.	Rp 200.000	IDR	CRITICAL	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Supplier Jatuh Tempo
+
+supplier_overdue_days_warning
+
+	Alert MEDIUM jika ada invoice supplier lewat jatuh tempo lebih dari N hari.	7	hari	MEDIUM	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Supplier Overdue Kritis
+
+supplier_overdue_days_critical
+
+	Alert HIGH jika invoice supplier lewat jatuh tempo lebih dari N hari. Risiko supply stop.	14	hari	HIGH	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Limit Kas Kecil Harian
+
+petty_cash_daily_limit
+
+	Alert MEDIUM jika total pengeluaran kas kecil per outlet per hari melebihi nilai ini.	Rp 500.000	IDR	MEDIUM	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Lonjakan Expense vs Rata-rata 7 Hari
+
+expense_spike_pct
+
+	Alert MEDIUM jika total expense hari ini naik lebih dari N persen dibanding rata-rata 7 hari sebelumnya.	20	%	MEDIUM	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Kenaikan Biaya Supplier Mingguan
+
+supplier_cost_spike_pct
+
+	Alert MEDIUM/HIGH jika total pembelian supplier minggu ini naik lebih dari N persen dibanding minggu sebelumnya.	15	%	MEDIUM	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Refund/Void Tinggi
+
+refund_void_pct_warning
+
+	Alert MEDIUM jika (refund + void) mencapai N persen dari gross sales hari ini.	5	%	MEDIUM	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Refund/Void Kritis
+
+refund_void_pct_high
+
+	Alert HIGH jika (refund + void) mencapai N persen dari gross sales hari ini.	10	%	HIGH	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Toleransi Selisih Settlement POS
+
+settlement_mismatch_tolerance
+
+	Alert MEDIUM jika total settlement per metode pembayaran tidak cocok dengan net sales melebihi nilai ini.	Rp 10.000	IDR	MEDIUM	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit
+
+
+Minimal Nota Wajib Ada
+
+missing_receipt_min_amount
+
+	Alert LOW untuk transaksi tanpa nota/bukti dengan nilai sama atau lebih dari ini.	Rp 100.000	IDR	LOW	GLOBAL	CANCELLED	2026-08-19 17:16:14
+system	Edit

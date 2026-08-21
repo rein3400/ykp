@@ -3,13 +3,13 @@
  * Required: full_name, outlet_id, basic_salary. Optional: role, brand_id, salary_type, employment_status, join_date.
  * Owner/HR admin only. Writes audit log.
  */
-import { appendRows, readTab, TABS } from '@/db/sheets';
+import { appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, ok } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
-import { nowTimestampWib } from '@/lib/format';
-import { assertBrand, assertOutlet } from '@/lib/repo';
+import { nowTimestampWib, parseIdr, todayWib } from '@/lib/format';
+import { assertBrand, assertOutlet, nextSequentialIdSync } from '@/lib/repo';
 
 const MAX_ROWS = 5000;
 const MAX_BYTES = 5_000_000; // 5 MB
@@ -39,23 +39,6 @@ function csvToRows(text: string): Record<string, string>[] {
   });
 }
 
-function pad(n: number, len = 3) {
-  return String(n).padStart(len, '0');
-}
-
-async function nextEmployeeId(): Promise<string> {
-  const rows = await readTab<Record<string, string>>(TABS.employees);
-  let max = 0;
-  for (const r of rows) {
-    const id = r.employee_id;
-    if (id.startsWith('EMP-')) {
-      const n = Number(id.split('-')[1]);
-      if (!Number.isNaN(n) && n > max) max = n;
-    }
-  }
-  return `EMP-${pad(max + 1)}`;
-}
-
 export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
@@ -74,7 +57,6 @@ export const POST = handler(async (req) => {
   if (parsed.length > MAX_ROWS) return badRequest(`Too many rows (max ${MAX_ROWS})`);
 
   const now = nowTimestampWib();
-  let nextId = await nextEmployeeId();
   const toInsert: Record<string, string>[] = [];
 
   for (const p of parsed) {
@@ -87,6 +69,7 @@ export const POST = handler(async (req) => {
     } catch (e) {
       return badRequest(e instanceof Error ? e.message : 'Invalid brand/outlet');
     }
+    const nextId = nextSequentialIdSync('EMP');
     toInsert.push({
       employee_id: nextId,
       employee_code: nextId.replace('EMP-', 'K-'),
@@ -98,7 +81,7 @@ export const POST = handler(async (req) => {
       telegram_id: '',
       address: '',
       date_of_birth: '',
-      join_date: p.join_date || new Date().toISOString().slice(0, 10),
+      join_date: p.join_date || todayWib(),
       employment_status: p.employment_status || 'PROBATION',
       contract_type: '',
       department: '',
@@ -107,7 +90,7 @@ export const POST = handler(async (req) => {
       brand_id: p.brand_id || 'BR-001',
       outlet_id: p.outlet_id,
       supervisor_id: '',
-      basic_salary: String(Number(p.basic_salary)),
+      basic_salary: String(parseIdr(p.basic_salary)),
       salary_type: p.salary_type || 'MONTHLY',
       bank_name: '',
       bank_account: '',
@@ -123,7 +106,6 @@ export const POST = handler(async (req) => {
       created_by: session.userId,
       updated_by: session.userId
     });
-    nextId = `EMP-${pad(Number(nextId.split('-')[1]) + 1)}`;
   }
 
   await appendRows(TABS.employees, toInsert);

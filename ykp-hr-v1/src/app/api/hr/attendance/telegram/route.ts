@@ -18,9 +18,13 @@
  * The employee is resolved by `master_employee.telegram_id` = sender chat id,
  * then linked to a user account (`users.employee_id`) for a full RBAC actor.
  */
-import { readTab, TABS, findRow } from '@/db/sheets';
 import { handler, ok } from '@/lib/http';
 import { performClockIn, performClockOut } from '@/lib/attendance-service';
+import {
+  findEmployeeByTelegramId,
+  findOpenAttendance,
+  findUserByEmployeeId
+} from '@/lib/attendance-lookup';
 import {
   parseAbsenIntent,
   sendTelegramText,
@@ -52,8 +56,7 @@ export const POST = handler(async (req) => {
   const reply = (text: string, markup?: unknown) => sendTelegramText(token, chatId, text, markup);
 
   // Resolve the employee by Telegram chat id (brief §6.2 master_employee.telegram_id).
-  const employees = await readTab<Record<string, string>>(TABS.employees);
-  const employee = employees.find((e) => (e.telegram_id ?? '').trim() === String(chatId));
+  const employee = await findEmployeeByTelegramId(chatId);
   if (!employee) {
     await reply('Akun Telegram ini belum tertaut ke data karyawan. Hubungi HR admin untuk menautkan Telegram ID Anda.');
     return ok({ ok: true });
@@ -62,10 +65,10 @@ export const POST = handler(async (req) => {
   // Resolve linked user account (users.employee_id) for a real RBAC actor.
   let actorUserId = `TG-${chatId}`;
   let actorRole = 'employee';
-  const userRow = await findRow(TABS.users, 'employee_id', employee.employee_id);
+  const userRow = await findUserByEmployeeId(employee.employee_id);
   if (userRow) {
-    actorUserId = userRow.row.user_id;
-    actorRole = (userRow.row.role ?? 'employee').toLowerCase();
+    actorUserId = userRow.user_id;
+    actorRole = (userRow.role ?? 'employee').toLowerCase();
   }
 
   const intent = parseAbsenIntent(msg.text);
@@ -77,10 +80,30 @@ export const POST = handler(async (req) => {
 
   if (intent === 'clock-in') {
     const loc = msg.location;
+    // Brief §6.3 + AGENTS.md §5: Telegram bot flow is /masuk → bot asks for
+    // location → employee sends location → bot checks radius. A /masuk with
+    // no location is NOT recorded (unlike the web fallback); we ask for the
+    // location first. This avoids recording clock-ins with no geofence
+    // check from Telegram, where the location button is always available.
+    if (!loc) {
+      await reply(
+        'Kirim lokasi Anda untuk absen masuk. Tekan tombol "Kirim Lokasi" di bawah, atau kirim lokasi via 📎 (paperclip) → Location.',
+        locationReplyMarkup()
+      );
+      return ok({ ok: true });
+    }
+    // Validate finite lat/lon at the webhook boundary so a malformed Telegram
+    // payload never produces a NaN that reaches the service (never 500).
+    const lat = Number(loc.latitude);
+    const lon = Number(loc.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      await reply('Lokasi yang dikirim tidak valid. Coba kirim ulang lokasi Anda.');
+      return ok({ ok: true });
+    }
     const result = await performClockIn({
       employeeId: employee.employee_id,
-      latitude: loc?.latitude,
-      longitude: loc?.longitude,
+      latitude: lat,
+      longitude: lon,
       actor: { userId: actorUserId, role: actorRole, employeeId: employee.employee_id },
       source: 'telegram'
     });
@@ -101,11 +124,7 @@ export const POST = handler(async (req) => {
   }
 
   if (intent === 'clock-out') {
-    const open = employees.length
-      ? await readTab<Record<string, string>>(TABS.attendance).then((rows) =>
-          rows.find((a) => a.employee_id === employee.employee_id && a.actual_check_in && !a.actual_check_out)
-        )
-      : undefined;
+    const open = await findOpenAttendance(employee.employee_id);
     if (!open) {
       await reply('Belum ada absen masuk yang terbuka untuk hari ini.');
       return ok({ ok: true });

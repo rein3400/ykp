@@ -1,19 +1,20 @@
 /**
  * Hermez service entry: Telegram long-polling + scheduler.
- * - Owner whitelist enforced here (non-owners get one polite refusal).
- * - Voice notes → transcription (lite model) → handled as text.
- * - Photos → multimodal analysis (full model with vision).
+ * - Owner + department-head gate enforced here (others get one refusal).
+ * - Text → LLM tool-use agent loop (deepseek-v4-flash, text-only).
+ * - Photo → vision model (minimax-m3 via Ollama Cloud) with tool access.
+ * - Voice → polite "not supported" reply (audio input is out of scope).
  * - Scheduler: AI daily brief at 22:05 WIB, watch rules every 30 min.
  * - DRY-RUN (no bot token): everything logs, nothing sends.
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CONFIG, DRY_RUN, todayWib, wibHourMinute } from './config.js';
-import { pollUpdates, sendMessage, sendToOwners, downloadFile, getMe, type TgMessage } from './telegram.js';
+import { pollUpdates, sendMessage, sendMessagePlain, sendToOwners, getMe, downloadFile, type TgMessage } from './telegram.js';
 import { handleText, executeTool } from './brain.js';
-import { chat } from './openrouter.js';
 import { runDailyBrief } from './brief.js';
 import { evaluateRules } from './watch.js';
+import { resolveActor, isAllowedRole, scopeFor, type Actor } from './actor.js';
 
 const OFFSET_FILE = () => join(CONFIG.dataDir, 'offset.txt');
 
@@ -29,57 +30,69 @@ async function saveOffset(offset: number): Promise<void> {
   await writeFile(OFFSET_FILE(), String(offset));
 }
 
-function isOwner(msg: TgMessage): boolean {
+/** Resolve the sender to an RBAC actor and enforce the owner/head gate. */
+async function resolveAllowedActor(msg: TgMessage): Promise<Actor | null> {
   const id = msg.from?.id ?? msg.chat.id;
-  return CONFIG.ownerIds.includes(String(id));
+  const idStr = String(id);
+  // Hard allowlist (if configured) is the single source of truth.
+  if (CONFIG.allowedIds.length > 0) {
+    if (!CONFIG.allowedIds.includes(idStr)) return null;
+    return { userId: `TG-${id}`, role: 'owner', brandId: '', outletId: '', employeeId: '' };
+  }
+  // Owner whitelist (env) always wins — no HR lookup needed.
+  if (CONFIG.ownerIds.includes(idStr)) {
+    return { userId: `TG-${id}`, role: 'owner', brandId: '', outletId: '', employeeId: '' };
+  }
+  const actor = await resolveActor(id);
+  if (!actor) return null;
+  if (!isAllowedRole(actor.role)) return null;
+  return actor;
 }
 
-async function transcribeVoice(fileId: string): Promise<string> {
-  const { data } = await downloadFile(fileId);
-  const result = await chat(
-    [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: 'Transkripsikan pesan suara ini (Bahasa Indonesia). Jawab HANYA dengan teks transkripsinya, tanpa komentar.' },
-          { type: 'input_audio', input_audio: { data: data.toString('base64'), format: 'ogg' } }
-        ]
-      }
-    ],
-    undefined,
-    CONFIG.liteModel
-  );
-  return result.content.trim();
+// ── Per-chat rate limiting (anti token-burn spam) ────────────────────
+
+interface RateEntry { count: number; windowStart: number }
+const rateState = new Map<number, RateEntry>();
+
+function rateLimited(chatId: number): boolean {
+  const now = Date.now();
+  const e = rateState.get(chatId);
+  if (!e || now - e.windowStart > CONFIG.rateLimitWindowMs) {
+    rateState.set(chatId, { count: 1, windowStart: now });
+    return false;
+  }
+  e.count += 1;
+  return e.count > CONFIG.rateLimitMax;
 }
 
 async function handleMessage(msg: TgMessage): Promise<void> {
   const chatId = msg.chat.id;
-  if (!isOwner(msg)) {
-    await sendMessage(chatId, 'Maaf, saya hanya melayani owner YKP. 🙏');
+  const actor = await resolveAllowedActor(msg);
+  if (!actor) {
+    await sendMessage(chatId, 'Maaf, saya hanya melayani owner dan kepala bagian YKP. 🙏');
     return;
   }
+  if (rateLimited(chatId)) {
+    await sendMessage(chatId, 'Terlalu banyak pesan. Tunggu sebentar ya.');
+    return;
+  }
+  const scope = scopeFor(actor);
   try {
     if (msg.voice) {
-      await sendMessage(chatId, '🎙 Mendengarkan…');
-      const transcript = await transcribeVoice(msg.voice.file_id);
-      if (!transcript) {
-        await sendMessage(chatId, 'Tidak bisa mendengar dengan jelas — coba ketik saja ya.');
-        return;
-      }
-      const reply = await handleText(chatId, transcript);
-      await sendMessage(chatId, `🎙 <i>"${transcript}"</i>\n\n${reply}`);
+      await sendMessage(chatId, 'Maaf, model AI saat ini belum mendukung pesan suara. Ketik pertanyaan Anda ya.');
       return;
     }
     if (msg.photo && msg.photo.length > 0) {
       const largest = msg.photo[msg.photo.length - 1];
       const { data } = await downloadFile(largest.file_id);
-      const reply = await handleText(chatId, msg.caption ?? '', data.toString('base64'));
-      await sendMessage(chatId, reply);
+      const caption = msg.caption ?? '';
+      const reply = await handleText(chatId, caption, data.toString('base64'), scope);
+      await sendMessagePlain(chatId, reply);
       return;
     }
     if (msg.text) {
-      const reply = await handleText(chatId, msg.text);
-      await sendMessage(chatId, reply);
+      const reply = await handleText(chatId, msg.text, undefined, scope);
+      await sendMessagePlain(chatId, reply);
     }
   } catch (e) {
     console.error('[hermez] message handling failed:', e);
@@ -115,6 +128,10 @@ async function scheduler(state: { lastBriefDate: string; lastWatchRun: number })
 }
 
 async function main(): Promise<void> {
+  if (process.env.TELEGRAM_OPEN_ACCESS === 'true') {
+    console.error('[hermez] REFUSING TO START: TELEGRAM_OPEN_ACCESS=true is a removed auth-bypass footgun. Delete it from .env.');
+    process.exit(1);
+  }
   const me = await getMe();
   console.log(`[hermez] starting as @${me} | owners: ${CONFIG.ownerIds.length} | dry-run: ${DRY_RUN}`);
   if (CONFIG.ownerIds.length === 0) {

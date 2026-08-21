@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, forbidden, handler } from '@/lib/http';
+import { ok, list, unauthorized, forbidden, badRequest, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, assertInvestor } from '@/lib/repo';
@@ -21,13 +21,19 @@ export const POST = handler(async (req: NextRequest) => {
   if (s.role !== 'owner') return forbidden('Only owner can record capital');
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   await assertInvestor(body.investor_id).catch(() => {});
+  // Validate amount as integer IDR (invariant §2). Mirrors dividend/route.ts:
+  // reject formatted strings ("Rp 5.000") and decimals ("5000.5") that would
+  // otherwise propagate to regenerateInvestorSummary as NaN → total_capital=NaN.
+  const rawAmount = body.amount ?? '0';
+  if (!/^-?\d+$/.test(rawAmount)) return badRequest('amount harus integer IDR (mis. "500000")');
+  const amount = Number(rawAmount);
   const id = nextSequentialIdSync('CAP');
   const row = {
     capital_id: id,
     investor_id: body.investor_id ?? '',
     date: body.date ?? formatDateWib(new Date()),
     type: body.type === 'out' ? 'out' : 'in',
-    amount: body.amount ?? '0',
+    amount: String(amount),
     method: body.method ?? '',
     reference: body.reference ?? '',
     note: body.note ?? '',

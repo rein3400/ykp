@@ -1,0 +1,35 @@
+TITLE: YKP Operational V1
+H1: Analytics & Configurations
+
+YKP Ops V1
+Ringkasan
+Briefing & Shift
+Opening Checklist
+Checklist Operasional
+KDS / Live Ops
+Visual QC
+Incident & Complaint
+Closing
+Waste & Stock
+Analytics
+AI Assistant
+Telegram
+owner
+Owner
+Logout
+Analytics & Configurations
+
+KPI agregat + regenerate summary + AI insight.
+
+Summary rows
+0
+Open high incidents
+0
+Waste value
+Rp 0
+Orders over SLA
+0
+Regenerate Daily Summary
+All Summaries
+
+Belum ada summary. Klik Regenerate.

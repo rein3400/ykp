@@ -1,0 +1,235 @@
+TITLE: YKP HR V1
+H1: HR Daily Summary
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+HR Daily Summary
+
+Summary agregat harian. Data ini dibaca oleh Hermez (read-only). Tidak ada PII.
+
+Tanggal
+Regenerate
+Funkydak — Funkydak Cipete
+2026-07-19
+green
+Present: 18
+Late: 0
+Absent: 2
+Late (m): 0
+Funkydak — Funkydak Cipete
+2026-07-18
+green
+Present: 19
+Late: 2
+Absent: 1
+Late (m): 30
+Funkydak — Funkydak Cipete
+2026-07-17
+green
+Present: 20
+Late: 1
+Absent: 0
+Late (m): 15
+Funkydak — Funkydak Cipete
+2026-07-16
+green
+Present: 18
+Late: 1
+Absent: 2
+Late (m): 15
+Funkydak — Funkydak Cipete
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Issue: 8 payroll issue pending
+Action: HR review payroll
+Funkydak — Funkydak Kemang
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Funkydak — Funkydak Senopati
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Sekarpizza — Sekarpizza Senopati
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Sekarpizza — Sekarpizza Kemang
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Suburbuns — Suburbuns Senayan
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Suburbuns — Suburbuns Pondok Indah
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Laju Kopi — Laju Kopi Senopati
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Laju Kopi — Laju Kopi Cikini
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Uncle Masala — Uncle Masala Kemang
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Funkydak — Smoke Test Outlet
+2026-07-15
+green
+Present: 0
+Late: 0
+Absent: 0
+Late (m): 0
+Funkydak — Funkydak Cipete
+2026-07-15
+green
+Present: 19
+Late: 2
+Absent: 1
+Late (m): 30
+Funkydak — Funkydak Cipete
+2026-07-14
+green
+Present: 18
+Late: 1
+Absent: 2
+Late (m): 15
+Funkydak — Funkydak Cipete
+2026-07-13
+green
+Present: 19
+Late: 2
+Absent: 1
+Late (m): 30
+Funkydak — Funkydak Cipete
+2026-07-12
+green
+Present: 18
+Late: 0
+Absent: 2
+Late (m): 0
+Funkydak — Funkydak Cipete
+2026-07-11
+green
+Present: 20
+Late: 1
+Absent: 0
+Late (m): 15
+Funkydak Cipete — OL-001
+2026-07-10
+green
+Present: 2
+Late: 0
+Absent: no
+Late (m): 2026-07-10 10:38:21
+Funkydak — Funkydak Cipete
+2026-07-10
+green
+Present: 20
+Late: 2
+Absent: 0
+Late (m): 30
+Funkydak Cipete — OL-001
+2026-07-09
+green
+Present: 1
+Late: 2
+Absent: yes
+Late (m): 2026-07-10 10:38:21
+Funkydak — Funkydak Cipete
+2026-07-09
+green
+Present: 19
+Late: 2
+Absent: 1
+Late (m): 30
+Funkydak Cipete — OL-001
+2026-07-08
+green
+Present: 2
+Late: 2
+Absent: yes
+Late (m): 2026-07-10 10:38:21
+Funkydak — Funkydak Cipete
+2026-07-08
+green
+Present: 19
+Late: 0
+Absent: 1
+Late (m): 0
+Funkydak Cipete — OL-001
+2026-07-07
+green
+Present: 1
+Late: 1
+Absent: no
+Late (m): 2026-07-10 10:38:21
+Funkydak — Funkydak Cipete
+2026-07-07
+green
+Present: 20
+Late: 0
+Absent: 0
+Late (m): 0
+Funkydak Cipete — OL-001
+2026-07-06
+green
+Present: 0
+Late: 1
+Absent: no
+Late (m): 2026-07-10 10:38:21
+Funkydak — Funkydak Cipete
+2026-07-06
+green
+P

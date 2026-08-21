@@ -12,6 +12,7 @@ import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } fro
 import { can, type Role } from '@/lib/rbac';
 import { evalNearExpiry, evalExpiredStock, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
+import { findOpenAlert } from '@/lib/alert-dedupe';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -43,6 +44,10 @@ export const POST = handler(async (req: NextRequest) => {
   if (!body.location_id) return badRequest('location_id is required');
   if (!body.batch_number) return badRequest('batch_number is required');
   if (!body.current_qty) return badRequest('current_qty is required');
+  // Finite guard: "abc" → NaN, which is not <= 0 so status stays ACTIVE and
+  // corrupts downstream expiry/value calc.
+  const qtyN = Number(body.current_qty);
+  if (!Number.isFinite(qtyN)) return badRequest('current_qty must be a finite number');
 
   try {
     await assertItem(body.item_id);
@@ -63,7 +68,7 @@ export const POST = handler(async (req: NextRequest) => {
     if (daysUntil < 0) status = 'EXPIRED';
     else if (daysUntil <= 7) status = 'NEAR_EXPIRY';
   }
-  if (Number(body.current_qty) <= 0) status = 'DEPLETED';
+  if (qtyN <= 0) status = 'DEPLETED';
 
   const row: Record<string, string> = {
     batch_stock_id: id,
@@ -84,31 +89,36 @@ export const POST = handler(async (req: NextRequest) => {
   // Create alerts for near/expired
   if (body.expiry_date) {
     const daysUntil = daysBetween(today, body.expiry_date);
-    const qty = Number(body.current_qty);
+    const qty = qtyN;
     let alert = evalExpiredStock(daysUntil, qty, body.item_id, body.batch_number, body.item_id);
     if (!alert) alert = evalNearExpiry(daysUntil, 7, qty, body.item_id, body.batch_number, body.item_id);
     if (alert) {
-      const alertId = nextSequentialIdSync('ALR');
-      const alertRow: Record<string, string> = {
-        alert_id: alertId, alert_datetime: now, alert_type: alert.alertType,
-        severity: alert.severity, brand_id: '', outlet_id: '',
-        location_id: body.location_id, item_id: body.item_id,
-        reference_type: 'batch', reference_id: body.batch_number,
-        title: alert.title, message: alert.message, status: 'OPEN',
-        assigned_to: '', due_date: today, action_required: alert.actionRequired,
-        telegram_status: 'QUEUED', created_at: now, resolved_at: '', resolved_by: ''
-      };
-      const startRow = await appendRows(TABS.alertLog, [alertRow]).catch(() => -1);
-      await dispatchAlertTelegram({
-        alertId,
-        severity: alert.severity,
-        alertType: alert.alertType,
-        title: alert.title,
-        message: alert.message,
-        actionRequired: alert.actionRequired,
-        startRow,
-        alertRow,
-      }).catch(() => null);
+      // Dedupe: do not create a second OPEN alert for the same
+      // (item_id, alert_type, reference_id=batch_number). Reuse the existing one.
+      const existing = await findOpenAlert(body.item_id, alert.alertType, body.batch_number).catch(() => null);
+      if (!existing) {
+        const alertId = nextSequentialIdSync('ALR');
+        const alertRow: Record<string, string> = {
+          alert_id: alertId, alert_datetime: now, alert_type: alert.alertType,
+          severity: alert.severity, brand_id: '', outlet_id: '',
+          location_id: body.location_id, item_id: body.item_id,
+          reference_type: 'batch', reference_id: body.batch_number,
+          title: alert.title, message: alert.message, status: 'OPEN',
+          assigned_to: '', due_date: today, action_required: alert.actionRequired,
+          telegram_status: 'QUEUED', created_at: now, resolved_at: '', resolved_by: ''
+        };
+        const startRow = await appendRows(TABS.alertLog, [alertRow]).catch(() => -1);
+        await dispatchAlertTelegram({
+          alertId,
+          severity: alert.severity,
+          alertType: alert.alertType,
+          title: alert.title,
+          message: alert.message,
+          actionRequired: alert.actionRequired,
+          startRow,
+          alertRow,
+        }).catch(() => null);
+      }
     }
   }
 

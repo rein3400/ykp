@@ -76,4 +76,63 @@ describe('approval FSM (ported from engine, keeps CANCELLED fix)', () => {
     expect(r.ok).toBe(true);
     expect(r.new_row.status).toBe('PAID');
   });
+
+  it('rejects self-approve: actor who created the row cannot APPROVE it', () => {
+    const r = transitionApproval(
+      row({ createdBy: 'USR-001' }),
+      'PENDING', 'APPROVED',
+      { id: 'USR-001', role: 'owner' }
+    );
+    expect(r.ok).toBe(false);
+    expect(r.error).toContain('segregation of duties');
+  });
+
+  it('rejects self-approve even when role would otherwise allow the amount', () => {
+    // owner can approve any amount, but still cannot self-approve
+    const r = transitionApproval(
+      row({ amount: 5_000_000, createdBy: 'USR-009' }),
+      'PENDING', 'APPROVED',
+      { id: 'USR-009', role: 'owner' }
+    );
+    expect(r.ok).toBe(false);
+    expect(r.error).toContain('segregation of duties');
+  });
+
+  it('rejects self-approve on APPROVED → PAID (supplier payment by creator)', () => {
+    const r = transitionApproval(
+      row({ entity: 'supplier_cost', status: 'APPROVED', amount: 1500000, createdBy: 'USR-001' }),
+      'APPROVED', 'PAID',
+      { id: 'USR-001', role: 'owner' }
+    );
+    expect(r.ok).toBe(false);
+    expect(r.error).toContain('segregation of duties');
+  });
+
+  it('a DIFFERENT approver with sufficient role still succeeds', () => {
+    const r = transitionApproval(
+      row({ createdBy: 'USR-001' }),
+      'PENDING', 'APPROVED',
+      { id: 'USR-002', role: 'finance_admin' }
+    );
+    expect(r.ok).toBe(true);
+    expect(r.new_row.approvedBy).toBe('USR-002');
+  });
+
+  it('REJECT by the creator is allowed (not a self-approval)', () => {
+    const r = transitionApproval(
+      row({ createdBy: 'USR-001' }),
+      'PENDING', 'REJECTED',
+      { id: 'USR-001', role: 'finance_admin' }
+    );
+    expect(r.ok).toBe(true);
+  });
+
+  it('self-approve does not fire when createdBy is absent (legacy rows)', () => {
+    const r = transitionApproval(
+      row({ createdBy: undefined }),
+      'PENDING', 'APPROVED',
+      { id: 'USR-001', role: 'finance_admin' }
+    );
+    expect(r.ok).toBe(true);
+  });
 });

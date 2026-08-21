@@ -1,0 +1,184 @@
+TITLE: YKP Owner Command
+H1: Command Center
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+MODE MOCK aktif — YKP_OWNER_MOCK=true, semua data adalah data demo bawaan. Login demo: owner / owner123.
+Command Center
+
+20 Agu 2026 · digenerate 10:04
+
+Estimasi Surplus Kas
+
+Rp15.651.789
+
+Revenue vs rata-rata 7 hari
+
+Rp24.137.267+6%
+
+Staf hadir / telat
+
+33 / 6
+
+Stok kritis
+
+5 item
+
+Insiden HIGH/CRITICAL
+
+3
+
+Modul
+Keuangan
+Mock
+Revenue hari ini
+Rp24.137.267
+Estimasi Surplus Kas
+Rp15.651.789
+Unpaid supplier
+Rp9.000.000
+updated 21:45
+Detail
+Buka ↗
+SDM
+Mock
+Hadir / Terjadwal
+33/34
+Telat
+6
+Absen
+1
+updated 21:40
+Detail
+Buka ↗
+Gudang
+Mock
+Nilai inventori
+Rp88.900.000
+Stok kritis
+5
+Near expiry
+7
+updated 21:50
+Detail
+Buka ↗
+Operasional
+Mock
+Outlet siap
+6/7
+Checklist
+96%
+Insiden berat
+1
+updated 21:55
+Detail
+Buka ↗
+Investor
+Mock
+Total revenue
+Rp24.137.267
+Total profit
+Rp15.651.789
+Dividend declared
+Rp45.000.000
+updated 22:00
+Detail
+Buka ↗
+Inbox Alert (6)
+CRITICAL
+Gudang
+
+3 item stok kritis di Funkydak Cipete (ayam fillet, tepung, minyak)
+
+Funkydak Cipete · 16:20
+
+Tangani ↗
+HIGH
+Keuangan
+
+Selisih kas -Rp75.000 di Suburbuns Depok saat closing
+
+Suburbuns Depok · 21:35
+
+Tangani ↗
+HIGH
+Operasional
+
+Kompor mati saat jam makan malam di Laju Kopi Bintaro
+
+Laju Kopi Bintaro · 19:05
+
+Tangani ↗
+MEDIUM
+SDM
+
+Kekurangan 1 orang shift malam di Sekarpizza Seturan
+
+Sekarpizza Seturan · 15:00
+
+Tangani ↗
+MEDIUM
+Gudang
+
+4 item mendekati kedaluwarsa di Uncle Masala Tebet (< 3 hari)
+
+Uncle Masala Tebet · 09:15
+
+Tangani ↗
+LOW
+Gudang
+
+Selisih opname Rp320.000 belum terjelaskan di Sekarpizza Demangan
+
+Sekarpizza Demangan · 11:40
+
+Tangani ↗
+
+Read-only: ACK/resolve dilakukan di modul pemilik alert (doktrin no-write-back).
+
+Action Tracker (4 terbuka)
+OPEN
+Gudang
+
+Approve purchase recommendation Funkydak Cipete
+
+PIC: Manager Gudang · deadline 20 Agu 2026 · Funkydak Cipete
+
+Buka ↗
+OVERDUE
+Operasional
+
+Panggil teknisi kompor Laju Kopi Bintaro
+
+PIC: SPV Laju Kopi · deadline 18 Agu 2026 · Laju Kopi Bintaro
+
+Buka ↗
+IN_PROGRESS
+Keuangan
+
+Audit closing kas Suburbuns Depok
+
+PIC: Owner · deadline 20 Agu 2026 · Suburbuns Depok
+
+Buka ↗
+OVERDUE
+Gudang
+
+Buang item kedaluwarsa Uncle Masala Tebet
+
+PIC: Kepala Outlet · deadline 18 Agu 2026 · Uncle Masala Tebet
+
+Buka ↗

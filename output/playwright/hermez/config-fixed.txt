@@ -1,0 +1,107 @@
+TITLE: YKP Hermez
+H1: Hermez
+
+YKP
+
+Hermez
+
+AI Command Center
+
+Ringkasan Harian
+Peringatan
+Actions
+Warehouse
+Konfigurasi
+Jalankan
+Tes Telegram
+Bot Telegram
+
+Konfigurasi
+
+Threshold Config
+
+Tuning parameter trigger Hermez. Hanya super-admin.
+
+Integrasi — Telegram & LLM
+
+Nilai di sini menimpa env var server. Secret ditampilkan masked dan hanya diganti kalau owner mengetik nilai baru.
+
+Telegram Bot Token
+belum di-set
+
+Token bot dari @BotFather. Dipakai untuk kirim daily brief & alert.
+
+Simpan
+Telegram Chat / Group ID
+belum di-set
+
+Chat atau group ID tujuan brief (contoh: -5437367893).
+
+Simpan
+LLM Provider
+belum di-set
+
+Provider model: openai, anthropic, openrouter, dll.
+
+Simpan
+LLM API Key
+belum di-set
+
+API key provider LLM. Disimpan server-side, ditampilkan masked.
+
+Simpan
+LLM Model
+belum di-set
+
+Nama model (contoh: gpt-4o-mini, claude-haiku-4-5).
+
+Simpan
+LLM Base URL (opsional)
+belum di-set
+
+Custom endpoint OpenAI-compatible. Kosongkan untuk default provider.
+
+Simpan
+Threshold Parameters
+Rasio Staf Terlambat (Warning)
+warning
+
+Persentase staf terlambat yang memicu warning
+
+%
+Simpan
+Rasio Staf Terlambat (Critical)
+critical
+
+Persentase staf terlambat yang memicu critical
+
+%
+Simpan
+Selisih Kas (Warning)
+warning
+
+Batas selisih kas yang memicu warning
+
+IDR
+Simpan
+Selisih Kas (Critical)
+critical
+
+Batas selisih kas yang memicu critical
+
+IDR
+Simpan
+Anomali Kas Kecil
+warning
+
+Multiplier rata-rata untuk deteksi anomali petty cash
+
+x
+Simpan
+Pengeluaran Tinggi
+warning
+
+Multiplier rata-rata untuk deteksi expense tidak wajar
+
+x
+Simpan

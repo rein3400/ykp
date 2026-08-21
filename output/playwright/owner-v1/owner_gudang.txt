@@ -1,0 +1,106 @@
+TITLE: YKP Owner Command
+H1: Gudang — 20 Agu 2026
+
+YKP Owner
+MOCK
+owner · owner
+Logout
+Beranda
+Keuangan
+Penjualan
+Bukti
+SDM
+Gudang
+Operasional
+Investor
+Aktivitas
+Daily Brief
+Health
+MODE MOCK aktif — YKP_OWNER_MOCK=true, semua data adalah data demo bawaan. Login demo: owner / owner123.
+Gudang — 20 Agu 2026
+Mock
+
+Nilai inventori
+
+Rp88.900.000
+
+Stok kritis
+
+5
+
+Risiko stockout
+
+2
+
+Varians tak terjelaskan
+
+Rp320.000
+
+Near expiry
+
+7
+
+Expired
+
+1
+
+Waste hari ini
+
+Rp510.000
+
+Est. nilai pembelian
+
+Rp3.250.000
+
+Purchase recommendation pending (3)
+
+Ayam Fillet (kg) — 25 kg
+
+Stok di bawah minimum (sisa 4 kg, cover 1 hari)
+
+Rp1.875.000
+
+Tepung Terigu (kg) — 20 kg
+
+Stok kritis — risiko stockout besok
+
+Rp475.000
+
+Susu Segar (liter) — 30 liter
+
+Days-of-cover 2 hari < threshold 3 hari
+
+Rp900.000
+Proses di modul Gudang ↗
+Per outlet
+Semua brand
+Funkydak
+Laju Kopi
+Sekarpizza
+Suburbuns
+Uncle Masala
+Semua outlet
+Funkydak Cipete
+Funkydak Kemang
+Laju Kopi Bintaro
+Sekarpizza Demangan
+Sekarpizza Seturan
+Suburbuns Depok
+Uncle Masala Tebet
+7 outlet
+OUTLET	NILAI STOK	KRITIS	RISIKO STOCKOUT	VARIANS TAK TERJELASKAN	NEAR EXPIRY	EXPIRED	WASTE
+Funkydak Cipete	Rp8.500.000	3	2	Rp0	1	0	Rp0
+Funkydak Kemang	Rp9.900.000	0	0	Rp0	0	0	Rp85.000
+Sekarpizza Demangan	Rp11.300.000	0	0	Rp320.000	1	0	Rp170.000
+Sekarpizza Seturan	Rp12.700.000	0	0	Rp0	0	0	Rp0
+Suburbuns Depok	Rp14.100.000	0	0	Rp0	1	0	Rp85.000
+Laju Kopi Bintaro	Rp15.500.000	2	0	Rp0	0	0	Rp170.000
+Uncle Masala Tebet	Rp16.900.000	0	0	Rp0	4	1	Rp0
+
+Sumber: Modul Gudang (wh_daily_summary) · update 21:50
+
+Detail
+Stok ↗
+Expiry ↗
+Opname / varians ↗
+Alerts ↗

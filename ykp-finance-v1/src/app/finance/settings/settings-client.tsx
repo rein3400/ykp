@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { can, type Role } from '@/lib/rbac';
 import { Card, Btn, Modal, Input, Select, Th, Td, Badge, rp } from '../ui';
 
-type TabKey = 'threshold' | 'brand' | 'outlet' | 'supplier' | 'category' | 'method' | 'account';
+type TabKey = 'threshold' | 'brand' | 'outlet' | 'supplier' | 'category' | 'method' | 'account' | 'telegram';
 
 const TABS_UI: { key: TabKey; label: string }[] = [
   { key: 'threshold', label: 'Threshold Config' },
@@ -20,7 +20,8 @@ const TABS_UI: { key: TabKey; label: string }[] = [
   { key: 'supplier', label: 'Supplier' },
   { key: 'category', label: 'Kategori Expense' },
   { key: 'method', label: 'Payment Method' },
-  { key: 'account', label: 'Akun Kas Kecil' }
+  { key: 'account', label: 'Akun Kas Kecil' },
+  { key: 'telegram', label: 'Telegram' }
 ];
 
 export default function SettingsClient(props: {
@@ -31,6 +32,7 @@ export default function SettingsClient(props: {
   methods: Record<string, string>[];
   accounts: Record<string, string>[];
   thresholds: Record<string, string>[];
+  appSettings: Record<string, string>[];
   role: string;
 }) {
   const router = useRouter();
@@ -39,6 +41,7 @@ export default function SettingsClient(props: {
   const [addEntity, setAddEntity] = useState<TabKey | null>(null);
   const canWriteMaster = can(props.role as Role, 'create', 'master');
   const canEditThreshold = can(props.role as Role, 'update', 'threshold');
+  const canEditTelegram = can(props.role as Role, 'update', 'telegram');
 
   return (
     <div className='space-y-4'>
@@ -150,6 +153,13 @@ export default function SettingsClient(props: {
           rows={props.accounts.map((a) => [a.account_id, a.account_name, a.outlet_id, rp(a.opening_balance), rp(a.daily_limit), a.status])}
         />
       )}
+      {tab === 'telegram' && (
+        <TelegramSettings
+          appSettings={props.appSettings}
+          canEdit={canEditTelegram}
+          onDone={() => router.refresh()}
+        />
+      )}
 
       {editThreshold && (
         <ThresholdModal
@@ -192,6 +202,64 @@ function MasterTable({ title, headers, rows, action }: {
             ))}
           </tbody>
         </table>
+      </div>
+    </Card>
+  );
+}
+
+function TelegramSettings({ appSettings, canEdit, onDone }: {
+  appSettings: Record<string, string>[];
+  canEdit: boolean;
+  onDone: () => void;
+}) {
+  const ownerRow = appSettings.find((s) => s.setting_key === 'telegram_owner_chat_id');
+  const [chatId, setChatId] = useState(ownerRow?.setting_value ?? '');
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setBusy(true);
+    try {
+      const r = await fetch('/api/finance/settings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'telegram_owner_chat_id',
+          value: chatId,
+          description: 'Chat id Telegram owner untuk daily brief & alert push'
+        })
+      });
+      const j = await r.json();
+      if (!r.ok) { toast.error(j.error?.message ?? 'Gagal menyimpan'); return; }
+      toast.success('Owner chat id tersimpan');
+      onDone();
+    } catch { toast.error('Network error'); } finally { setBusy(false); }
+  }
+
+  return (
+    <Card
+      title='Telegram'
+      sub='Chat id owner untuk menerima daily brief & alert HIGH/CRITICAL. Bisa diubah tanpa edit .env.'
+    >
+      <div className='space-y-3'>
+        <div className='rounded border border-border p-3'>
+          <p className='text-[10px] text-muted-foreground mb-1'>Cara dapat chat id:</p>
+          <ol className='list-decimal list-inside text-xs text-muted-foreground space-y-0.5'>
+            <li>Chat bot <b>@justatestermaybot</b> di Telegram, kirim <code>/start</code>.</li>
+            <li>Forward pesan apa pun ke <b>@userinfobot</b> — dia balas chat id kamu.</li>
+            <li>Salin angka chat id (tanpa tanda kutip/spasi) ke kolom di bawah.</li>
+          </ol>
+        </div>
+        <Input
+          label='Owner Chat ID'
+          placeholder='contoh: 5721500978'
+          value={chatId}
+          onChange={(e) => setChatId(e.target.value)}
+          disabled={!canEdit}
+        />
+        <div className='flex justify-end gap-2'>
+          <Btn disabled={busy || !canEdit || !chatId.trim()} onClick={save}>
+            {busy ? 'Menyimpan…' : 'Simpan'}
+          </Btn>
+        </div>
       </div>
     </Card>
   );

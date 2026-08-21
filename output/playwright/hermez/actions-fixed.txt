@@ -1,0 +1,35 @@
+TITLE: YKP Hermez
+H1: Hermez
+
+YKP
+
+Hermez
+
+AI Command Center
+
+Ringkasan Harian
+Peringatan
+Actions
+Warehouse
+Konfigurasi
+Jalankan
+Tes Telegram
+Bot Telegram
+
+Actions
+
+Action Tracker
+
+Tindak lanjut alert dan keputusan Hermez.
+
+Buat Action
+Filter
+Semua status
+Open
+In Progress
+Waiting Approval
+Done
+Cancelled
+Overdue
+TITLE	BRAND	OUTLET	ASSIGNED	PRIORITY	DUE DATE	STATUS	ACTIONS
+Tidak ada action untuk filter saat ini.

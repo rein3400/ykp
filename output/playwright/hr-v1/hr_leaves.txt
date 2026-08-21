@@ -1,0 +1,123 @@
+TITLE: YKP HR V1
+H1: 
+
+Y
+YKP HR V1
+COMMAND CENTER
+Ringkasan
+Karyawan
+Absensi
+Roster
+Keterlambatan
+Izin / Cuti
+Payroll
+Bonus & Potongan
+Summary Harian
+User & Role
+Telegram
+owner
+Owner
+Keluar
+Ajukan Izin / Cuti
+Karyawan
+Budi Santoso
+Citra Lestari
+Dewi Anggraini
+Hadi Pranata
+Lina Kusuma
+Rudi Hartono
+Maya Sari
+Budi Santoso
+Dewi Wijaya
+Joko Kusuma
+Maya Pratama
+Hadi Sari
+Tuti Dewi
+Fajar Santoso
+Yuni Wijaya
+Hendra Kusuma
+Ayu Pratama
+Jaya Sari
+Kartini Dewi
+Demo Test Karyawan
+VPS Test Employee
+Tipe
+Cuti Tahunan
+Sakit
+Izin
+Cuti Tidak Dibayar
+Darurat
+Melahirkan
+Mulai
+Selesai
+Alasan
+Ajukan
+Daftar Pengajuan
+KARYAWAN	TIPE	MULAI	SELESAI	HARI	ALASAN	STATUS	AKSI
+EMP-001	2026-06-26	2026-06-29	4	Keperluan unpaid_leave		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-001	2026-07-04	2026-07-06	3	Keperluan annual_leave		-
+"2026-07-10 10:38:21"
+	—
+EMP-002	2026-06-28	2026-06-30	3	Keperluan emergency		-
+"2026-07-10 10:38:21"
+	—
+EMP-002	2026-06-22	2026-06-25	4	Keperluan unpaid_leave		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-003	2026-07-03	2026-07-06	4	Keperluan unpaid_leave		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-003	2026-06-18	2026-06-20	3	Keperluan maternity		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-004	2026-07-03	2026-07-06	4	Keperluan maternity		-
+"2026-07-10 10:38:21"
+	—
+EMP-004	2026-06-21	2026-06-24	4	Keperluan unpaid_leave		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-005	2026-06-20	2026-06-22	3	Keperluan maternity		-
+"2026-07-10 10:38:21"
+	—
+EMP-005	2026-06-15	2026-06-17	3	Keperluan unpaid_leave		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-006	2026-07-03	2026-07-05	3	Keperluan maternity		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-006	2026-07-05	2026-07-07	3	Keperluan annual_leave		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-007	2026-06-19	2026-06-20	2	Keperluan unpaid_leave		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-007	2026-06-20	2026-06-21	2	Keperluan maternity		2026-07-10 10:38:21
+"2026-07-10 10:38:21"
+	—
+EMP-008	2026-06-25	2026-06-28	4	Keperluan maternity		-
+"2026-07-10 10:38:21"
+	—
+EMP-008	2026-06-20	2026-06-23	4	Keperluan annual_leave		-
+"2026-07-10 10:38:21"
+	—
+EMP-001	2026-07-12	2026-07-12	1			-
+"2026-07-12 21:10:53"
+	—
+EMP-001	PERMISSION	2026-07-18	2026-07-18	1		PENDING	
+Setujui
+Tolak
+
+EMP-001	ANNUAL	2026-07-14	2026-07-16	3	MEGA seed leave	APPROVED	—
+EMP-002	SICK	2026-07-11	2026-07-13	3	MEGA seed leave	APPROVED	—
+EMP-003	UNPAID	2026-07-08	2026-07-10	3	MEGA seed leave	APPROVED	—
+EMP-004	ANNUAL	2026-07-05	2026-07-07	3	MEGA seed leave	APPROVED	—
+EMP-005	SICK	2026-07-02	2026-07-04	3	MEGA seed leave	APPROVED	—
+MEGA-EMP-0001	SICK	2026-07-24	2026-07-26	3	demam	PENDING	
+Setujui
+Tolak
+
+MEGA-EMP-0001	SICK	2026-07-24	2026-07-26	3	demam	PENDING	
+Setujui
+Tolak

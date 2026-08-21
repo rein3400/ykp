@@ -6,16 +6,25 @@
  *            'petty_cash', a linked petty-cash OUT row is auto-created so the
  *            summary never double counts (Revisi #4).
  * RBAC: finance_admin+ (amount tiers enforced by lib/approval).
+ *
+ * Bug #2: the pay path is guarded by `guardedUpdateRow` (optimistic concurrency
+ * on `updated_at`) so two concurrent pays cannot both read the same
+ * `unpaid_amount` and silently lose a payment.
+ * Bug #9: when paying via petty_cash, balance sufficiency + the account
+ * `daily_limit` are checked before the petty OUT row is created, so
+ * `running_balance` never goes negative from this path.
  */
 import { NextRequest } from 'next/server';
 import { findRow, updateRow, appendRows, readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, unauthorized, badRequest, notFound, handler, forbidden } from '@/lib/http';
+import { ok, unauthorized, badRequest, notFound, handler, forbidden, conflict } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, todayWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
 import { canApprove, type Role } from '@/lib/rbac';
 import { transitionApproval, type ApprovalStatus } from '@/lib/approval';
+import { guardedUpdateRow, ConcurrentUpdateError } from '@/lib/concurrency';
+import { isInactiveStatus } from '@/lib/fin-summary';
 
 export const POST = handler(async (req: NextRequest, { params }) => {
   const s = await getSession();
@@ -43,6 +52,8 @@ export const POST = handler(async (req: NextRequest, { params }) => {
     if (!r.ok) return badRequest(r.error ?? 'transition not allowed');
     next.approval_status = to;
     next.approved_by = action === 'approve' ? s.userId : '';
+    next.updated_at = nowTimestampWib();
+    await updateRow(TABS.supplierCost, found.rowNumber, next);
   } else {
     // pay
     if (remaining <= 0) return badRequest('Invoice sudah lunas');
@@ -73,20 +84,38 @@ export const POST = handler(async (req: NextRequest, { params }) => {
     next.approval_status = newPaid >= total ? 'PAID' : 'APPROVED';
     next.approved_by = s.userId;
 
-    // Revisi #4: dibayar lewat kas kecil → catat petty OUT dengan link (anti double count)
+    // Revisi #4: dibayar lewat kas kecil → catat petty OUT dengan link (anti double count).
+    // Bug #9: validate balance sufficiency + daily_limit BEFORE committing, so the
+    // auto-created petty OUT never drives running_balance negative. Balance is taken
+    // from the latest row by petty_id (monotonic ts-based id), not created_at.
+    let pettyPayload: Record<string, string> | null = null;
     if ((body.payment_source ?? '') === 'petty_cash') {
       const accountId = body.petty_account_id;
       if (!accountId) return badRequest('petty_account_id is required when payment_source=petty_cash');
-      const accounts = await readTab<Record<string, string>>(TABS.pettyCashAccounts);
+      const [accounts, pettyRows] = await Promise.all([
+        readTab<Record<string, string>>(TABS.pettyCashAccounts),
+        readTab<Record<string, string>>(TABS.pettyCash)
+      ]);
       const account = accounts.find((a) => a.account_id === accountId);
       if (!account) return badRequest(`petty account not found: ${accountId}`);
-      const pettyRows = await readTab<Record<string, string>>(TABS.pettyCash);
       const last = pettyRows
         .filter((p) => p.account_id === accountId)
-        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || (a.created_at ?? '').localeCompare(b.created_at ?? ''))
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || (a.petty_id ?? '').localeCompare(b.petty_id ?? ''))
         .at(-1);
-      const newBalance = Number(last?.running_balance || account.opening_balance || 0) - payAmount;
-      await appendRows(TABS.pettyCash, [{
+      const prevBalance = Number(last?.running_balance || account.opening_balance || 0);
+      const newBalance = prevBalance - payAmount;
+      if (newBalance < 0) return badRequest(`Saldo kas kecil tidak cukup (saldo ${prevBalance}, keluar ${payAmount})`);
+      const dailyLimit = Number(account.daily_limit || 0);
+      if (dailyLimit > 0) {
+        const paidDate = next.payment_date;
+        const spentToday = pettyRows
+          .filter((p) => p.account_id === accountId && p.date === paidDate && !isInactiveStatus(p.approval_status))
+          .reduce((sum, p) => sum + Number(p.credit_out || 0), 0);
+        if (spentToday + payAmount > dailyLimit) {
+          return badRequest(`Pengeluaran kas kecil hari ini melebihi daily_limit (limit ${dailyLimit}, sudah keluar ${spentToday}, keluar ${payAmount})`);
+        }
+      }
+      pettyPayload = {
         petty_id: nextSequentialIdSync('PC'),
         date: next.payment_date,
         brand_id: before.brand_id,
@@ -117,12 +146,23 @@ export const POST = handler(async (req: NextRequest, { params }) => {
         linked_supplier_invoice_id: params.id,
         created_by: s.userId,
         created_at: nowTimestampWib()
-      }]);
+      };
     }
+
+    // Bug #2: optimistic-concurrency guard on the invoice write. A concurrent pay
+    // that already moved updated_at would otherwise silently lose a payment; the
+    // guard rejects with 409 instead. Petty OUT is only created after the invoice
+    // write wins, so a failed invoice write never leaves an orphan petty row.
+    next.updated_at = nowTimestampWib();
+    try {
+      await guardedUpdateRow(TABS.supplierCost, 'costing_id', params.id, found, next);
+    } catch (e) {
+      if (e instanceof ConcurrentUpdateError) return conflict(e.message);
+      throw e;
+    }
+    if (pettyPayload) await appendRows(TABS.pettyCash, [pettyPayload]);
   }
 
-  next.updated_at = nowTimestampWib();
-  await updateRow(TABS.supplierCost, found.rowNumber, next);
   await logAudit({
     module: 'finance', action: `approve-payment:${action}`, recordType: 'fin_supplier_cost',
     recordId: params.id, beforeValue: JSON.stringify(before), afterValue: JSON.stringify(next),
