@@ -1,7 +1,7 @@
 # YKP ERP & VPS Multi-Project Guide
 
 ## VPS Specs & Info
-- **Host / IP**: `187.77.114.168`
+- **Host / IP**: `187.52.124.40`
 - **Location**: Jakarta, Indonesia
 - **OS**: Ubuntu 24.04 LTS
 - **User**: `dev` (sudo available)

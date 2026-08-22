@@ -220,7 +220,7 @@ workstream — understand it deeply before touching `ykp-hr-v1`.
 
 ### Deploy facts
 
-- VPS: `187.77.114.168`, SSH user `dev`.
+- VPS: `187.52.124.40`, SSH user `dev`.
 - App path: `/home/dev/ykp/ykp-hr-v1`, PM2 app `ykp-hr-v1`, port `3008`.
 - Webhook: `POST https://oseedigital.tech/api/hr/attendance/telegram`,
   validated via `X-Telegram-Bot-Api-Secret-Token` header against

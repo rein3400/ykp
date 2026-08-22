@@ -1,7 +1,7 @@
 # YKP HR V1 — Telegram Absen Bot (Production)
 
 > Last updated: 2026-08-18
-> Status: LIVE di VPS `187.77.114.168`, PM2 app `ykp-hr-v1`, port `3008`.
+> Status: LIVE di VPS `187.52.124.40`, PM2 app `ykp-hr-v1`, port `3008`.
 > Webhook: `https://oseedigital.tech/api/hr/attendance/telegram`
 
 ## Spreadsheet (sumber data)
@@ -114,7 +114,7 @@ instruksi cara kirim lokasi di desktop (bukan "perintah tidak dikenali").
 
 ## Env & deploy (referensi)
 
-- VPS: `187.77.114.168`, user `dev`.
+- VPS: `187.52.124.40`, user `dev`.
 - App path: `/home/dev/ykp/ykp-hr-v1`.
 - PM2: `pm2 restart ykp-hr-v1 --update-env`.
 - Env file: `/home/dev/ykp/ykp-hr-v1/.env`.

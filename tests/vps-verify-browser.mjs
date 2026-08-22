@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import path from 'path';
 
-const VPS = 'http://187.77.114.168';
+const VPS = 'http://187.52.124.40';
 const outDir = path.resolve('screenshots');
 
 async function main() {
