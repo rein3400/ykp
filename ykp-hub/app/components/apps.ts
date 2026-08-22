@@ -111,7 +111,7 @@ export function findApp(id: AppId | null): AppDef | undefined {
  *              link would 404/401. Hub opens the app root; user logs in.
  *   - warehouse, investor (Sheets apps): same — manual login.
  */
-export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["finance", "owner", "ops"]);
+export const ROLE_SSO_APPS: ReadonlySet<AppId> = new Set<AppId>(["ops"]);
 
 /**
  * Per-app SSO role override. Hermez (Owner Command) config/brief APIs

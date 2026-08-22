@@ -15,7 +15,7 @@ export interface HubModuleDef {
   probeReturnsCount: boolean;
 }
 
-const VPS = "http://187.77.114.168";
+const VPS = "http://187.52.124.40";
 
 export const HUB_MODULES: readonly HubModuleDef[] = [
   {

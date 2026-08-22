@@ -42,13 +42,12 @@ export async function chat(
   tools?: ToolSpec[],
   model: string = CONFIG.model
 ): Promise<ChatResult> {
-  if (!CONFIG.openRouterKey) throw new Error('OPENROUTER_API_KEY not set');
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  if (!CONFIG.openRouterKey) throw new Error('LLM_API_KEY not set');
+  const res = await fetch('https://ollama.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${CONFIG.openRouterKey}`,
-      'HTTP-Referer': 'https://github.com/rein3400/ykp',
       'X-Title': 'YKP Hermez'
     },
     body: JSON.stringify({
@@ -59,14 +58,14 @@ export async function chat(
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`OpenRouter HTTP ${res.status}: ${text.slice(0, 300)}`);
+    throw new Error(`LLM HTTP ${res.status}: ${text.slice(0, 300)}`);
   }
   const json = (await res.json()) as {
     choices?: { message?: { content?: string | null; tool_calls?: ToolCall[] } }[];
     error?: { message?: string };
   };
-  if (json.error) throw new Error(`OpenRouter: ${json.error.message ?? 'unknown error'}`);
+  if (json.error) throw new Error(`LLM: ${json.error.message ?? 'unknown error'}`);
   const msg = json.choices?.[0]?.message;
-  if (!msg) throw new Error('OpenRouter: empty response');
+  if (!msg) throw new Error('LLM: empty response');
   return { content: msg.content ?? '', toolCalls: msg.tool_calls ?? [] };
 }

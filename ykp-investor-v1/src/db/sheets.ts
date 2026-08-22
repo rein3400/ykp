@@ -17,6 +17,12 @@ function addDaysWib(days: number): string {
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 let cached: sheets_v4.Sheets | null = null;
 
+// In-memory read cache (TTL) to avoid bursting Google Sheets read quota
+// (60 reads/min/user). Any write clears the whole cache.
+const READ_CACHE_TTL_MS = 10_000;
+const readCache = new Map<string, { at: number; rows: Record<string, string>[] }>();
+function invalidateReadCache(): void { readCache.clear(); }
+
 export function getSheetsClient(): sheets_v4.Sheets {
   if (cached) return cached;
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -122,6 +128,8 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
 export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
   if (isMockMode()) return mockReadTab(tab) as T[];
+  const hit = readCache.get(tab);
+  if (hit && Date.now() - hit.at < READ_CACHE_TTL_MS) return hit.rows as T[];
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -130,13 +138,15 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
     spreadsheetId: sid, range: `${quoteTab(tab)}!A1:${lastCol}1000`
   });
   const rows = res.data.values ?? [];
-  if (rows.length < 2) return [];
+  if (rows.length < 2) { readCache.set(tab, { at: Date.now(), rows: [] }); return []; }
   const headerRow = rows[0] as string[];
-  return rows.slice(1).map((row) => {
+  const mapped = rows.slice(1).map((row) => {
     const obj: Record<string, string> = {};
     headerRow.forEach((h, i) => { obj[h] = (row[i] as string) ?? ''; });
     return obj as T;
   });
+  readCache.set(tab, { at: Date.now(), rows: mapped as Record<string, string>[] });
+  return mapped;
 }
 
 /**
@@ -194,6 +204,7 @@ export async function readFinanceTab<T = Record<string, string>>(tabName: string
 }
 
 export async function appendRows(tab: TabName, rows: Record<string, string>[]): Promise<number> {
+  invalidateReadCache();
   if (rows.length === 0) return -1;
   if (isMockMode()) return mockAppendRows(tab, rows);
   const sheets = getSheetsClient();
@@ -210,6 +221,7 @@ export async function appendRows(tab: TabName, rows: Record<string, string>[]): 
 }
 
 export async function updateRow(tab: TabName, rowNumber: number, values: Record<string, string>): Promise<void> {
+  invalidateReadCache();
   if (isMockMode()) { mockUpdateRow(tab, rowNumber, values); return; }
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();

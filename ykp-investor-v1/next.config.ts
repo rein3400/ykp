@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const HUB_ORIGIN = process.env.YKP_HUB_ORIGIN ?? "http://187.77.114.168:3000";
+const HUB_ORIGIN = process.env.YKP_HUB_ORIGIN ?? "http://187.52.124.40:3000";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },

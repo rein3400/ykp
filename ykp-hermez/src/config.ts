@@ -47,11 +47,11 @@ export const CONFIG = {
     .filter(Boolean),
   /** Shared secret the bot uses to authenticate link-consume calls to the apps. */
   botSecret: env('TELEGRAM_BOT_SECRET'),
-  openRouterKey: env('OPENROUTER_API_KEY'),
+  openRouterKey: env('LLM_API_KEY'),
   /** Chat model — tool-use capable. Override via OPENROUTER_MODEL. */
-  model: env('OPENROUTER_MODEL', 'anthropic/claude-sonnet-4'),
+  model: env('LLM_MODEL', 'deepseek-v4-flash'),
   /** Cheaper model for voice transcription + simple classifications. */
-  liteModel: env('OPENROUTER_LITE_MODEL', 'google/gemini-2.0-flash-001'),
+  liteModel: env('LLM_LITE_MODEL', 'deepseek-v4-flash'),
   modules: {
     finance: env('YKP_FINANCE_URL', 'http://localhost:3003'),
     hr: env('YKP_HR_URL', 'http://localhost:3002'),

@@ -22,6 +22,12 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 let cached: sheets_v4.Sheets | null = null;
 
+// In-memory read cache (TTL) to avoid bursting Google Sheets read quota
+// (60 reads/min/user). Any write clears the whole cache.
+const READ_CACHE_TTL_MS = 10_000;
+const readCache = new Map<string, { at: number; rows: Record<string, string>[] }>();
+function invalidateReadCache(): void { readCache.clear(); }
+
 export function getSheetsClient(): sheets_v4.Sheets {
   if (cached) return cached;
 
@@ -187,7 +193,8 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   // ── Auth + audit ─────────────────────────────────────────────
   [TABS.users]: [
     'user_id', 'username', 'password_hash', 'role', 'brand_id', 'outlet_id',
-    'department', 'telegram_id', 'active_status', 'created_at', 'last_login_at'
+    'department', 'employee_id', 'telegram_id', 'active_status',
+    'must_change_password', 'created_at', 'last_login_at'
   ],
   [TABS.auditLog]: [
     'audit_id', 'module', 'action', 'record_type', 'record_id',
@@ -204,6 +211,8 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 /** Read a tab as array of objects keyed by header. Empty cells → "". */
 export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
   if (isMockMode()) return mockReadTab(tab) as T[];
+  const hit = readCache.get(tab);
+  if (hit && Date.now() - hit.at < READ_CACHE_TTL_MS) return hit.rows as T[];
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -213,19 +222,22 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
     range: `${quoteTab(tab)}!A1:${lastCol}1000`
   });
   const rows = res.data.values ?? [];
-  if (rows.length < 2) return [];
+  if (rows.length < 2) { readCache.set(tab, { at: Date.now(), rows: [] }); return []; }
   const headerRow = rows[0] as string[];
-  return rows.slice(1).map((row) => {
+  const mapped = rows.slice(1).map((row) => {
     const obj: Record<string, string> = {};
     headerRow.forEach((h, i) => {
       obj[h] = (row[i] as string) ?? '';
     });
     return obj as T;
   });
+  readCache.set(tab, { at: Date.now(), rows: mapped as Record<string, string>[] });
+  return mapped;
 }
 
 /** Append rows to a tab. Returns the 1-based starting row of the inserted block. */
 export async function appendRows(tab: TabName, rows: Record<string, string>[]): Promise<number> {
+  invalidateReadCache();
   if (rows.length === 0) return -1;
   if (isMockMode()) return mockAppendRows(tab, rows);
   const sheets = getSheetsClient();
@@ -268,6 +280,7 @@ export async function updateRow(
   rowNumber: number,
   values: Record<string, string>
 ): Promise<void> {
+  invalidateReadCache();
   if (isMockMode()) { mockUpdateRow(tab, rowNumber, values); return; }
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
