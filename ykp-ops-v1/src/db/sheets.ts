@@ -4,6 +4,7 @@
  */
 import { google, type sheets_v4 } from 'googleapis';
 import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow } from './mock-store';
+import { isPostgresMode, pgReadTab, pgAppendRows, pgUpdateRow, pgFindRow } from './postgres';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 let cached: sheets_v4.Sheets | null = null;
@@ -177,6 +178,7 @@ export async function readTab<T extends Record<string, string> = Record<string, 
   tab: TabName
 ): Promise<T[]> {
   if (isMockMode()) return mockReadTab(tab) as T[];
+  if (isPostgresMode()) return pgReadTab<T>(tab, TAB_HEADERS[tab]);
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const end = columnLetter(headers.length);
@@ -199,6 +201,7 @@ export async function appendRows(
   rows: Record<string, string>[]
 ): Promise<{ startRow: number }> {
   if (isMockMode()) return mockAppendRows(tab, rows);
+  if (isPostgresMode()) return pgAppendRows(tab, TAB_HEADERS[tab], rows);
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const values = rows.map((row) => headers.map((h) => row[h] ?? ''));

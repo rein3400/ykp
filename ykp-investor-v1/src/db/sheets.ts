@@ -4,6 +4,7 @@
  */
 import { google, type sheets_v4 } from 'googleapis';
 import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow } from './mock-store';
+import { isPostgresMode, pgReadTab, pgAppendRows, pgUpdateRow, pgFindRow } from './postgres';
 import { todayWib } from '@/lib/format';
 
 /** YYYY-MM-DD for N days before today (Asia/Jakarta), used for growth baseline. */
@@ -124,6 +125,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
 export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
   if (isMockMode()) return mockReadTab(tab) as T[];
+  if (isPostgresMode()) return pgReadTab<T>(tab, TAB_HEADERS[tab]);
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -198,6 +200,7 @@ export async function readFinanceTab<T = Record<string, string>>(tabName: string
 export async function appendRows(tab: TabName, rows: Record<string, string>[]): Promise<number> {
   if (rows.length === 0) return -1;
   if (isMockMode()) return mockAppendRows(tab, rows);
+  if (isPostgresMode()) return pgAppendRows(tab, TAB_HEADERS[tab], rows);
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -213,6 +216,7 @@ export async function appendRows(tab: TabName, rows: Record<string, string>[]): 
 
 export async function updateRow(tab: TabName, rowNumber: number, values: Record<string, string>): Promise<void> {
   if (isMockMode()) { mockUpdateRow(tab, rowNumber, values); return; }
+  if (isPostgresMode()) { await pgUpdateRow(tab, TAB_HEADERS[tab], rowNumber, values); return; }
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -226,6 +230,7 @@ export async function updateRow(tab: TabName, rowNumber: number, values: Record<
 
 export async function findRow(tab: TabName, keyCol: string, value: string): Promise<{ rowNumber: number; row: Record<string, string> } | null> {
   if (isMockMode()) return mockFindRow(tab, keyCol, value);
+  if (isPostgresMode()) return pgFindRow(tab, TAB_HEADERS[tab], keyCol, value);
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];

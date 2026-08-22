@@ -39,14 +39,15 @@ describe('investor summary route — bug #1 (no cross-date leak)', () => {
   beforeEach(() => readTabMock.mockReset());
 
   it('returns only today rows when today has data', async () => {
+    const today = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
     readTabMock.mockResolvedValue([
-      { date: '2026-08-21', total_capital: '1000' },
+      { date: today, total_capital: '1000' },
       { date: '2026-08-19', total_capital: '9999' }
     ]);
     const res = await summaryGet(asReq(null), ctx);
     const json = await res.json();
     expect(json.data.items).toHaveLength(1);
-    expect(json.data.items[0].date).toBe('2026-08-21');
+    expect(json.data.items[0].date).toBe(today);
   });
 
   it('returns empty list on a no-data date instead of stale rows', async () => {
