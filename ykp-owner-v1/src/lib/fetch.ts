@@ -13,10 +13,14 @@ export async function fetchJson<T = unknown>(url: string, timeoutMs = 4000): Pro
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
+    const botSecret = process.env.TELEGRAM_BOT_SECRET;
     const res = await fetch(url, {
       signal: ctrl.signal,
       cache: 'no-store',
-      headers: { accept: 'application/json' }
+      headers: {
+        accept: 'application/json',
+        ...(botSecret ? { 'x-bot-secret': botSecret } : {})
+      }
     });
     const latencyMs = Date.now() - started;
     if (!res.ok) {
