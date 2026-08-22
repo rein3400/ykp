@@ -22,6 +22,10 @@ interface ModuleLink {
 /** Apps that expose a Telegram link-consume endpoint. */
 const LINK_MODULES: ModuleLink[] = [
   { baseUrl: CONFIG.modules.hr, consumePath: '/api/hr/telegram/link/consume' },
+  { baseUrl: CONFIG.modules.finance, consumePath: '/api/finance/telegram/link/consume' },
+  { baseUrl: CONFIG.modules.warehouse, consumePath: '/api/warehouse/telegram/link/consume' },
+  { baseUrl: CONFIG.modules.investor, consumePath: '/api/investor/telegram/link/consume' },
+  { baseUrl: CONFIG.modules.ops, consumePath: '/api/ops/telegram/link/consume' },
 ];
 
 export function isLinkCommand(text: string): boolean {
@@ -345,6 +349,7 @@ export async function handleLinkCommand(text: string, telegramChatId: number): P
     return '⚠️ Link belum aktif (TELEGRAM_BOT_SECRET belum di-set). Hubungi admin.';
   }
 
+  let saw400 = false;
   for (const mod of LINK_MODULES) {
     try {
       const res = await fetch(`${mod.baseUrl}${mod.consumePath}`, {
@@ -359,14 +364,13 @@ export async function handleLinkCommand(text: string, telegramChatId: number): P
       if (res.ok && json.data?.userId) {
         return `✅ Akun Telegram kamu berhasil dihubungkan (user ${json.data.userId}). Sekarang kamu bisa menerima notifikasi & bertanya ke Hermez.`;
       }
-      if (res.status === 400) {
-        return `❌ Kode tidak valid atau sudah kedaluwarsa. Minta kode baru dari aplikasi, lalu coba lagi.`;
-      }
+      if (res.status === 400) saw400 = true;
       // 401/other — try next module.
     } catch {
       // network error — try next module
     }
   }
+  if (saw400) return '❌ Kode tidak valid atau sudah kedaluwarsa. Minta kode baru dari aplikasi, lalu coba lagi.';
   return '⚠️ Gagal menghubungkan akun. Coba lagi sebentar lagi, atau hubungi admin.';
 }
 
@@ -381,6 +385,7 @@ export async function handleStartLink(text: string, telegramChatId: number): Pro
   if (!CONFIG.botSecret) {
     return '⚠️ Link belum aktif (TELEGRAM_BOT_SECRET belum di-set). Hubungi admin.';
   }
+    let saw400 = false;
   for (const mod of LINK_MODULES) {
     try {
       const res = await fetch(`${mod.baseUrl}${mod.consumePath}`, {
@@ -392,12 +397,11 @@ export async function handleStartLink(text: string, telegramChatId: number): Pro
       if (res.ok && json.data?.userId) {
         return `✅ Akun Telegram kamu berhasil dihubungkan! 🎉\n\nSekarang kamu bisa absen, lihat jadwal, dan ajukan cuti langsung dari sini.`;
       }
-      if (res.status === 400) {
-        return `❌ Kode tidak valid atau sudah kedaluwarsa. Buka aplikasi web YKP → menu Telegram → tap tombol untuk dapat kode baru.`;
-      }
+      if (res.status === 400) saw400 = true;
     } catch {
       // network error — try next module
     }
   }
+  if (saw400) return '❌ Kode tidak valid atau sudah kedaluwarsa. Buka aplikasi web YKP → menu Telegram → tap tombol untuk dapat kode baru.';
   return '⚠️ Gagal menghubungkan akun. Coba lagi sebentar lagi, atau hubungi admin.';
 }
