@@ -21,26 +21,31 @@ DATABASE_URL = "postgresql://ykp:ykp12345@localhost:5432/ykp_v1"
 
 APPS = {
     "hr": {
+        "local": "ykp-hr-v1",
         "dir": "/home/dev/ykp/ykp-hr-v1",
         "service": "ykp-hr-v1",
         "port": 3002,
     },
     "finance": {
+        "local": "ykp-finance-v1",
         "dir": "/home/dev/ykp/ykp-finance-v1",
         "service": "ykp-finance-v1",
         "port": 3003,
     },
     "warehouse": {
+        "local": "ykp-warehouse-v1",
         "dir": "/home/dev/ykp/ykp-warehouse-v1",
         "service": "ykp-warehouse-v1",
         "port": 3005,
     },
     "investor": {
+        "local": "ykp-investor-v1",
         "dir": "/home/dev/ykp/ykp-investor-v1",
         "service": "ykp-investor-v1",
         "port": 3006,
     },
     "ops": {
+        "local": "ykp-ops-v1",
         "dir": "/home/dev/ykp/ykp-ops-v1",
         "service": "ykp-ops-v1",
         "port": 3007,
@@ -73,7 +78,7 @@ def deploy_app(c, key, local_root):
     d = cfg["dir"]
     sftp = c.open_sftp()
     for rel in FILES:
-        local = f"{local_root}/{rel}"
+        local = f"{local_root}/{cfg['local']}/{rel}"
         remote = f"{d}/{rel}"
         sftp.put(local, remote)
         print(f"  uploaded {rel}")
@@ -100,7 +105,7 @@ def deploy_app(c, key, local_root):
         print("  BUILD OUTPUT TAIL:\n" + "\n".join(tail))
         return False
 
-    o, _ = run(c, f"sudo -S password systemctl restart {cfg['service']} 2>&1 || systemctl restart {cfg['service']} 2>&1")
+    run(c, f"echo password | sudo -S systemctl restart {cfg['service']} 2>&1")
     time.sleep(4)
     o, _ = run(c, f"systemctl is-active {cfg['service']}")
     status = o.strip()

@@ -201,7 +201,10 @@ export async function appendRows(
   rows: Record<string, string>[]
 ): Promise<{ startRow: number }> {
   if (isMockMode()) return mockAppendRows(tab, rows);
-  if (isPostgresMode()) return pgAppendRows(tab, TAB_HEADERS[tab], rows);
+  if (isPostgresMode()) {
+    await pgAppendRows(tab, TAB_HEADERS[tab], rows);
+    return { startRow: -1 };
+  }
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const values = rows.map((row) => headers.map((h) => row[h] ?? ''));
