@@ -76,19 +76,19 @@ beforeEach(seed);
 
 describe('internal approval endpoint', () => {
   it('401 without and with wrong secret', async () => {
-    expect((await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '5721500978' }), { params: {} })).status).toBe(401);
-    expect((await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '5721500978' }, 'nope'), { params: {} })).status).toBe(401);
+    expect((await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '5721500978' }), { params: Promise.resolve({}) })).status).toBe(401);
+    expect((await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '5721500978' }, 'nope'), { params: Promise.resolve({}) })).status).toBe(401);
   });
 
   it('400 on invalid action / chat id / unknown prefix', async () => {
     const h = SECRET;
-    expect((await POST(req({ record_id: 'EXP-TG1', action: 'maybe', telegram_chat_id: '5721500978' }, h), { params: {} })).status).toBe(400);
-    expect((await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: 'abc' }, h), { params: {} })).status).toBe(400);
-    expect((await POST(req({ record_id: 'ZZZ-9', action: 'approve', telegram_chat_id: '5721500978' }, h), { params: {} })).status).toBe(400);
+    expect((await POST(req({ record_id: 'EXP-TG1', action: 'maybe', telegram_chat_id: '5721500978' }, h), { params: Promise.resolve({}) })).status).toBe(400);
+    expect((await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: 'abc' }, h), { params: Promise.resolve({}) })).status).toBe(400);
+    expect((await POST(req({ record_id: 'ZZZ-9', action: 'approve', telegram_chat_id: '5721500978' }, h), { params: Promise.resolve({}) })).status).toBe(400);
   });
 
   it('approves via owner chat id — FSM applies, audit trail has presser id', async () => {
-    const res = await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '5721500978' }, SECRET), { params: {} });
+    const res = await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '5721500978' }, SECRET), { params: Promise.resolve({}) });
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.data.approval_status).toBe('APPROVED');
@@ -96,21 +96,21 @@ describe('internal approval endpoint', () => {
   });
 
   it('rejects the creator approving own expense (segregation of duties)', async () => {
-    const res = await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '551111111' }, SECRET), { params: {} });
+    const res = await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '551111111' }, SECRET), { params: Promise.resolve({}) });
     expect(res.status).toBe(400);
     expect(JSON.stringify(await res.json())).toContain('segregation of duties');
     expect(tabRows('fin_expense')[0].approval_status).toBe('PENDING');
   });
 
   it('second approve after APPROVED is refused by transition guard', async () => {
-    await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '5721500978' }, SECRET), { params: {} });
-    const res2 = await POST(req({ record_id: 'EXP-TG1', action: 'reject', telegram_chat_id: '5721500978' }, SECRET), { params: {} });
+    await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '5721500978' }, SECRET), { params: Promise.resolve({}) });
+    const res2 = await POST(req({ record_id: 'EXP-TG1', action: 'reject', telegram_chat_id: '5721500978' }, SECRET), { params: Promise.resolve({}) });
     expect(res2.status).toBe(400);
     expect(tabRows('fin_expense')[0].approval_status).toBe('APPROVED');
   });
 
   it('unknown chat id → 400 with clear message', async () => {
-    const res = await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '999999' }, SECRET), { params: {} });
+    const res = await POST(req({ record_id: 'EXP-TG1', action: 'approve', telegram_chat_id: '999999' }, SECRET), { params: Promise.resolve({}) });
     expect(res.status).toBe(400);
     expect(JSON.stringify(await res.json())).toContain('No user linked');
   });
