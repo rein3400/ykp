@@ -12,8 +12,18 @@ const GATEWAY_ENABLED = () =>
   (process.env.USE_NOTIFY_GATEWAY ?? '').trim() === 'true' &&
   Boolean((process.env.NOTIFY_GATEWAY_URL ?? '').trim());
 
+export interface GatewayApprovalBlock {
+  entity: string;
+  record_id: string;
+  title?: string;
+  detail?: Record<string, string>;
+  callback_base_url?: string;
+  allowed_roles?: string[];
+  ttl_seconds?: number;
+}
+
 export interface GatewaySendInput {
-  /** Log label, e.g. daily_brief | ALERT. */
+  /** Log label, e.g. daily_brief | ALERT | APPROVAL_REQUEST. */
   message_type: string;
   source_module: string;
   /** Comma-separated role list; default "owner". */
@@ -21,6 +31,11 @@ export interface GatewaySendInput {
   /** Optional brand scope filter. */
   brand_id?: string;
   message: string;
+  /**
+   * Approval block (Fase 4): the gateway signs inline Setujui/Tolak buttons
+   * and button presses are relayed back to our /api/internal/approval.
+   */
+  approval?: GatewayApprovalBlock;
 }
 
 /**
@@ -42,6 +57,7 @@ export async function sendViaGateway(input: GatewaySendInput): Promise<boolean> 
         source_module: input.source_module,
         roles: input.roles ?? 'owner',
         ...(input.brand_id ? { brand_id: input.brand_id } : {}),
+        ...(input.approval ? { approval: input.approval } : {}),
         message: input.message
       }),
       signal: AbortSignal.timeout(5000)

@@ -2,9 +2,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 // Keep cookie name inline — do NOT import from session.ts (Node crypto breaks Edge Runtime).
 const SESSION_COOKIE = 'ykp_finance_session';
-const PUBLIC = ['/login', '/api/auth/login', '/api/auth/logout', '/api/finance/notify/daily-brief'];
-// Public read endpoints for the Hermez / owner hub layer (GET only;
-// mutations on these resources stay session-protected)
+const PUBLIC = [
+  '/login',
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/finance/notify/daily-brief',
+  // Internal Telegram-approval endpoint (Fase 4): the route authenticates
+  // callers itself via the shared x-bot-secret header — never session-based.
+  '/api/internal/approval'
+];
 const PUBLIC_GET_PREFIXES = [
   '/api/finance/summary',
   '/api/finance/alerts',
@@ -48,7 +54,8 @@ export async function middleware(req: NextRequest) {
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
-  // Public read endpoints for Hermez (GET only)
+  // Public read endpoints for Hermez (GET only; route-level auth still applies
+  // where sensitive — these are aggregate reads for the owner hub layer).
   if (req.method === 'GET' && PUBLIC_GET_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }

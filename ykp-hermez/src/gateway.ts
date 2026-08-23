@@ -17,10 +17,11 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { appendFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CONFIG } from './config.js';
-import { sendMessage } from './telegram.js';
+import { sendMessage, type InlineKeyboard } from './telegram.js';
+import { signApprovalData, CALLBACK_MAX_AGE_MS } from './approval.js';
 
 export interface NotifyRequest {
-  /** message_type for the delivery log (daily_brief | alert | test ...). */
+  /** message_type for the delivery log (daily_brief | alert | approval ...). */
   message_type: string;
   source_module?: string;
   /** Comma-separated roles; default "owner". */
@@ -30,6 +31,24 @@ export interface NotifyRequest {
   /** Explicit chat id override — skips role resolution when set. */
   chat_ids?: string[];
   message: string;
+  /**
+   * Approval block (Fase 4). When present the gateway signs a callback_data
+   * pair (approve/reject) keyed with TELEGRAM_BOT_SECRET and attaches an
+   * inline keyboard; button presses are relayed back to
+   * `${source_module}/api/internal/approval` by the Hermez callback handler.
+   */
+  approval?: {
+    entity: string;
+    record_id: string;
+    title?: string;
+    detail?: Record<string, string>;
+    /** Decision target base URL, e.g. http://127.0.0.1:3003 (default: module port map). */
+    callback_base_url?: string;
+    /** Roles allowed to press the buttons (informational; enforcement is server-side). */
+    allowed_roles?: string[];
+    /** TTL in seconds (default 24h, max 7d). */
+    ttl_seconds?: number;
+  };
 }
 
 interface QueueItem extends NotifyRequest {
@@ -85,6 +104,65 @@ async function logDelivery(entry: Record<string, unknown>): Promise<void> {
   }
 }
 
+/** Default decision-target base URLs per source module (VPS loopback). */
+const MODULE_BASE_URLS: Record<string, string> = {
+  finance: 'http://127.0.0.1:3003',
+  hr: 'http://127.0.0.1:3002',
+  warehouse: 'http://127.0.0.1:3005',
+  investor: 'http://127.0.0.1:3006',
+  ops: 'http://127.0.0.1:3007'
+};
+
+function moduleBaseUrl(sourceModule: string, override?: string): string {
+  return (override ?? '').trim() || MODULE_BASE_URLS[sourceModule] || `http://127.0.0.1:${process.env.PORT ?? '3000'}`;
+}
+
+/**
+ * Build the approval message + inline keyboard for one queue item.
+ * Returns null when the approval block is missing/invalid (logged as FAILED).
+ */
+export function buildApprovalMessage(item: NotifyRequest): { text: string; keyboard: InlineKeyboard; meta: Record<string, unknown> } | null {
+  const ap = item.approval;
+  if (!ap || typeof ap.entity !== 'string' || !ap.entity.trim()
+    || typeof ap.record_id !== 'string' || !ap.record_id.trim()) return null;
+  if (!item.source_module) return null;
+  const ttlSec = Math.min(Math.max(Math.trunc(Number(ap.ttl_seconds) || CALLBACK_MAX_AGE_MS / 1000), 60), 7 * 24 * 3600);
+  const now = Math.floor(Date.now() / 1000);
+  // callback_data ≤64 bytes: prefix(2) + record_id + '.' + ts + '.' + hmac32hex
+  const dataApprove = signApprovalData('a.', ap.record_id.trim(), now, item.source_module);
+  const dataReject = signApprovalData('r.', ap.record_id.trim(), now, item.source_module);
+  if (!dataApprove || !dataReject) return null;
+
+  const detailLines = Object.entries(ap.detail ?? {})
+    .map(([k, v]) => `${escapeHtmlLabel(k)}: <b>${escapeHtmlLabel(String(v))}</b>`)
+    .join('\n');
+  const title = escapeHtmlLabel(ap.title ?? `${ap.entity} ${ap.record_id}`);
+  const text = [
+    `<b>🔔 Approval Request</b>`,
+    `${title}`,
+    detailLines ? `\n${detailLines}` : '',
+    `\nModul: ${escapeHtmlLabel(item.source_module)} | ID: <code>${escapeHtmlLabel(ap.record_id)}</code>`,
+    `<i>Tombol kedaluwarsa ${Math.round(ttlSec / 3600)} jam setelah pesan ini dikirim.</i>`
+  ].filter(Boolean).join('\n');
+
+  const keyboard: InlineKeyboard = {
+    inline_keyboard: [[
+      { text: '✅ Setujui', callback_data: dataApprove },
+      { text: '❌ Tolak', callback_data: dataReject }
+    ]]
+  };
+  return {
+    text,
+    keyboard,
+    meta: { entity: ap.entity, record_id: ap.record_id, ttl_seconds: ttlSec }
+  };
+}
+
+/** Escape HTML-significant chars in dynamic label values. */
+function escapeHtmlLabel(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 /**
  * Process one queue item. Recipient resolution failures and send failures
  * both retry up to MAX_ATTEMPTS; after that the item is dropped with a
@@ -104,12 +182,28 @@ async function processItem(item: QueueItem): Promise<void> {
       });
       return;
     }
+    // Approval requests carry an inline keyboard signed with the bot secret.
+    let replyMarkup: InlineKeyboard | undefined;
+    if (item.approval) {
+      const built = buildApprovalMessage(item);
+      if (!built) {
+        await logDelivery({
+          status: 'FAILED',
+          message_type: item.message_type,
+          source_module: item.source_module ?? '',
+          error: 'invalid approval block',
+          attempts: item.attempts
+        });
+        return;
+      }
+      replyMarkup = built.keyboard;
+    }
     let sent = 0;
     for (const chatId of chatIds) {
       try {
         // Module messages are HTML-formatted; sendMessage parses HTML with a
         // plain-text fallback per chunk.
-        await sendMessage(chatId, item.message);
+        await sendMessage(chatId, item.message, replyMarkup);
         sent += 1;
       } catch (e) {
         console.error(`[gateway] send to ${chatId} failed:`, e instanceof Error ? e.message : e);
@@ -121,6 +215,7 @@ async function processItem(item: QueueItem): Promise<void> {
       source_module: item.source_module ?? '',
       roles: item.roles ?? 'owner',
       brand_id: item.brand_id ?? '',
+      ...(item.approval ? { approval_record_id: item.approval.record_id, entity: item.approval.entity } : {}),
       recipients: chatIds.length,
       sent
     });

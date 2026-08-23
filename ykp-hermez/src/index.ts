@@ -4,6 +4,7 @@
  * - Text → LLM tool-use agent loop (deepseek-v4-flash, text-only).
  * - Photo → vision model (minimax-m3 via Ollama Cloud) with tool access.
  * - Voice → polite "not supported" reply (audio input is out of scope).
+ * - Callback queries → approval-button decisions relayed to source modules.
  * - Scheduler: AI daily brief at 22:05 WIB, watch rules every 30 min.
  * - DRY-RUN (no bot token): everything logs, nothing sends.
  */
@@ -16,6 +17,7 @@ import { runDailyBrief } from './brief.js';
 import { evaluateRules } from './watch.js';
 import { resolveActor, isAllowedRole, scopeFor, type Actor } from './actor.js';
 import { startGateway } from './gateway.js';
+import { processCallbackUpdate } from './approval.js';
 
 const OFFSET_FILE = () => join(CONFIG.dataDir, 'offset.txt');
 
@@ -163,6 +165,7 @@ async function main(): Promise<void> {
     for (const u of updates) {
       offset = u.update_id + 1;
       if (u.message) void handleMessage(u.message);
+      if (u.callback_query) void processCallbackUpdate(u.callback_query);
     }
     await saveOffset(offset);
   }
