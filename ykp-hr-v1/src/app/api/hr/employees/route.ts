@@ -87,7 +87,9 @@ export const POST = handler(async (req) => {
     gender: parsed.data.gender,
     phone: parsed.data.phone,
     email: parsed.data.email ?? '',
-    telegram_id: parsed.data.telegram_id || '',
+    // telegram_id is owned by the /link pairing flow (users.telegram_id) —
+    // manual writes here are deprecated (plan §Fase 1 step 4).
+    telegram_id: '',
     address: parsed.data.address || '',
     date_of_birth: parsed.data.date_of_birth || '',
     join_date: parsed.data.join_date,

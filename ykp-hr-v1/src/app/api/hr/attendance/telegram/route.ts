@@ -151,8 +151,8 @@ export const POST = handler(async (req) => {
   if (!webhookSecretOk(req)) return ok({ ok: false, error: 'unauthorized' }, 401);
 
   const update = (await req.json().catch(() => ({}))) as TelegramUpdate;
-  const token = process.env.TELEGRAM_BOT_TOKEN ?? '';
-  if (!token) return ok({ ok: false, error: 'TELEGRAM_BOT_TOKEN not configured' }, 500);
+  const token = process.env.TELEGRAM_EMPLOYEE_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN ?? '';
+  if (!token) return ok({ ok: false, error: 'TELEGRAM_EMPLOYEE_BOT_TOKEN not configured' }, 500);
 
   // ── callback_query: inline menu navigation ────────────────────────────
   const cb = update.callback_query;

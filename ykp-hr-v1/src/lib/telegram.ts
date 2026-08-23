@@ -37,6 +37,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** Employee bot token (webhook owner). Falls back to the legacy shared name. */
+export function employeeBotToken(): string {
+  return (process.env.TELEGRAM_EMPLOYEE_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN ?? '').trim();
+}
+
 async function postToTelegram(token: string, chatId: string, text: string): Promise<string> {
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
@@ -107,7 +112,7 @@ const HOD_ROLES = new Set(['hod', 'outlet_manager', 'supervisor', 'brand_manager
 export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: string; status: string; sent: number; failed: number }> {
   const deliveryId = nextSequentialIdSync('TDL');
   const now = nowTimestampWib();
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = employeeBotToken();
 
   const logDelivery = (chatId: string, status: string, messageId: string, errorMessage: string, sentAt: string, retryCount: number) =>
     appendRows(TABS.telegramDeliveryLog, [{
@@ -125,7 +130,7 @@ export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: 
     }]).catch(() => null);
 
   if (!token) {
-    await logDelivery(msg.recipient || '', 'FAILED', '', 'TELEGRAM_BOT_TOKEN not configured', '', 0);
+    await logDelivery(msg.recipient || '', 'FAILED', '', 'TELEGRAM_EMPLOYEE_BOT_TOKEN not configured', '', 0);
     return { deliveryId, status: 'FAILED', sent: 0, failed: 1 };
   }
 

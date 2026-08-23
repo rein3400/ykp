@@ -40,7 +40,8 @@ function env(name: string, fallback = ''): string {
 }
 
 export const CONFIG = {
-  botToken: env('TELEGRAM_BOT_TOKEN'),
+  /** Management bot token. Falls back to the legacy shared name. */
+  botToken: env('TELEGRAM_MANAGEMENT_BOT_TOKEN') || env('TELEGRAM_BOT_TOKEN'),
   ownerIds: env('TELEGRAM_OWNER_IDS')
     .split(',')
     .map((s) => s.trim())
