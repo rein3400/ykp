@@ -10,6 +10,10 @@
  * The command lists are duplicated inline as JSON so this script has no
  * TypeScript build step; keep in sync with src/lib/telegram-commands.ts
  * (HR) and src/telegram-commands.ts (Hermez).
+ *
+ * NOTE: the MANAGEMENT bot has NO /link command by design — its access is
+ * chat-id/role based only (TELEGRAM_OWNER_IDS / TELEGRAM_ALLOWED_IDS /
+ * users.telegram_id). Pairing codes belong to the EMPLOYEE bot flow.
  */
 const EMPLOYEE = [
   { command: 'start', description: 'Mulai & menu utama' },
@@ -26,7 +30,6 @@ const MANAGEMENT = [
   { command: 'brief', description: 'Ringkasan harian semua modul' },
   { command: 'alerts', description: 'Alert terbuka' },
   { command: 'watch', description: 'Watch rules aktif' },
-  { command: 'link', description: 'Hubungkan akun: /link KODE' },
   { command: 'help', description: 'Contoh pertanyaan' }
 ];
 

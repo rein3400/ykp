@@ -164,6 +164,17 @@ Kirim foto untuk saya analisis.`;
 export async function handleText(chatId: number, text: string, imageBase64?: string, scope: Scope = {}): Promise<string> {
   const trimmed = text.trim();
   if (trimmed === '/start' || trimmed === '/help') return HELP_TEXT;
+  // Management bot has NO pairing flow — access is chat-id/role based only.
+  if (/^\/link\b/i.test(trimmed)) {
+    return [
+      'Bot ini tidak memakai kode pairing. Akses owner/kepala bagian diberikan otomatis lewat chat id Telegram kamu:',
+      '',
+      '1. Pastikan chat id kamu tercatat di kolom `telegram_id` tabel users (via admin), atau',
+      '2. Masuk daftar TELEGRAM_OWNER_IDS / TELEGRAM_ALLOWED_IDS di server.',
+      '',
+      'Kode pairing hanya ada di bot karyawan (@justatestermaybot) via menu "Hubungkan Telegram" di tiap aplikasi.'
+    ].join('\n');
+  }
 
   const history = getMemory(chatId);
   const scopeNote = scope.brandId || scope.outletId

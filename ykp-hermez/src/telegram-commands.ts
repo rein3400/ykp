@@ -11,6 +11,5 @@ export const MANAGEMENT_COMMANDS: BotCommand[] = [
   { command: 'brief', description: 'Ringkasan harian semua modul' },
   { command: 'alerts', description: 'Alert terbuka' },
   { command: 'watch', description: 'Watch rules aktif' },
-  { command: 'link', description: 'Hubungkan akun: /link KODE' },
   { command: 'help', description: 'Contoh pertanyaan' }
 ];
