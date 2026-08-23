@@ -25,12 +25,15 @@ export function EmployeesTable({
   data,
   brandById,
   outletById,
-  canEdit
+  canEdit,
+  linkedTelegram
 }: {
   data: Employee[];
   brandById: Map<string, string>;
   outletById: Map<string, string>;
   canEdit: boolean;
+  /** employee_id -> linked telegram chat id (from the users tab /link flow). */
+  linkedTelegram?: Map<string, string>;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -77,6 +80,7 @@ export function EmployeesTable({
             <th>Posisi</th>
             <th>Brand</th>
             <th>Outlet</th>
+            <th>Telegram</th>
             <th className='text-right'>Gaji Pokok</th>
             <th>Tipe</th>
             <th>Status</th>
@@ -95,6 +99,15 @@ export function EmployeesTable({
                 <td>{e.position || '-'}</td>
                 <td>{brandById.get(e.brand_id) ?? e.brand_id}</td>
                 <td>{outletById.get(e.outlet_id) ?? e.outlet_id}</td>
+                <td>
+                  {linkedTelegram?.get(e.employee_id) ? (
+                    <span className='badge-green'>✓ linked</span>
+                  ) : (
+                    <span className='badge-gray' title='Karyawan belum /link dari menu Telegram di aplikasi web'>
+                      Belum link
+                    </span>
+                  )}
+                </td>
                 <td className='text-right'>{formatIdr(e.basic_salary || '0')}</td>
                 <td>{e.salary_type || 'MONTHLY'}</td>
                 <td>

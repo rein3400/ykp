@@ -28,15 +28,22 @@ interface Brand { brand_id: string; brand_name: string }
 interface Outlet { outlet_id: string; brand_id: string; outlet_name: string }
 
 export default async function EmployeesPage() {
-  const [session, employees, brands, outlets] = await Promise.all([
+  const [session, employees, brands, outlets, users] = await Promise.all([
     getSession(),
     readTab<Employee>(TABS.employees),
     readTab<Brand>(TABS.brands),
-    readTab<Outlet>(TABS.outlets)
+    readTab<Outlet>(TABS.outlets),
+    readTab<Record<string, string>>(TABS.users)
   ]);
 
   const brandById = new Map(brands.map((b) => [b.brand_id, b.brand_name]));
   const outletById = new Map(outlets.map((o) => [o.outlet_id, o.outlet_name]));
+  // employee_id -> linked telegram chat id (owned by the /link pairing flow).
+  const linkedTg = new Map(
+    users
+      .filter((u) => (u.employee_id ?? '').trim() && (u.telegram_id ?? '').trim())
+      .map((u) => [u.employee_id.trim(), u.telegram_id.trim()])
+  );
   const canEdit = session ? can(session.role as Role, 'update', 'employee') : false;
 
   return (
@@ -64,6 +71,7 @@ export default async function EmployeesPage() {
             brandById={brandById}
             outletById={outletById}
             canEdit={canEdit}
+            linkedTelegram={linkedTg}
           />
         )}
       </div>
