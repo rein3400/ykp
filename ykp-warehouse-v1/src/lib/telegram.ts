@@ -9,6 +9,7 @@
 import { appendRows, readTab, updateRow, findRow, TABS } from '@/db/sheets';
 import { nowTimestampWib, formatDateWib } from './format';
 import { nextSequentialIdSync } from './repo';
+import { sendViaGateway } from './notify-gateway';
 
 export interface TelegramMessage {
   sourceModule: string;
@@ -336,6 +337,13 @@ export function formatAlertMessage(sourceLabel: string, a: AlertPushInput): stri
 export async function pushAlertNotification(sourceModule: string, a: AlertPushInput): Promise<void> {
   if (!shouldPushAlert(a.severity)) return;
   try {
+    // Gateway first (management bot fan-out); legacy direct send as fallback.
+    const viaGateway = await sendViaGateway({
+      message_type: 'ALERT',
+      source_module: sourceModule,
+      message: formatAlertMessage(sourceModule, a)
+    });
+    if (viaGateway) return;
     await sendTelegram({
       sourceModule,
       sourceReferenceId: a.alertId,

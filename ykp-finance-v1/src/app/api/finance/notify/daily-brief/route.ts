@@ -10,6 +10,7 @@ import { readTab, TABS } from '@/db/sheets';
 import { ok, unauthorized, handler } from '@/lib/http';
 import { isCronAuthorized } from '@/lib/cron';
 import { buildFinanceDailyBrief, sendTelegram } from '@/lib/telegram';
+import { sendViaGateway } from '@/lib/notify-gateway';
 import { todayWib } from '@/lib/format';
 
 export const POST = handler(async (req: NextRequest) => {
@@ -32,6 +33,11 @@ export const POST = handler(async (req: NextRequest) => {
     // weeks ago do not leak into the "daily" brief.
     alerts.filter((a) => (a.status === 'OPEN' || a.status === 'ACK') && (a.date ?? '') === date)
   );
+  // Gateway first (management bot, dynamic recipients); legacy direct send
+  // as fallback when the gateway is disabled or unreachable.
+  if (await sendViaGateway({ message_type: 'DAILY_BRIEF', source_module: 'finance', message: text })) {
+    return ok({ date, status: 'SENT', via: 'gateway' });
+  }
   const result = await sendTelegram({
     sourceModule: 'finance',
     sourceReferenceId: `daily-${date}`,

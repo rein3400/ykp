@@ -18,6 +18,7 @@ import {
   alertAlreadyDelivered, composeInvestorDailyBrief,
   pushAlertNotification, sendTelegram, shouldPushAlert
 } from '@/lib/telegram';
+import { sendViaGateway } from '@/lib/notify-gateway';
 import { todayWib } from '@/lib/format';
 
 /** MOU section for the daily brief: expired + expiring within 30 days. */
@@ -77,6 +78,11 @@ export const POST = handler(async (req: NextRequest) => {
   if (!date) return ok({ status: 'SKIPPED', reason: `no daily summary for ${today}`, alert_pushes: alertPushes.length });
 
   const text = composeInvestorDailyBrief(date, summary, alerts) + composeMouExpirySection(documents, investors, today);
+  // Gateway first (management bot, dynamic recipients); legacy direct send
+  // as fallback when the gateway is disabled or unreachable.
+  if (await sendViaGateway({ message_type: 'DAILY_BRIEF', source_module: 'investor', message: text })) {
+    return ok({ date, status: 'SENT', via: 'gateway', alert_pushes: alertPushes.length, alerts: alertPushes });
+  }
   const result = await sendTelegram({
     sourceModule: 'investor',
     sourceReferenceId: summary?.summary_id || `daily-${date}`,

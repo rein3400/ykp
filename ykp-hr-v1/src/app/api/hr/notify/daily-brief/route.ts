@@ -8,6 +8,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { ok, unauthorized, handler } from '@/lib/http';
 import { isCronAuthorized } from '@/lib/cron';
+import { sendViaGateway } from '@/lib/notify-gateway';
 import { composeHrDailyBrief, sendTelegram } from '@/lib/telegram';
 import { todayWib } from '@/lib/format';
 
@@ -29,6 +30,11 @@ export const POST = handler(async (req) => {
     summaries.filter((s) => s.date === date),
     alerts.filter((a) => a.status === 'OPEN' || a.status === 'ACK')
   );
+  // Gateway first (management bot, dynamic recipients); legacy direct send
+  // as fallback when the gateway is disabled or unreachable.
+  if (await sendViaGateway({ message_type: 'DAILY_BRIEF', source_module: 'hr', message: text })) {
+    return ok({ date, status: 'SENT', via: 'gateway' });
+  }
   const result = await sendTelegram({
     sourceModule: 'hr',
     sourceReferenceId: `daily-${date}`,

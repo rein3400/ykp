@@ -61,6 +61,10 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/api/hr/telegram-actor') && req.method === 'GET') {
     return NextResponse.next();
   }
+  // Hermez notification gateway: resolve recipients by role+scope (GET only)
+  if (pathname.startsWith('/api/hr/telegram-recipients') && req.method === 'GET') {
+    return NextResponse.next();
+  }
   // Cross-division identity resolution for both bots (POST only) — the route
   // authenticates callers itself via the x-bot-secret header.
   if (pathname.startsWith('/api/hr/telegram-identity') && req.method === 'POST') {

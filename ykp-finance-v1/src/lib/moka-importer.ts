@@ -41,6 +41,8 @@ export interface MokaVarianceEntry {
 export interface MokaImportResult {
   rows: MokaParsedRow[];
   errors: MokaVarianceEntry[];
+  /** Soft warnings - row is kept but flagged for review (e.g. net_sales mismatch). */
+  warnings: MokaVarianceEntry[];
   variance_report: {
     total_input_lines: number;
     parsed_lines: number;
@@ -143,10 +145,12 @@ function normalizeHeader(h: string): string {
 export function parseMokaCsv(csvText: string): MokaImportResult {
   const rows = parseCsv(csvText);
   const errors: MokaVarianceEntry[] = [];
+  const warnings: MokaVarianceEntry[] = [];
   if (rows.length < 2) {
     return {
       rows: [],
       errors,
+      warnings,
       variance_report: { total_input_lines: 0, parsed_lines: 0, dropped_lines: 0, alias_guesses: {} }
     };
   }
@@ -201,6 +205,22 @@ export function parseMokaCsv(csvText: string): MokaImportResult {
     }
     const txCount = Number.parseInt(raw.transactionCount ?? '1', 10) || 1;
 
+    // Soft warning (row kept): net_sales far off from its components. With
+    // Bug #10 outlet-wide columns the components are only meaningful on the
+    // FIRST row per (date, outlet), so only check there.
+    const existingForWarn = aggregates.get(key);
+    if (!existingForWarn) {
+      const expectedNet = grossSales - discount - refund - tax;
+      if (Math.abs(expectedNet - netSales) > 1) {
+        warnings.push({
+          row: i + 1,
+          field: 'net_sales',
+          reason: `net_sales (${netSales}) != gross-discount-refund-tax (${expectedNet})`,
+          raw: cells.join(',')
+        });
+      }
+    }
+
     const existing = aggregates.get(key);
     if (existing) {
       // Bug #10: gross_sales/discount/refund/void/tax/service_charge are
@@ -247,6 +267,7 @@ export function parseMokaCsv(csvText: string): MokaImportResult {
   return {
     rows: outRows,
     errors,
+    warnings,
     variance_report: {
       total_input_lines: rows.length - 1,
       parsed_lines: outRows.length,

@@ -10,6 +10,7 @@ import { readTab, TABS } from '@/db/sheets';
 import { ok, unauthorized, handler } from '@/lib/http';
 import { isCronAuthorized } from '@/lib/cron';
 import { buildDailyBrief, sendTelegram, collectFraudWatchData, composeFraudWatchBlock } from '@/lib/telegram';
+import { sendViaGateway } from '@/lib/notify-gateway';
 import { todayWib } from '@/lib/format';
 
 export const POST = handler(async (req: NextRequest) => {
@@ -27,6 +28,11 @@ export const POST = handler(async (req: NextRequest) => {
   const fraudData = await collectFraudWatchData(summary.date || today);
   const text = baseText + composeFraudWatchBlock(fraudData, summary.date || today);
 
+  // Gateway first (management bot, dynamic recipients); legacy direct send
+  // as fallback when the gateway is disabled or unreachable.
+  if (await sendViaGateway({ message_type: 'DAILY_BRIEF', source_module: 'warehouse', message: text })) {
+    return ok({ date: summary.date || today, status: 'SENT', via: 'gateway' });
+  }
   const result = await sendTelegram({
     sourceModule: 'warehouse',
     sourceReferenceId: summary.summary_id || `daily-${summary.date || today}`,

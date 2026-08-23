@@ -15,6 +15,7 @@ import { handleText, executeTool } from './brain.js';
 import { runDailyBrief } from './brief.js';
 import { evaluateRules } from './watch.js';
 import { resolveActor, isAllowedRole, scopeFor, type Actor } from './actor.js';
+import { startGateway } from './gateway.js';
 
 const OFFSET_FILE = () => join(CONFIG.dataDir, 'offset.txt');
 
@@ -140,6 +141,9 @@ async function main(): Promise<void> {
 
   const state = { lastBriefDate: '', lastWatchRun: 0 };
   setInterval(() => void scheduler(state), 30_000);
+
+  // Outbound notification gateway (module apps POST here for fan-out).
+  startGateway();
 
   if (DRY_RUN) {
     console.log('[hermez] dry-run mode: polling disabled. Set TELEGRAM_BOT_TOKEN to go live.');
