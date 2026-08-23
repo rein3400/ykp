@@ -6,7 +6,7 @@
  * heads only" and to derive the caller's brand/outlet scope. Returns 404 when
  * the chat id is not linked to an employee or the employee has no user row.
  */
-import { readTab, findRow, TABS } from '@/db/sheets';
+import { readTab, TABS } from '@/db/sheets';
 import { ok, notFound, badRequest, unauthorized, handler } from '@/lib/http';
 import { safeEqual } from '@/lib/cron';
 
@@ -27,14 +27,20 @@ export const GET = handler(async (req) => {
   const employee = employees.find((e) => (e.telegram_id ?? '').trim() === telegramId);
   if (!employee) return notFound('No employee linked to this Telegram id');
 
-  const userRow = await findRow(TABS.users, 'employee_id', employee.employee_id);
-  if (!userRow) return notFound('No user account linked to this employee');
+  // Several user rows may reference the same employee (demo/staff accounts).
+  // Prefer the row that carries THIS chat id; tie-break by smallest user_id
+  // (U-001 < U-EMP-1) so resolution is deterministic regardless of row order.
+  const users = await readTab<Record<string, string>>(TABS.users);
+  const candidates = users.filter((u) => u.employee_id === employee.employee_id);
+  if (candidates.length === 0) return notFound('No user account linked to this employee');
+  const chatMatch = candidates.find((u) => (u.telegram_id ?? '').trim() === telegramId);
+  const chosen = chatMatch ?? [...candidates].sort((a, b) => a.user_id.localeCompare(b.user_id))[0];
 
   return ok({
-    user_id: userRow.row.user_id,
-    role: (userRow.row.role ?? 'employee').toLowerCase(),
-    brand_id: userRow.row.brand_id ?? '',
-    outlet_id: userRow.row.outlet_id ?? '',
+    user_id: chosen.user_id,
+    role: (chosen.role ?? 'employee').toLowerCase(),
+    brand_id: chosen.brand_id ?? '',
+    outlet_id: chosen.outlet_id ?? '',
     employee_id: employee.employee_id
   });
 });
