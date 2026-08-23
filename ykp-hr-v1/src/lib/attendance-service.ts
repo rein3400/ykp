@@ -26,6 +26,9 @@ export interface AttendanceActor {
   employeeId?: string;
 }
 
+/** Management roles clock in from anywhere (AGENTS.md §5). */
+export const GEO_EXEMPT_ROLES = new Set(['owner', 'super_admin', 'hr_admin', 'finance_admin']);
+
 export interface ServiceError {
   status: number;
   code: string;
@@ -104,14 +107,19 @@ export async function performClockIn(input: {
     checkInLocation = verdict.classification;
     radiusStr = verdict.radiusMeters ? String(verdict.radiusMeters) : '';
     if (verdict.outsideRadius) {
-      return {
-        ok: false,
-        error: {
-          status: 400,
-          code: 'bad_request',
-          message: `Clock-in di luar radius outlet (${verdict.distanceMeters}m > ${verdict.radiusMeters}m). Ajukan koreksi manual.`
-        }
-      };
+      // Management roles are mobile (meetings, audits, multiple outlets) —
+      // they clock in from anywhere (AGENTS.md §5). The row still records
+      // OUTSIDE_RADIUS so the trail is honest.
+      if (!GEO_EXEMPT_ROLES.has((input.actor.role ?? '').toLowerCase())) {
+        return {
+          ok: false,
+          error: {
+            status: 400,
+            code: 'bad_request',
+            message: `Clock-in di luar radius outlet (${verdict.distanceMeters}m > ${verdict.radiusMeters}m). Ajukan koreksi manual.`
+          }
+        };
+      }
     }
   }
 

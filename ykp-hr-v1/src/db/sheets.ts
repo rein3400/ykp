@@ -367,8 +367,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'active_status',
     'must_change_password',
     'created_at',
-    'last_login_at',
-    'employee_id'
+    'last_login_at'
   ],
   [TABS.auditLog]: [
     'audit_id',

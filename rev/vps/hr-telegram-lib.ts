@@ -172,45 +172,30 @@ export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: 
 
 const CODE_TTL_MS = 10 * 60_000; // 10 minutes
 
-/**
- * Generate a fresh 6-char link code bound to a user id. Persisted to the
- * telegram_link_codes tab/table so codes survive app restarts (in-memory
- * codes were lost on every redeploy).
- */
-export async function createLinkCode(userId: string): Promise<string> {
+/** In-memory pending link codes: code → { userId, expiresAt }. */
+const pendingCodes = new Map<string, { userId: string; expiresAt: number }>();
+
+/** Generate a fresh 6-char link code bound to a user id. */
+export function createLinkCode(userId: string): string {
   const code = Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
-  await appendRows(TABS.telegramLinkCodes, [{
-    code,
-    user_id: userId,
-    expires_at: new Date(Date.now() + CODE_TTL_MS).toISOString(),
-    telegram_chat_id: '',
-    consumed_at: '',
-    created_at: nowTimestampWib(),
-    division: 'hr'
-  }]).catch(() => null);
+  pendingCodes.set(code, { userId, expiresAt: Date.now() + CODE_TTL_MS });
+  // Opportunistic cleanup.
+  for (const [k, v] of pendingCodes) if (v.expiresAt < Date.now()) pendingCodes.delete(k);
   return code;
 }
 
 /**
  * Consume a link code and bind the Telegram chat id to the user.
- * Returns the bound user_id, or null if the code is invalid/expired/used.
+ * Returns the bound user_id, or null if the code is invalid/expired.
  */
 export async function consumeLinkCode(code: string, telegramChatId: string): Promise<string | null> {
-  const c = (code || '').trim().toUpperCase();
-  if (!c) return null;
-  const found = await findRow(TABS.telegramLinkCodes, 'code', c).catch(() => null);
-  if (!found) return null;
-  const r = found.row as Record<string, string>;
-  if (r.consumed_at || Date.parse(r.expires_at || '') < Date.now()) return null;
-  await updateRow(TABS.telegramLinkCodes, found.rowNumber, {
-    ...r,
-    telegram_chat_id: telegramChatId,
-    consumed_at: nowTimestampWib()
-  }).catch(() => null);
-  const user = await findRow(TABS.users, 'user_id', r.user_id).catch(() => null);
+  const entry = pendingCodes.get((code || '').trim().toUpperCase());
+  if (!entry || entry.expiresAt < Date.now()) return null;
+  pendingCodes.delete(entry.userId ? code.trim().toUpperCase() : '');
+  const user = await findRow(TABS.users, 'user_id', entry.userId).catch(() => null);
   if (!user) return null;
   await updateRow(TABS.users, user.rowNumber, { ...user.row, telegram_id: telegramChatId }).catch(() => null);
-  return r.user_id;
+  return entry.userId;
 }
 
 /** Look up the telegram chat id bound to a user id (for inbound identity checks). */

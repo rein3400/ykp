@@ -24,9 +24,12 @@ import { resetMockStore } from '@/db/mock-store';
 
 beforeAll(() => {
   // Telegram token + webhook secret are read by the webhook route. Set them
-  // so the route's early-return guards don't fire when we POST to it.
+  // so the route's early-return guards don't fire when we POST to it. The
+  // bot secret authenticates the webhook's in-process calls to the
+  // self-service routes (/api/hr/telegram/*).
   process.env.TELEGRAM_BOT_TOKEN = 'test-token';
   process.env.TELEGRAM_WEBHOOK_SECRET = 'test-secret';
+  process.env.TELEGRAM_BOT_SECRET = 'test-bot-secret';
 });
 
 describe('findEmployeeByTelegramId (large-headcount resolution)', () => {
@@ -261,10 +264,14 @@ describe('webhook route — missing-location + malformed-coords hardening', () =
   type SendFn = typeof import('./telegram-attendance')['sendTelegramText'];
   let POST: (req: Request, ctx: RouteCtx) => Promise<Response>;
   let sendSpy: MockInstance<SendFn>;
+  let answerSpy: MockInstance<typeof import('./telegram-attendance')['answerCallbackQuery']>;
 
   beforeAll(async () => {
     const mod = await import('./telegram-attendance');
     sendSpy = vi.spyOn(mod, 'sendTelegramText').mockResolvedValue('mock-msg-id');
+    // answerCallbackQuery hits the real Telegram API — mock it so callback
+    // tests never touch the network.
+    answerSpy = vi.spyOn(mod, 'answerCallbackQuery').mockResolvedValue(undefined);
     const route = await import('@/app/api/hr/attendance/telegram/route');
     POST = route.POST;
   });
@@ -337,9 +344,10 @@ describe('webhook route — missing-location + malformed-coords hardening', () =
       message: { chat: { id: 999999999 }, text: '/masuk', location: { latitude: -6.27, longitude: 106.8 } }
     }), emptyCtx);
     expect(res.status).toBe(200);
-    const call = sendSpy.mock.calls[0];
-    const text: string = String(call?.[2] ?? '');
-    expect(text).toContain('belum tertaut');
+    // Unlinked sender with a location falls back to the self-service route
+    // (users.telegram_id), which 404s — the reply now explains /link pairing.
+    const texts = sendSpy.mock.calls.map((c) => String(c?.[2] ?? '')).join('\n');
+    expect(texts).toMatch(/belum (tertaut|dihubungkan)|\/link KODE/);
   });
 
   it('clocks out an open row via /pulang', async () => {
@@ -365,4 +373,63 @@ describe('webhook route — missing-location + malformed-coords hardening', () =
     const text: string = String(call?.[2] ?? '');
     expect(text).toContain('Belum ada absen masuk');
   });
+
+  // ── employee self-service menu (inline keyboards + pairing) ──
+
+  it('shows the main menu with inline keyboard on /start', async () => {
+  sendSpy.mockClear();
+  const res = await POST(webhookRequest({
+    message: { chat: { id: 123456 }, text: '/start' }
+  }), emptyCtx);
+  expect(res.status).toBe(200);
+  const call = sendSpy.mock.calls[0];
+  expect(call).toBeTruthy();
+  const text: string = String(call?.[2] ?? '');
+  expect(text).toContain('YKP HR Bot');
+  const markup = call?.[3] as { inline_keyboard?: { callback_data: string }[][] };
+  expect(markup?.inline_keyboard?.[0]?.[0]?.callback_data).toBe('main:absen');
+});
+
+it('shows the attendance sub-menu on /absen', async () => {
+  sendSpy.mockClear();
+  const res = await POST(webhookRequest({
+    message: { chat: { id: 123456 }, text: '/absen' }
+  }), emptyCtx);
+  expect(res.status).toBe(200);
+  const call = sendSpy.mock.calls[0];
+  const markup = call?.[3] as { inline_keyboard?: { callback_data: string }[][] };
+  expect(markup?.inline_keyboard?.[0]?.[0]?.callback_data).toBe('att:clock-in');
+});
+
+it('replies with the pairing hint for /link without a code', async () => {
+  sendSpy.mockClear();
+  const res = await POST(webhookRequest({
+    message: { chat: { id: 123456 }, text: '/link' }
+  }), emptyCtx);
+  expect(res.status).toBe(200);
+  const call = sendSpy.mock.calls[0];
+  const text: string = String(call?.[2] ?? '');
+  expect(text).toContain('Format salah');
+});
+
+it('handles a callback_query: main:absen opens the attendance menu', async () => {
+  sendSpy.mockClear();
+  const res = await POST(webhookRequest({
+    callback_query: { id: 'cbq-1', data: 'main:absen', from: { id: 123456 }, message: { message_id: 9, chat: { id: 123456 } } }
+  }), emptyCtx);
+  expect(res.status).toBe(200);
+  const texts = sendSpy.mock.calls.map((c) => String(c?.[2] ?? '')).join('\n');
+  expect(texts).toContain('Pilih aksi absensi');
+});
+
+it('replies the leave format help for /cuti without args', async () => {
+  sendSpy.mockClear();
+  const res = await POST(webhookRequest({
+    message: { chat: { id: 123456 }, text: '/cuti' }
+  }), emptyCtx);
+  expect(res.status).toBe(200);
+  const call = sendSpy.mock.calls[0];
+  const text: string = String(call?.[2] ?? '');
+  expect(text).toContain('/cuti JENIS');
+});
 });

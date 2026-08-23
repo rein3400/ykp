@@ -11,14 +11,23 @@ export interface TelegramLocation {
   longitude: number;
 }
 
+export interface TelegramCallbackQuery {
+  id: string;
+  data?: string;
+  from?: { id?: number };
+  message?: { message_id?: number; chat?: { id?: number } };
+}
+
 export interface TelegramUpdate {
   update_id?: number;
   message?: {
     message_id?: number;
+    from?: { id?: number };
     chat?: { id?: number; username?: string };
     text?: string;
     location?: TelegramLocation;
   };
+  callback_query?: TelegramCallbackQuery;
 }
 
 export type AbsenIntent = 'clock-in' | 'clock-out' | 'help' | 'unknown';
@@ -28,7 +37,7 @@ export function parseAbsenIntent(text: string | undefined): AbsenIntent {
   const t = (text ?? '').trim().toLowerCase();
   if (!t) return 'unknown';
   if (/^\/(start|help|bantuan|mulai)\b/.test(t)) return 'help';
-  if (/^\/(masuk|absen|clockin|clock_in|checkin|check_in)\b/.test(t)) return 'clock-in';
+  if (/^\/(masuk|clockin|clock_in|checkin|check_in)\b/.test(t)) return 'clock-in';
   if (/^\/(pulang|keluar|clockout|clock_out|checkout|check_out)\b/.test(t)) return 'clock-out';
   return 'unknown';
 }
@@ -42,6 +51,50 @@ export const HELP_TEXT = [
   '',
   'Untuk deteksi lokasi: kirim lokasi Telegram, atau /masuk lalu tekan tombol "Kirim Lokasi".'
 ].join('\n');
+
+// ── Employee self-service menu (inline keyboards) ────────────────────────
+
+export interface KeyboardButton {
+  text: string;
+  callback_data: string;
+}
+
+/** Inline keyboard for the attendance sub-menu. */
+export function attendanceKeyboard(): KeyboardButton[][] {
+  return [
+    [{ text: '✅ Clock-in', callback_data: 'att:clock-in' }],
+    [{ text: '🏁 Clock-out', callback_data: 'att:clock-out' }],
+    [{ text: '📍 Kirim Lokasi (untuk clock-in)', callback_data: 'att:location' }],
+    [{ text: '🔙 Menu Utama', callback_data: 'main:menu' }]
+  ];
+}
+
+/** Main menu keyboard for employees. */
+export function mainMenuKeyboard(): KeyboardButton[][] {
+  return [
+    [{ text: '📍 Absen', callback_data: 'main:absen' }],
+    [{ text: '📅 Jadwal', callback_data: 'main:jadwal' }],
+    [{ text: '🏖 Cuti', callback_data: 'main:cuti' }],
+    [{ text: '👤 Profil Saya', callback_data: 'main:me' }],
+    [{ text: '❓ Bantuan', callback_data: 'main:help' }]
+  ];
+}
+
+/** Employee-facing help text (shown on /start and /help). */
+export function employeeHelpText(): string {
+  return `<b>👋 Selamat datang di YKP HR Bot</b>
+
+Ketik /link KODE untuk menghubungkan akun kamu (kode didapat dari aplikasi web YKP).
+
+Menu yang tersedia:
+• 📍 <b>Absen</b> — clock-in / clock-out (bisa pakai lokasi GPS)
+• 📅 <b>Jadwal</b> — lihat shift kamu
+• 🏖 <b>Cuti</b> — ajukan cuti / izin
+• 👤 <b>Profil Saya</b> — kehadiran & cuti kamu
+• ❓ <b>Bantuan</b> — menu ini
+
+Atau ketik perintah: /masuk /pulang /absen /jadwal /cuti /me /help`;
+}
 
 /** Send a Telegram message. Returns sent message id, or null on failure. */
 export async function sendTelegramText(
@@ -84,4 +137,14 @@ export function escapeHtml(s: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/** Answer a callback query (dismisses the button's loading state). */
+export async function answerCallbackQuery(token: string, callbackQueryId: string, text = ''): Promise<void> {
+  await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
+    signal: AbortSignal.timeout(10000)
+  }).catch(() => undefined);
 }

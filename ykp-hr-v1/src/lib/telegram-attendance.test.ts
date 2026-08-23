@@ -4,7 +4,9 @@ import { parseAbsenIntent, escapeHtml } from './telegram-attendance';
 describe('parseAbsenIntent', () => {
   it('recognizes clock-in commands', () => {
     expect(parseAbsenIntent('/masuk')).toBe('clock-in');
-    expect(parseAbsenIntent('/absen')).toBe('clock-in');
+    // /absen is handled by the webhook route BEFORE parseAbsenIntent — it
+    // opens the attendance menu, so it must NOT map to a clock-in intent.
+    expect(parseAbsenIntent('/absen')).toBe('unknown');
     expect(parseAbsenIntent('/clock_in')).toBe('clock-in');
   });
 

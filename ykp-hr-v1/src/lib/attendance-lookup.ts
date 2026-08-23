@@ -15,6 +15,7 @@
  * is the single place to add that cache later.
  */
 import { readTab, TABS, findRow, type TabName } from '@/db/sheets';
+import { todayWib } from '@/lib/format';
 
 /** Employee row shape used by the attendance flow. */
 export interface EmployeeRow {
@@ -95,10 +96,14 @@ export async function findTodayAttendance(
  */
 export async function findOpenAttendance(employeeId: string): Promise<AttendanceRow | null> {
   if (!employeeId) return null;
+  // TODAY only: without the date filter this would close a stale open row
+  // from weeks ago instead of telling the user they haven't clocked in.
+  const today = todayWib();
   const rows = await readTab<AttendanceRow>(TABS.attendance);
   for (let i = rows.length - 1; i >= 0; i--) {
     const r = rows[i];
     if (
+      r.date === today &&
       r.employee_id === employeeId &&
       r.actual_check_in &&
       !r.actual_check_out
