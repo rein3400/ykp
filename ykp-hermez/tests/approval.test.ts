@@ -23,7 +23,7 @@ const NOW_SEC = Math.floor(NOW / 1000);
 describe('signApprovalData / verifyCallbackData', () => {
   it('roundtrips a signed approve payload', () => {
     const data = signApprovalData('a.', 'EXP-1', NOW_SEC, 'finance')!;
-    expect(data).toMatch(/^a\.5:EXP-1\.\d{10}\.[0-9a-f]{32}$/);
+    expect(data).toMatch(/^a\.EXP-1\.\d{10}\.[0-9a-f]{24}$/);
     const parsed = verifyCallbackData(data, 'finance', NOW);
     expect(parsed).toEqual({ action: 'approve', recordId: 'EXP-1', issuedAtMs: NOW_SEC * 1000 });
   });
@@ -34,6 +34,17 @@ describe('signApprovalData / verifyCallbackData', () => {
     expect(parsed?.action).toBe('reject');
     // approve/reject MACs differ → cross-verify must fail
     expect(verifyCallbackData(data.replace(/^r\./, 'a.'), 'finance')).toBeNull();
+  });
+
+  it('roundtrips a REAL finance id at the 64-byte limit', () => {
+    // finance expense ids look like EXP-MT5J1E79CC0864 (18 chars) — the
+    // original 32-hex-sig + length-tag format overflowed 64 bytes for these.
+    const id = 'EXP-MT5J1E79CC0864';
+    const data = signApprovalData('a.', id, NOW_SEC, 'finance')!;
+    expect(data).not.toBeNull();
+    expect(Buffer.byteLength(data, 'utf8')).toBeLessThanOrEqual(64);
+    const parsed = verifyCallbackData(data, 'finance', NOW);
+    expect(parsed?.recordId).toBe(id);
   });
 
   it('verifies only against the module that signed', () => {
@@ -49,7 +60,7 @@ describe('signApprovalData / verifyCallbackData', () => {
     expect(det.parsed.recordId).toBe('INV-2');
   });
 
-  it('rejects tampered record id / timestamp / signature / length tag', () => {
+  it('rejects tampered record id / timestamp / signature', () => {
     const base = signApprovalData('a.', 'EXP-100', NOW_SEC, 'finance')!;
     // swap id inside same-length envelope
     expect(verifyCallbackData(base.replace('EXP-100', 'EXP-101'), 'finance')).toBeNull();
@@ -58,8 +69,6 @@ describe('signApprovalData / verifyCallbackData', () => {
     // flip last sig char
     const flipped = base.slice(0, -1) + (base.endsWith('0') ? '1' : '0');
     expect(verifyCallbackData(flipped, 'finance')).toBeNull();
-    // wrong embedded length
-    expect(verifyCallbackData(base.replace(/^a\.7:/, 'a.6:'), 'finance')).toBeNull();
   });
 
   it('enforces the 24h expiry and rejects future timestamps > 1min', () => {

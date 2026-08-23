@@ -10,12 +10,15 @@
  * business data itself.
  *
  * callback_data layout (≤64 bytes per Telegram limit):
- *   a.<len>:<record_id>.<unix_sec>.<hmac32hex>   → approve
- *   r.<len>:<record_id>.<unix_sec>.<hmac32hex>   → reject
- * The id length is embedded so ids of different lengths can never produce
+ *   a.<record_id>.<unix_sec>.<hmac24hex>   → approve
+ *   r.<record_id>.<unix_sec>.<hmac24hex>   → reject
+ * Parsing splits on '.' from the right (ids never contain '.'); the id length
+ * is mixed INTO the MAC input so ids of different lengths can never produce
  * colliding MAC inputs ("AB-1" vs "AB-12").
  * hmac = HMAC-SHA256(TELEGRAM_BOT_SECRET,
- *                    `${prefix}${len}:${id}.${ts}.${source_module}`)[0..31 hex]
+ *                    `${prefix}${len}:${id}.${ts}.${source_module}`)[..24 hex]
+ * Truncated to 96 bits — sufficient here since the module re-validates every
+ * decision server-side anyway.
  * The module name is not carried in callback_data (bytes are scarce); it is
  * recovered by trying each known module's MAC (detectAndVerify).
  */
@@ -56,8 +59,8 @@ export function signApprovalData(
   const rid = recordId.trim();
   if (!rid || !Number.isFinite(issuedAtSec)) return null;
   const macInput = `${prefix}${rid.length}:${rid}.${issuedAtSec}.${sourceModule}`;
-  const sig = createHmac('sha256', s).update(macInput).digest('hex').slice(0, 32);
-  const data = `${prefix}${rid.length}:${rid}.${issuedAtSec}.${sig}`;
+  const sig = createHmac('sha256', s).update(macInput).digest('hex').slice(0, 24);
+  const data = `${prefix}${rid}.${issuedAtSec}.${sig}`;
   if (Buffer.byteLength(data, 'utf8') > 64) return null;
   return data;
 }
@@ -68,7 +71,8 @@ export interface ParsedCallbackData {
   issuedAtMs: number;
 }
 
-const CALLBACK_RE = /^([ar])\.(\d+):(.+)\.(\d{10})\.([0-9a-f]{32})$/;
+// prefix(2) + id + '.' + 10-digit ts + '.' + 24-hex sig; id may not contain '.'
+const CALLBACK_RE = /^([ar])\.(.+)\.(\d{10})\.([0-9a-f]{24})$/;
 
 /**
  * Verify structure + HMAC + age against ONE candidate source module.
@@ -81,9 +85,8 @@ export function verifyCallbackData(
 ): ParsedCallbackData | null {
   const m = raw.match(CALLBACK_RE);
   if (!m) return null;
-  const [, flag, lenStr, rid, tsStr, sig] = m;
-  const declaredLen = Number(lenStr);
-  if (!declaredLen || declaredLen !== rid.length) return null;
+  const [, flag, rid, tsStr, sig] = m;
+  if (!rid) return null;
   const ts = Number(tsStr);
   const issuedAtMs = ts * 1000;
   // Reject expired AND far-future (clock skew > 1min).
@@ -92,7 +95,7 @@ export function verifyCallbackData(
   const expected = createHmac('sha256', secret())
     .update(`${prefix}${rid.length}:${rid}.${ts}.${sourceModule}`)
     .digest('hex')
-    .slice(0, 32);
+    .slice(0, 24);
   if (!safeEqual(sig, expected)) return null;
   return { action: flag === 'a' ? 'approve' : 'reject', recordId: rid, issuedAtMs };
 }
