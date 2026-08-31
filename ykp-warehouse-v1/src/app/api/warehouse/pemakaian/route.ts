@@ -7,7 +7,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, handler } from '@/lib/http';
+import { ok, list, unauthorized, badRequest, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { legacyWritesEnabled, legacyWritesDisabledResponse } from '@/lib/legacy';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
@@ -25,6 +25,11 @@ export const POST = handler(async (req: NextRequest) => {
   if (!s) return unauthorized();
   if (!legacyWritesEnabled()) return legacyWritesDisabledResponse();
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
+  const qtyOut = Number(body.qty_out ?? body.qty ?? 0);
+  if (!Number.isFinite(qtyOut) || qtyOut <= 0) {
+    return badRequest('qty_out (atau qty) wajib > 0');
+  }
+  if (!body.item_id) return badRequest('item_id is required');
   const id = nextSequentialIdSync('USE');
   const row = {
     usage_id: id,
@@ -33,7 +38,7 @@ export const POST = handler(async (req: NextRequest) => {
     outlet_id: body.outlet_id ?? '',
     item_id: body.item_id ?? '',
     item_name: body.item_name ?? '',
-    qty_out: body.qty_out ?? '0',
+    qty_out: String(qtyOut),
     unit: body.unit ?? '',
     for_menu: body.for_menu ?? '',
     requested_by: body.requested_by ?? '',

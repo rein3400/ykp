@@ -6,6 +6,8 @@
  * Schema matches sheets.ts TABS — full Warehouse V1 brief.
  */
 import { createHash } from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
 
@@ -164,11 +166,52 @@ function seed(): Record<string, Record<string, string>[]> {
 // Dev-mode (Turbopack) gives each route-handler bundle its own module graph,
 // so a module-level `let store` is NOT shared between routes. Hoist onto
 // globalThis so all graphs in this Node process share ONE store.
+// Disk persistence: mock data must survive PM2 restarts.
 const SEED_VERSION = 3; // bump when seed() data changes to force a clean re-seed
 const GLOBAL_KEY = `__YKP_WAREHOUSE_MOCK_STORE_V${SEED_VERSION}__`;
 const g = globalThis as unknown as Record<string, Record<string, Record<string, string>[]> | undefined>;
+
+function storeFilePath(): string {
+  return path.join(process.cwd(), '.data', 'warehouse-mock-store.json');
+}
+
+let persistTimer: NodeJS.Timeout | null = null;
+
+function persistStore(s: Record<string, Record<string, string>[]>): void {
+  if (persistTimer) return;
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    try {
+      const file = storeFilePath();
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, JSON.stringify(s), 'utf8');
+    } catch (e) {
+      console.error('[mock-store] persist failed:', e);
+    }
+  }, 500);
+  if (persistTimer.unref) persistTimer.unref();
+}
+
+function loadPersisted(s: Record<string, Record<string, string>[]>): boolean {
+  try {
+    const file = storeFilePath();
+    if (!fs.existsSync(file)) return false;
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, Record<string, string>[]>;
+    for (const [tab, rows] of Object.entries(parsed)) {
+      if (Array.isArray(rows)) s[tab] = rows;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function getStore() {
-  if (!g[GLOBAL_KEY]) g[GLOBAL_KEY] = seed();
+  if (!g[GLOBAL_KEY]) {
+    const fresh = seed();
+    g[GLOBAL_KEY] = fresh;
+    loadPersisted(fresh);
+  }
   return g[GLOBAL_KEY]!;
 }
 
@@ -188,6 +231,7 @@ export function mockAppendRows(tab: string, rows: Record<string, string>[]): num
   if (!s[tab]) s[tab] = [];
   const start = s[tab].length + 2;
   s[tab].push(...rows.map((r) => ({ ...r })));
+  persistStore(s);
   return start;
 }
 
@@ -196,6 +240,7 @@ export function mockUpdateRow(tab: string, rowNumber: number, values: Record<str
   const idx = rowNumber - 2;
   if (idx < 0 || !s[tab]?.[idx]) throw new Error(`mock row ${rowNumber} not found in ${tab}`);
   s[tab][idx] = { ...s[tab][idx], ...values };
+  persistStore(s);
 }
 
 export function mockFindRow(
