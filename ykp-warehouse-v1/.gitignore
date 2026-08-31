@@ -4,3 +4,6 @@
 
 .vercel
 .env*
+
+# runtime mock-store persistence
+.data/

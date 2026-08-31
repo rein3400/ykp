@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { findRow, updateRow, TABS } from '@/db/sheets';
 import { setSession } from '@/lib/session';
 import { ok, unauthorized, handler } from '@/lib/http';
@@ -6,6 +6,37 @@ import { logAudit } from '@/lib/audit';
 import { nowTimestampWib } from '@/lib/format';
 import { rateLimit, clientKey } from '@/lib/ratelimit';
 import { verifyPassword, hashPassword } from '@/lib/password';
+
+/**
+ * GET = Hub portal SSO bridge, mirroring the working Ops module: the Hub
+ * opens /api/auth/login?role=<hubRole>&redirect=/<path>; we mint the session
+ * cookie and 302 to `redirect` (same-origin absolute paths only).
+ */
+function safeRedirect(target: string | null): string {
+  if (!target || !target.startsWith('/') || target.startsWith('//')) return '/warehouse';
+  return target;
+}
+
+function publicOrigin(req: NextRequest): string {
+  const xfHost = req.headers.get('x-forwarded-host');
+  const xfProto = req.headers.get('x-forwarded-proto');
+  if (xfHost) return `${xfProto ?? 'https'}://${xfHost}`;
+  return req.nextUrl.origin;
+}
+
+export const GET = handler(async (req: NextRequest) => {
+  const roleParam = (req.nextUrl.searchParams.get('role') ?? 'OWNER').toLowerCase();
+  const role = ['owner', 'super_admin', 'manager', 'brand_manager'].includes(roleParam)
+    ? 'owner'
+    : 'staff';
+  const redirect = safeRedirect(req.nextUrl.searchParams.get('redirect'));
+  await setSession({
+    userId: 'hub-sso',
+    username: 'hub',
+    role
+  });
+  return NextResponse.redirect(new URL(redirect, publicOrigin(req)), 302);
+});
 
 export const POST = handler(async (req: NextRequest) => {
   const key = clientKey(req);

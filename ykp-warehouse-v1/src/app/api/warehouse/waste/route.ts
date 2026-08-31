@@ -2,7 +2,7 @@
  * Waste — writes to warehouse_waste (new schema).
  * Photo still required. Phase 3 will expand with approval + auto ledger.
  */
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { ok, list, unauthorized, badRequest, handler } from '@/lib/http';
@@ -41,6 +41,14 @@ export const POST = handler(async (req: NextRequest) => {
   const id = nextSequentialIdSync('WST');
   const unitCost = Number(body.estimated_unit_cost || body.buy_price || 0);
   const qty = Number(body.qty || 0);
+  // Ledger integrity: stock movements are keyed by (item, location). A waste
+  // without a location cannot deduct from the ledger — previously the ledger
+  // post silently failed ("Insufficient stock" swallowed), so stock never
+  // decreased while the API returned 201. Location is now mandatory.
+  const locationId = String(body.location_id ?? '');
+  if (qty > 0 && body.item_id && !locationId) {
+    return badRequest('location_id wajib untuk pengurangan stok waste (stok dilacak per lokasi).');
+  }
   const row: Record<string, string> = {
     waste_id: id,
     waste_number: id,
@@ -71,24 +79,32 @@ export const POST = handler(async (req: NextRequest) => {
     created_at: nowTimestampWib()
   };
   await appendRows(TABS.waste, [row]);
-  // Waste reduces stock — post a WASTE movement to the ledger so inventory
-  // stays accurate. Best-effort: never breaks the request path.
+  // A waste MUST reduce ledger stock; a swallowed ledger failure here would
+  // leave the API reporting success while inventory stays unchanged.
   if (qty > 0 && body.item_id) {
-    await appendMovement({
-      movementType: 'WASTE',
-      direction: 'OUT',
-      quantity: qty,
-      baseUnit: String(body.unit ?? ''),
-      unitCost,
-      itemId: String(body.item_id),
-      brandId: String(body.brand_id ?? ''),
-      outletId: String(body.outlet_id ?? ''),
-      locationId: String(body.location_id ?? ''),
-      referenceType: 'waste',
-      referenceId: id,
-      createdBy: s.userId,
-      notes: `Waste ${id}: ${String(body.reason ?? '')}`
-    }).catch((e) => console.error('[waste] ledger post failed:', e));
+    try {
+      await appendMovement({
+        movementType: 'WASTE',
+        direction: 'OUT',
+        quantity: qty,
+        baseUnit: String(body.unit ?? ''),
+        unitCost,
+        itemId: String(body.item_id),
+        brandId: String(body.brand_id ?? ''),
+        outletId: String(body.outlet_id ?? ''),
+        locationId,
+        referenceType: 'waste',
+        referenceId: id,
+        createdBy: s.userId,
+        notes: `Waste ${id}: ${String(body.reason ?? '')}`
+      });
+    } catch (e) {
+      console.error('[waste] ledger post failed:', e);
+      return NextResponse.json(
+        { error: { code: 'ledger_write_failed', message: `Waste tersimpan tapi stok GAGAL dikurangi: ${e instanceof Error ? e.message : 'ledger error'}. Hubungi admin untuk koreksi manual.` } },
+        { status: 500 }
+      );
+    }
   }
   if (evidenceFiles.length) {
     await appendEvidenceRows('waste', id, evidenceFiles, s.userId).catch(

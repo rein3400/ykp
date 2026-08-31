@@ -13,7 +13,7 @@ import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertSupplier, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
-import { evalReceivingDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
+import { evalReceivingDiscrepancy, shouldCreateAction, evalNearExpiry } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 import { FraudControlError, assertReceivingVerification, checkReceivingThreeWay } from '@/lib/fraud-controls';
@@ -319,6 +319,66 @@ export const POST = handler(async (req: NextRequest) => {
           ...found.row,
           photo_url: evidenceFiles[0].url,
         }).catch(() => null);
+      }
+    }
+  }
+
+  // Upsert batch_stock: FEFO/expiry tracking must reflect every receipt.
+  if (body.destination_location_id) {
+    for (const t of threeWay) {
+      const it = t.item;
+      const qtyAccepted = it.qty_accepted ?? it.qty_delivered;
+      if (qtyAccepted <= 0) continue;
+      try {
+        const batchRows = await readTab<Record<string, string>>(TABS.batchStock);
+        const existing = batchRows.find(
+          (b) => b.item_id === it.item_id
+            && b.location_id === body.destination_location_id
+            && (b.batch_number || '') === (it.batch_number ?? '')
+            && (b.status || 'ACTIVE') === 'ACTIVE'
+        );
+        if (existing) {
+          const found = await findRow(TABS.batchStock, 'batch_stock_id', existing.batch_stock_id);
+          if (found) {
+            const newQty = (Number(existing.current_qty) || 0) + qtyAccepted;
+            await updateRow(TABS.batchStock, found.rowNumber, {
+              ...found.row,
+              current_qty: String(newQty),
+              unit: it.unit,
+              updated_at: now
+            }).catch(() => null);
+          }
+        } else {
+          const expiry = it.expiry_date ?? '';
+          let batchStatus = 'ACTIVE';
+          if (expiry) {
+            const daysUntilExpiry = Math.floor(
+              (new Date(expiry).getTime() - Date.now()) / 86_400_000
+            );
+            if (daysUntilExpiry < 0) {
+              batchStatus = 'EXPIRED';
+            } else if (evalNearExpiry(daysUntilExpiry, 7, qtyAccepted, it.item_id, it.batch_number ?? '', it.item_id) !== null) {
+              batchStatus = 'NEAR_EXPIRY';
+            }
+          }
+          const batchId = nextSequentialIdSync('BAT');
+          await appendRows(TABS.batchStock, [{
+            batch_stock_id: batchId,
+            item_id: it.item_id,
+            location_id: body.destination_location_id,
+            batch_number: it.batch_number ?? '',
+            expiry_date: expiry,
+            received_date: today,
+            current_qty: String(qtyAccepted),
+            unit: it.unit,
+            unit_cost: String(it.unit_price || 0),
+            status: batchStatus,
+            created_at: now,
+            updated_at: now
+          }]).catch((e) => console.error('[receiving] batch_stock create failed:', e));
+        }
+      } catch (e) {
+        console.error('[receiving] batch_stock upsert failed:', e);
       }
     }
   }

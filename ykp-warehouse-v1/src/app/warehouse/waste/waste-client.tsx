@@ -4,14 +4,15 @@ import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload'
 import { EvidenceGallery } from '@/components/evidence-gallery';
 
 export default function WasteClient({
-  rows, items, outlets
+  rows, items, outlets, locations
 }: {
   rows: Record<string, string>[];
   items: Record<string, string>[];
   outlets: Record<string, string>[];
+  locations: Record<string, string>[];
 }) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ outlet_id: '', item_id: '', qty: '', unit: 'kg', reason: '', photo_url: '', pic: '', witness_signature: '' });
+  const [form, setForm] = useState({ outlet_id: '', location_id: '', item_id: '', qty: '', unit: 'kg', reason: '', photo_url: '', pic: '', witness_signature: '' });
   const [list, setList] = useState(rows);
   const [err, setErr] = useState<string | null>(null);
   const [evidence, setEvidence] = useState<EvidenceFile[]>([]);
@@ -22,6 +23,7 @@ export default function WasteClient({
 
   async function create() {
     setErr(null);
+    if (!form.location_id) { setErr('Lokasi wajib dipilih — stok dikurangi per lokasi.'); return; }
     const body = {
       ...form,
       photo_url: form.photo_url || evidence[0]?.url || '',
@@ -50,6 +52,10 @@ export default function WasteClient({
             <select value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Outlet</option>
               {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
+            </select>
+            <select value={form.location_id} onChange={(e) => setForm({ ...form, location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+              <option value=''>Lokasi *</option>
+              {locations.map((l) => <option key={l.location_id} value={l.location_id}>{l.location_name}</option>)}
             </select>
             <select value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value, unit: items.find((i) => i.item_id === e.target.value)?.unit ?? 'kg' })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Item</option>
