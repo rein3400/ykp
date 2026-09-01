@@ -55,9 +55,7 @@ export const POST = handler(async (req) => {
       if (r.payroll_period !== payroll_period) continue;
       if (brand_id && r.brand_id !== brand_id) continue;
       if (r.finance_notified_at) continue;
-      const found = await findRow(TABS.payroll, 'payroll_id', r.payroll_id);
-      if (!found) continue;
-      await updateRow(TABS.payroll, found.rowNumber, { ...found.row, finance_notified_at: now, finance_notified_by: actorId, updated_at: now });
+      await updateRow(TABS.payroll, i + 2, { ...r, finance_notified_at: now, finance_notified_by: actorId, updated_at: now });
       updated++;
     }
   }
