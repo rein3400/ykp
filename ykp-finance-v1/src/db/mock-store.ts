@@ -58,15 +58,16 @@ const TAB = {
   thresholdConfig: 'finance_threshold_config',
   users: 'users',
   auditLog: 'audit_log',
-  telegramDeliveryLog: 'telegram_delivery_log'
+  telegramDeliveryLog: 'telegram_delivery_log',
+  payroll: 'hr_payroll'
 } as const;
 
 const BRANDS = [
-  ['BR-001', 'Funkydak', 'FKD'],
-  ['BR-002', 'Sekarpizza', 'SKP'],
-  ['BR-003', 'Suburbuns', 'SBN'],
-  ['BR-004', 'Laju Kopi', 'LJK'],
-  ['BR-005', 'Uncle Masala', 'UMS']
+  ['BR-001', 'Funkydak', 'FKD', 'funkydak@gmail.com'],
+  ['BR-002', 'Sekarpizza', 'SKP', 'sekarpizza@gmail.com'],
+  ['BR-003', 'Suburbuns', 'SBN', 'suburbunsyk@gmail.com'],
+  ['BR-004', 'Laju Kopi', 'LJK', ''],
+  ['BR-005', 'Uncle Masala', 'UMS', '']
 ] as const;
 
 const OUTLETS = [
@@ -512,9 +513,66 @@ function seed(): Record<string, Record<string, string>[]> {
     active: 'true', last_changed: t, changed_by: 'USR-001'
   });
 
+  // hr_payroll (data HR V1 — dibaca read-only oleh Beban Gaji)
+  const payPeriods = [0, 1].map((back) => {
+    const d = new Date();
+    d.setUTCMonth(d.getUTCMonth() - back, 1);
+    return d.toISOString().slice(0, 7);
+  });
+  const EMP = [
+    ['EMP-00001', 'Andi Saputra', 'BR-001', 'OL-001', 3_200_000],
+    ['EMP-00002', 'Budi Santoso', 'BR-001', 'OL-002', 2_900_000],
+    ['EMP-00003', 'Citra Lestari', 'BR-002', 'OL-003', 3_000_000],
+    ['EMP-00004', 'Dewi Anggraini', 'BR-002', 'OL-004', 2_800_000],
+    ['EMP-00005', 'Eko Prasetyo', 'BR-003', 'OL-005', 2_700_000],
+    ['EMP-00006', 'Fitri Handayani', 'BR-004', 'OL-006', 2_600_000],
+    ['EMP-00007', 'Gilang Ramadhan', 'BR-005', 'OL-007', 2_750_000]
+  ] as const;
+  const payrolls: Record<string, string>[] = [];
+  payPeriods.forEach((period, pi) => {
+    EMP.forEach(([empId, name, brandId, outletId, basic], ei) => {
+      const overtime = Math.round((rnd() * 8 + 2)) * 15_000;
+      const bonus = pi === 0 && ei % 3 === 0 ? 250_000 : 0;
+      const gross = basic + overtime + bonus;
+      const bpjs = Math.round(basic * 0.03 / 1000) * 1000;
+      const net = gross - bpjs;
+      const paymentStatus = pi === 1 ? 'PAID' : ei < 2 ? 'PAID' : 'UNPAID';
+      payrolls.push({
+        payroll_id: `PR-${empId}-${period}`,
+        payroll_period: period,
+        employee_id: empId,
+        employee_name: name,
+        brand_id: brandId,
+        outlet_id: outletId,
+        basic_salary: String(basic),
+        attendance_deduction: '0',
+        overtime_pay: String(overtime),
+        bonus_total: String(bonus),
+        allowance_total: '0',
+        penalty_total: '0',
+        cash_advance_deduction: '0',
+        bpjs_deduction: String(bpjs),
+        tax_deduction: '0',
+        gross_salary: String(gross),
+        net_salary: String(net),
+        calculation_status: 'OK',
+        approval_status: 'APPROVED',
+        payment_status: paymentStatus,
+        payment_date: paymentStatus === 'PAID' ? `${period}-28` : '',
+        finance_notified_at: '',
+        finance_notified_by: '',
+        email_sent_at: '',
+        email_sent_to: '',
+        email_sent_status: '',
+        created_at: t,
+        updated_at: t
+      });
+    });
+  });
+
   return {
-    [TAB.brands]: BRANDS.map(([id, name, code]) => ({
-      brand_id: id, brand_name: name, brand_code: code, status: 'active', created_at: t, updated_at: t
+    [TAB.brands]: BRANDS.map(([id, name, code, email]) => ({
+      brand_id: id, brand_name: name, brand_code: code, email: email ?? '', status: 'active', created_at: t, updated_at: t
     })),
     [TAB.outlets]: OUTLETS.map((o) => ({
       outlet_id: o.id, brand_id: o.brand, outlet_name: o.name, outlet_code: o.code,
@@ -557,6 +615,7 @@ function seed(): Record<string, Record<string, string>[]> {
     [TAB.pettyCash]: petty,
     [TAB.expense]: expenses,
     [TAB.closingCash]: closing,
+    [TAB.payroll]: payrolls,
     // Output tabs diisi oleh /api/finance/summary/regenerate
     [TAB.dailySummary]: [],
     [TAB.alertLog]: [],
@@ -575,7 +634,7 @@ function seed(): Record<string, Record<string, string>[]> {
 // so a module-level `let store` is NOT shared between routes (e.g. /regenerate
 // writes don't appear in /count). Hoist onto globalThis so all graphs in this
 // Node process share ONE store. Keyed per-app to avoid collisions.
-const SEED_VERSION = 3; // bump when seed() data changes to force a clean re-seed
+const SEED_VERSION = 4; // bump when seed() data changes to force a clean re-seed
 const GLOBAL_KEY = `__YKP_FINANCE_MOCK_STORE_V${SEED_VERSION}__`;
 const g = globalThis as unknown as Record<string, Record<string, Record<string, string>[]> | undefined>;
 function getStore() {
