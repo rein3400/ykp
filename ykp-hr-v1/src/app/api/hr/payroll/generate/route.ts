@@ -3,7 +3,7 @@
  * Reads: employees, attendance, adjustments, lateness_rules
  * Writes: hr_payroll with status PENDING
  */
-import { readTab, appendRows, TABS } from '@/db/sheets';
+import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, ok } from '@/lib/http';
@@ -195,7 +195,25 @@ export const POST = handler(async (req) => {
   }
 
   if (rows.length > 0) {
-    await appendRows(TABS.payroll, rows);
+    const existing = await readTab<Record<string, string>>(TABS.payroll);
+    const byId = new Map<string, { rowNumber: number; row: Record<string, string> }>();
+    for (const r of existing) {
+      if (r.payroll_period === parsed.data.period) {
+        const found = await findRow(TABS.payroll, 'payroll_id', r.payroll_id);
+        if (found) byId.set(r.payroll_id, found);
+      }
+    }
+    const toAppend: Record<string, string>[] = [];
+    for (const r of rows) {
+      const ex = byId.get(r.payroll_id);
+      if (ex) {
+        await updateRow(TABS.payroll, ex.rowNumber, { ...ex.row, ...r });
+        byId.delete(r.payroll_id);
+      } else {
+        toAppend.push(r);
+      }
+    }
+    if (toAppend.length > 0) await appendRows(TABS.payroll, toAppend);
   }
 
   await logAudit({
