@@ -65,6 +65,21 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/api/hr/audit') && req.method === 'GET') {
     return NextResponse.next();
   }
+  // Finance → HR service-to-service notify: the route authenticates the caller
+  // itself via constant-time compare of the x-finance-secret header against
+  // FINANCE_NOTIFY_SECRET; no session cookie exists in a server-to-server call.
+  if (pathname === '/api/hr/payroll/finance-notify' && req.method === 'POST') {
+    const financeSecret = (process.env.FINANCE_NOTIFY_SECRET ?? '').trim();
+    const provided = (req.headers.get('x-finance-secret') ?? '').trim();
+    if (financeSecret.length >= 32 && provided.length === financeSecret.length) {
+      const a = new TextEncoder().encode(provided);
+      const b = new TextEncoder().encode(financeSecret);
+      let diff = 0;
+      for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+      if (diff === 0) return NextResponse.next();
+    }
+    return NextResponse.json({ error: { code: 'unauthorized', message: 'Unauthorized' } }, { status: 401 });
+  }
   const cookie = req.cookies.get('ykp_hr_session')?.value;
   const secret = process.env.SESSION_SECRET ?? '';
   if (!cookie || !(await verify(cookie, secret))) {
