@@ -73,6 +73,8 @@ export const TABS = {
   // Auth + audit
   users: 'users',
   auditLog: 'audit_log',
+  // App settings (key/value: SMTP config, dsb)
+  appSettings: 'app_settings',
   // Hermez alert log (brief §11)
   hermezAlerts: 'hermes_alert_log',
   // Telegram delivery log (notification wiring)
@@ -83,7 +85,7 @@ export type TabName = (typeof TABS)[keyof typeof TABS];
 
 /** Header row for each tab. Order = column index. */
 export const TAB_HEADERS: Record<TabName, string[]> = {
-  [TABS.brands]: ['brand_id', 'brand_name', 'brand_code', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+  [TABS.brands]: ['brand_id', 'brand_name', 'brand_code', 'email', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by'],
   [TABS.outlets]: [
     'outlet_id',
     'brand_id',
@@ -111,6 +113,10 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'join_date',
     'employment_status',
     'contract_type',
+    'probation_end_date',
+    'contract_start_date',
+    'contract_end_date',
+    'permanent_date',
     'department',
     'role',
     'position',
@@ -306,10 +312,18 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'locked_by',
     'unlock_reason',
     'unlock_approved_by',
+    'needs_revision_reason',
+    'needs_revision_at',
+    'needs_revision_by',
     'payment_date',
     'payment_reference',
     'payslip_url',
     'approved_by',
+    'finance_notified_at',
+    'finance_notified_by',
+    'email_sent_at',
+    'email_sent_to',
+    'email_sent_status',
     'created_at',
     'updated_at'
   ],
@@ -383,6 +397,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'ip_address',
     'chain_hash'
   ],
+  [TABS.appSettings]: ['setting_key', 'setting_value', 'updated_at', 'updated_by'],
   [TABS.hermezAlerts]: [
     'alert_id',
     'date',

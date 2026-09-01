@@ -6,7 +6,7 @@
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
-import { handler, badRequest, unauthorized, forbidden, ok } from '@/lib/http';
+import { handler, badRequest, unauthorized, forbidden, ok, conflict } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { computePayroll, type PayrollInput, periodDays, attendanceDeduction, overtimePay, hourlyRate } from '@/features/hr/lib/payroll';
@@ -202,6 +202,10 @@ export const POST = handler(async (req) => {
         const found = await findRow(TABS.payroll, 'payroll_id', r.payroll_id);
         if (found) byId.set(r.payroll_id, found);
       }
+    }
+    const locked = [...byId.values()].some((v) => v.row.locked_status === 'LOCKED');
+    if (locked) {
+      return conflict(`Payroll periode ${parsed.data.period} sudah di-lock (APPROVED). Unlock dulu dengan alasan untuk regenerate.`);
     }
     const toAppend: Record<string, string>[] = [];
     for (const r of rows) {
