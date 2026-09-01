@@ -8,6 +8,8 @@
  * Asia/Jakarta at seed time so "today" views always render demo data.
  */
 import { createHash } from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
 
@@ -222,10 +224,56 @@ function seed(): Record<string, Record<string, string>[]> {
   };
 }
 
-let store: Record<string, Record<string, string>[]> | null = null;
-function getStore() {
-  if (!store) store = seed();
-  return store;
+// Dev-mode (Turbopack) gives each route-handler bundle its own module graph,
+// so a module-level `let store` is NOT shared between routes — a POST writes
+// to one instance while the page re-render reads a fresh, empty one. Hoist
+// onto globalThis (disk-backed) so all graphs share ONE store.
+const SEED_VERSION = 1; // bump when seed() data changes to force a clean re-seed
+const STORE_KEY = `__YKP_HR_MOCK_STORE_V${SEED_VERSION}__`;
+const storeHost = globalThis as unknown as Record<string, Record<string, Record<string, string>[]> | undefined>;
+
+function storeFilePath(): string {
+  return path.join(process.cwd(), '.data', 'hr-mock-store.json');
+}
+
+let persistTimer: NodeJS.Timeout | null = null;
+
+function persistStore(s: Record<string, Record<string, string>[]>): void {
+  if (persistTimer) return;
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    try {
+      const file = storeFilePath();
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, JSON.stringify(s), 'utf8');
+    } catch (e) {
+      console.error('[mock-store] persist failed:', e);
+    }
+  }, 500);
+  if (persistTimer.unref) persistTimer.unref();
+}
+
+function loadPersisted(s: Record<string, Record<string, string>[]>): boolean {
+  try {
+    const file = storeFilePath();
+    if (!fs.existsSync(file)) return false;
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, Record<string, string>[]>;
+    for (const [tab, rows] of Object.entries(parsed)) {
+      if (Array.isArray(rows)) s[tab] = rows;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getStore(): Record<string, Record<string, string>[]> {
+  if (!storeHost[STORE_KEY]) {
+    const fresh = seed();
+    storeHost[STORE_KEY] = fresh;
+    loadPersisted(fresh);
+  }
+  return storeHost[STORE_KEY]!;
 }
 
 export function isMockMode(): boolean {
@@ -244,6 +292,7 @@ export function mockAppendRows(tab: string, rows: Record<string, string>[]): num
   if (!s[tab]) s[tab] = [];
   const start = s[tab].length + 2;
   s[tab].push(...rows.map((r) => ({ ...r })));
+  persistStore(s);
   return start;
 }
 
@@ -252,6 +301,7 @@ export function mockUpdateRow(tab: string, rowNumber: number, values: Record<str
   const idx = rowNumber - 2;
   if (idx < 0 || !s[tab]?.[idx]) throw new Error(`mock row ${rowNumber} not found in ${tab}`);
   s[tab][idx] = { ...s[tab][idx], ...values };
+  persistStore(s);
 }
 
 export function mockFindRow(

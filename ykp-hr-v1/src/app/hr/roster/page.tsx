@@ -27,6 +27,7 @@ export default async function RosterPage() {
     .filter((e) => e.active_status === 'active' || e.active_status === '1')
     .map((e) => ({ id: e.employee_id, name: e.full_name }));
   const shiftById = new Map(shifts.map((s) => [s.shift_id || '', s]));
+  const activeShifts = shifts.filter((s) => (s.active_status ?? 'active') === 'active');
   const today = todayWib();
   const todayRoster = rosters
     .filter((r) => r.date === today)
@@ -47,7 +48,7 @@ export default async function RosterPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="card">
           <h2 className="mb-2 font-semibold">Buat Roster</h2>
-          <RosterForm employees={active} shifts={shifts} />
+          <RosterForm employees={active} shifts={activeShifts} />
         </div>
         <div className="card lg:col-span-2">
           <h2 className="mb-3 font-semibold">Roster Hari Ini ({today})</h2>
