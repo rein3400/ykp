@@ -1,8 +1,10 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { can, Role } from '@/lib/rbac';
+import { getReminderCandidates } from '@/lib/employment-contract';
 import Link from 'next/link';
 import { EmployeesTable } from '@/features/hr/components/employees-table';
+import { todayWib } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +25,10 @@ interface Employee {
   employment_status: string;
   active_status: string;
   join_date: string;
+  probation_end_date: string;
+  contract_start_date: string;
+  contract_end_date: string;
+  permanent_date: string;
 }
 interface Brand { brand_id: string; brand_name: string }
 interface Outlet { outlet_id: string; brand_id: string; outlet_name: string }
@@ -38,9 +44,21 @@ export default async function EmployeesPage() {
   const brandById = new Map(brands.map((b) => [b.brand_id, b.brand_name]));
   const outletById = new Map(outlets.map((o) => [o.outlet_id, o.outlet_name]));
   const canEdit = session ? can(session.role as Role, 'update', 'employee') : false;
+  const reminders = getReminderCandidates(employees as unknown as Record<string, string>[], todayWib());
 
   return (
     <div className='space-y-4'>
+      {reminders.length > 0 && (
+        <div className='rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm'>
+          <div className='font-semibold text-amber-800'>Reminder Kontrak & Probation ({reminders.length})</div>
+          <ul className='mt-1 list-disc pl-5 text-amber-900'>
+            {reminders.slice(0, 5).map((r) => (
+              <li key={r.employeeId}>{r.employeeName} — {r.kind === 'PROBATION_ENDING' ? 'Probation' : 'Kontrak'} berakhir {r.targetDate} ({r.daysRemaining} hari) — {r.employmentStatus}</li>
+            ))}
+          </ul>
+          <div className='mt-1 text-xs text-muted-foreground'>Total probation 2 bln + kontrak 12 bln = 14 bln. Telegram HR dikirim otomatis H-7 (probation) & H-14 (kontrak) via cron POST /api/hr/notify/contract-reminders.</div>
+        </div>
+      )}
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-2xl font-bold'>Master Karyawan</h1>
