@@ -5,7 +5,7 @@
  */
 import { NextRequest } from 'next/server';
 import { getSession } from '@/lib/session';
-import { ok, unauthorized, badRequest, handler, forbidden } from '@/lib/http';
+import { ok, unauthorized, badRequest, fail, serverError, handler, forbidden } from '@/lib/http';
 import { can, type Role } from '@/lib/rbac';
 import { isMockMode } from '@/db/mock-store';
 
@@ -35,9 +35,15 @@ export const POST = handler(async (req: NextRequest) => {
       body: JSON.stringify({ payroll_period: period, brand_id: body.brand_id, payroll_ids: body.payroll_ids })
     });
     const j = await res.json().catch(() => ({}));
-    if (!res.ok) return badRequest(j.error?.message ?? `HR notify gagal: HTTP ${res.status}`);
+    if (!res.ok) {
+      const message = j.error?.message ?? `HR notify gagal: HTTP ${res.status}`;
+      if (res.status === 401) return unauthorized(`HR menolak kredensial service (${message})`);
+      if (res.status === 403) return forbidden(message);
+      if (res.status === 404) return fail('not_found', 'Endpoint finance-notify tidak ditemukan di aplikasi HR — deploy HR belum memuat fitur ini', 404);
+      return badRequest(message);
+    }
     return ok(j.data ?? j);
   } catch (e) {
-    return badRequest(e instanceof Error ? e.message : 'Gagal menghubungi HR');
+    return serverError();
   }
 });

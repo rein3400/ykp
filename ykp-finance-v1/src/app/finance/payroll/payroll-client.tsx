@@ -17,6 +17,7 @@ export default function PayrollClient(props: {
   const [period, setPeriod] = useState(props.periods[0] ?? '');
   const [data, setData] = useState(props.initial);
   const [loading, setLoading] = useState(false);
+  const [notifyState, setNotifyState] = useState<{ kind: 'idle' | 'success' | 'error'; message: string }>({ kind: 'idle', message: '' });
 
   async function loadPeriod(p: string) {
     setPeriod(p);
@@ -55,8 +56,9 @@ export default function PayrollClient(props: {
           </select>
           <Btn
             variant='outline'
-            disabled={!period || loading}
+            disabled={!period || loading || notifyState.kind === 'success'}
             onClick={async () => {
+              setNotifyState({ kind: 'idle', message: '' });
               try {
                 const r = await fetch('/api/finance/payroll/notify-hr', {
                   method: 'POST',
@@ -65,9 +67,12 @@ export default function PayrollClient(props: {
                 });
                 const j = await r.json().catch(() => ({}));
                 if (!r.ok) throw new Error(j.error?.message ?? `HTTP ${r.status}`);
-                toast.success(`Notifikasi terkirim ke HR — ${j.data?.updated ?? 0} payroll ditandai`);
+                setNotifyState({ kind: 'success', message: `Notifikasi terkirim ke HR — ${j.data?.updated ?? 0} payroll ditandai (periode ${period})` });
+                toast.success('Notifikasi terkirim ke HR');
               } catch (e) {
-                toast.error(e instanceof Error ? e.message : 'Gagal notifikasi HR');
+                const msg = e instanceof Error ? e.message : 'Gagal notifikasi HR';
+                setNotifyState({ kind: 'error', message: `Gagal mengirim notifikasi untuk periode ${period}: ${msg}` });
+                toast.error(msg);
               }
             }}
           >
@@ -75,6 +80,19 @@ export default function PayrollClient(props: {
           </Btn>
         </div>
       </div>
+
+      {notifyState.kind === 'error' && (
+        <div role='alert' className='flex items-start justify-between rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800'>
+          <span>⚠ {notifyState.message}</span>
+          <button type='button' onClick={() => setNotifyState({ kind: 'idle', message: '' })} className='ml-3 text-xs text-red-600 underline'>tutup</button>
+        </div>
+      )}
+      {notifyState.kind === 'success' && (
+        <div role='status' className='flex items-start justify-between rounded border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800'>
+          <span>✓ {notifyState.message} — HR dapat memproses approve di aplikasi HR.</span>
+          <button type='button' onClick={() => setNotifyState({ kind: 'idle', message: '' })} className='ml-3 text-xs text-green-700 underline'>tutup</button>
+        </div>
+      )}
 
       {props.periods.length === 0 ? (
         <EmptyState message='Belum ada data payroll dari HR V1. Generate payroll di aplikasi HR terlebih dahulu.' />
