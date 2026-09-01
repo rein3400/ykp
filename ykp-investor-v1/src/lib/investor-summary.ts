@@ -167,9 +167,14 @@ export async function regenerateInvestorSummary(date?: string): Promise<Record<s
   const totalRevenue = fin.totalRevenue;
   const totalProfit = fin.totalProfit;
 
-  // growth vs previous summary if any
+  // growth vs previous summary if any. Sort by date and take the latest row
+  // strictly before today — sheet order is append-order, so out-of-order
+  // backfills would otherwise pick an arbitrary baseline (MEDIUM bug).
   const prev = await readTab(TABS.summary);
-  const last = prev.filter((r) => r.date !== d).slice(-1)[0];
+  const last = prev
+    .filter((r) => r.date && r.date < d)
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+    .at(-1);
   const prevCapital = Number(last?.total_capital || 0);
   const growth = prevCapital > 0 ? ((totalCapital - prevCapital) / prevCapital) * 100 : 0;
 
@@ -227,7 +232,8 @@ export async function writeInvestorAlerts(
       date,
       severity: 'HIGH',
       alert_type: 'DIVIDEND_HIGH_RATIO',
-      title: 'Dividend vs capital tinggi',
+      // No `title` column on investor_hermes_alert_log (TAB_HEADERS); the
+      // title is embedded into `message` below (LOW bug — key was dropped).
       message: `Dividend declared ${dividend} — ${((dividend / capital) * 100).toFixed(1)}% of capital ${capital}`,
       outlet_id: '',
       status: 'OPEN',
@@ -240,7 +246,6 @@ export async function writeInvestorAlerts(
       date,
       severity: 'MEDIUM',
       alert_type: 'CAPITAL_DROP',
-      title: 'Capital growth negatif',
       message: `Growth ${growth}% vs previous summary`,
       outlet_id: '',
       status: 'OPEN',
@@ -253,7 +258,6 @@ export async function writeInvestorAlerts(
       date,
       severity: 'LOW',
       alert_type: 'NO_HOLDINGS',
-      title: 'Belum ada shareholding',
       message: 'Investor shareholding table empty',
       outlet_id: '',
       status: 'OPEN',
@@ -262,13 +266,21 @@ export async function writeInvestorAlerts(
   }
 
   if (alerts.length) {
+    // Embed the human title into the message text — the alert_log tab has no
+    // `title` column (TAB_HEADERS[TABS.hermezAlerts]); writing a title key
+    // would be silently dropped (LOW bug).
+    const titles: Record<string, string> = {
+      DIVIDEND_HIGH_RATIO: 'Dividend vs capital tinggi',
+      CAPITAL_DROP: 'Capital growth negatif',
+      NO_HOLDINGS: 'Belum ada shareholding',
+    };
     const mapped = alerts.map((a) => ({
       alert_id: a.alert_id,
       date: a.date,
       source_app: 'investor',
       alert_type: a.alert_type,
       severity: a.severity,
-      message: `${a.title}: ${a.message}`,
+      message: `${titles[a.alert_type] ?? a.alert_type}: ${a.message}`,
       status: a.status,
       created_at: a.created_at,
       resolved_at: '',

@@ -13,14 +13,15 @@ export interface TgMessage {
   caption?: string;
   voice?: { file_id: string; duration: number; mime_type?: string };
   photo?: { file_id: string; width: number; height: number }[];
-  location?: { latitude: number; longitude: number };
   date: number;
 }
 
+/** Inline-keyboard button press (approval buttons, Fase 4). */
 export interface TgCallbackQuery {
   id: string;
-  from: { id: number; first_name?: string; username?: string };
-  message?: TgMessage;
+  from?: { id: number; first_name?: string; username?: string };
+  /** The message the button was attached to (may be absent for old messages). */
+  message?: { message_id: number; chat: { id: number; type: string }; text?: string };
   data?: string;
 }
 
@@ -28,6 +29,11 @@ interface TgUpdate {
   update_id: number;
   message?: TgMessage;
   callback_query?: TgCallbackQuery;
+}
+
+/** Inline keyboard markup (approval buttons, Fase 4). */
+export interface InlineKeyboard {
+  inline_keyboard: { text: string; callback_data: string }[][];
 }
 
 const API = () => `https://api.telegram.org/bot${CONFIG.botToken}`;
@@ -58,54 +64,93 @@ export async function pollUpdates(offset: number, timeoutSec = 30): Promise<TgUp
   }
 }
 
-/** Send text (HTML) with an inline keyboard (array of button rows). */
-export async function sendMessageWithKeyboard(
-  chatId: number,
-  text: string,
-  buttons: { text: string; callback_data: string }[][]
-): Promise<void> {
-  if (DRY_RUN) {
-    console.log(`\n[DRY-RUN telegram → ${chatId}]\n${text}\n[buttons: ${JSON.stringify(buttons)}]\n`);
-    return;
-  }
-  await api('sendMessage', {
-    chat_id: chatId,
-    text,
-    parse_mode: 'HTML',
-    disable_web_page_preview: true,
-    reply_markup: { inline_keyboard: buttons }
-  });
-}
-
-/** Show a reply keyboard with a "Share Location" button (request_location). */
-export async function sendLocationPrompt(chatId: number, text: string): Promise<void> {
-  if (DRY_RUN) {
-    console.log(`\n[DRY-RUN telegram → ${chatId}]\n${text}\n[reply keyboard: Share Location]\n`);
-    return;
-  }
-  await api('sendMessage', {
-    chat_id: chatId,
-    text,
-    parse_mode: 'HTML',
-    reply_markup: {
-      keyboard: [[{ text: '📍 Kirim Lokasi Saya', request_location: true }]],
-      resize_keyboard: true,
-      one_time_keyboard: true
-    }
-  });
-}
-
-/** Acknowledge an inline button press (clears the loading spinner). */
-export async function answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
-  if (DRY_RUN) return;
-  await api('answerCallbackQuery', {
-    callback_query_id: callbackQueryId,
-    ...(text ? { text } : {})
-  }).catch(() => undefined);
+/** Strip malformed HTML that Telegram can't parse.
+ *  Telegram supports a strict subset: <b>, <i>, <u>, <s>, <strong>, <em>, <ins>, <strike>, <del>,
+ *  <span>, <tg-spoiler>, <a href="...">, <pre>, <code>, <br>.
+ *  Any `<` that's NOT part of one of these tags breaks parse_mode=HTML. */
+function escapeHtmlTags(text: string): string {
+  return text
+    // Escape all `<` and `>` first
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Restore whitelisted valid tags
+    .replace(/&lt;(\/?)(b|strong|i|em|u|ins|s|strike|del|span|tg-spoiler|pre|code|br)(\s[^&]*?)?&gt;/gi, '<$1$2$3>')
+    .replace(/&lt;a(\s+href=&quot;.*?&quot;[^&]*?)?&gt;(.*?)&lt;\/a&gt;/gi, '<a$1>$2</a>');
 }
 
 /** Send text (HTML), chunked to Telegram's 4096-char limit. */
-export async function sendMessage(chatId: number, text: string): Promise<void> {
+export async function sendMessage(chatId: number, text: string, replyMarkup?: unknown): Promise<number | null> {
+  const chunks: string[] = [];
+  let rest = escapeHtmlTags(text);
+  while (rest.length > CONFIG.telegramChunk) {
+    let cut = rest.lastIndexOf('\n', CONFIG.telegramChunk);
+    if (cut < CONFIG.telegramChunk / 2) cut = CONFIG.telegramChunk;
+    chunks.push(rest.slice(0, cut));
+    rest = rest.slice(cut).trimStart();
+  }
+  chunks.push(rest);
+
+  // Inline keyboard only on the LAST chunk — buttons belong at the end.
+  const markup = replyMarkup && chunks.length > 0 ? { reply_markup: replyMarkup } : {};
+
+  for (let i = 0; i < chunks.length; i++) {
+    const isLast = i === chunks.length - 1;
+    if (DRY_RUN) {
+      console.log(`\n[DRY-RUN telegram → ${chatId}]\n${chunks[i]}\n`);
+      continue;
+    }
+    try {
+      const sent = await api<{ message_id: number }>('sendMessage', {
+        chat_id: chatId,
+        text: chunks[i],
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        ...(isLast ? markup : {})
+      });
+      if (isLast) return sent.message_id;
+    } catch (e) {
+      // If HTML parsing still fails, fall back to plain text (markup kept)
+      console.warn('[telegram] HTML parse failed, falling back to plain text:', e instanceof Error ? e.message : e);
+      const sent = await api<{ message_id: number }>('sendMessage', {
+        chat_id: chatId,
+        text: chunks[i],
+        disable_web_page_preview: true,
+        ...(isLast ? markup : {})
+      });
+      if (isLast) return sent.message_id;
+    }
+  }
+  return null;
+}
+
+/** Acknowledge a callback-query button press (stops the client spinner). */
+export async function answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
+  if (DRY_RUN) return;
+  await api('answerCallbackQuery', { callback_query_id: callbackQueryId, ...(text ? { text } : {}) })
+    .catch((e) => console.error('[telegram] answerCallbackQuery failed:', e instanceof Error ? e.message : e));
+}
+
+/** Replace an existing message's text + keyboard (used after a decision). */
+export async function editMessageText(chatId: number, messageId: number, text: string, replyMarkup?: unknown): Promise<void> {
+  if (DRY_RUN) {
+    console.log(`\n[DRY-RUN telegram edit → ${chatId}/${messageId}]\n${text}\n`);
+    return;
+  }
+  await api('editMessageText', {
+    chat_id: chatId,
+    message_id: messageId,
+    text: escapeHtmlTags(text),
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    ...(replyMarkup ? { reply_markup: replyMarkup } : {})
+  }).catch(async (e) => {
+    // editMessageText fails when the new text equals the old one; ignore that case.
+    console.warn('[telegram] editMessageText failed:', e instanceof Error ? e.message : e);
+  });
+}
+
+/** Send plain text (no parse_mode) — for LLM replies that may contain
+ *  markdown/HTML-ish characters. Chunked to Telegram's 4096-char limit. */
+export async function sendMessagePlain(chatId: number, text: string): Promise<void> {
   const chunks: string[] = [];
   let rest = text;
   while (rest.length > CONFIG.telegramChunk) {
@@ -124,7 +169,6 @@ export async function sendMessage(chatId: number, text: string): Promise<void> {
     await api('sendMessage', {
       chat_id: chatId,
       text: chunk,
-      parse_mode: 'HTML',
       disable_web_page_preview: true
     });
   }

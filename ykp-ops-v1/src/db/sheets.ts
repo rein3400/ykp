@@ -4,15 +4,10 @@
  */
 import { google, type sheets_v4 } from 'googleapis';
 import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow } from './mock-store';
+import { isPostgresMode, pgReadTab, pgAppendRows, pgUpdateRow, pgFindRow } from './postgres';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 let cached: sheets_v4.Sheets | null = null;
-
-// In-memory read cache (TTL) to avoid bursting Google Sheets read quota
-// (60 reads/min/user). Any write clears the whole cache.
-const READ_CACHE_TTL_MS = 10_000;
-const readCache = new Map<string, { at: number; rows: Record<string, string>[] }>();
-function invalidateReadCache(): void { readCache.clear(); }
 
 export function getSheetsClient(): sheets_v4.Sheets {
   if (cached) return cached;
@@ -58,6 +53,7 @@ export const TABS = {
   auditLog: 'ops_audit_log',
   hermezAlerts: 'ops_hermes_alert_log',
   telegramDeliveryLog: 'ops_telegram_delivery_log',
+  telegramLinkCodes: 'ops_telegram_link_code',
 } as const;
 
 export type TabName = (typeof TABS)[keyof typeof TABS];
@@ -80,8 +76,9 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'checklist_item', 'required_photo', 'target_value', 'tolerance_value', 'critical_flag', 'active_status',
   ],
   [TABS.checklistSubmissions]: [
-    'submission_id', 'date', 'brand_id', 'outlet_id', 'shift_id', 'checklist_type',
-    'checklist_item', 'department', 'status', 'notes', 'verified_by', 'verified_at', 'critical_flag', 'created_at',
+    'submission_id', 'date', 'brand_id', 'outlet_id', 'shift_id',
+    'checklist_type', 'department', 'checklist_item', 'status',
+    'notes', 'critical_flag', 'photo_url', 'submitted_by', 'submitted_at',
   ],
   [TABS.briefing]: [
     'briefing_id', 'date', 'brand_id', 'brand_name', 'outlet_id', 'outlet_name',
@@ -143,29 +140,27 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   ],
   [TABS.users]: [
     'user_id', 'username', 'password_hash', 'role', 'brand_id', 'outlet_id',
-    'department', 'employee_id', 'telegram_id', 'active_status', 'created_at', 'last_login_at',
+    'active_status', 'created_at', 'last_login_at',
   ],
   [TABS.auditLog]: [
     'audit_id', 'timestamp', 'actor_user_id', 'actor_role', 'action', 'entity',
-    'entity_id', 'before_value', 'after_value', 'reason', 'ip_address', 'chain_hash',
+    'entity_id', 'before_value', 'after_value', 'reason', 'ip_address',
   ],
   [TABS.hermezAlerts]: [
     'alert_id', 'date', 'severity', 'alert_type', 'title', 'message',
     'outlet_id', 'status', 'created_at',
   ],
   [TABS.telegramDeliveryLog]: [
-    'delivery_id', 'source_module', 'source_reference_id', 'message_type',
-    'recipient', 'message_id', 'status', 'retry_count', 'sent_at',
-    'error_message', 'created_at',
+    'delivery_id', 'source_module', 'source_reference_id',
+    'chat_id', 'status', 'message_id', 'error_message', 'sent_at',
+  ],
+  [TABS.telegramLinkCodes]: [
+    'code', 'chat_id', 'employee_id', 'consumed_at', 'created_at',
   ],
 };
 
 function quoteTab(name: string): string {
-  // Quote only when the tab name needs it (spaces/special chars). Quoting a
-  // plain alphanumeric+underscore name (e.g. `ops_closing`) produces a
-  // malformed range like `'ops_closing'!A1` that Google rejects with
-  // "Unable to parse range" — same behavior as the working warehouse layer.
-  return /^[A-Za-z0-9_]+$/.test(name) ? name : `'${name.replace(/'/g, "''")}'`;
+  return `'${name.replace(/'/g, "''")}'`;
 }
 
 function columnLetter(n: number): string {
@@ -183,38 +178,33 @@ export async function readTab<T extends Record<string, string> = Record<string, 
   tab: TabName
 ): Promise<T[]> {
   if (isMockMode()) return mockReadTab(tab) as T[];
-  const hit = readCache.get(tab);
-  if (hit && Date.now() - hit.at < READ_CACHE_TTL_MS) return hit.rows as T[];
+  if (isPostgresMode()) return pgReadTab<T>(tab, TAB_HEADERS[tab]);
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const end = columnLetter(headers.length);
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: getSpreadsheetId(),
-    range: `${quoteTab(tab)}!A1:${end}`,
+    range: `${quoteTab(tab)}!A2:${end}`,
   });
   const rows = res.data.values ?? [];
-  if (rows.length < 2) { readCache.set(tab, { at: Date.now(), rows: [] }); return []; }
-  const headerRow = rows[0] as string[];
-  // Map by the ACTUAL sheet header row, not by TAB_HEADERS position, so a
-  // column added later (e.g. chain_hash) or reordered in the sheet doesn't
-  // silently misalign every read (input "saves" but reads back empty/wrong).
-  const mapped = rows.slice(1).map((r) => {
+  return rows.map((r) => {
     const obj: Record<string, string> = {};
-    headerRow.forEach((h, i) => {
+    headers.forEach((h, i) => {
       obj[h] = r[i] != null ? String(r[i]) : '';
     });
     return obj as T;
   });
-  readCache.set(tab, { at: Date.now(), rows: mapped as Record<string, string>[] });
-  return mapped;
 }
 
 export async function appendRows(
   tab: TabName,
   rows: Record<string, string>[]
 ): Promise<{ startRow: number }> {
-  invalidateReadCache();
   if (isMockMode()) return mockAppendRows(tab, rows);
+  if (isPostgresMode()) {
+    await pgAppendRows(tab, TAB_HEADERS[tab], rows);
+    return { startRow: -1 };
+  }
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const values = rows.map((row) => headers.map((h) => row[h] ?? ''));
@@ -227,6 +217,7 @@ export async function appendRows(
     spreadsheetId: getSpreadsheetId(),
     range: `${quoteTab(tab)}!A${startRow}`,
     valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
     requestBody: { values },
   });
   return { startRow };
@@ -237,7 +228,6 @@ export async function updateRow(
   rowIndex: number,
   row: Record<string, string>
 ): Promise<void> {
-  invalidateReadCache();
   if (isMockMode()) return mockUpdateRow(tab, rowIndex, row);
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];

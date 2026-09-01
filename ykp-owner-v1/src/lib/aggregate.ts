@@ -6,7 +6,7 @@
  */
 import type { ModuleKey, OwnerAction, OwnerAlert, OwnerOverview, SummaryRow } from './types';
 import { MODULE_KEYS } from './types';
-import { MODULES, moduleUrl, type ModuleDef } from './modules';
+import { MODULES, moduleUrl, modulePublicUrl, type ModuleDef } from './modules';
 import { fetchJson, extractItems, extractCount } from './fetch';
 import { computeModuleStatus, latestSummaryDate } from './status';
 import {
@@ -146,7 +146,7 @@ export async function getOverview(): Promise<OwnerOverview> {
       actions: extras.actions,
       purchaseRecs: extras.purchaseRecs,
       error: s.error,
-      deepLink: moduleUrl(def, def.pages.home)
+      deepLink: modulePublicUrl(def, def.pages.home)
     };
   });
 
@@ -158,7 +158,7 @@ export async function getOverview(): Promise<OwnerOverview> {
   for (const k of MODULE_KEYS) {
     const m = modules[k];
     if (!m.reachable) continue;
-    const link = moduleUrl(MODULES[k], MODULES[k].pages.alerts);
+    const link = modulePublicUrl(MODULES[k], MODULES[k].pages.alerts);
     if (m.alerts.length > 0) {
       alertLists.push(m.alerts);
     } else {

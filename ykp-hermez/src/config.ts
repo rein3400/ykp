@@ -40,17 +40,29 @@ function env(name: string, fallback = ''): string {
 }
 
 export const CONFIG = {
-  botToken: env('TELEGRAM_BOT_TOKEN'),
+  /** Management bot token. Falls back to the legacy shared name. */
+  botToken: env('TELEGRAM_MANAGEMENT_BOT_TOKEN') || env('TELEGRAM_BOT_TOKEN'),
   ownerIds: env('TELEGRAM_OWNER_IDS')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
-  /** Shared secret the bot uses to authenticate link-consume calls to the apps. */
+  openRouterKey: env('OPENROUTER_API_KEY'),
+  /** Hard allowlist: if set, ONLY these Telegram ids may chat (owner + HODs).
+   *  Empty = fall back to owner whitelist + HR role resolution. */
+  allowedIds: env('TELEGRAM_ALLOWED_IDS')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+  /** Shared secret the bot uses to authenticate read calls to the module apps. */
   botSecret: env('TELEGRAM_BOT_SECRET'),
-  openRouterKey: env('LLM_API_KEY'),
-  /** Chat model — tool-use capable. Override via OPENROUTER_MODEL. */
+  /** Ollama Cloud LLM (OpenAI-compatible). */
+  llmApiKey: env('LLM_API_KEY'),
+  llmBaseUrl: env('LLM_BASE_URL', 'https://ollama.com/v1'),
+  /** Chat model — tool-use capable. Override via LLM_MODEL. */
   model: env('LLM_MODEL', 'deepseek-v4-flash'),
-  /** Cheaper model for voice transcription + simple classifications. */
+  /** Vision model — image input + tool-use capable. Override via LLM_VISION_MODEL. */
+  visionModel: env('LLM_VISION_MODEL', 'minimax-m3'),
+  /** Cheaper model for simple classifications. */
   liteModel: env('LLM_LITE_MODEL', 'deepseek-v4-flash'),
   modules: {
     finance: env('YKP_FINANCE_URL', 'http://localhost:3003'),
@@ -68,6 +80,9 @@ export const CONFIG = {
   /** Chat memory window. */
   memoryTtlMinutes: 120,
   memoryMaxMessages: 12,
+  /** Per-chat rate limit: max messages per window (anti token-burn spam). */
+  rateLimitMax: 20,
+  rateLimitWindowMs: 60_000,
   dataDir: env('HERMEZ_DATA_DIR', './data'),
   /** Max chars per Telegram message (limit is 4096; leave headroom). */
   telegramChunk: 3900

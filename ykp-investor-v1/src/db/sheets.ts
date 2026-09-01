@@ -4,6 +4,7 @@
  */
 import { google, type sheets_v4 } from 'googleapis';
 import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow } from './mock-store';
+import { isPostgresMode, pgReadTab, pgAppendRows, pgUpdateRow, pgFindRow } from './postgres';
 import { todayWib } from '@/lib/format';
 
 /** YYYY-MM-DD for N days before today (Asia/Jakarta), used for growth baseline. */
@@ -16,12 +17,6 @@ function addDaysWib(days: number): string {
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 let cached: sheets_v4.Sheets | null = null;
-
-// In-memory read cache (TTL) to avoid bursting Google Sheets read quota
-// (60 reads/min/user). Any write clears the whole cache.
-const READ_CACHE_TTL_MS = 10_000;
-const readCache = new Map<string, { at: number; rows: Record<string, string>[] }>();
-function invalidateReadCache(): void { readCache.clear(); }
 
 export function getSheetsClient(): sheets_v4.Sheets {
   if (cached) return cached;
@@ -63,7 +58,8 @@ export const TABS = {
   // ── Photo/document attachments (Drive-backed) + MOU + share history ──
   attachments: 'investor_attachments',
   documents: 'investor_documents',
-  shareHistory: 'investor_share_history'
+  shareHistory: 'investor_share_history',
+  telegramLinkCodes: 'telegram_link_codes',
 } as const;
 export type TabName = (typeof TABS)[keyof typeof TABS];
 
@@ -92,9 +88,10 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'summary_id', 'date', 'total_revenue', 'total_profit', 'total_capital',
     'active_investors', 'dividend_declared', 'growth_pct', 'created_at'
   ],
+  [TABS.telegramLinkCodes]: ['code', 'user_id', 'expires_at', 'telegram_chat_id', 'consumed_at', 'created_at', 'division'],
   [TABS.users]: [
     'user_id', 'username', 'password_hash', 'role',
-    'investor_id', 'department', 'telegram_id', 'active_status', 'created_at', 'last_login_at'
+    'investor_id', 'active_status', 'created_at', 'last_login_at'
   ],
   [TABS.auditLog]: [
     'audit_id', 'timestamp', 'actor_user_id', 'actor_role', 'action',
@@ -128,8 +125,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
 export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
   if (isMockMode()) return mockReadTab(tab) as T[];
-  const hit = readCache.get(tab);
-  if (hit && Date.now() - hit.at < READ_CACHE_TTL_MS) return hit.rows as T[];
+  if (isPostgresMode()) return pgReadTab<T>(tab, TAB_HEADERS[tab]);
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -138,15 +134,13 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
     spreadsheetId: sid, range: `${quoteTab(tab)}!A1:${lastCol}1000`
   });
   const rows = res.data.values ?? [];
-  if (rows.length < 2) { readCache.set(tab, { at: Date.now(), rows: [] }); return []; }
+  if (rows.length < 2) return [];
   const headerRow = rows[0] as string[];
-  const mapped = rows.slice(1).map((row) => {
+  return rows.slice(1).map((row) => {
     const obj: Record<string, string> = {};
     headerRow.forEach((h, i) => { obj[h] = (row[i] as string) ?? ''; });
     return obj as T;
   });
-  readCache.set(tab, { at: Date.now(), rows: mapped as Record<string, string>[] });
-  return mapped;
 }
 
 /**
@@ -204,16 +198,16 @@ export async function readFinanceTab<T = Record<string, string>>(tabName: string
 }
 
 export async function appendRows(tab: TabName, rows: Record<string, string>[]): Promise<number> {
-  invalidateReadCache();
   if (rows.length === 0) return -1;
   if (isMockMode()) return mockAppendRows(tab, rows);
+  if (isPostgresMode()) return pgAppendRows(tab, TAB_HEADERS[tab], rows);
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
   const values = rows.map((r) => headers.map((h) => r[h] ?? ''));
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId: sid, range: `${quoteTab(tab)}!A1`,
-    valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS',
+    valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS',
     requestBody: { values }
   });
   const m = (res.data.updates?.updatedRange ?? '').match(/![A-Z]+(\d+):/);
@@ -221,8 +215,8 @@ export async function appendRows(tab: TabName, rows: Record<string, string>[]): 
 }
 
 export async function updateRow(tab: TabName, rowNumber: number, values: Record<string, string>): Promise<void> {
-  invalidateReadCache();
   if (isMockMode()) { mockUpdateRow(tab, rowNumber, values); return; }
+  if (isPostgresMode()) { await pgUpdateRow(tab, TAB_HEADERS[tab], rowNumber, values); return; }
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
@@ -230,12 +224,13 @@ export async function updateRow(tab: TabName, rowNumber: number, values: Record<
   const arr = headers.map((h) => values[h] ?? '');
   await sheets.spreadsheets.values.update({
     spreadsheetId: sid, range: `${quoteTab(tab)}!A${rowNumber}:${lastCol}${rowNumber}`,
-    valueInputOption: 'USER_ENTERED', requestBody: { values: [arr] }
+    valueInputOption: 'RAW', requestBody: { values: [arr] }
   });
 }
 
 export async function findRow(tab: TabName, keyCol: string, value: string): Promise<{ rowNumber: number; row: Record<string, string> } | null> {
   if (isMockMode()) return mockFindRow(tab, keyCol, value);
+  if (isPostgresMode()) return pgFindRow(tab, TAB_HEADERS[tab], keyCol, value);
   const sheets = getSheetsClient();
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];

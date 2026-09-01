@@ -3,13 +3,29 @@
  * endpoints (the same ones the owner dashboard uses). Every tool returns
  * COMPACT json (aggregated/top-N) to keep the LLM context small.
  * A failing module degrades to {error} instead of killing the whole call.
+ *
+ * Scope: every tool receives the caller's Scope and filters rows to the
+ * caller's brand/outlet before aggregating, so a department head never sees
+ * another brand/outlet's numbers. Owner/super_admin/hr_admin/finance_admin
+ * pass an empty scope and see everything.
  */
 import { CONFIG, todayWib, daysAgoWib } from './config.js';
-import type { ToolSpec } from './openrouter.js';
+import type { ToolSpec } from './llm.js';
+import type { Scope } from './actor.js';
+import { filterRows, filterPerOutlet, filterItems } from './scope.js';
 
 type Row = Record<string, string>;
 
-async function fetchRows(url: string, timeoutMs = 6000): Promise<Row[]> {
+/** Result of a module fetch: rows on success, or an `error` tag when the
+ *  module was unreachable (non-OK status, auth failure, timeout). Returning
+ *  `[]` would mask a 401/config outage as "no data"; the AI now sees the
+ *  error so it can say "modul X tidak terjangkau" instead. */
+interface FetchResult {
+  rows: Row[];
+  error?: string;
+}
+
+async function fetchRows(url: string, timeoutMs = 6000): Promise<FetchResult> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -17,14 +33,33 @@ async function fetchRows(url: string, timeoutMs = 6000): Promise<Row[]> {
       signal: ctrl.signal,
       headers: CONFIG.botSecret ? { 'x-bot-secret': CONFIG.botSecret } : {}
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      return { rows: [], error: `HTTP ${res.status}` };
+    }
     const json = (await res.json()) as { data?: { items?: Row[] } };
-    return json.data?.items ?? [];
-  } catch {
-    return [];
+    return { rows: json.data?.items ?? [] };
+  } catch (e) {
+    return { rows: [], error: e instanceof Error ? e.message : 'fetch failed' };
   } finally {
     clearTimeout(t);
   }
+}
+
+/** Filter helper that tolerates an errored fetch: log the error and filter
+ *  the (empty) row set so the tool still produces partial output instead of
+ *  throwing and killing the whole multi-module call. */
+function scopedRows(res: FetchResult, scope: Scope, use: typeof filterRows): Row[] {
+  if (res.error) {
+    console.warn(`[tools] fetch failed (${res.error}); treating as empty`);
+  }
+  return use(res.rows, scope);
+}
+
+/** Surface the first error among parallel fetches as a `sumber_error` note so
+ *  the AI can distinguish "modul tidak terjangkau" from genuine empty data. */
+function firstError(results: FetchResult[]): string | undefined {
+  for (const r of results) if (r.error) return r.error;
+  return undefined;
 }
 
 const num = (v: string | undefined): number => Number(v || 0) || 0;
@@ -32,7 +67,7 @@ const top = <T>(arr: T[], n: number): T[] => arr.slice(0, n);
 
 // ── Tool implementations ─────────────────────────────────────────────
 
-async function getOverview(args: { date?: string }): Promise<unknown> {
+async function getOverview(args: { date?: string }, scope: Scope): Promise<unknown> {
   const date = args.date || todayWib();
   const m = CONFIG.modules;
   const [fin, wh, ops, hr, inv] = await Promise.all([
@@ -42,29 +77,35 @@ async function getOverview(args: { date?: string }): Promise<unknown> {
     fetchRows(`${m.hr}/api/hr/summary?date=${date}`),
     fetchRows(`${m.investor}/api/investor/summary`)
   ]);
+  const finS = scopedRows(fin, scope, filterRows);
+  const whS = scopedRows(wh, scope, filterRows);
+  const opsS = scopedRows(ops, scope, filterRows);
+  const hrS = scopedRows(hr, scope, filterRows);
   const sum = (rows: Row[], k: string) => rows.reduce((s, r) => s + num(r[k]), 0);
+  const err = firstError([fin, wh, ops, hr, inv]);
   return {
     date,
+    sumber_error: err,
     keuangan: {
-      rows: fin.length,
-      revenue: sum(fin, 'revenue'),
-      estimasi_surplus_kas: sum(fin, 'estimated_surplus'),
-      total_expense: sum(fin, 'total_expense'),
-      unpaid_supplier: sum(fin, 'unpaid_supplier'),
-      per_outlet: top(fin.map((r) => ({
+      rows: finS.length,
+      revenue: sum(finS, 'revenue'),
+      estimasi_surplus_kas: sum(finS, 'estimated_surplus'),
+      total_expense: sum(finS, 'total_expense'),
+      unpaid_supplier: sum(finS, 'unpaid_supplier'),
+      per_outlet: top(finS.map((r) => ({
         outlet: r.outlet_name, revenue: num(r.revenue), surplus: num(r.estimated_surplus)
       })), 15)
     },
     gudang: {
-      rows: wh.length,
-      nilai_inventori: sum(wh, 'total_inventory_value'),
-      stok_kritis: sum(wh, 'critical_low_stock_count'),
-      near_expiry: sum(wh, 'near_expiry_item_count'),
-      varians: sum(wh, 'unexplained_variance_value')
+      rows: whS.length,
+      nilai_inventari: sum(whS, 'total_inventory_value'),
+      stok_kritis: sum(whS, 'critical_low_stock_count'),
+      near_expiry: sum(whS, 'near_expiry_item_count'),
+      varians: sum(whS, 'unexplained_variance_value')
     },
     operasional: {
-      rows: ops.length,
-      outlets: ops.map((r) => ({
+      rows: opsS.length,
+      outlets: opsS.map((r) => ({
         outlet: r.outlet_name,
         status: r.outlet_ready_status ?? r.status ?? '',
         checklist_pct: num(r.checklist_completion_pct),
@@ -72,22 +113,23 @@ async function getOverview(args: { date?: string }): Promise<unknown> {
       }))
     },
     sdm: {
-      rows: hr.length,
-      hadir: sum(hr, 'present_count'),
-      terlambat: sum(hr, 'late_count'),
-      absen: sum(hr, 'absent_count')
+      rows: hrS.length,
+      hadir: sum(hrS, 'present_count'),
+      terlambat: sum(hrS, 'late_count'),
+      absen: sum(hrS, 'absent_count')
     },
-    investor: inv[0] ?? { info: 'no summary rows' }
+    investor: inv.rows[0] ?? { info: inv.error ? `modul tidak terjangkau (${inv.error})` : 'no summary rows' }
   };
 }
 
-async function getSalesItems(args: { from?: string; to?: string; outlet_id?: string; item?: string }): Promise<unknown> {
+async function getSalesItems(args: { from?: string; to?: string; outlet_id?: string; item?: string }, scope: Scope): Promise<unknown> {
   const from = args.from || daysAgoWib(7);
   const to = args.to || todayWib();
   const q = new URLSearchParams({ from, to });
   if (args.outlet_id) q.set('outlet_id', args.outlet_id);
   if (args.item) q.set('item', args.item);
-  const rows = await fetchRows(`${CONFIG.modules.finance}/api/finance/pos/items?${q}`);
+  const res = await fetchRows(`${CONFIG.modules.finance}/api/finance/pos/items?${q}`);
+  const rows = scopedRows(res, scope, filterItems);
   const byItem = new Map<string, { item: string; qty: number; net: number; outlets: Set<string> }>();
   let totalNet = 0;
   let totalQty = 0;
@@ -104,20 +146,22 @@ async function getSalesItems(args: { from?: string; to?: string; outlet_id?: str
   const items = [...byItem.values()]
     .sort((a, b) => b.net - a.net)
     .map((e) => ({ ...e, outlets: [...e.outlets] }));
-  return { from, to, total_qty: totalQty, total_net: totalNet, items: top(items, 20), baris_mentah: rows.length };
+  return { from, to, total_qty: totalQty, total_net: totalNet, items: top(items, 20), baris_mentah: rows.length, sumber_error: res.error };
 }
 
-async function getMargins(args: { from?: string; to?: string }): Promise<unknown> {
+async function getMargins(args: { from?: string; to?: string }, scope: Scope): Promise<unknown> {
   const from = args.from || daysAgoWib(7);
   const to = args.to || todayWib();
-  const [posRows, costRows] = await Promise.all([
+  const [posRes, costRes] = await Promise.all([
     fetchRows(`${CONFIG.modules.finance}/api/finance/pos/items?from=${from}&to=${to}`),
     fetchRows(`${CONFIG.modules.warehouse}/api/warehouse/recipe-costs`)
   ]);
+  const posScoped = scopedRows(posRes, scope, filterItems);
+  const costRows = costRes.rows;
   const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
   const cost = new Map(costRows.map((r) => [norm(r.menu_name ?? ''), num(r.cost_per_portion)]));
   const byItem = new Map<string, { item: string; qty: number; net: number }>();
-  for (const r of posRows) {
+  for (const r of posScoped) {
     const key = r.item_name || '(?)';
     const e = byItem.get(key) ?? { item: key, qty: 0, net: 0 };
     e.qty += num(r.qty);
@@ -142,16 +186,17 @@ async function getMargins(args: { from?: string; to?: string }): Promise<unknown
   }).sort((a, b) => b.net - a.net);
   return {
     from, to,
-    total_net: posRows.reduce((s, r) => s + num(r.net_sales), 0),
+    total_net: posScoped.reduce((s, r) => s + num(r.net_sales), 0),
     total_gp: totalGp,
     items_matched_recipe: matched,
     items_total: items.length,
     note: 'COGS dari resep teoretis gudang; item tanpa resep tidak dihitung GP',
-    items: top(items, 20)
+    items: top(items, 20),
+    sumber_error: firstError([posRes, costRes])
   };
 }
 
-async function getActivity(args: { from?: string; to?: string; module?: string; user?: string }): Promise<unknown> {
+async function getActivity(args: { from?: string; to?: string; module?: string; user?: string }, scope: Scope): Promise<unknown> {
   const from = args.from || todayWib();
   const to = args.to || from;
   const m = CONFIG.modules;
@@ -163,25 +208,31 @@ async function getActivity(args: { from?: string; to?: string; module?: string; 
     investor: `${m.investor}/api/investor/audit`
   };
   const keys = args.module && args.module in targets ? [args.module] : Object.keys(targets);
-  const rows = (await Promise.all(
-    keys.map(async (k) =>
-      (await fetchRows(`${targets[k]}?from=${from}&to=${to}&limit=100`)).map((r) => ({
-        waktu: r.created_at ?? r.timestamp ?? '',
-        modul: k,
-        user: r.user_id ?? r.actor_user_id ?? '',
-        aksi: r.action ?? '',
-        entitas: r.record_type ?? r.entity ?? '',
-        id: r.record_id ?? r.entity_id ?? ''
-      }))
-    )
-  )).flat();
+  const results = await Promise.all(
+    keys.map(async (k) => {
+      const res = await fetchRows(`${targets[k]}?from=${from}&to=${to}&limit=100`);
+      return { key: k, res };
+    })
+  );
+  const errors = results.filter((r) => r.res.error).map((r) => `${r.key}: ${r.res.error}`);
+  const rows = results.flatMap((r) =>
+    r.res.rows.map((row) => ({
+      waktu: row.created_at ?? row.timestamp ?? '',
+      modul: r.key,
+      user: row.user_id ?? row.actor_user_id ?? '',
+      aksi: row.action ?? '',
+      entitas: row.record_type ?? row.entity ?? '',
+      id: row.record_id ?? row.entity_id ?? ''
+    }))
+  );
   const filtered = args.user ? rows.filter((r) => r.user.toLowerCase().includes(String(args.user).toLowerCase())) : rows;
   filtered.sort((a, b) => b.waktu.localeCompare(a.waktu));
-  return { from, to, total: filtered.length, entries: top(filtered, 40) };
+  return { from, to, total: filtered.length, entries: top(filtered, 40), sumber_error: errors.length ? errors.join('; ') : undefined };
 }
 
-async function getInventory(): Promise<unknown> {
-  const rows = await fetchRows(`${CONFIG.modules.warehouse}/api/warehouse/summary`);
+async function getInventory(scope: Scope): Promise<unknown> {
+  const res = await fetchRows(`${CONFIG.modules.warehouse}/api/warehouse/summary`);
+  const rows = scopedRows(res, scope, filterRows);
   const sum = (k: string) => rows.reduce((s, r) => s + num(r[k]), 0);
   return {
     nilai_inventori: sum('total_inventory_value'),
@@ -195,13 +246,15 @@ async function getInventory(): Promise<unknown> {
       outlet: r.outlet_name,
       nilai: num(r.total_inventory_value),
       kritis: num(r.critical_low_stock_count)
-    })), 15)
+    })), 15),
+    sumber_error: res.error
   };
 }
 
-async function getHr(args: { date?: string }): Promise<unknown> {
+async function getHr(args: { date?: string }, scope: Scope): Promise<unknown> {
   const date = args.date || todayWib();
-  const rows = await fetchRows(`${CONFIG.modules.hr}/api/hr/summary?date=${date}`);
+  const res = await fetchRows(`${CONFIG.modules.hr}/api/hr/summary?date=${date}`);
+  const rows = scopedRows(res, scope, filterRows);
   const sum = (k: string) => rows.reduce((s, r) => s + num(r[k]), 0);
   return {
     date,
@@ -212,11 +265,12 @@ async function getHr(args: { date?: string }): Promise<unknown> {
     cuti: sum('leave_count'),
     per_outlet: top(rows.map((r) => ({
       outlet: r.outlet_name, hadir: num(r.present_count), telat: num(r.late_count), absen: num(r.absent_count)
-    })), 15)
+    })), 15),
+    sumber_error: res.error
   };
 }
 
-async function getAlerts(): Promise<unknown> {
+async function getAlerts(scope: Scope): Promise<unknown> {
   const m = CONFIG.modules;
   const [finA, whA, opsA, finAct, whAct, opsAct] = await Promise.all([
     fetchRows(`${m.finance}/api/finance/alerts`),
@@ -226,19 +280,22 @@ async function getAlerts(): Promise<unknown> {
     fetchRows(`${m.warehouse}/api/warehouse/actions`),
     fetchRows(`${m.ops}/api/ops/actions`)
   ]);
-  const open = (rows: Row[], modul: string) =>
-    rows.filter((r) => (r.status ?? '').toUpperCase() !== 'CLOSED' && (r.status ?? '').toUpperCase() !== 'RESOLVED')
+  const open = (res: FetchResult, modul: string) =>
+    scopedRows(res, scope, filterRows)
+      .filter((r) => (r.status ?? '').toUpperCase() !== 'CLOSED' && (r.status ?? '').toUpperCase() !== 'RESOLVED')
       .map((r) => ({ modul, severity: r.severity ?? '', pesan: r.message ?? r.title ?? '', status: r.status ?? '', tanggal: r.date ?? r.created_at ?? '' }));
-  const openAct = (rows: Row[], modul: string) =>
-    rows.filter((r) => (r.status ?? '').toUpperCase() !== 'DONE' && (r.status ?? '').toUpperCase() !== 'CLOSED')
+  const openAct = (res: FetchResult, modul: string) =>
+    scopedRows(res, scope, filterRows)
+      .filter((r) => (r.status ?? '').toUpperCase() !== 'DONE' && (r.status ?? '').toUpperCase() !== 'CLOSED')
       .map((r) => ({ modul, judul: r.title ?? r.action ?? '', pic: r.pic ?? r.assignee ?? '', due: r.due_date ?? '' }));
   return {
     alerts: top([...open(finA, 'finance'), ...open(whA, 'warehouse'), ...open(opsA, 'ops')], 25),
-    actions: top([...openAct(finAct, 'finance'), ...openAct(whAct, 'warehouse'), ...openAct(opsAct, 'ops')], 25)
+    actions: top([...openAct(finAct, 'finance'), ...openAct(whAct, 'warehouse'), ...openAct(opsAct, 'ops')], 25),
+    sumber_error: firstError([finA, whA, opsA, finAct, whAct, opsAct])
   };
 }
 
-async function getPhotos(args: { entity_type?: string; limit?: number }): Promise<unknown> {
+async function getPhotos(args: { entity_type?: string; limit?: number }, scope: Scope): Promise<unknown> {
   const m = CONFIG.modules;
   const q = args.entity_type ? `?entity_type=${encodeURIComponent(args.entity_type)}` : '';
   const [wh, ops, inv] = await Promise.all([
@@ -247,8 +304,8 @@ async function getPhotos(args: { entity_type?: string; limit?: number }): Promis
     fetchRows(`${m.investor}/api/investor/attachments${q}`)
   ]);
   const lim = args.limit ?? 10;
-  const mapRows = (rows: Row[], base: string, modul: string) =>
-    rows.map((r) => ({
+  const mapRows = (res: FetchResult, base: string, modul: string) =>
+    scopedRows(res, scope, filterRows).map((r) => ({
       modul,
       jenis: r.entity_type,
       entitas: r.entity_id,
@@ -261,28 +318,33 @@ async function getPhotos(args: { entity_type?: string; limit?: number }): Promis
     ...mapRows(ops, m.ops, 'ops'),
     ...mapRows(inv, m.investor, 'investor')
   ].sort((a, b) => b.waktu.localeCompare(a.waktu));
-  return { total: all.length, photos: top(all, lim), note: 'URL bisa dibuka langsung di browser' };
+  return { total: all.length, photos: top(all, lim), note: 'URL bisa dibuka langsung di browser', sumber_error: firstError([wh, ops, inv]) };
 }
 
-async function getInvestorStatus(): Promise<unknown> {
-  const rows = await fetchRows(`${CONFIG.modules.investor}/api/investor/summary`);
-  return { summary: rows[0] ?? { info: 'no summary rows' }, rows: rows.length };
+async function getInvestorStatus(scope: Scope): Promise<unknown> {
+  const res = await fetchRows(`${CONFIG.modules.investor}/api/investor/summary`);
+  const rows = scopedRows(res, scope, filterRows);
+  return {
+    summary: rows[0] ?? { info: res.error ? `modul tidak terjangkau (${res.error})` : 'no summary rows' },
+    rows: rows.length,
+    sumber_error: res.error
+  };
 }
 
 // ── Registry ─────────────────────────────────────────────────────────
 
-type Handler = (args: Record<string, unknown>) => Promise<unknown>;
+type Handler = (args: Record<string, unknown>, scope: Scope) => Promise<unknown>;
 
 export const TOOL_HANDLERS: Record<string, Handler> = {
-  get_overview: (a) => getOverview(a as { date?: string }),
-  get_sales_items: (a) => getSalesItems(a as { from?: string; to?: string; outlet_id?: string; item?: string }),
-  get_margins: (a) => getMargins(a as { from?: string; to?: string }),
-  get_activity: (a) => getActivity(a as { from?: string; to?: string; module?: string; user?: string }),
-  get_inventory: () => getInventory(),
-  get_hr: (a) => getHr(a as { date?: string }),
-  get_alerts: () => getAlerts(),
-  get_photos: (a) => getPhotos(a as { entity_type?: string; limit?: number }),
-  get_investor_status: () => getInvestorStatus()
+  get_overview: (a, s) => getOverview(a as { date?: string }, s),
+  get_sales_items: (a, s) => getSalesItems(a as { from?: string; to?: string; outlet_id?: string; item?: string }, s),
+  get_margins: (a, s) => getMargins(a as { from?: string; to?: string }, s),
+  get_activity: (a, s) => getActivity(a as { from?: string; to?: string; module?: string; user?: string }, s),
+  get_inventory: (_a, s) => getInventory(s),
+  get_hr: (a, s) => getHr(a as { date?: string }, s),
+  get_alerts: (_a, s) => getAlerts(s),
+  get_photos: (a, s) => getPhotos(a as { entity_type?: string; limit?: number }, s),
+  get_investor_status: (_a, s) => getInvestorStatus(s)
 };
 
 const dateParams = (extra: Record<string, unknown> = {}) => ({

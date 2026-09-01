@@ -4,7 +4,7 @@
  * then recommendations. Replaces template-text briefs with judgment.
  */
 import { CONFIG, todayWib, daysAgoWib } from './config.js';
-import { chat } from './openrouter.js';
+import { chat } from './llm.js';
 import { executeTool } from './brain.js';
 import { sendToOwners } from './telegram.js';
 

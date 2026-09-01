@@ -1,5 +1,5 @@
 /**
- * Telegram Reporting per brief -�23.
+ * Telegram Reporting per brief -—23.
  * Sends only HIGH/CRITICAL alerts + daily brief. Never raw stock changes.
  * Logs every delivery to telegram_delivery_log.
  *
@@ -9,6 +9,7 @@
 import { appendRows, readTab, updateRow, findRow, TABS } from '@/db/sheets';
 import { nowTimestampWib, formatDateWib } from './format';
 import { nextSequentialIdSync } from './repo';
+import { sendViaGateway } from './notify-gateway';
 
 export interface TelegramMessage {
   sourceModule: string;
@@ -83,7 +84,7 @@ export async function sendTelegram(
 ): Promise<{ deliveryId: string; status: string; error?: string; messageId?: string; sent?: number; failed?: number }> {
   const deliveryId = nextSequentialIdSync('TDL');
   const now = nowTimestampWib();
-  // Strip BOM / whitespace G�� Vercel env set via Windows PowerShell pipe can inject U+FEFF.
+  // Strip BOM / whitespace — Vercel env set via Windows PowerShell pipe can inject U+FEFF.
   const clean = (v: string | undefined) => (v ?? '').replace(/^﻿/, '').trim();
   const token = clean(process.env.TELEGRAM_BOT_TOKEN);
 
@@ -129,7 +130,10 @@ export async function sendTelegram(
       const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: msg.text, parse_mode: 'HTML' })
+        body: JSON.stringify({ chat_id: chatId, text: msg.text, parse_mode: 'HTML' }),
+        // 10s cap so a hanging Telegram API can't stall the route/cron to the
+        // platform timeout.
+        signal: AbortSignal.timeout(10000)
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.description || 'Telegram API error');
@@ -188,7 +192,7 @@ export function composeDailyBrief(
 
   const lines: string[] = [];
   lines.push(`<b>YKP WAREHOUSE DAILY BRIEF</b>`);
-  lines.push(`${brandName} G�� ${date}`);
+  lines.push(`${brandName} 📅 ${date}`);
   lines.push('');
   lines.push(`Total Inventory Value: ${formatRp(summary.total_inventory_value)}`);
   lines.push(`Critical Low Stock: ${summary.critical_low_stock_count} item`);
@@ -212,7 +216,7 @@ export function composeDailyBrief(
     lines.push('');
     lines.push(`<b>CRITICAL/HIGH ALERTS:</b>`);
     for (const a of highCritical.slice(0, 5)) {
-      lines.push(`G�� ${a.title} (${a.severity})`);
+      lines.push(`⚠️ ${a.title} (${a.severity})`);
     }
   }
 
@@ -291,7 +295,7 @@ function escapeHtml(s: string): string {
 }
 
 // --------------------------------------------------------------------------
-// Fraud controls (P0/P2) � appended 2026-07-18. Alert-push compat helpers
+// Fraud controls (P0/P2) — appended 2026-07-18. Alert-push compat helpers
 // for the cron routes + the fraud-watch block in the daily brief.
 // --------------------------------------------------------------------------
 
@@ -328,11 +332,18 @@ export function formatAlertMessage(sourceLabel: string, a: AlertPushInput): stri
 
 /**
  * Fire-and-log push for a newly created alert. Never throws and never
- * blocks on failure � safe to call from any request path.
+ * blocks on failure — safe to call from any request path.
  */
 export async function pushAlertNotification(sourceModule: string, a: AlertPushInput): Promise<void> {
   if (!shouldPushAlert(a.severity)) return;
   try {
+    // Gateway first (management bot fan-out); legacy direct send as fallback.
+    const viaGateway = await sendViaGateway({
+      message_type: 'ALERT',
+      source_module: sourceModule,
+      message: formatAlertMessage(sourceModule, a)
+    });
+    if (viaGateway) return;
     await sendTelegram({
       sourceModule,
       sourceReferenceId: a.alertId,
@@ -349,11 +360,11 @@ export interface FraudWatchData {
   wasteToday: { count: number; value: number };
   adjustmentsToday: { pending: number; approved: number };
   receivingDiscrepanciesToday: number;
-  staleApprovals: number; // PENDING > 24h � rubber-stamp / ignored-queue indicator
+  staleApprovals: number; // PENDING > 24h — rubber-stamp / ignored-queue indicator
 }
 
 /**
- * Fraud-watch block appended to the daily brief (anti-fraud blueprint �Layer 3).
+ * Fraud-watch block appended to the daily brief (anti-fraud blueprint —Layer 3).
  * Deterrence by visibility: the owner sees a named list of the day's
  * manipulation-prone events every morning. Pure function.
  */
@@ -361,11 +372,11 @@ export function composeFraudWatchBlock(d: FraudWatchData, date: string): string 
   const lines: string[] = [];
   lines.push('');
   lines.push('<b>FRAUD WATCH:</b>');
-  lines.push(`� Waste hari ini: ${d.wasteToday.count} kasus (${formatRp(String(d.wasteToday.value))})`);
-  lines.push(`� Stock adjustment: ${d.adjustmentsToday.pending} pending / ${d.adjustmentsToday.approved} approved`);
-  lines.push(`� Receiving discrepancy: ${d.receivingDiscrepanciesToday}`);
+  lines.push(`🗑️ Waste hari ini: ${d.wasteToday.count} kasus (${formatRp(String(d.wasteToday.value))})`);
+  lines.push(`🔧 Stock adjustment: ${d.adjustmentsToday.pending} pending / ${d.adjustmentsToday.approved} approved`);
+  lines.push(`📥 Receiving discrepancy: ${d.receivingDiscrepanciesToday}`);
   if (d.staleApprovals > 0) {
-    lines.push(`� ?? Approval menggantung &gt;24 jam: ${d.staleApprovals}`);
+    lines.push(`⏰ Approval menggantung &gt;24 jam: ${d.staleApprovals}`);
   }
   lines.push(`<i>Semua event tercatat di audit log (hash-chained). Laporkan kejanggalan ke owner.</i>`);
   return lines.join('\n');

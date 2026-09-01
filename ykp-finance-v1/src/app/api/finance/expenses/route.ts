@@ -11,6 +11,13 @@ import { logAudit } from '@/lib/audit';
 import { nowTimestampWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertOutlet, assertExpenseCategory } from '@/lib/repo';
 import { can, scopeFilter, type Role } from '@/lib/rbac';
+import { sendViaGateway } from '@/lib/notify-gateway';
+import { formatIdr } from '@/lib/format';
+
+/** Escape HTML-significant chars in dynamic text sent through the gateway. */
+function escapeHtmlText(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
@@ -97,6 +104,38 @@ export const POST = handler(async (req: NextRequest) => {
     updated_at: t
   };
   await appendRows(TABS.expense, [row]);
+
+  // Fase 4: PENDING expense di atas limit → Telegram approval request via
+  // Hermez gateway (owner chat, fire-and-forget — never blocks the create).
+  if (needsApproval) {
+    void sendViaGateway({
+      message_type: 'APPROVAL_REQUEST',
+      source_module: 'finance',
+      roles: 'owner',
+      brand_id: row.brand_id || undefined,
+      message: [
+        `<b>Permintaan Approval Expense</b>`,
+        `${row.description ? escapeHtmlText(row.description) + '\n' : ''}`,
+        `Kategori: <b>${escapeHtmlText(row.expense_category)}</b> | Nominal: <b>${formatIdr(amount)}</b>`,
+        `Outlet: ${escapeHtmlText(row.outlet_name)} | Tanggal: ${row.date}`,
+        `ID: <code>${id}</code>`
+      ].filter(Boolean).join('\n'),
+      approval: {
+        entity: 'expense',
+        record_id: id,
+        title: `Expense ${row.expense_category} — ${formatIdr(amount)} (${row.outlet_name})`,
+        detail: {
+          Kategori: row.expense_category,
+          Nominal: formatIdr(amount),
+          Outlet: row.outlet_name,
+          Tanggal: row.date,
+          ...(row.description ? { Keterangan: row.description } : {})
+        },
+        allowed_roles: ['owner', 'super_admin', 'finance_admin']
+      }
+    }).catch(() => undefined);
+  }
+
   await logAudit({
     module: 'finance', action: 'create', recordType: 'fin_expense',
     recordId: id, afterValue: JSON.stringify(row), userId: s.userId

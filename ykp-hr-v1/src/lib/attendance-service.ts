@@ -7,8 +7,13 @@
  * in-memory mock store when Google Sheets env is missing — so these functions
  * are unit-testable against real seeded data.
  */
-import { readTab, appendRows, TABS, findRow, updateRow } from '@/db/sheets';
+import { appendRows, TABS, findRow, updateRow } from '@/db/sheets';
 import { assertEmployee, nextSequentialId } from '@/lib/repo';
+import {
+  findTodayAttendance,
+  findTodayRoster,
+  findLatenessRule
+} from '@/lib/attendance-lookup';
 import { logAudit } from '@/lib/audit';
 import { attendanceTargetGuard } from '@/lib/rbac-guard';
 import { classifyLocation, parseGeoPoint } from '@/lib/attendance-geo';
@@ -20,6 +25,9 @@ export interface AttendanceActor {
   role: string;
   employeeId?: string;
 }
+
+/** Management roles clock in from anywhere (AGENTS.md §5). */
+export const GEO_EXEMPT_ROLES = new Set(['owner', 'super_admin', 'hr_admin', 'finance_admin']);
 
 export interface ServiceError {
   status: number;
@@ -71,8 +79,7 @@ export async function performClockIn(input: {
   }
 
   const today = todayWib();
-  const existing = await readTab<{ date: string; employee_id: string; actual_check_in: string }>(TABS.attendance);
-  const dup = existing.find((a) => a.date === today && a.employee_id === input.employeeId);
+  const dup = await findTodayAttendance(input.employeeId, today);
   if (dup && dup.actual_check_in) {
     return { ok: true, row: dup as Record<string, string>, already: true };
   }
@@ -100,19 +107,23 @@ export async function performClockIn(input: {
     checkInLocation = verdict.classification;
     radiusStr = verdict.radiusMeters ? String(verdict.radiusMeters) : '';
     if (verdict.outsideRadius) {
-      return {
-        ok: false,
-        error: {
-          status: 400,
-          code: 'bad_request',
-          message: `Clock-in di luar radius outlet (${verdict.distanceMeters}m > ${verdict.radiusMeters}m). Ajukan koreksi manual.`
-        }
-      };
+      // Management roles are mobile (meetings, audits, multiple outlets) —
+      // they clock in from anywhere (AGENTS.md §5). The row still records
+      // OUTSIDE_RADIUS so the trail is honest.
+      if (!GEO_EXEMPT_ROLES.has((input.actor.role ?? '').toLowerCase())) {
+        return {
+          ok: false,
+          error: {
+            status: 400,
+            code: 'bad_request',
+            message: `Clock-in di luar radius outlet (${verdict.distanceMeters}m > ${verdict.radiusMeters}m). Ajukan koreksi manual.`
+          }
+        };
+      }
     }
   }
 
-  const rosters = await readTab<{ date: string; employee_id: string; shift_id: string }>(TABS.roster);
-  const todayRoster = rosters.find((r) => r.date === today && r.employee_id === input.employeeId);
+  const todayRoster = await findTodayRoster(input.employeeId, today);
   let shiftId = '';
   let scheduledIn = '';
   let scheduledOut = '';
@@ -125,8 +136,7 @@ export async function performClockIn(input: {
     }
   }
 
-  const rules = await readTab<{ outlet_id: string; tolerance_minutes: string }>(TABS.latenessRules);
-  const rule = rules.find((r) => r.outlet_id === outletId) ?? rules[0];
+  const rule = await findLatenessRule(outletId);
   const tolerance = Number(rule?.tolerance_minutes ?? 10);
 
   const timeNow = formatTimeWib(new Date());

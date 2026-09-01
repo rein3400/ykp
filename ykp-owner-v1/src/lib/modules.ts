@@ -10,6 +10,8 @@ export interface ModuleDef {
   label: string;
   envVar: string;
   defaultUrl: string;
+  /** Public HTTPS base URL for client-side deep links (distinct from internal fetch URL). */
+  publicUrl: string;
   /** Public GET paths (relative to base URL). */
   summaryPath: string;
   countPath: string | null;
@@ -39,6 +41,7 @@ export const MODULES: Record<ModuleKey, ModuleDef> = {
     label: 'Keuangan',
     envVar: 'YKP_FINANCE_URL',
     defaultUrl: 'http://localhost:3003',
+    publicUrl: 'https://finance.oseedigital.tech',
     summaryPath: '/api/finance/summary',
     countPath: '/api/finance/summary/count',
     alertsPath: '/api/finance/alerts',
@@ -55,6 +58,7 @@ export const MODULES: Record<ModuleKey, ModuleDef> = {
     label: 'SDM',
     envVar: 'YKP_HR_URL',
     defaultUrl: 'http://localhost:3002',
+    publicUrl: 'https://hr.oseedigital.tech',
     summaryPath: '/api/hr/summary?date=TODAY',
     countPath: '/api/hr/summary/count',
     alertsPath: null,
@@ -71,6 +75,7 @@ export const MODULES: Record<ModuleKey, ModuleDef> = {
     label: 'Gudang',
     envVar: 'YKP_WAREHOUSE_URL',
     defaultUrl: 'http://localhost:3005',
+    publicUrl: 'https://warehouse.oseedigital.tech',
     summaryPath: '/api/warehouse/summary',
     countPath: '/api/warehouse/summary/count',
     alertsPath: '/api/warehouse/alerts',
@@ -87,6 +92,7 @@ export const MODULES: Record<ModuleKey, ModuleDef> = {
     label: 'Operasional',
     envVar: 'YKP_OPS_URL',
     defaultUrl: 'http://localhost:3007',
+    publicUrl: 'https://ops.oseedigital.tech',
     summaryPath: '/api/ops/summary',
     countPath: '/api/ops/summary/count',
     alertsPath: '/api/ops/alerts',
@@ -103,6 +109,7 @@ export const MODULES: Record<ModuleKey, ModuleDef> = {
     label: 'Investor',
     envVar: 'YKP_INVESTOR_URL',
     defaultUrl: 'http://localhost:3006',
+    publicUrl: 'https://investor.oseedigital.tech',
     summaryPath: '/api/investor/summary',
     countPath: '/api/investor/summary/count',
     alertsPath: null,
@@ -122,4 +129,8 @@ export function moduleBaseUrl(def: ModuleDef): string {
 
 export function moduleUrl(def: ModuleDef, path: string): string {
   return `${moduleBaseUrl(def)}${path}`;
+}
+
+export function modulePublicUrl(def: ModuleDef, path: string): string {
+  return `${(def.publicUrl || moduleBaseUrl(def)).replace(/\/$/, '')}${path}`;
 }

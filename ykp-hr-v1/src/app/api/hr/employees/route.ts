@@ -23,7 +23,7 @@ const insertSchema = z.object({
   brand_id: z.string().min(1),
   outlet_id: z.string().min(1),
   supervisor_id: z.string().default(''),
-  basic_salary: z.coerce.number().min(0).default(0),
+  basic_salary: z.coerce.number().min(0).int().default(0),
   salary_type: z.string().default('MONTHLY'),
   employment_status: z.string().default('PROBATION'),
   contract_type: z.string().default(''),
@@ -87,7 +87,9 @@ export const POST = handler(async (req) => {
     gender: parsed.data.gender,
     phone: parsed.data.phone,
     email: parsed.data.email ?? '',
-    telegram_id: parsed.data.telegram_id || '',
+    // telegram_id is owned by the /link pairing flow (users.telegram_id) —
+    // manual writes here are deprecated (plan §Fase 1 step 4).
+    telegram_id: '',
     address: parsed.data.address || '',
     date_of_birth: parsed.data.date_of_birth || '',
     join_date: parsed.data.join_date,

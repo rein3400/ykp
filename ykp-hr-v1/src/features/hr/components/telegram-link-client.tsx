@@ -16,7 +16,7 @@ export function TelegramLinkClient() {
 
   // Bot username from env (set NEXT_PUBLIC_TELEGRAM_BOT_USERNAME). Fallback
   // to a placeholder so the page still renders in dev.
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'ykp_hermez_bot';
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'justatestermaybot';
   const deepLink = code ? `https://t.me/${botUsername}?start=${code}` : null;
 
   async function getCode() {

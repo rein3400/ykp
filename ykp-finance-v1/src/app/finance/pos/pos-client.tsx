@@ -222,7 +222,7 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
   const [csv, setCsv] = useState('');
   const [sheetUrl, setSheetUrl] = useState('');
   const [busy, setBusy] = useState(false);
-  const [report, setReport] = useState<{ inserted: number; skipped: { date: string; outlet: string; reason: string }[]; errors: { row: number; reason: string }[]; variance_report: { total_input_lines: number; parsed_lines: number; dropped_lines: number; alias_guesses: Record<string, string> } } | null>(null);
+  const [report, setReport] = useState<{ inserted: number; skipped: { date: string; outlet: string; reason: string }[]; errors: { row: number; reason: string }[]; warnings: { row: number; field: string; reason: string }[]; variance_report: { total_input_lines: number; parsed_lines: number; dropped_lines: number; alias_guesses: Record<string, string> } } | null>(null);
 
   const canSubmit = busy ? false : mode === 'sheet' ? sheetUrl.trim().length > 0 : csv.trim().length > 0;
 
@@ -306,6 +306,12 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
             <div className='rounded border border-red-300 bg-red-50 p-2'>
               <p className='font-medium'>Error:</p>
               {report.errors.map((e, i) => <p key={i} className='text-[10px]'>• Baris {e.row}: {e.reason}</p>)}
+            </div>
+          )}
+          {report.warnings && report.warnings.length > 0 && (
+            <div className='rounded border border-yellow-300 bg-yellow-50 p-2'>
+              <p className='font-medium'>Peringatan (perlu dicek):</p>
+              {report.warnings.map((w, i) => <p key={i} className='text-[10px]'>• Baris {w.row} ({w.field}): {w.reason}</p>)}
             </div>
           )}
           {Object.keys(report.variance_report.alias_guesses).length > 0 && (

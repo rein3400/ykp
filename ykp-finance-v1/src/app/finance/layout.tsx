@@ -25,6 +25,12 @@ const NAV_GROUPS = [
     ]
   },
   {
+    title: 'SDM',
+    items: [
+      { href: '/finance/payroll', label: 'Beban Gaji' }
+    ]
+  },
+  {
     title: 'Kontrol',
     items: [
       { href: '/finance/alerts', label: 'Alert' },
