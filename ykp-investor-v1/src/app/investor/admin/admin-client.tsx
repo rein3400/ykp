@@ -210,13 +210,13 @@ export default function AdminClient({
                         <span className='font-medium'>{sh.brand_name || sh.brand_id}:</span>
                         <span className='font-bold'>{sh.share_pct}%</span>
                         <input
-                          type='number' min='0' max='100' step='0.1' placeholder='% baru'
+                          type='number' min='0' max='100' step='0.1' placeholder='% baru' aria-label={`Persen baru ${sh.brand_name || sh.brand_id}`}
                           value={edit.pct}
                           onChange={(e) => setShareEdits({ ...shareEdits, [key]: { ...edit, pct: e.target.value } })}
                           className='w-16 rounded border border-border px-1 py-0.5 text-[10px]'
                         />
                         <input
-                          type='date'
+                          type='date' aria-label={`Tanggal berlaku ${sh.brand_name || sh.brand_id}`}
                           value={edit.eff}
                           onChange={(e) => setShareEdits({ ...shareEdits, [key]: { ...edit, eff: e.target.value } })}
                           className='rounded border border-border px-1 py-0.5 text-[10px]'

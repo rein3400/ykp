@@ -28,18 +28,18 @@ export default function CapitalClient({
       {showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-3'>
-            <select value={form.investor_id} onChange={(e) => setForm({ ...form, investor_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <select aria-label='Investor' value={form.investor_id} onChange={(e) => setForm({ ...form, investor_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Investor</option>
               {investors.map((i) => <option key={i.investor_id} value={i.investor_id}>{i.investor_name}</option>)}
             </select>
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <select aria-label='Tipe' value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value='in'>In (Masuk)</option>
               <option value='out'>Out (Keluar)</option>
             </select>
-            <input placeholder='Amount' value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='Method' value={form.method} onChange={(e) => setForm({ ...form, method: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='Reference' value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='Note' value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
+            <input aria-label='Nominal' placeholder='Amount' value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
+            <input aria-label='Metode' placeholder='Method' value={form.method} onChange={(e) => setForm({ ...form, method: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
+            <input aria-label='Referensi' placeholder='Reference' value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
+            <input aria-label='Catatan' placeholder='Note' value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
           </div>
           {err && <p className='text-xs text-destructive'>{err}</p>}
           <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>
