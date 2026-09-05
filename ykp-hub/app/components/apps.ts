@@ -36,7 +36,7 @@ const PRESENTATION: Record<AppId, { tone: AppDef["tone"]; icon: IconComponent }>
   hr: {
     tone: {
       gradient: "from-emerald-500 to-emerald-700",
-      text: "text-emerald-600 dark:text-emerald-400",
+      text: "text-emerald-700 dark:text-emerald-400",
       ring: "ring-emerald-200 dark:ring-emerald-800",
       soft: "bg-emerald-50 dark:bg-emerald-900/30"
     },

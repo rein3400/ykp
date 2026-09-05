@@ -14,7 +14,7 @@ export function pingTone(ms: number): "fast" | "ok" | "slow" {
 }
 export function pingColor(ms: number): string {
   const t = pingTone(ms);
-  return t === "fast" ? "text-emerald-600 dark:text-emerald-400" : t === "ok" ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400";
+  return t === "fast" ? "text-emerald-700 dark:text-emerald-400" : t === "ok" ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400";
 }
 export function pingBg(ms: number): string {
   const t = pingTone(ms);
