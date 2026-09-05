@@ -308,6 +308,10 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'payment_reference',
     'payslip_url',
     'approved_by',
+    // MOM 1 Sep 2026 — Needs Revision flow (HR-side; Finance calls needs-revision route)
+    'revision_reason',
+    'revision_by',
+    'revision_at',
     'created_at',
     'updated_at'
   ],
@@ -381,7 +385,17 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'after_value',
     'reason',
     'ip_address',
-    'chain_hash'
+    'chain_hash',
+    // MOM 1 Sep 2026 item 3 — align with Postgres DDL (20 cols incl __rownum).
+    // Sheets readTab maps by actual header names so old 12-col tabs keep
+    // working; re-run sheets:bootstrap to extend the header row.
+    'module',
+    'record_type',
+    'record_id',
+    'user_id',
+    'approval_user_id',
+    'environment',
+    'created_at'
   ],
   [TABS.hermezAlerts]: [
     'alert_id',

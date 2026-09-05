@@ -87,7 +87,7 @@ export const POST = handler(async (req) => {
       (p) =>
         p.outlet_id === o.outlet_id &&
         p.payroll_period === period &&
-        (p.approval_status === 'PENDING' || p.approval_status === 'REJECTED' || p.approval_status === 'ISSUE')
+        (p.approval_status === 'PENDING' || p.approval_status === 'REJECTED' || p.approval_status === 'ISSUE' || p.approval_status === 'NEEDS_REVISION')
     ).length;
 
     const input: SummaryInput = {

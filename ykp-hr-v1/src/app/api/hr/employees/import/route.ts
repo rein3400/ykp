@@ -1,6 +1,8 @@
 /**
  * Import employees from CSV. Expected header matching employee columns.
- * Required: full_name, outlet_id, basic_salary. Optional: role, brand_id, salary_type, employment_status, join_date.
+ * Required: full_name, outlet_id, basic_salary. Optional: role, brand_id, salary_type, employment_status, join_date,
+ * nickname, gender, phone, email, position, department, bank_name, bank_account, account_holder (MOM 1 Sep: master
+ * data minimum — email, WA/phone, rekening, brand, posisi, tgl masuk, status).
  * Owner/HR admin only. Writes audit log.
  */
 import { appendRows, TABS } from '@/db/sheets';
@@ -84,7 +86,7 @@ export const POST = handler(async (req) => {
       join_date: p.join_date || todayWib(),
       employment_status: p.employment_status || 'PROBATION',
       contract_type: '',
-      department: '',
+      department: p.department || '',
       role: p.role || 'staff',
       position: p.position || '',
       brand_id: p.brand_id || 'BR-001',
@@ -92,9 +94,9 @@ export const POST = handler(async (req) => {
       supervisor_id: '',
       basic_salary: String(parseIdr(p.basic_salary)),
       salary_type: p.salary_type || 'MONTHLY',
-      bank_name: '',
-      bank_account: '',
-      account_holder: '',
+      bank_name: p.bank_name ?? '',
+      bank_account: p.bank_account ?? '',
+      account_holder: p.account_holder || p.full_name,
       bpjs_status: '',
       tax_status: '',
       emergency_contact_name: '',

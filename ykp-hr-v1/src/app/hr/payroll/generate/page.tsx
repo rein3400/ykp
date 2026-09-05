@@ -42,7 +42,7 @@ export default function GeneratePayrollPage() {
           <input type='month' className='input mt-1 w-full' value={period} onChange={(e) => setPeriod(e.target.value)} />
         </label>
         <p className='text-xs text-muted-foreground'>
-          Generate akan: ambil semua karyawan aktif, hitung kehadiran dari tab attendance periode, sum approved adjustments (bonus/penalty/allowance/kasbon), dan hitung payroll via engine. Status awal: DRAFT → PENDING untuk approval.
+          Generate akan: ambil semua karyawan aktif, hitung kehadiran dari tab attendance periode, sum approved adjustments (bonus/penalty/allowance/kasbon), dan hitung payroll via engine. Hasil langsung APPROVED + READY_TO_PAY (masuk Finance, revisi final MOM 1 Sep — tidak ada approve terpisah). Re-generate aman: baris PAID/LOCKED tidak disentuh, baris NEEDS_REVISION dihitung ulang.
         </p>
         {error && <div className='text-sm text-red-600'>{error}</div>}
         {result && <div className='text-sm text-green-700'>Generated {result.count} payroll rows.</div>}

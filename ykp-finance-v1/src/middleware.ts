@@ -7,6 +7,9 @@ const PUBLIC = [
   '/api/auth/login',
   '/api/auth/logout',
   '/api/finance/notify/daily-brief',
+  // HR → Finance payroll notify (MOM 1 Sep 2026): the route authenticates
+  // callers itself via the shared x-finance-secret header — never session-based.
+  '/api/finance/payroll/hr-notify',
   // Internal Telegram-approval endpoint (Fase 4): the route authenticates
   // callers itself via the shared x-bot-secret header — never session-based.
   '/api/internal/approval'

@@ -15,7 +15,7 @@ import { list, handler } from '@/lib/http';
 const MAX_LIMIT = 500;
 
 /** Fields that may carry PII / sensitive amounts — never expose on public GET. */
-const REDACTED_FIELDS = ['beforeValue', 'afterValue'] as const;
+const REDACTED_FIELDS = ['before_value', 'after_value'] as const;
 
 export const GET = handler(async (req) => {
   const q = new URL(req.url).searchParams;

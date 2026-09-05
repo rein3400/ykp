@@ -1,9 +1,18 @@
 /**
  * Generate payroll for a YYYY-MM period.
  * Reads: employees, attendance, adjustments, lateness_rules
- * Writes: hr_payroll with status PENDING
+ * Writes: hr_payroll rows as APPROVED + READY_TO_PAY (MOM 1 Sep 2026 revisi
+ * final: generate langsung masuk Finance — HR yang generate = HR yang cek,
+ * tidak ada tombol approve terpisah di UI; endpoint /approve dipertahankan
+ * untuk kompatibilitas tapi tidak dipakai alur utama).
+ *
+ * Idempotent: re-generate periode yang sama MENGUPDATE baris yang belum
+ * final (PENDING / NEEDS_REVISION / REJECTED) dan tidak pernah menyentuh
+ * baris PAID / LOCKED. NEEDS_REVISION ikut ter-reset (revisi dianggap
+ * selesai saat HR re-generate).
+ * Setelah tulis, Finance di-notify best-effort (tidak menggagalkan generate).
  */
-import { readTab, appendRows, TABS } from '@/db/sheets';
+import { readTab, appendRows, updateRow, findRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, ok } from '@/lib/http';
@@ -183,19 +192,46 @@ export const POST = handler(async (req) => {
       gross_salary: String(result.gross_salary),
       net_salary: String(result.net_salary),
       calculation_status: 'FINAL',
-      approval_status: 'PENDING',
-      payment_status: 'UNPAID',
+      // Revisi final MOM 1 Sep: generate = HR sudah cek → langsung Ready to Pay.
+      approval_status: 'APPROVED',
+      payment_status: 'READY_TO_PAY',
       payment_date: '',
       payment_reference: '',
       payslip_url: '',
-      approved_by: '',
+      approved_by: session.userId,
+      revision_reason: '',
+      revision_by: '',
+      revision_at: '',
       created_at: now,
       updated_at: now
     });
   }
 
-  if (rows.length > 0) {
-    await appendRows(TABS.payroll, rows);
+  // Upsert idempotent: baris PAID/LOCKED tidak pernah disentuh; baris
+  // non-final (PENDING / NEEDS_REVISION / REJECTED) dihitung ulang.
+  // findRow per ID (bukan index i+2) agar rowNumber benar di semua backend
+  // (Sheets i+2 vs Postgres __rownum).
+  let created = 0;
+  let updated = 0;
+  let skipped = 0;
+  const toAppend: Record<string, string>[] = [];
+  for (const r of rows) {
+    const prev = await findRow(TABS.payroll, 'payroll_id', r.payroll_id);
+    if (!prev) {
+      toAppend.push(r);
+      created++;
+      continue;
+    }
+    const isFinal = prev.row.payment_status === 'PAID' || prev.row.locked_status === 'LOCKED';
+    if (isFinal) {
+      skipped++;
+      continue;
+    }
+    await updateRow(TABS.payroll, prev.rowNumber, { ...prev.row, ...r });
+    updated++;
+  }
+  if (toAppend.length > 0) {
+    await appendRows(TABS.payroll, toAppend);
   }
 
   await logAudit({
@@ -204,8 +240,36 @@ export const POST = handler(async (req) => {
     action: 'generate',
     entity: 'payroll',
     entityId: parsed.data.period,
-    afterValue: `${rows.length} rows`
+    afterValue: `${created} created, ${updated} updated, ${skipped} skipped`
   });
 
-  return ok({ period: parsed.data.period, count: rows.length });
+  // Notify Finance best-effort: payroll Ready to Pay sudah bisa dilihat di
+  // modul Finance. Kegagalan notify TIDAK menggagalkan generate.
+  let financeNotified = false;
+  const financeUrl = (process.env.FINANCE_NOTIFY_URL ?? '').trim();
+  if (financeUrl) {
+    try {
+      const headers: Record<string, string> = { 'content-type': 'application/json' };
+      const secret = (process.env.FINANCE_NOTIFY_SECRET ?? process.env.HR_NOTIFY_SECRET ?? '').trim();
+      if (secret) headers['x-finance-secret'] = secret;
+      const res = await fetch(financeUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          period: parsed.data.period,
+          created,
+          updated,
+          skipped,
+          generated_by: session.userId
+        }),
+        signal: AbortSignal.timeout(8000)
+      });
+      financeNotified = res.ok;
+      if (!res.ok) console.error('[payroll:generate] finance notify failed:', res.status);
+    } catch (e) {
+      console.error('[payroll:generate] finance notify error:', e instanceof Error ? e.message : e);
+    }
+  }
+
+  return ok({ period: parsed.data.period, count: created + updated, created, updated, skipped, financeNotified });
 });

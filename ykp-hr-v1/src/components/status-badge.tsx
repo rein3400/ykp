@@ -6,6 +6,7 @@ import * as React from "react";
 
 type Status =
   | "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "CANCELLED"
+  | "NEEDS_REVISION" | "READY_TO_PAY"
   | "OPEN" | "ACK" | "RESOLVED"
   | "PRESENT" | "LATE" | "ABSENT" | "LEAVE" | "SICK" | "OFF" | "INCOMPLETE" | "MANUAL_CORRECTION"
   | "SCHEDULED" | "ACTIVE" | "INACTIVE" | "FILLED" | "OPEN_SHIFT";
@@ -17,6 +18,8 @@ const STYLES: Record<Status, string> = {
   REJECTED: "bg-rose-100 text-rose-800 border border-rose-200",
   PAID: "bg-blue-100 text-blue-800 border border-blue-200",
   CANCELLED: "bg-slate-100 text-slate-500 border border-slate-200 line-through",
+  NEEDS_REVISION: "bg-orange-100 text-orange-800 border border-orange-200",
+  READY_TO_PAY: "bg-teal-100 text-teal-800 border border-teal-200",
   OPEN: "bg-rose-100 text-rose-800 border border-rose-200",
   ACK: "bg-amber-100 text-amber-800 border border-amber-200",
   RESOLVED: "bg-emerald-100 text-emerald-800 border border-emerald-200",
