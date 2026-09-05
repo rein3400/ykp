@@ -39,9 +39,16 @@ function computeEarlyLeaveMinutes(scheduled: string, actual: string): number {
   return Math.max(0, sh * 60 + sm - (ah * 60 + am));
 }
 
-export const GET = handler(async () => {
+export const GET = handler(async (req) => {
   const rows = await readTab<Record<string, string>>(TABS.attendance);
-  return list(rows);
+  const url = new URL(req.url);
+  const limitRaw = url.searchParams.get('limit');
+  // Newest-first so the history page can page without downloading everything.
+  const ordered = [...rows].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  if (limitRaw === null) return list(rows);
+  const limit = Math.min(Math.max(parseInt(limitRaw || '200', 10) || 200, 1), 2000);
+  const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10) || 0, 0);
+  return list(ordered.slice(offset, offset + limit), rows.length);
 });
 
 export const POST = handler(async (req) => {

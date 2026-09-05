@@ -6,7 +6,7 @@ export default function LoginPage() {
       <div className='w-full max-w-sm'>
         {/* Brand block */}
         <div className='mb-6 text-center'>
-          <div className='mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-sky-600 text-2xl font-bold text-white shadow-lg'>Y</div>
+          <div className='mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-sky-700 text-2xl font-bold text-white shadow-lg'>Y</div>
           <h1 className='text-2xl font-bold tracking-tight text-slate-900'>YKP HR V1</h1>
           <p className='mt-1 text-sm text-slate-600'>Masuk untuk mengelola HR operasional</p>
         </div>

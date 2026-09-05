@@ -30,7 +30,7 @@ export function ImportEmployees() {
 
   return (
     <form onSubmit={submit} className='space-y-3'>
-      <input type='file' name='file' accept='.csv,text/csv' className='input w-full' required />
+      <label className='block text-sm font-medium text-slate-700'>File CSV karyawan<input type='file' name='file' accept='.csv,text/csv' className='input mt-1 w-full' required /></label>
       {error && <div className='text-sm text-red-600'>{error}</div>}
       {msg && <div className='text-sm text-green-700'>{msg}</div>}
       <button type='submit' disabled={busy} className='btn-primary'>{busy ? '...' : 'Upload & Import'}</button>

@@ -57,7 +57,7 @@ export function Sidebar({ role, userName }: { role: string; userName?: string })
   const navContent = (
     <>
       <div className='mb-6 flex items-center gap-2 px-2'>
-        <div className='flex h-8 w-8 items-center justify-center rounded-md bg-sky-600 text-sm font-bold text-white'>Y</div>
+        <div className='flex h-8 w-8 items-center justify-center rounded-md bg-sky-700 text-sm font-bold text-white'>Y</div>
         <div>
           <div className='text-sm font-bold text-slate-900'>YKP HR V1</div>
           <div className='text-[10px] uppercase tracking-wide text-slate-500'>Command Center</div>
@@ -83,7 +83,7 @@ export function Sidebar({ role, userName }: { role: string; userName?: string })
                 viewBox='0 0 24 24'
                 strokeWidth={1.5}
                 stroke='currentColor'
-                className={`h-4 w-4 flex-shrink-0 ${active ? 'text-sky-600' : 'text-slate-400'}`}
+                className={`h-4 w-4 flex-shrink-0 ${active ? 'text-sky-600' : 'text-slate-500'}`}
                 aria-hidden='true'
               >
                 <path strokeLinecap='round' strokeLinejoin='round' d={item.icon} />
@@ -117,7 +117,7 @@ export function Sidebar({ role, userName }: { role: string; userName?: string })
       {/* Mobile top bar with hamburger */}
       <div className='fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:hidden'>
         <div className='flex items-center gap-2'>
-          <div className='flex h-7 w-7 items-center justify-center rounded-md bg-sky-600 text-xs font-bold text-white'>Y</div>
+          <div className='flex h-7 w-7 items-center justify-center rounded-md bg-sky-700 text-xs font-bold text-white'>Y</div>
           <span className='text-sm font-bold text-slate-900'>YKP HR V1</span>
         </div>
         <button
@@ -150,7 +150,7 @@ export function Sidebar({ role, userName }: { role: string; userName?: string })
 
       {/* Sidebar: static on md+, slide-over on mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white p-4 transition-transform duration-200 md:static md:z-auto md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-4 transition-transform duration-200 md:sticky md:top-0 md:z-auto md:h-screen md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

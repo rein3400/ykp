@@ -143,7 +143,7 @@ export function LeavesTable({ data: initial }: { data: Leave[] }) {
                         </button>
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-400">—</span>
+                      <span className="text-xs text-slate-500">—</span>
                     )}
                   </td>
                 </tr>

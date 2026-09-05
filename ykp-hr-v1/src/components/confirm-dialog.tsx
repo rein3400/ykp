@@ -74,7 +74,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 className={
                   state.tone === 'danger'
                     ? 'rounded-md bg-rose-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-700'
-                    : 'rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-700'
+                    : 'rounded-md bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-800'
                 }
               >
                 {state.confirmLabel ?? 'Lanjutkan'}

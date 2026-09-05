@@ -200,7 +200,7 @@ export function PayrollTable({
             return (
               <React.Fragment key={row.payroll_id}>
                 <tr className={`hover:bg-slate-50${isLocked ? " bg-amber-50/50" : ""}`}>
-                  <td className="px-3 py-2 text-sm">{row.employee_name} <span className="text-slate-400 text-xs">({row.employee_id})</span></td>
+                  <td className="px-3 py-2 text-sm">{row.employee_name} <span className="text-slate-500 text-xs">({row.employee_id})</span></td>
                   <td className="px-3 py-2 text-sm">{row.basic_salary}</td>
                   <td className="px-3 py-2 text-sm font-semibold">{row.net_salary}</td>
                   <td className="px-3 py-2 text-sm">
@@ -230,7 +230,7 @@ export function PayrollTable({
                         unlocked
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-400">—</span>
+                      <span className="text-xs text-slate-500">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right">
@@ -266,7 +266,7 @@ export function PayrollTable({
                         </button>
                       )}
                       {isLocked && !canUnlock && (
-                        <span className="text-xs text-slate-400" title="Hanya owner/super_admin yang dapat unlock">locked</span>
+                        <span className="text-xs text-slate-500" title="Hanya owner/super_admin yang dapat unlock">locked</span>
                       )}
                     </div>
                   </td>

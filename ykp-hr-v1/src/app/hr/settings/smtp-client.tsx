@@ -138,7 +138,7 @@ export default function SmtpClient() {
             className='mt-1 w-full rounded border px-2 py-1.5 text-sm' placeholder='funkydak@gmail.com' />
         </label>
         <label className='block text-[11px] font-medium text-slate-600'>
-          App Password {configured && !passDirty && <span className='text-slate-400'>(tidak diubah bila dibiarkan kosong)</span>}
+          App Password {configured && !passDirty && <span className='text-slate-500'>(tidak diubah bila dibiarkan kosong)</span>}
           <input
             type='password'
             value={form.smtp_pass}
@@ -164,6 +164,7 @@ export default function SmtpClient() {
             value={testTo}
             onChange={(e) => setTestTo(e.target.value)}
             className='flex-1 rounded border px-2 py-1.5 text-sm'
+            aria-label='Email tujuan tes'
             placeholder='email tujuan tes'
           />
           <button onClick={sendTest} disabled={busy} className='rounded border border-slate-300 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 disabled:opacity-50'>

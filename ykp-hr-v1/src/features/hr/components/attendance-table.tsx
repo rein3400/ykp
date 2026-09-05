@@ -21,20 +21,24 @@ interface AttendanceRow {
   notes: string;
 }
 
-async function fetchAttendance(): Promise<AttendanceRow[]> {
-  const r = await fetch('/api/hr/attendance', { cache: 'no-store' });
+const PAGE = 200;
+async function fetchAttendance(limit: number): Promise<{ items: AttendanceRow[]; total: number }> {
+  const r = await fetch(`/api/hr/attendance?limit=${limit}`, { cache: 'no-store' });
   const j = await r.json();
-  return j.data?.items ?? [];
+  return { items: j.data?.items ?? [], total: j.data?.total_items ?? 0 };
 }
 
 export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; outlets: OutletOpt[] }) {
   const router = useRouter();
   const toast = useToast();
   const qc = useQueryClient();
-  const { data: rows = [], isLoading } = useQuery({
-    queryKey: ['attendance'],
-    queryFn: fetchAttendance
+  const [limit, setLimit] = useState(PAGE);
+  const { data, isLoading } = useQuery({
+    queryKey: ['attendance', limit],
+    queryFn: () => fetchAttendance(limit)
   });
+  const rows = data?.items ?? [];
+  const total = data?.total ?? 0;
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
     employee_id: employees[0]?.id ?? '',
@@ -244,6 +248,11 @@ export function AttendanceTable({ employees, outlets }: { employees: EmpOpt[]; o
               ))}
             </tbody>
           </table>
+        )}
+        {!isLoading && total > rows.length && (
+          <button type='button' className='btn-outline mt-2' onClick={() => setLimit((l) => l + PAGE)}>
+            Muat lebih banyak ({rows.length} dari {total})
+          </button>
         )}
       </div>
     </div>
