@@ -43,7 +43,14 @@ export function CommandPalette({ open, onClose, apps, results, onSelect }: Props
         setCursor((c) => Math.max(c - 1, 0));
       } else if (e.key === "Enter") {
         e.preventDefault();
-        const a = filtered[cursor];
+        // Skip modules that report unreachable — activating them opens
+        // nothing. Prefer the highlighted row, else the first reachable.
+        const isUp = (a: AppDef) => {
+          const r = results.find((x) => x.id === a.id);
+          return !r || r.reachable;
+        };
+        const a =
+          filtered.slice(cursor).find(isUp) ?? filtered.find(isUp);
         if (a) {
           onSelect(a.id);
           onClose();
