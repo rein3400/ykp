@@ -49,8 +49,8 @@ function LoginForm() {
       </div>
       {error && <div className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Username</label>
-        <input
+        <label htmlFor='login-u' className="mb-1 block text-xs font-medium text-slate-600">Username</label>
+        <input id='login-u'
           name="username"
           className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
           value={username}
@@ -59,8 +59,8 @@ function LoginForm() {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Password</label>
-        <input
+        <label htmlFor='login-p' className="mb-1 block text-xs font-medium text-slate-600">Password</label>
+        <input id='login-p'
           name="password"
           type="password"
           className="w-full rounded border border-slate-300 px-3 py-2 text-sm"

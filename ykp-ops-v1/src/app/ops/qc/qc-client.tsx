@@ -130,7 +130,7 @@ export function QcClient({
                     {r.defect_type && <span className='block text-slate-600'>Defects: {r.defect_type}</span>}
                   </div>
                 )}
-                <div className='mt-1 text-xs text-slate-400'>{r.date} · {r.outlet_id}</div>
+                <div className='mt-1 text-xs text-slate-500'>{r.date} · {r.outlet_id}</div>
               </li>
             ))}
           </ul>

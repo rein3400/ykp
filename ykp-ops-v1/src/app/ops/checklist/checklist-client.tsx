@@ -167,10 +167,10 @@ export function ChecklistClient({
                 <div className='flex flex-wrap items-center gap-2'>
                   <span className='font-medium'>{r.checklist_item}</span>
                   <span className={`rounded px-2 py-0.5 text-xs ${r.status === 'DONE' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{r.status}</span>
-                  <span className='text-xs text-slate-400'>{r.checklist_type} · {r.department || '—'}</span>
+                  <span className='text-xs text-slate-500'>{r.checklist_type} · {r.department || '—'}</span>
                 </div>
                 {r.notes && <div className='mt-1 text-xs text-slate-500'>Catatan: {r.notes}</div>}
-                <div className='mt-1 text-xs text-slate-400'>{r.outlet_id} · {r.date} · {r.shift_id || '—'} · verif {r.verified_by}</div>
+                <div className='mt-1 text-xs text-slate-500'>{r.outlet_id} · {r.date} · {r.shift_id || '—'} · verif {r.verified_by}</div>
               </li>
             ))}
           </ul>

@@ -66,7 +66,7 @@ export function ClosingClient({
                 <span className='font-medium'>{r.outlet_id}</span>
                 <span className='ml-2 text-xs'>{formatIdr(r.cash_difference)}</span>
                 <span className='ml-2 text-xs text-slate-500'>{r.status}</span>
-                <div className='mt-1 text-xs text-slate-400'>{r.date} · closed by {r.closed_by}</div>
+                <div className='mt-1 text-xs text-slate-500'>{r.date} · closed by {r.closed_by}</div>
               </li>
             ))}
           </ul>

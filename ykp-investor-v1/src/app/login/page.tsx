@@ -31,13 +31,13 @@ export default function LoginPage() {
         <p className='mb-4 text-xs text-muted-foreground'>Dashboard investor + cap table — owner / investor</p>
         <form onSubmit={onSubmit} className='space-y-3'>
           <div>
-            <label className='mb-1 block text-xs font-medium'>Username</label>
-            <input type='text' value={username} onChange={(e) => setUsername(e.target.value)}
+            <label htmlFor='login-u' className='mb-1 block text-xs font-medium'>Username</label>
+            <input id='login-u' type='text' value={username} onChange={(e) => setUsername(e.target.value)}
               className='w-full rounded border border-border px-3 py-2 text-sm' required autoFocus />
           </div>
           <div>
-            <label className='mb-1 block text-xs font-medium'>Password</label>
-            <input type='password' value={password} onChange={(e) => setPassword(e.target.value)}
+            <label htmlFor='login-p' className='mb-1 block text-xs font-medium'>Password</label>
+            <input id='login-p' type='password' value={password} onChange={(e) => setPassword(e.target.value)}
               className='w-full rounded border border-border px-3 py-2 text-sm' required />
           </div>
           {err && <p className='text-xs text-destructive'>{err}</p>}

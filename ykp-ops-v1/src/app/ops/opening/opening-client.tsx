@@ -94,7 +94,7 @@ export function OpeningClient({
               <li key={r.opening_id} className='rounded border p-3 text-sm'>
                 <span className='font-medium'>{r.checklist_item}</span>
                 <span className={`ml-2 rounded px-2 py-0.5 text-xs ${r.status === 'DONE' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{r.status}</span>
-                <div className='mt-1 text-xs text-slate-400'>{r.outlet_id} · {r.date} · {r.completed_by}</div>
+                <div className='mt-1 text-xs text-slate-500'>{r.outlet_id} · {r.date} · {r.completed_by}</div>
               </li>
             ))}
           </ul>

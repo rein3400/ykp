@@ -86,7 +86,7 @@ export function BriefingClient({
                   <span className='font-mono text-xs text-slate-500'>{r.date}</span>
                 </div>
                 <p className='mt-1 text-slate-700'>{r.briefing_text}</p>
-                <div className='mt-1 text-xs text-slate-400'>{r.briefing_type} · {r.published_status}</div>
+                <div className='mt-1 text-xs text-slate-500'>{r.briefing_type} · {r.published_status}</div>
               </li>
             ))}
           </ul>
