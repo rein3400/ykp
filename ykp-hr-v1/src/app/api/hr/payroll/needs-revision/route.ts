@@ -58,9 +58,9 @@ export const POST = handler(async (req) => {
   const updated = {
     ...found.row,
     approval_status: 'NEEDS_REVISION',
-    revision_reason: parsed.data.reason,
-    revision_by: actorUserId,
-    revision_at: now,
+    needs_revision_reason: parsed.data.reason,
+    needs_revision_by: actorUserId,
+    needs_revision_at: now,
     updated_at: now
   };
   await updateRow(TABS.payroll, found.rowNumber, updated);

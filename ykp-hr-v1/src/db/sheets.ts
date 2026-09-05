@@ -308,10 +308,11 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'payment_reference',
     'payslip_url',
     'approved_by',
-    // MOM 1 Sep 2026 — Needs Revision flow (HR-side; Finance calls needs-revision route)
-    'revision_reason',
-    'revision_by',
-    'revision_at',
+    // MOM 1 Sep 2026 — Needs Revision flow. Nama kolom ikut standar VPS
+    // develop (needs_revision_*), tempat approve-route arris1 juga menulis.
+    'needs_revision_reason',
+    'needs_revision_by',
+    'needs_revision_at',
     'created_at',
     'updated_at'
   ],

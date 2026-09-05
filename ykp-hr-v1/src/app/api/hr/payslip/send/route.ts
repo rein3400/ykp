@@ -12,7 +12,7 @@
  * Upgrade path: swap the .html attachment for a rendered PDF (puppeteer)
  * without changing this route's contract.
  */
-import { findRow, TABS } from '@/db/sheets';
+import { findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, conflict, notFound, ok, fail } from '@/lib/http';
@@ -56,6 +56,7 @@ export const POST = handler(async (req) => {
 
   const html = buildPayslipHtml(row.payroll_id, row);
   const filename = `slip-${row.payroll_period}-${row.employee_id}.html`;
+  const emailAt = new Date().toISOString();
   try {
     const { messageId } = await sendMail({
       to: email,
@@ -63,6 +64,14 @@ export const POST = handler(async (req) => {
       html: `<p>Yth. ${row.employee_name},</p><p>Terlampir slip gaji periode ${row.payroll_period}. Dokumen ini bersifat rahasia.</p>`,
       attachments: [{ filename, contentType: 'text/html', content: Buffer.from(html, 'utf8') }]
     });
+    const stamped = {
+      ...row,
+      email_sent_at: emailAt,
+      email_sent_to: email,
+      email_sent_status: 'SENT'
+    };
+    const refetch = await findRow(TABS.payroll, 'payroll_id', row.payroll_id);
+    if (refetch) await updateRow(TABS.payroll, refetch.rowNumber, stamped);
     await logAudit({
       actorUserId: session.userId,
       actorRole: session.role,
@@ -74,6 +83,15 @@ export const POST = handler(async (req) => {
     return ok({ payroll_id: row.payroll_id, email, messageId });
   } catch (e) {
     console.error('[payslip:send]', e instanceof Error ? e.message : e);
+    const refetch = await findRow(TABS.payroll, 'payroll_id', row.payroll_id);
+    if (refetch) {
+      await updateRow(TABS.payroll, refetch.rowNumber, {
+        ...refetch.row,
+        email_sent_at: emailAt,
+        email_sent_to: email,
+        email_sent_status: 'FAILED'
+      });
+    }
     return fail('smtp_send_failed', 'Gagal mengirim email slip (cek config SMTP / koneksi)', 502);
   }
 });

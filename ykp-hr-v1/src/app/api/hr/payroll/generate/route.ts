@@ -199,9 +199,9 @@ export const POST = handler(async (req) => {
       payment_reference: '',
       payslip_url: '',
       approved_by: session.userId,
-      revision_reason: '',
-      revision_by: '',
-      revision_at: '',
+      needs_revision_reason: '',
+      needs_revision_by: '',
+      needs_revision_at: '',
       created_at: now,
       updated_at: now
     });

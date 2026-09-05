@@ -20,9 +20,9 @@ interface Payroll {
   unlock_approved_by?: string;
   approved_by?: string;
   payment_reference?: string;
-  revision_reason?: string;
-  revision_by?: string;
-  revision_at?: string;
+  needs_revision_reason?: string;
+  needs_revision_by?: string;
+  needs_revision_at?: string;
 }
 
 export function PayrollTable({
@@ -205,9 +205,9 @@ export function PayrollTable({
                   <td className="px-3 py-2 text-sm font-semibold">{row.net_salary}</td>
                   <td className="px-3 py-2 text-sm">
                     <StatusBadge status={row.approval_status} />
-                    {row.approval_status === "NEEDS_REVISION" && row.revision_reason && (
-                      <div className="mt-1 max-w-56 text-xs text-orange-700" title={row.revision_by ? `Diminta oleh ${row.revision_by}${row.revision_at ? ` • ${row.revision_at}` : ""}` : undefined}>
-                        Revisi: {row.revision_reason}
+                    {row.approval_status === "NEEDS_REVISION" && row.needs_revision_reason && (
+                      <div className="mt-1 max-w-56 text-xs text-orange-700" title={row.needs_revision_by ? `Diminta oleh ${row.needs_revision_by}${row.needs_revision_at ? ` • ${row.needs_revision_at}` : ""}` : undefined}>
+                        Revisi: {row.needs_revision_reason}
                       </div>
                     )}
                   </td>

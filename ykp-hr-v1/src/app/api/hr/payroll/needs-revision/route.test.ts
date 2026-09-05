@@ -76,8 +76,8 @@ describe('POST /api/hr/payroll/needs-revision (MOM 1 Sep 2026)', () => {
     expect(res.status).toBe(200);
     const j = await res.json();
     expect(j.data.approval_status).toBe('NEEDS_REVISION');
-    expect(j.data.revision_reason).toBe('nominal lembur kelebihan 2 jam');
-    expect(j.data.revision_by).toBe('USR-001');
+    expect(j.data.needs_revision_reason).toBe('nominal lembur kelebihan 2 jam');
+    expect(j.data.needs_revision_by).toBe('USR-001');
   });
 
   it('second request on the same row conflicts with 409', async () => {
@@ -103,7 +103,7 @@ describe('POST /api/hr/payroll/needs-revision (MOM 1 Sep 2026)', () => {
     expect(res.status).toBe(200);
     const j = await res.json();
     expect(j.data.approval_status).toBe('NEEDS_REVISION');
-    expect(j.data.revision_by).toBe('finance-app');
+    expect(j.data.needs_revision_by).toBe('finance-app');
     delete process.env.FINANCE_NOTIFY_SECRET;
   });
 
