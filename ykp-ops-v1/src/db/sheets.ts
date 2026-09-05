@@ -229,6 +229,9 @@ export async function updateRow(
   row: Record<string, string>
 ): Promise<void> {
   if (isMockMode()) return mockUpdateRow(tab, rowIndex, row);
+  // Sheets rowIndex is 1-based with header at row 1; pg __rownum is the
+  // 1-based data sequence, so __rownum = rowIndex - 1.
+  if (isPostgresMode()) { await pgUpdateRow(tab, TAB_HEADERS[tab], rowIndex - 1, row); return; }
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const values = [headers.map((h) => row[h] ?? '')];
