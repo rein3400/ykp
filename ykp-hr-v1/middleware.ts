@@ -5,6 +5,9 @@ const PUBLIC = [
   '/api/auth/login',
   '/api/auth/logout',
   '/api/hr/notify/daily-brief',
+  // Scheduler cron harian (contract-reminders): route validasi CRON_SECRET
+  // sendiri, tanpa session cookie.
+  '/api/hr/notify/contract-reminders',
   // Telegram Bot webhook — authenticated via X-Telegram-Bot-Api-Secret-Token
   // inside the route, not via the session cookie.
   '/api/hr/attendance/telegram',

@@ -13,24 +13,17 @@ function html(s: TemplateStringsArray, ...vals: unknown[]): string {
   return String.raw({ raw: s }, ...vals.map((v) => String(v ?? '')));
 }
 
-export const GET = handler(async (req, { params }) => {
-  const session = await getSession();
-  if (!session) return unauthorized();
-  const { id } = params;
-  const payroll = await findRow(TABS.payroll, 'payroll_id', id);
-  if (!payroll) return notFound('Payroll not found');
-  const row = payroll.row;
-
-  // Role-based access: self can only view own
-  const isSelf = session.role === 'employee' && session.userId === row.employee_id;
-  const isPrivileged = ['owner', 'super_admin', 'hr_admin', 'finance_admin'].includes(session.role);
-  if (!isSelf && !isPrivileged) return forbidden();
-
+/**
+ * Build the printable payslip HTML for one payroll row.
+ * Shared by GET (browser view/print-to-PDF) and POST /send (SMTP email).
+ * Pure — same markup everywhere, no drift.
+ */
+export function buildPayslipHtml(id: string, row: Record<string, string>): string {
   const paymentDate = row.payment_date
     ? new Date(row.payment_date).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'long', day: 'numeric' })
     : '-';
 
-  const body = html`
+  return html`
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -255,7 +248,24 @@ export const GET = handler(async (req, { params }) => {
 </script>
 </body>
 </html>`;
+}
 
+export const GET = handler(async (req, { params }) => {
+  const session = await getSession();
+  if (!session) return unauthorized();
+  const { id } = params;
+  const payroll = await findRow(TABS.payroll, 'payroll_id', id);
+  if (!payroll) return notFound('Payroll not found');
+  const row = payroll.row;
+
+  // Role-based access: self can only view own. session.employeeId is the
+  // linked EMP- id (set at login from users.employee_id); session.userId is
+  // USR- and never equals row.employee_id (EMP-), so the old check always 403'd.
+  const isSelf = session.role === 'employee' && session.employeeId === row.employee_id;
+  const isPrivileged = ['owner', 'super_admin', 'hr_admin', 'finance_admin'].includes(session.role);
+  if (!isSelf && !isPrivileged) return forbidden();
+
+  const body = buildPayslipHtml(id, row);
   return new NextResponse(body, {
     status: 200,
     headers: {

@@ -44,7 +44,8 @@ export type Action =
   | 'approve'
   | 'export'
   | 'generate'
-  | 'mark_paid';
+  | 'mark_paid'
+  | 'request_revision';
 
 /** Returns true if role can do action on resource. Scope filtering handled by caller. */
 export function can(role: Role, action: Action, resource: Resource): boolean {
@@ -68,7 +69,7 @@ export function scopeFilter(role: Role, userBrandId?: string, userOutletId?: str
   return { selfOnly: true };
 }
 
-const ALL: Action[] = ['view', 'create', 'update', 'delete', 'approve', 'export', 'generate', 'mark_paid'];
+const ALL: Action[] = ['view', 'create', 'update', 'delete', 'approve', 'export', 'generate', 'mark_paid', 'request_revision'];
 
 const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
   owner: {
@@ -77,7 +78,7 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     roster: ['view', 'export'],
     leave: ['view', 'approve', 'export'],
     lateness: ['view', 'approve', 'export'],
-    payroll: ['view', 'approve', 'export', 'mark_paid'],
+    payroll: ['view', 'approve', 'export', 'mark_paid', 'request_revision'],
     adjustment: ['view', 'approve', 'export'],
     summary: ['view', 'export'],
     audit: ['view', 'export'],
@@ -105,7 +106,7 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     roster: ['view', 'create', 'update', 'export'],
     leave: ['view', 'approve', 'export'],
     lateness: ['view', 'create', 'update', 'approve', 'export'],
-    payroll: ['view', 'generate', 'export'],
+    payroll: ['view', 'generate', 'export', 'request_revision'],
     adjustment: ['view', 'create', 'update', 'export'],
     summary: ['view', 'generate', 'export'],
     audit: ['view'],
@@ -114,7 +115,7 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     user: ['view', 'create', 'update']
   },
   finance_admin: {
-    payroll: ['view', 'export', 'mark_paid'],
+    payroll: ['view', 'export', 'mark_paid', 'request_revision'],
     summary: ['view', 'export'],
     audit: ['view']
   },

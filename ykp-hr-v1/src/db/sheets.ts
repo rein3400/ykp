@@ -395,7 +395,15 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'after_value',
     'reason',
     'ip_address',
-    'chain_hash'
+    'chain_hash',
+    // MOM 1 Sep 2026 — align Sheets headers dengan DDL Postgres (20 kolom).
+    'module',
+    'record_type',
+    'record_id',
+    'user_id',
+    'approval_user_id',
+    'environment',
+    'created_at'
   ],
   [TABS.appSettings]: ['setting_key', 'setting_value', 'updated_at', 'updated_by'],
   [TABS.hermezAlerts]: [
