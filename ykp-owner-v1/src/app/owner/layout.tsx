@@ -23,6 +23,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
   const mock = isMockForced();
   return (
     <div className='min-h-screen bg-muted'>
+      <a href='#own-main' className='sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-slate-900 focus:px-3 focus:py-2 focus:text-sm focus:text-white'>Lewati ke konten utama</a>
       <header className='sticky top-0 z-10 border-b border-border bg-background'>
         <div className='mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2'>
           <div className='flex items-center gap-2'>
@@ -55,7 +56,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
           </ul>
         </nav>
       </header>
-      <main className='mx-auto max-w-6xl space-y-4 px-3 py-4'>{children}</main>
+      <main id='own-main' className='mx-auto max-w-6xl space-y-4 px-3 py-4'>{children}</main>
       <Toaster richColors position='top-center' />
     </div>
   );

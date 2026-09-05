@@ -13,8 +13,8 @@ export function StatusDot({ status }: { status: ModuleStatus }) {
 
 const SEV_STYLE: Record<Severity, string> = {
   CRITICAL: 'bg-destructive text-destructive-foreground',
-  HIGH: 'bg-orange-500 text-white',
-  MEDIUM: 'bg-warning text-white',
+  HIGH: 'bg-orange-700 text-white',
+  MEDIUM: 'bg-warning text-slate-900',
   LOW: 'bg-gray-300 text-gray-700'
 };
 
