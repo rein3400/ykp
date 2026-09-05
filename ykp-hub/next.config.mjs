@@ -3,6 +3,11 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Replay QA ownership nonce: must be exact plain text, no redirect.
+        source: "/.well-known/replay-qa-security-nonce",
+        headers: [{ key: "Content-Type", value: "text/plain; charset=utf-8" }],
+      },
+      {
         source: "/(.*)",
         headers: [
           // Portal design: the Hub embeds the other YKP apps — framing stays open.
