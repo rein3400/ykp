@@ -125,7 +125,13 @@ export default function HubDashboard() {
 
   // Render
   if (!ready) return null;
-  if (!session) return <LoginForm onLogin={login} />;
+  if (!session) {
+    return (
+      <main>
+        <LoginForm onLogin={login} />
+      </main>
+    );
+  }
 
   if (activeModule) {
     const app = APPS.find((a) => a.id === activeModule)!;

@@ -6,6 +6,13 @@ import Link from 'next/link';
 import { EmployeesTable } from '@/features/hr/components/employees-table';
 import { todayWib } from '@/lib/format';
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Karyawan — YKP HR V1',
+  description: 'Master data karyawan YKP HR V1.',
+};
+
 export const dynamic = 'force-dynamic';
 
 interface Employee {

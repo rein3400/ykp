@@ -53,7 +53,7 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
           )}
         </nav>
         <button onClick={logout}
-          className='mt-4 w-full rounded border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted'>
+          className='mt-4 w-full rounded border border-border px-2 py-1.5 text-xs text-slate-600 hover:bg-muted'>
           Logout
         </button>
       </aside>
