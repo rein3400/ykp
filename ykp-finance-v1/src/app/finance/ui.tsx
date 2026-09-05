@@ -2,7 +2,7 @@
 /**
  * Shared UI primitives for YKP Finance pages (sibling-convention styling).
  */
-import React from 'react';
+import React, { useId } from 'react';
 
 export function rp(n: number | string | null | undefined): string {
   const num = typeof n === 'string' ? Number(n) : n;
@@ -140,11 +140,13 @@ export function Btn({ children, onClick, variant, disabled, type }: {
 }
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
-  const { label, ...rest } = props;
+  const { label, id, ...rest } = props;
+  const auto = useId();
+  const fid = id ?? `fin-${auto}`;
   return (
     <div>
-      <label className='mb-1 block text-[10px] font-medium text-muted-foreground'>{label}</label>
-      <input {...rest} className='w-full rounded border border-border px-2 py-1.5 text-xs' />
+      <label htmlFor={fid} className='mb-1 block text-[10px] font-medium text-muted-foreground'>{label}</label>
+      <input id={fid} {...rest} className='w-full rounded border border-border px-2 py-1.5 text-xs' />
     </div>
   );
 }
@@ -152,10 +154,12 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { lab
 export function Select({ label, value, onChange, children }: {
   label: string; value: string; onChange: (v: string) => void; children: React.ReactNode;
 }) {
+  const fid = useId();
   return (
     <div>
-      <label className='mb-1 block text-[10px] font-medium text-muted-foreground'>{label}</label>
+      <label htmlFor={`fin-${fid}`} className='mb-1 block text-[10px] font-medium text-muted-foreground'>{label}</label>
       <select
+        id={`fin-${fid}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className='w-full rounded border border-border px-2 py-1.5 text-xs bg-background'

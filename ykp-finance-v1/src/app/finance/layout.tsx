@@ -65,6 +65,7 @@ export default function FinanceLayout({ children }: { children: React.ReactNode 
 
   return (
     <div className='flex min-h-screen'>
+      <a href='#fin-main' className='sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-slate-900 focus:px-3 focus:py-2 focus:text-sm focus:text-white'>Lewati ke konten utama</a>
       <Toaster richColors position='top-right' />
       <aside className='w-56 border-r border-border bg-muted/50 p-3 flex flex-col'>
         <div className='mb-3'>
@@ -101,7 +102,7 @@ export default function FinanceLayout({ children }: { children: React.ReactNode 
           Logout
         </button>
       </aside>
-      <main className='flex-1 p-6'>
+      <main id='fin-main' className='flex-1 p-6'>
         {user.username === 'owner' && (
           <div className='mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800'>
             Anda login dengan akun default <b>owner/owner123</b>. Ganti password sebelum pilot production.
