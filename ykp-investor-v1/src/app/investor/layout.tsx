@@ -36,7 +36,7 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
       <aside className='w-56 shrink-0 border-r border-border bg-muted/50 p-4 flex flex-col md:sticky md:top-0 md:h-screen'>
         <div className='mb-4'>
           <h2 className='text-sm font-bold'>YKP Investor</h2>
-          <p className='text-[10px] text-muted-foreground'>{user.username} · {user.role}</p>
+          <p className='text-[10px] text-slate-600'>{user.username} · {user.role}</p>
         </div>
         <nav className='flex-1 space-y-0.5'>
           {NAV.map((n) => (

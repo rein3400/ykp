@@ -46,7 +46,7 @@ export default function DividendClient({
       )}
       <div className='overflow-x-auto rounded border border-border'>
         <table className='w-full text-xs'>
-          <thead className='bg-muted text-muted-foreground'>
+          <thead className='bg-muted text-slate-600'>
             <tr>
               <th className='px-2 py-1 text-left'>Period</th><th className='px-2 py-1 text-left'>Investor</th>
               <th className='px-2 py-1 text-right'>Amount</th><th className='px-2 py-1 text-center'>Status</th>
