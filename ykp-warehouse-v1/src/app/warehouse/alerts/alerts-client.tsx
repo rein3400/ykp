@@ -119,7 +119,7 @@ export default function AlertsClient({
                       type="button"
                       disabled={busyId === a.alert_id}
                       onClick={() => updateStatus(a.alert_id, 'acknowledge')}
-                      className="rounded bg-blue-500 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
+                      className="rounded bg-blue-700 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
                     >
                       ACK
                     </button>
@@ -127,7 +127,7 @@ export default function AlertsClient({
                       type="button"
                       disabled={busyId === a.alert_id}
                       onClick={() => updateStatus(a.alert_id, 'resolve')}
-                      className="rounded bg-green-500 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
+                      className="rounded bg-green-700 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
                     >
                       Resolve
                     </button>
@@ -135,7 +135,7 @@ export default function AlertsClient({
                       type="button"
                       disabled={busyId === a.alert_id}
                       onClick={() => updateStatus(a.alert_id, 'ignore')}
-                      className="rounded bg-gray-400 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
+                      className="rounded bg-gray-600 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
                     >
                       Ignore
                     </button>
