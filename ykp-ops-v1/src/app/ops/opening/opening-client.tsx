@@ -68,10 +68,10 @@ export function OpeningClient({
   return (
     <div className='space-y-4'>
       <div className='grid gap-3 sm:grid-cols-2'>
-        <select className='rounded border px-3 py-2 text-sm' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
+        <select aria-label='Pilih outlet' className='rounded border px-3 py-2 text-sm' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
           {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
         </select>
-        <select className='rounded border px-3 py-2 text-sm' value={shiftId} onChange={(e) => setShiftId(e.target.value)}>
+        <select aria-label='Pilih shift' className='rounded border px-3 py-2 text-sm' value={shiftId} onChange={(e) => setShiftId(e.target.value)}>
           {shifts.map((s) => <option key={s.shift_id} value={s.shift_id}>{s.shift_name}</option>)}
         </select>
       </div>
