@@ -64,7 +64,7 @@ export default async function OwnerHome() {
 
       <div className='flex items-baseline justify-between'>
         <h1 className='text-lg font-bold'>Command Center</h1>
-        <p className='text-[11px] text-muted-foreground'>
+        <p className='text-[11px] text-slate-600'>
           {formatDateShort(ov.date)} · digenerate {formatTimeHm(ov.generatedAt.replace('T', ' '))}
         </p>
       </div>

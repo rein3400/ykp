@@ -6,7 +6,7 @@ export function StatusDot({ status }: { status: ModuleStatus }) {
   return (
     <span className='inline-flex items-center gap-1.5'>
       <span className={`inline-block h-2.5 w-2.5 rounded-full ${STATUS_DOT[status]}`} />
-      <span className='text-[11px] text-muted-foreground'>{STATUS_LABEL[status]}</span>
+      <span className='text-[11px] text-slate-600'>{STATUS_LABEL[status]}</span>
     </span>
   );
 }

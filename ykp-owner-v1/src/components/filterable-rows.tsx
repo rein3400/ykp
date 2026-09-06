@@ -38,6 +38,7 @@ export function FilterableRows({ rows, columns }: { rows: SummaryRow[]; columns:
     <div>
       <div className='mb-3 flex flex-wrap gap-2'>
         <select
+          aria-label='Filter brand'
           value={brand}
           onChange={(e) => { setBrand(e.target.value); setOutlet(''); }}
           className='rounded border border-border bg-background px-2 py-1.5 text-xs'
@@ -46,6 +47,7 @@ export function FilterableRows({ rows, columns }: { rows: SummaryRow[]; columns:
           {brands.map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
         <select
+          aria-label='Filter outlet'
           value={outlet}
           onChange={(e) => setOutlet(e.target.value)}
           className='rounded border border-border bg-background px-2 py-1.5 text-xs'

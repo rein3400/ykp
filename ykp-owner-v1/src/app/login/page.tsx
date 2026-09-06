@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('owner');
-  const [password, setPassword] = useState('owner123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -70,12 +70,6 @@ export default function LoginPage() {
             {loading ? 'Memproses…' : 'Login'}
           </button>
         </form>
-        <div className='mt-4 rounded border border-amber-300 bg-amber-50 p-2'>
-          <p className='text-[10px] font-medium text-amber-800'>
-            Mode MOCK: owner / owner123 — akun demo lokal, WAJIB DIGANTI sebelum production.
-            Mode live: login diteruskan ke HR ({'YKP_HR_URL'}) sebagai identity provider.
-          </p>
-        </div>
       </div>
     </div>
   );
