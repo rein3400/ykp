@@ -60,10 +60,12 @@ export async function assertShift(shiftId: string): Promise<void> {
   if (!r) throw new MissingRefError(`shift_id not found: ${shiftId}`);
 }
 
-/** Generate a unique ID of shape PREFIX-{ts36}{rand6}. No read-modify-write race. */
+const ID_RANDOM_BYTES = 16;
+
+/** Generate a collision-resistant PREFIX-{ts36}{rand32} ID without a shared counter. */
 export function nextSequentialIdSync(prefix: string): string {
   const ts = Date.now().toString(36).toUpperCase();
-  const rand = randomBytes(3).toString('hex').toUpperCase();
+  const rand = randomBytes(ID_RANDOM_BYTES).toString('hex').toUpperCase();
   return `${prefix}-${ts}${rand}`;
 }
 
@@ -71,7 +73,7 @@ export function nextSequentialIdSync(prefix: string): string {
  * Read current numeric seq from a tab and return next padded ID `PREFIX-NNN`.
  * Race-safe under Sheets append semantics only if callers verify via findRow
  * after append (CollisionGuard pattern). For high-concurrency inserts, prefer
- * `nextSequentialIdSync` which is race-free without re-check.
+ * `nextSequentialIdSync` which uses 128 random bits instead of a shared counter.
  *
  * Pilot 5-10 staff: collision risk negligible; caller ConflictError guard
  * handles the rare same-ms insert.

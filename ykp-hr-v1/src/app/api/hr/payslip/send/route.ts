@@ -19,7 +19,7 @@ import { handler, badRequest, unauthorized, forbidden, conflict, notFound, ok, f
 import { smtpConfig, sendMail } from '@/lib/smtp';
 import { Buffer } from 'node:buffer';
 import { z } from 'zod';
-import { buildPayslipHtml } from '../[id]/route';
+import { buildPayslipHtml } from '@/lib/payslip-html';
 
 const schema = z.object({ payroll_id: z.string().min(1) });
 
