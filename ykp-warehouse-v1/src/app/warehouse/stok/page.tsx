@@ -27,7 +27,7 @@ export default async function StokPage({ searchParams }: { searchParams: Promise
       </div>
       <LegacyBanner newFlow='Stock Ledger (immutable movement ledger) — menu Transaksi › Stock Ledger' />
       <form className='flex gap-2 text-xs'>
-        <select name='item_id' defaultValue={itemId ?? ''} className='rounded border border-border px-2 py-1'>
+        <select name='item_id' aria-label='Filter berdasarkan item' defaultValue={itemId ?? ''} className='rounded border border-border px-2 py-1'>
           <option value=''>Semua Item</option>
           {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
         </select>

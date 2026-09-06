@@ -55,6 +55,7 @@ export default function AlertsClient({
     <div className="space-y-3">
       <div className="flex gap-2 text-xs">
         <select
+          aria-label="Filter by severity"
           value={filter.severity}
           onChange={(e) => setFilter({ ...filter, severity: e.target.value })}
           className="rounded border border-border px-2 py-1"
@@ -67,6 +68,7 @@ export default function AlertsClient({
           ))}
         </select>
         <select
+          aria-label="Filter by status"
           value={filter.status}
           onChange={(e) => setFilter({ ...filter, status: e.target.value })}
           className="rounded border border-border px-2 py-1"
