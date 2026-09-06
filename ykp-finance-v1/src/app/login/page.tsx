@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('owner');
-  const [password, setPassword] = useState('owner123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className='flex min-h-screen items-center justify-center bg-muted'>
+    <main className='flex min-h-screen items-center justify-center bg-muted'>
       <div className='w-full max-w-sm rounded-lg border border-border bg-background p-6 shadow-sm'>
         <h1 className='mb-1 text-xl font-bold'>YKP Finance V1</h1>
         <p className='mb-4 text-xs text-muted-foreground'>
@@ -70,12 +70,7 @@ export default function LoginPage() {
             {loading ? 'Memproses…' : 'Login'}
           </button>
         </form>
-        <div className='mt-4 rounded border border-amber-300 bg-amber-50 p-2'>
-          <p className='text-[10px] font-medium text-amber-800'>
-            Akun default: owner / owner123 — WAJIB DIGANTI sebelum pilot production.
-          </p>
-        </div>
       </div>
-    </div>
+    </main>
   );
 }

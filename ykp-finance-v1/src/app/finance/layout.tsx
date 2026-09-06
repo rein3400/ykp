@@ -71,7 +71,7 @@ export default function FinanceLayout({ children }: { children: React.ReactNode 
         <div className='mb-3'>
           <h2 className='text-sm font-bold'>YKP Finance</h2>
           <p className='text-[10px] text-muted-foreground'>{user.username} · {user.role}</p>
-          <p className='text-[10px] font-medium text-amber-600 mt-0.5'>TESTING</p>
+          <p className='text-[10px] font-medium text-amber-800 mt-0.5'>TESTING</p>
         </div>
         <nav className='flex-1 space-y-2 overflow-y-auto'>
           {NAV_GROUPS.map((g) => (

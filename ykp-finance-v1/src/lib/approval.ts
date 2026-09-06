@@ -71,6 +71,8 @@ export function canApproveAmount(entity: ApprovalEntity, amount: number, role: s
 /**
  * Attempt a transition. Returns ok=false (with error) when:
  *   - transition is not in ALLOWED_TRANSITIONS,
+ *   - the row amount is not positive (zero/negative rows are corrupt or
+ *     legacy data and must never be approved or paid, regardless of role),
  *   - actor's role cannot approve the amount for this entity,
  *   - the target status requires approval authority the actor lacks.
  */
@@ -95,6 +97,14 @@ export function transitionApproval(
     return fail(`transition ${fromStatus}->${toStatus} not allowed`);
   }
   if (toStatus === 'APPROVED' || toStatus === 'PAID') {
+    // Business invariant: create/update routes reject amount <= 0
+    // ('amount must be > 0' in expenses, suppliers, supplier pay routes), so
+    // a zero or negative amount reaching approval signals corrupt/legacy
+    // data. Reject here (defense in depth) — even owner cannot approve it.
+    // REJECTED/CANCELLED stay allowed so bad rows can still be disposed.
+    if (!Number.isFinite(row.amount) || row.amount <= 0) {
+      return fail(`amount must be > 0 (got ${row.amount}) for entity ${row.entity}`);
+    }
     // Segregation of duties: the person who created the row cannot approve
     // or pay it themselves, regardless of role. This closes the self-approve
     // fraud vector on expenses and petty cash.
