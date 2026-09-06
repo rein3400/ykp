@@ -33,10 +33,10 @@ export function StatusBanner({ health, loading }: Props) {
         <OverallIcon overall={state} />
         <span>{label}</span>
         {total > 0 && (
-          <span className="opacity-75">· {up}/{total} online</span>
+          <span>· {up}/{total} online</span>
         )}
       </div>
-      <span className="ml-auto text-xs opacity-70 tabular-nums">
+      <span className="ml-auto text-xs tabular-nums">
         {health ? `Updated ${new Date(health.ts).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : loading ? "Loading…" : "—"}
       </span>
     </div>

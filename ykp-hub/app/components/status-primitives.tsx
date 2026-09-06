@@ -14,7 +14,7 @@ export function pingTone(ms: number): "fast" | "ok" | "slow" {
 }
 export function pingColor(ms: number): string {
   const t = pingTone(ms);
-  return t === "fast" ? "text-emerald-700 dark:text-emerald-400" : t === "ok" ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400";
+  return t === "fast" ? "text-emerald-700 dark:text-emerald-400" : t === "ok" ? "text-amber-700 dark:text-amber-400" : "text-rose-600 dark:text-rose-400";
 }
 export function pingBg(ms: number): string {
   const t = pingTone(ms);
@@ -62,7 +62,7 @@ interface SparklineProps {
   height?: number;
 }
 export function Sparkline({ data, className = "", height = 24 }: SparklineProps) {
-  if (data.length === 0) return <span className="text-xs text-slate-400">—</span>;
+  if (data.length === 0) return <span className="text-xs text-slate-500 dark:text-slate-400">—</span>;
   const max = Math.max(...data, 1);
   const w = 80;
   const points = data.map((v, i) => {

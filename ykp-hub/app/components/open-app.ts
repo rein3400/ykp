@@ -1,20 +1,26 @@
-/**
- * Guaranteed module opener.
- *
- * Uses 2-arg window.open (no feature string): the 3-arg form makes Chrome
- * create a synchronous about:blank tab first and KEEPS it in session
- * history, so the Back button inside the module lands on a blank page.
- * When the popup is blocked (automation browsers, strict blockers),
- * falls back to a same-tab navigation so the click always does something.
- */
+/** Open a module in a protected new tab, or navigate here if the popup cannot be used. */
 export function openAppUrl(url: string): void {
-  let w: Window | null = null;
+  const protocol = new URL(url, window.location.href).protocol;
+  if (protocol !== 'https:' && protocol !== 'http:') {
+    throw new Error('Module URLs must use HTTP or HTTPS');
+  }
+  let popup: Window | null = null;
   try {
-    w = window.open(url, "_blank", "noopener");
+    // A successful open with the noopener feature returns null in Chromium,
+    // falsely triggering the blocked-popup fallback. Retain the handle and
+    // sever its opener synchronously, before the requested document loads.
+    popup = window.open(url, '_blank');
+    if (popup && !popup.closed) {
+      popup.opener = null;
+      if (popup.opener === null) return;
+    }
   } catch {
-    w = null;
+    // A blocked open or unverifiable opener must use the safe fallback below.
   }
-  if (!w || w.closed) {
-    window.location.href = url;
+  try {
+    if (popup && !popup.closed) popup.close();
+  } catch {
+    // Hardened contexts may disallow closing; never perform another popup open.
   }
+  window.location.href = url;
 }

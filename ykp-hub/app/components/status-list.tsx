@@ -48,7 +48,7 @@ export function StatusList({ apps, results, history, onOpen, onRefresh, loading 
                 </span>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{app.name}</div>
-                  <div className="font-mono text-[11px] text-slate-400 dark:text-slate-500 truncate">{app.url.replace("https://", "")}</div>
+                  <div className="font-mono text-[11px] text-slate-500 dark:text-slate-400 truncate">{app.url.replace("https://", "")}</div>
                 </div>
               </div>
               <div className="hidden sm:block">

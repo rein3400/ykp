@@ -109,7 +109,7 @@ export function LoginForm({ onLogin }: Props) {
             </div>
           </form>
 
-          <p className="mt-6 text-center text-[11px] text-slate-500">
+          <p className="mt-6 text-center text-[11px] text-slate-400">
             YKP HERMEZ AI Command Center · v0.1.0
           </p>
         </div>

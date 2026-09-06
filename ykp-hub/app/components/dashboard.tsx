@@ -184,7 +184,7 @@ function Footer({ apps, role }: { apps: AppDef[]; role: string }) {
           </p>
         </div>
       </div>
-      <div className="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
+      <div className="mt-4 text-center text-[11px] text-slate-500 dark:text-slate-400">
         © YKP Developer · Made with care for the pilot launch.
       </div>
     </footer>
