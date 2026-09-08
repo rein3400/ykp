@@ -42,7 +42,8 @@ Fakta deploy terverifikasi: produksi jalan di VPS `187.52.124.40` (bukan Railway
 - [x] 6.1 (G1) Reconcile lokal: `git fetch`, rebase/merge lokal ke atas tip `origin/develop`, commit seluruh artefak moka (6 file untracked + 3 modified + `.github/workflows/moka-daily-sync.yml` + `openspec/changes/moka-live-sync/`) → push
 - [x] 6.2 (G2) Deploy VPS: `cd /home/dev/ykp && git pull origin develop && npm ci && npm run build && sudo systemctl restart ykp-finance-v1`
 - [x] 6.3 (G3) Isi 14 var `MOKA_*` + `MOKA_SYNC_ENABLED=true` di `/home/dev/ykp/ykp-finance-v1/.env` (nilai ada di `.env` lokal mesin dev; tanpa commit)
-- [x] 6.4 (G4) Smoke 1 outlet × 1 hari dari VPS → **endpoint live + secret + guard jalan**; ditahan di guard mapping: outlet Moka (772618/696752/843676) belum ada OL-NNN-nya di master_outlet live — menunggu keputusan pemetaan (lihat 6.3b)
-- [ ] 6.5 (G5) = 5.1 paralel run vs CSV
+- [x] 6.4 (G4) Smoke 1 outlet × 1 hari dari VPS → **BERHASIL 2026-09-09**: 3 outlet × 2026-09-08 (Sekar 1.712.000/18 trx → OL-008, Funkydak 3.628.000/60 → OL-009, Suburbuns 7.962.000/60 → OL-010), idempoten (re-sync = updated, 0 duplikat), audit_log 9x moka_sync
+- [ ] 6.5 (G5) = 5.1 paralel run vs CSV — **sisi API sudah tertarik untuk 2026-09-08** (3 outlet di atas); sisa: owner bandingkan nilai vs CSV manual tanggal yang sama, selisih = blocker cutover
 - [ ] 6.6 (G6) Aktifkan cron — pilih salah satu: (a) commit `.github/workflows/moka-daily-sync.yml` + 2 repo secret (`YKP_FINANCE_URL`, `MOKA_SYNC_SECRET`), atau (b) crontab VPS pola proven: `0 23 * * *` curl localhost:3003 + `x-moka-sync-secret` → pantau 3 hari (= 5.2)
 - [ ] 6.7 (G7) = 5.3 cutover CSV + rotasi secret → 5.4 verifikasi akhir → archive change
+- **Catatan perbaikan 2026-09-09**: bug PG-mode ditemukan saat smoke — upsert map pakai konvensi Sheets `i+2` padahal PG `__rownum` mulai dari 1 → re-sync menabrak PK `pos_id` baris tetangga. Fix: `pgReadTab` ikutkan `__rownum`, kedua map upsert pakai `__rownum` di mode PG (fallback `i+2` untuk Sheets/mock) + test regresi `tests/moka-sync-pg.test.ts`. (0849d06)
