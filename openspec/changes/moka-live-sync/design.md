@@ -64,3 +64,9 @@
 - ~~`725042` outlet?~~ → **business id**. Outlet nyata via `GET /v1/businesses/{business_id}/outlets`: Sekar Pizza Tirtodipuran = outlet **772618** (aktif), "Sekar Pizza Colombo" = 878538 (langganan habis 2025-12).
 - ~~Bentuk respons laporan~~ → **masih tertutup**: v2/v3 mengembalikan 403 *"token isn't granted scope: Laporan Merchant"* — owner harus mengaktifkan scope laporan pada app; parser tetap toleran + fixture ditukar saat scope aktif.
 - App "Funkydak Colombo" & "Suburbuns Colombo" → `invalid_client` (401): kredensial perlu diverifikasi ulang owner di Developer Dashboard.
+
+## Deployment Target (VPS) — fakta terverifikasi 2026-09-09
+
+Produksi jalan di **VPS `187.52.124.40`** (Ubuntu, bukan Railway/Vercel): repo `/home/dev/ykp`, app dikelola **systemd** (`ykp-finance-v1.service` dst), branch `develop`, `YKP_FINANCE_SPREADSHEET_ID` live terisi, `.env` VPS **belum punya var `MOKA_*`**. Port finance-v1 = 3003; pola cron VPS-natif (curl localhost + secret header) sudah proven oleh entry crontab contract-reminders hr-v1 (01:00).
+
+Sejarah tiga garis (risiko hilang kode): origin `main`/`develop`/`stagging`; VPS `develop` = origin/develop + 22 commit **belum di-push** (fix QA produksi); lokal `main` = origin/develop + 1 commit + seluruh kode moka uncommitted. Ramp-up + rekonsiliasi: lihat `tasks.md` bagian 6.
