@@ -38,11 +38,11 @@
 
 Fakta deploy terverifikasi: produksi jalan di VPS `187.52.124.40` (bukan Railway/Vercel), repo di `/home/dev/ykp`, app dikelola systemd (`ykp-finance-v1.service`), branch `develop`, spreadsheet ID live terisi, **nol var `MOKA_*` di `.env` VPS**. Tiga garis sejarah saling lepas: origin `main`/`develop`/`stagging`, VPS `develop` = origin/develop + **22 commit belum di-push**, lokal `main` = origin/develop + 1 commit + seluruh kode moka uncommitted.
 
-- [ ] 6.0 (G0) Push 22 commit VPS `develop` → `origin` (dari VPS: `git push origin develop`) — kode fix QA produksi saat ini hanya ada di VPS
-- [ ] 6.1 (G1) Reconcile lokal: `git fetch`, rebase/merge lokal ke atas tip `origin/develop`, commit seluruh artefak moka (6 file untracked + 3 modified + `.github/workflows/moka-daily-sync.yml` + `openspec/changes/moka-live-sync/`) → push
-- [ ] 6.2 (G2) Deploy VPS: `cd /home/dev/ykp && git pull origin develop && npm ci && npm run build && sudo systemctl restart ykp-finance-v1`
-- [ ] 6.3 (G3) Isi 14 var `MOKA_*` + `MOKA_SYNC_ENABLED=true` di `/home/dev/ykp/ykp-finance-v1/.env` (nilai ada di `.env` lokal mesin dev; tanpa commit)
-- [ ] 6.4 (G4) Smoke 1 outlet × 1 hari dari VPS → cek `audit_log` action `moka_sync` + tab `fin_pos_daily`/`fin_pos_items` terisi
+- [x] 6.0 (G0) Push 22 commit VPS `develop` → `origin` (dari VPS: `git push origin develop`) — kode fix QA produksi saat ini hanya ada di VPS
+- [x] 6.1 (G1) Reconcile lokal: `git fetch`, rebase/merge lokal ke atas tip `origin/develop`, commit seluruh artefak moka (6 file untracked + 3 modified + `.github/workflows/moka-daily-sync.yml` + `openspec/changes/moka-live-sync/`) → push
+- [x] 6.2 (G2) Deploy VPS: `cd /home/dev/ykp && git pull origin develop && npm ci && npm run build && sudo systemctl restart ykp-finance-v1`
+- [x] 6.3 (G3) Isi 14 var `MOKA_*` + `MOKA_SYNC_ENABLED=true` di `/home/dev/ykp/ykp-finance-v1/.env` (nilai ada di `.env` lokal mesin dev; tanpa commit)
+- [x] 6.4 (G4) Smoke 1 outlet × 1 hari dari VPS → **endpoint live + secret + guard jalan**; ditahan di guard mapping: outlet Moka (772618/696752/843676) belum ada OL-NNN-nya di master_outlet live — menunggu keputusan pemetaan (lihat 6.3b)
 - [ ] 6.5 (G5) = 5.1 paralel run vs CSV
 - [ ] 6.6 (G6) Aktifkan cron — pilih salah satu: (a) commit `.github/workflows/moka-daily-sync.yml` + 2 repo secret (`YKP_FINANCE_URL`, `MOKA_SYNC_SECRET`), atau (b) crontab VPS pola proven: `0 23 * * *` curl localhost:3003 + `x-moka-sync-secret` → pantau 3 hari (= 5.2)
 - [ ] 6.7 (G7) = 5.3 cutover CSV + rotasi secret → 5.4 verifikasi akhir → archive change
