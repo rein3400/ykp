@@ -11,13 +11,19 @@ Monorepo for YKP Hermez AI Command Center — three independent tracks plus shar
 | A — ICT trading orchestrator | `orchestrator/` | API `3001`, dashboard `/dashboard` | deprioritized; smoke-clean, infra-only work paused |
 | B-OLD — ykp-erp monorepo | `ykp-erp/` | HR `3002`, Finance `3003`, Hermez `3004` | **parked** 2026-07-07 (14 CRITICAL/HIGH residuals, no fix loop). See `ykp-erp/YKP_ERP_V1_FINAL.md` |
 | B-NEW — HR V1 (Google Sheets) | `ykp-hr-v1/` | `3002` | **active**. Awaiting owner: GCP service account, data pack, then 7-day pilot. Steps in `ykp-hr-v1/PILOT-CHECKLIST.md` |
+| B-NEW — Finance V1 (Google Sheets) | `ykp-finance-v1/` | `3003` | active, mirrors hr-v1 Sheets pattern |
+| B-NEW — Warehouse V1 (Sheets, 37 tabs) | `ykp-warehouse-v1/` | `3005` | active, inventory-engine 40/40 tests |
+| B-NEW — Ops V1 (Sheets + AI) | `ykp-ops-v1/` | `3007` | active |
+| B-NEW — Investor V1 (Sheets) | `ykp-investor-v1/` | `3006` | active |
+| B-NEW — Owner V1 (aggregator, no Sheets) | `ykp-owner-v1/` | `3010` | active, aggregates other V1s |
+| Hub (reverse-proxy) + Hermez bot | `ykp-hub/` (`3000`), `ykp-hermez/` (Telegram) | `3000` | hub rewrites to finance/hr/hermez; hermez is TS-only aggregator |
 | Infra | `mt5-bridge-service/`, NSSM-managed Windows services, Cloudflare Tunnel | — | deployed for orchestrator; B4 + C1-C4 pending for Track A |
 
 Source briefs live at repo root: `HERMES_AI_SRI_ICT_Developer_Brief.txt` (Track A), `YKP_ERP_HR_Developer_Brief_V1.txt` / `YKP_ERP_Finance_Developer_Brief_V1.txt` / `YKP_ERP_Operational_Developer_Brief_V1.txt` (Track B), `YKP_ERP_Roadmap_Phase1_Migration_Brief.pdf` + `YKP_Hermez_Developer_Brief_Migration_V1.docx` (foundational).
 
 `.backup_ykp-demo_2026-07-03/` is a stale Clerk-based Next.js starter snapshot used during recon; do not develop against it.
 
-> **Port collision:** `ykp-erp/apps/hr` and `ykp-hr-v1` both bind `3002`. Run one at a time.
+> **Port collision:** `ykp-erp/apps/hr` and `ykp-hr-v1` both bind `3002`; `ykp-erp/apps/finance` and `ykp-finance-v1` both bind `3003`. Run one at a time.
 
 ---
 
@@ -96,7 +102,7 @@ Native Windows service. Containerized bridge is impossible — MT5 SDK is Window
 | Track | Storage | Why |
 |---|---|---|
 | orchestrator | 1 Postgres `ykp` (Drizzle) + Redis + Qdrant | single-DB, vector sidecar |
-| ykp-erp | **4 Postgres DBs** (`ykp_master` / `ykp_hr` / `ykp_finance` / `ykp_hermez`) on one server, separate by domain | cross-DB FK impossible in PG; app-layer validates master refs (`packages/schema/src/db/clients.ts:8-23`) |
+| ykp-erp | 1 Postgres, **4 schemas** (`master` / `hr` / `finance` / `hermez`) via single `YKP_DATABASE_URL` (refactored from 4 DBs for Supabase free-tier) | cross-schema FK still impossible in PG; app-layer validates master refs (`packages/schema/src/db/clients.ts`) |
 | ykp-hr-v1 | Google Sheets (17 tabs, header row 1) | brief V1 allowed; 60 writes/min quota ok for 5-10 staff × 7-day pilot |
 
 ### Cross-cutting invariants (enforced everywhere)
