@@ -6,6 +6,7 @@
  * Per spec finance/moka-sync: per-outlet isolation, dedup, read-only to Moka.
  */
 import { readTab, appendRows, updateRow, findRow, TABS } from '@/db/sheets';
+import { isPostgresMode } from '@/db/postgres';
 import {
   type MokaOutletConfig,
   type MokaToken,
@@ -427,6 +428,11 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
       const brandId = outlet?.brand_id ?? '';
       const brandName = brands.find((b) => b.brand_id === brandId)?.brand_name ?? outlet?.outlet_name ?? '';
       const t = nowTimestampWib();
+      // PG backend: rowNumber = real __rownum (Sheets-style index+2 breaks:
+      // PG __rownum starts at 1 → off-by-one update hits the neighbour row
+      // and violates the PK on re-sync). Sheets/mock: no __rownum field →
+      // physical row = index+2 (row 1 is the header).
+      const pgMode = isPostgresMode();
 
       if (summary) {
         const row: Record<string, string> = {
@@ -472,12 +478,17 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
         };
         const dailyByKey = new Map<string, number>();
         existingDaily.forEach((row, i) => {
-          if (row.date && row.outlet_id) dailyByKey.set(`${row.date}|${row.outlet_id}`, i + 2);
+          if (row.date && row.outlet_id) {
+            dailyByKey.set(
+              `${row.date}|${row.outlet_id}`,
+              pgMode ? Number(row.__rownum) : i + 2
+            );
+          }
         });
         // preserve original pos_id/created_at on update
         const upsert = upsertRows(existingDaily, dailyByKey, [row], (rw) => `${rw.date}|${rw.outlet_id}`);
         for (const u of upsert.updates) {
-          const prev = existingDaily[u.rowNumber - 2];
+          const prev = existingDaily[pgMode ? existingDaily.findIndex((x) => Number(x.__rownum) === u.rowNumber) : u.rowNumber - 2];
           u.values.pos_id = prev?.pos_id || u.values.pos_id;
           u.values.created_at = prev?.created_at || u.values.created_at;
         }
@@ -508,12 +519,15 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
         const itemsByKey = new Map<string, number>();
         existingItems.forEach((row, i) => {
           if (row.date && row.outlet_id && row.item_name) {
-            itemsByKey.set(`${row.date}|${row.outlet_id}|${row.item_name}`, i + 2);
+            itemsByKey.set(
+              `${row.date}|${row.outlet_id}|${row.item_name}`,
+              pgMode ? Number(row.__rownum) : i + 2
+            );
           }
         });
         const upsert = upsertRows(existingItems, itemsByKey, itemRows, (rw) => `${rw.date}|${rw.outlet_id}|${rw.item_name}`);
         for (const u of upsert.updates) {
-          const prev = existingItems[u.rowNumber - 2];
+          const prev = existingItems[pgMode ? existingItems.findIndex((x) => Number(x.__rownum) === u.rowNumber) : u.rowNumber - 2];
           u.values.pos_item_id = prev?.pos_item_id || u.values.pos_item_id;
           u.values.created_at = prev?.created_at || u.values.created_at;
         }
