@@ -58,9 +58,17 @@ export async function pgReadTab<T = Record<string, string>>(
 ): Promise<T[]> {
   const p = getPgPool();
   const res: QueryResult = await p.query(
-    `SELECT ${headers.map(q).join(', ')} FROM ${q(tab)} ORDER BY __rownum ASC`
+    `SELECT __rownum, ${headers.map(q).join(', ')} FROM ${q(tab)} ORDER BY __rownum ASC`
   );
-  return res.rows.map((r) => toRecord(r, headers) as T);
+  // __rownum is surfaced as a field so callers that derive rowNumbers for
+  // updateRow (Sheets convention: index+2) can use the real PG row id instead.
+  // pgUpdateRow/pgAppendRows iterate TAB_HEADERS only, so the extra key is
+  // never written back. Sheets/mock mode has no such field → fallback holds.
+  return res.rows.map((r) => {
+    const rec = toRecord(r, headers);
+    rec.__rownum = String(r.__rownum);
+    return rec as T;
+  });
 }
 
 /** Append rows. Returns the 1-based starting __rownum of the inserted block. */
