@@ -9,7 +9,10 @@ const PUBLIC = [
   '/api/finance/notify/daily-brief',
   // Internal Telegram-approval endpoint (Fase 4): the route authenticates
   // callers itself via the shared x-bot-secret header — never session-based.
-  '/api/internal/approval'
+  '/api/internal/approval',
+  // Moka API sync (spec moka-live-sync): route authenticates itself — admin
+  // session OR x-moka-sync-secret (platform cron). Gated by MOKA_SYNC_ENABLED.
+  '/api/finance/pos/sync'
 ];
 const PUBLIC_GET_PREFIXES = [
   '/api/finance/summary',

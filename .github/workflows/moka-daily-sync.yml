@@ -1,0 +1,60 @@
+# Moka API → finance Sheets daily sync (moka-live-sync, spec finance/moka-sync).
+# Hits POST /api/finance/pos/sync with x-moka-sync-secret at 16:00 UTC = 23:00 WIB.
+# Optional manual date (YYYY-MM-DD) for backfill via workflow_dispatch.
+name: Moka Daily Sync
+
+on:
+  schedule:
+    # 16:00 UTC = 23:00 WIB (after close-of-cash)
+    - cron: "0 16 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Optional YYYY-MM-DD (defaults to today WIB on server)"
+        required: false
+      outlet:
+        description: "Optional outlet env key (e.g. SEKARPIZZA_TIRTODIPURAN)"
+        required: false
+
+jobs:
+  run-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger Moka → Sheets sync
+        env:
+          FINANCE_URL: ${{ secrets.YKP_FINANCE_URL }}
+          MOKA_SYNC_SECRET: ${{ secrets.MOKA_SYNC_SECRET }}
+          DATE: ${{ github.event.inputs.date }}
+          OUTLET: ${{ github.event.inputs.outlet }}
+        run: |
+          set -euo pipefail
+          URL="${FINANCE_URL:-}"
+          if [ -z "$URL" ]; then
+            echo "YKP_FINANCE_URL secret is not set" >&2
+            exit 1
+          fi
+          if [ -z "${MOKA_SYNC_SECRET:-}" ]; then
+            echo "MOKA_SYNC_SECRET secret is not set" >&2
+            exit 1
+          fi
+          BODY="{}"
+          if [ -n "${DATE:-}" ] && [ -n "${OUTLET:-}" ]; then
+            BODY=$(printf '{"date":"%s","outlet":"%s"}' "$DATE" "$OUTLET")
+          elif [ -n "${DATE:-}" ]; then
+            BODY=$(printf '{"date":"%s"}' "$DATE")
+          elif [ -n "${OUTLET:-}" ]; then
+            BODY=$(printf '{"outlet":"%s"}' "$OUTLET")
+          fi
+          echo "POST $URL/api/finance/pos/sync body=$BODY"
+          RESP=$(curl -sS -w "\n%{http_code}" -X POST "$URL/api/finance/pos/sync" \
+            -H "content-type: application/json" \
+            -H "x-moka-sync-secret: $MOKA_SYNC_SECRET" \
+            -d "$BODY")
+          CODE=$(printf '%s' "$RESP" | tail -n 1)
+          BODYOUT=$(printf '%s' "$RESP" | sed '$d')
+          echo "$BODYOUT" | head -c 2000; echo
+          if [ "$CODE" != "200" ] && [ "$CODE" != "201" ]; then
+            echo "::error::Moka sync returned HTTP $CODE" >&2
+            exit 1
+          fi

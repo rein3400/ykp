@@ -55,7 +55,16 @@ export const POST = handler(async (req: NextRequest) => {
     }
     if (existing.some((e) => e.date === r.date && e.outlet_id === outlet.outlet_id)
       || inserted.some((e) => e.date === r.date && e.outlet_id === outlet.outlet_id)) {
-      skipped.push({ date: r.date, outlet: r.outletName, reason: 'duplikat — baris (date, outlet) sudah ada' });
+      // Single-source guard (moka-live-sync): a date already ingested via the
+      // Moka API must not also receive CSV rows for the same outlet.
+      const apiSynced = existing.some((e) => e.date === r.date && e.outlet_id === outlet.outlet_id && e.source === 'moka' && e.source_ref?.startsWith('moka:'));
+      skipped.push({
+        date: r.date,
+        outlet: r.outletName,
+        reason: apiSynced
+          ? 'ditolak — tanggal ini sudah tersinkron otomatis dari Moka API (satu sumber)'
+          : 'duplikat — baris (date, outlet) sudah ada'
+      });
       continue;
     }
     const brand = brands.find((b) => b.brand_id === outlet.brand_id);
