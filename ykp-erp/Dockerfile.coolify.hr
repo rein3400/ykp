@@ -30,7 +30,7 @@ ENV YKP_MASTER_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HR_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_FINANCE_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HERMEZ_DATABASE_URL=postgresql://placeholder/db
-RUN sed -i 's|isLocal ? false : "require"|(isLocal || process.env.YKP_DB_PLAIN_TCP === "true") ? false : "require"|' packages/schema/src/db/clients.ts
+RUN sed -i 's#isLocal ? false : "require"#(isLocal || process.env.YKP_DB_PLAIN_TCP === "true") ? false : "require"#' packages/schema/src/db/clients.ts
 RUN npx next build
 
 FROM node:22-slim AS runner
