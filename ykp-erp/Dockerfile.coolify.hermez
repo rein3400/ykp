@@ -26,7 +26,7 @@ ENV YKP_HERMEZ_DATABASE_URL=postgresql://placeholder/db
 WORKDIR /repo
 RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true \
  && rm -rf packages/ui/dist packages/engine/dist packages/auth/dist packages/config/dist packages/format/dist
-RUN sed -i 's|isLocal ? false : "require"|(isLocal || process.env.YKP_DB_PLAIN_TCP === "true") ? false : "require"|' packages/schema/src/db/clients.ts
+RUN sed -i 's#isLocal ? false : "require"#(isLocal || process.env.YKP_DB_PLAIN_TCP === "true") ? false : "require"#' packages/schema/src/db/clients.ts
 RUN npm run build --workspace @ykp/config --if-present \
  && npm run build --workspace @ykp/format --if-present \
  && npm run build --workspace @ykp/engine --if-present \
