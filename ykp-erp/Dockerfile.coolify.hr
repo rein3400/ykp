@@ -1,19 +1,20 @@
 # Coolify deploy Dockerfile — hr (plain-TCP internal Postgres support)
 # ponytail: sed-patch because packages/schema clients.ts has no env override for ssl.
 # Upgrade path: add YKP_DB_PLAIN_TCP handling directly in clients.ts, then delete this file.
+# NOTE: build context is the REPO ROOT (Coolify base_directory=/), hence ykp-erp/ prefixes.
 FROM node:22-slim AS deps
 WORKDIR /repo
-COPY package.json package-lock.json* ./
-COPY apps/hr/package.json ./apps/hr/
+COPY ykp-erp/package.json ykp-erp/package-lock.json* ./
+COPY ykp-erp/apps/hr/package.json ./apps/hr/
 RUN npm install --legacy-peer-deps --no-audit
 
 FROM node:22-slim AS builder
 WORKDIR /repo
 COPY --from=deps /repo/node_modules ./node_modules
-COPY packages ./packages
-COPY apps/hr ./apps/hr
+COPY ykp-erp/packages ./packages
+COPY ykp-erp/apps/hr ./apps/hr
 COPY --from=deps /repo/apps/hr/package.json ./apps/hr/package.json
-COPY tsconfig.json package.json package-lock.json* ./
+COPY ykp-erp/tsconfig.json ykp-erp/package.json ykp-erp/package-lock.json* ./
 RUN npm install --legacy-peer-deps --no-audit
 WORKDIR /repo
 RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true \
