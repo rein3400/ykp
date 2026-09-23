@@ -32,7 +32,10 @@ export default async function HrOverview() {
   const session = await getSession();
   if (!session) redirect('/login');
 
-  const [employees, attendance, leaves, rosters, brands, outlets, latestSummary] = await Promise.all([
+  // Degrade gracefully per tab: satu tab DB jebol (mis. master_employee /
+  // master_brand pasca-migrasi PG) tidak boleh merobohkan seluruh halaman.
+  // Tab gagal tampil kosong + banner menyebut namanya (observable).
+  const results = await Promise.allSettled([
     readTab<Employee>(TABS.employees),
     readTab<Attendance>(TABS.attendance),
     readTab<Leave>(TABS.leaves),
@@ -41,6 +44,23 @@ export default async function HrOverview() {
     readTab<Outlet>(TABS.outlets),
     readTab<DailySummary>(TABS.dailySummary)
   ]);
+
+  const failedTabs: string[] = [];
+  const pick = <T,>(r: PromiseSettledResult<T[]>, tab: string): T[] => {
+    if (r.status === 'fulfilled') return r.value;
+    failedTabs.push(tab);
+    // Log the failed tab, not raw database errors that may contain connection details.
+    console.error(`[hr/overview] readTab ${tab} failed, degrading to empty`);
+    return [];
+  };
+  const [rEmp, rAtt, rLea, rRos, rBra, rOut, rSum] = results;
+  const employees = pick<Employee>(rEmp, TABS.employees);
+  const attendance = pick<Attendance>(rAtt, TABS.attendance);
+  const leaves = pick<Leave>(rLea, TABS.leaves);
+  const rosters = pick<Roster>(rRos, TABS.roster);
+  const brands = pick<Brand>(rBra, TABS.brands);
+  const outlets = pick<Outlet>(rOut, TABS.outlets);
+  const latestSummary = pick<DailySummary>(rSum, TABS.dailySummary);
 
   const today = todayWib();
   const recent = latestSummary.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30);
@@ -76,6 +96,11 @@ export default async function HrOverview() {
         <h1 className='text-2xl font-bold'>HR Overview</h1>
         <p className='text-sm text-muted-foreground'>Snapshot harian untuk owner, HR admin, manager.</p>
       </div>
+      {failedTabs.length > 0 && (
+        <div className='rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800'>
+          Sebagian data gagal dimuat ({failedTabs.join(', ')}). Halaman tampil sebagian — cek DB/env VPS lalu muat ulang.
+        </div>
+      )}
 
       <HrOverviewClient
         employees={scopedEmployees}
