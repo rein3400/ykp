@@ -12,7 +12,7 @@
  * one returns a clear `ConcurrentUpdateError` (→ 409) instead of a silent
  * overwrite. The caller then retries or surfaces the conflict.
  */
-import { readTab, updateRow, findRow, TABS, type TabName } from '@/db/sheets';
+import { updateRow, findRow, type TabName } from '@/db/sheets';
 
 export class ConcurrentUpdateError extends Error {
   constructor(message = 'Row was modified by another request (optimistic-concurrency check failed)') {
