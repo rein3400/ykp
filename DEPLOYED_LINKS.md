@@ -1,12 +1,38 @@
 # YKP Hermez — Deployed Production Links
 
-> Last verified: **2026-07-22**  
+> Last verified: **2026-09-23** (Coolify self-hosted VPS deploy)
 > Source of truth for live URLs. Update this file every deploy.  
 > Production code source: branch `origin/stagging` @ `5ad8271` (deep-test fixes 2026-07-22: Hub SSO token baked, Hermez SUPER_ADMIN SSO + ops-summary route, Finance form banner). Prior `1243c84` = security cutover 2026-07-21.
 
 ---
 
-## Primary (owner / day-to-day)
+## Coolify (self-hosted VPS — active)
+
+Dashboard: `http://187.127.124.37:8000` (project **YKP** / environment `production`).
+Deployed from `rein3400/ykp` branch `main` @ `ca6e629`. Apps are published on host ports
+(`ports_mappings`), not via Traefik domains. Hub reaches modules server-side over the
+shared docker network (`YKP_*_INTERNAL_URL`), browsers use the public IP:port URLs.
+
+| # | App | URL | Notes |
+|---|---|---|---|
+| 1 | **Hub** (launcher) | http://187.127.124.37:3000 | login `owner` / `owner123`; health probe 6/6 |
+| 2 | **HR V1** (Sheets) | http://187.127.124.37:3002 | Sheets creds empty → mock |
+| 3 | **Finance V1** (Sheets) | http://187.127.124.37:3003 | Sheets creds empty → mock; Moka creds set, sync OFF |
+| 4 | **Warehouse V1** | http://187.127.124.37:3005 | Sheets creds empty → mock |
+| 5 | **Investor V1** | http://187.127.124.37:3006 | Sheets creds empty → mock |
+| 6 | **Ops V1** | http://187.127.124.37:3007 | Sheets creds empty → mock; AI key empty |
+| 7 | **Owner V1** (aggregator) | http://187.127.124.37:3010 | reads live modules |
+| — | ERP hr / finance / hermez | internal only | no public port (V1 wins 3002/3003) |
+| — | Postgres / Redis | internal only | `ykp-postgres`, `ykp-redis` (healthy) |
+
+**Pending owner action:** fill Sheets service account + spreadsheet IDs (hr, finance,
+warehouse, investor, ops), Telegram bot token/chat id, OpenAI key — no rebuild needed
+for runtime vars; `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` and `YKP_HUB_ORIGIN` are build-time
+(fill then redeploy).
+
+---
+
+## Legacy (Railway / Vercel)
 
 | # | App | Platform | Production URL | Auth notes |
 |---|---|---|---|---|
@@ -26,8 +52,8 @@
 
 | Consumer | Method | URL | Notes |
 |---|---|---|---|
-| Hermez ← HR Pilot | `GET` | https://ykp-hr-v1-standalone-production.up.railway.app/api/hr/summary?date=YYYY-MM-DD | Public allowlist (aggregate only) |
-| Hermez ← HR Pilot (count) | `GET` | https://ykp-hr-v1-standalone-production.up.railway.app/api/hr/summary/count | Used by Hub health |
+| Hermez ← HR V1 | `GET` | http://187.127.124.37:3002/api/hr/summary?date=YYYY-MM-DD | Public allowlist (aggregate only) |
+| Hermez ← HR V1 (count) | `GET` | http://187.127.124.37:3002/api/hr/summary/count | Used by Hub health |
 | Hermez ← Warehouse | `GET` | https://ykp-warehouse-v1.vercel.app/api/warehouse/summary?date=YYYY-MM-DD | Set `WAREHOUSE_SUMMARY_URL` / `NEXT_PUBLIC_WAREHOUSE_URL` on Hermez |
 | Hermez ← Operational | `GET` | https://ykp-ops-v1.vercel.app/api/ops/summary?date=YYYY-MM-DD | Set `OPS_SUMMARY_URL` on Hermez Railway |
 | Hermez proxy warehouse | `GET` | https://ykp-erp-hermez-production.up.railway.app/api/hermez/warehouse-summary | Read-only proxy |

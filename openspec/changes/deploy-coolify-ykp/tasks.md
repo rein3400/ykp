@@ -65,3 +65,38 @@
 - [ ] 9.1 Smoke: `GET /api/hr/summary?date=`, `/api/warehouse/summary`, `/api/ops/summary`, `/api/investor/summary`, hermez proxy — semua 200
 - [ ] 9.2 Perbarui `DEPLOYED_LINKS.md` dengan URL Coolify final + catat kredensial mana yang sudah di-rotate
 - [ ] 9.3 Putar ulang kredensial dashboard Coolify yang sempat lewat channel chat; tutup akses register publik bila memungkinkan
+
+---
+
+## Execution log — 2026-09-23 (Coolify VPS 187.127.124.37)
+
+Project **YKP** / environment `production` (uuid `t5cnqcdicw6t9eilbwgafl4l`), server `localhost`,
+source `rein3400/ykp@main` `ca6e629`, apps published via `ports_mappings` (IP:port), not Traefik.
+
+| Service | Coolify uuid | URL | State |
+|---|---|---|---|
+| hub | `l79lqzirhbingnpuipcygggt` | :3000 | ✅ health 6/6, SSO login OK |
+| owner | `5hwspriiojkoviflj4valbkc` | :3010 | ✅ |
+| hr-v1 | `cqtltk5zbtljgfhbulgooweg` | :3002 | ✅ (mock) |
+| finance-v1 | `d3yzfwoon1q3uedheo8bgx1g` | :3003 | ✅ (mock) |
+| warehouse-v1 | `lxn2necwmx7kzsn7i2l4kycz` | :3005 | ✅ (mock) |
+| investor-v1 | `hja2sf7mlxbhqowdjp0igbcz` | :3006 | ✅ (mock) |
+| ops-v1 | `fchbdokhr7voynzct04agxgb` | :3007 | ✅ (mock) |
+| erp hr/finance/hermez | pre-existing | internal | running (built from an earlier commit) |
+| postgres / redis | pre-existing | internal | healthy |
+| hermez-bot | — | — | ⏸ deferred (task 1.3) |
+
+Code changes pushed for this deploy: `eda9c12` (native `YKP_DB_PLAIN_TCP`), `8f8a5c1` (hub
+`requiredUrl`, rewrites dropped), `c080ecb` (finance/owner Dockerfiles), `e6e4db9` (V1
+build-time `ARG`/`ENV`), `ca6e629` (hub internal server URLs for probe + login proxy).
+
+Still open for the owner:
+1. Fill Sheets creds (`GOOGLE_SERVICE_ACCOUNT_EMAIL/PRIVATE_KEY`, `YKP_*_SPREADSHEET_ID`) for
+   hr-v1 / finance-v1 / warehouse / investor / ops → apps leave mock mode; runtime vars, no rebuild.
+2. Fill `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` (currently empty) and `OPENAI_API_KEY` (ops).
+3. `MOKA_SYNC_ENABLED=false` was forced (local `.env` says `true` but Sheets creds are empty,
+   so sync had nowhere to write). Flip to `true` once Sheets creds are in.
+4. Rotate default `owner/owner123` per app; rotate the Coolify dashboard password (task 9.3).
+5. `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` + `YKP_HUB_ORIGIN` are build-time → redeploy after change.
+6. Optional: redeploy the ERP trio so they match `main` (sed-patch removal + native plain-TCP).
+7. Cron for daily-brief (task 8.1) not registered yet; `CRON_SECRET` already generated per module.
