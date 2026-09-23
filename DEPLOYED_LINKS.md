@@ -15,20 +15,39 @@ shared docker network (`YKP_*_INTERNAL_URL`), browsers use the public IP:port UR
 
 | # | App | URL | Notes |
 |---|---|---|---|
-| 1 | **Hub** (launcher) | http://187.127.124.37:3000 | login `owner` / `owner123`; health probe 6/6 |
-| 2 | **HR V1** (Sheets) | http://187.127.124.37:3002 | Sheets creds empty → mock |
-| 3 | **Finance V1** (Sheets) | http://187.127.124.37:3003 | Sheets creds empty → mock; Moka creds set, sync OFF |
-| 4 | **Warehouse V1** | http://187.127.124.37:3005 | Sheets creds empty → mock |
-| 5 | **Investor V1** | http://187.127.124.37:3006 | Sheets creds empty → mock |
-| 6 | **Ops V1** | http://187.127.124.37:3007 | Sheets creds empty → mock; AI key empty |
+| 1 | **Hub** (launcher) | http://187.127.124.37:3000 | login via HR user store; health probe 6/6 |
+| 2 | **HR V1** (Sheets) | http://187.127.124.37:3002 | LIVE Sheets (20 tabs, users 22, employees 23) |
+| 3 | **Finance V1** (Sheets) | http://187.127.124.37:3003 | LIVE Sheets; Moka OAuth OK, outlet map pending |
+| 4 | **Warehouse V1** | http://187.127.124.37:3005 | LIVE Sheets |
+| 5 | **Investor V1** | http://187.127.124.37:3006 | LIVE Sheets |
+| 6 | **Ops V1** | http://187.127.124.37:3007 | LIVE Sheets; AI key still empty |
 | 7 | **Owner V1** (aggregator) | http://187.127.124.37:3010 | reads live modules |
 | — | ERP hr / finance / hermez | internal only | no public port (V1 wins 3002/3003) |
 | — | Postgres / Redis | internal only | `ykp-postgres`, `ykp-redis` (healthy) |
 
-**Pending owner action:** fill Sheets service account + spreadsheet IDs (hr, finance,
-warehouse, investor, ops), Telegram bot token/chat id, OpenAI key — no rebuild needed
-for runtime vars; `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` and `YKP_HUB_ORIGIN` are build-time
-(fill then redeploy).
+**Scheduled tasks (Coolify, in-container, `CRON_SECRET` / `MOKA_SYNC_SECRET`)**
+
+| App | Task | Cron (UTC) | Purpose | Last test-fire |
+|---|---|---|---|---|
+| hr-v1 | daily-brief | `0 15 * * *` (22:00 WIB) | Telegram HR brief | SENT (sent:1) |
+| hr-v1 | contract-reminders | `0 1 * * *` | contract expiry reminders | registered |
+| finance-v1 | daily-brief | `0 15 * * *` | Telegram finance brief | registered |
+| finance-v1 | moka-pos-sync | `0 16 * * *` | Moka POS → Sheets | runs; outlet map pending |
+| warehouse-v1 | daily-brief | `0 15 * * *` | Telegram warehouse brief | registered |
+| warehouse-v1 | random-audit | `0 1 * * 1` | weekly random stock audit | CREATED (W39) |
+| warehouse-v1 | verify-audit-chain | `30 16 * * *` | nightly hash-chain check | ok (112 legacy skipped) |
+| investor-v1 | daily-brief | `0 15 * * *` | Telegram investor brief | SENT (sent:1) |
+
+**Still needs owner input**
+
+1. `app_settings.moka_outlet_map` rows in the finance spreadsheet — map Moka outlet ids
+   (`772618`, `696752`, `843676`) to internal outlet ids; Moka sync reports
+   `outlet … belum dipetakan` until then.
+2. `OPENAI_API_KEY` for ops (AI triage/insight) — no real key in the repo history.
+3. Rotate `owner/owner123` (shared Sheets user store — affects every deployment that
+   reads this spreadsheet) and the Coolify dashboard password.
+4. Telegram bot `@justatestermaybot` must stay in the target group (chat id comes from
+   the warehouse env; the hr/finance env chat id was stale).
 
 ---
 

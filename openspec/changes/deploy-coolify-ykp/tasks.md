@@ -100,3 +100,44 @@ Still open for the owner:
 5. `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` + `YKP_HUB_ORIGIN` are build-time → redeploy after change.
 6. Optional: redeploy the ERP trio so they match `main` (sed-patch removal + native plain-TCP).
 7. Cron for daily-brief (task 8.1) not registered yet; `CRON_SECRET` already generated per module.
+
+---
+
+## Execution log N2 — 2026-09-23 (credentials + cron + live mode)
+
+Recovered real credentials from git history (`b7a12e6d`, `a1a92416` — the "commit all V1
+.env files" commits) and pushed them into Coolify as runtime env vars, then recreated the
+containers (`POST /applications/{uuid}/restart` → `restart_only` deployment, no rebuild):
+
+- Google service account (email + 1730-char key) + per-module `YKP_*_SPREADSHEET_ID` →
+  all five V1 modules left mock mode and read the real spreadsheets.
+- Telegram `TELEGRAM_BOT_TOKEN` (`@justatestermaybot`) + working `TELEGRAM_CHAT_ID`
+  (the hr/finance env chat id was stale — `chat not found`; the warehouse env one works).
+- `CRON_SECRET` (hr == finance in the historical env) / investor generated fresh;
+  `MOKA_SYNC_SECRET` in the local `.env` was a template comment (`# generate: node -e …`)
+  → replaced with a generated 64-hex value.
+- `ERP_SSO_SECRET` aligned across hub + investor + the three ERP apps.
+- `MOKA_SYNC_ENABLED=true` now that Sheets creds exist.
+
+Cron registered as Coolify scheduled tasks (per-app, in-container `node -e fetch(...)`):
+
+| App | Task | Cron (UTC) | Result |
+|---|---|---|---|
+| hr-v1 | daily-brief | `0 15 * * *` | ✅ SENT (sent 1) |
+| hr-v1 | contract-reminders | `0 1 * * *` | registered |
+| finance-v1 | daily-brief | `0 15 * * *` | registered |
+| finance-v1 | moka-pos-sync | `0 16 * * *` | ✅ 200, needs `moka_outlet_map` |
+| warehouse-v1 | daily-brief | `0 15 * * *` | registered |
+| warehouse-v1 | random-audit | `0 1 * * 1` | ✅ CREATED 2026-W39 |
+| warehouse-v1 | verify-audit-chain | `30 16 * * *` | ✅ ok, 112 legacy rows skipped |
+| investor-v1 | daily-brief | `0 15 * * *` | ✅ SENT (sent 1) |
+
+Code fixes found while wiring this up (both pushed):
+
+- `a786aca` warehouse: `/api/warehouse/cron/*` was not in the middleware PUBLIC list, so a
+  generic 401 blocked the scheduler before `isCronAuthorized` could run.
+- `ca6e629` hub: server-side probe + login proxy now use `YKP_<ID>_INTERNAL_URL`
+  (docker-network hostname) instead of the public IP.
+
+Still open (owner): `moka_outlet_map` rows, real `OPENAI_API_KEY` for ops, credential
+rotation (`owner/owner123` + Coolify dashboard), optional ERP-trio redeploy.
