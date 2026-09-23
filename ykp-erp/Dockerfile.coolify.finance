@@ -1,6 +1,4 @@
-# Coolify deploy Dockerfile — finance (plain-TCP internal Postgres support)
-# ponytail: sed-patch because packages/schema clients.ts has no env override for ssl.
-# Upgrade path: add YKP_DB_PLAIN_TCP handling directly in clients.ts, then delete this file.
+# Coolify deploy Dockerfile — finance (YKP_DB_PLAIN_TCP handled natively in clients.ts)
 # NOTE: build context is the REPO ROOT (Coolify base_directory=/), hence ykp-erp/ prefixes.
 FROM node:22-slim AS deps
 WORKDIR /repo
@@ -24,7 +22,6 @@ ENV YKP_FINANCE_DATABASE_URL=postgresql://placeholder/db
 ENV YKP_HERMEZ_DATABASE_URL=postgresql://placeholder/db
 WORKDIR /repo
 RUN find packages -name 'tsconfig.tsbuildinfo' -delete 2>/dev/null || true
-RUN sed -i 's#isLocal ? false : "require"#(isLocal || process.env.YKP_DB_PLAIN_TCP === "true") ? false : "require"#' packages/schema/src/db/clients.ts
 RUN npm run build --workspace @ykp/config --if-present \
  && npm run build --workspace @ykp/engine --if-present \
  && npm run build --workspace @ykp/auth --if-present \

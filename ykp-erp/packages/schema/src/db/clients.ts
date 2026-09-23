@@ -58,11 +58,13 @@ export function initDbClients(): { db: Db; sql: Sql } {
     const url = requireUrl();
     const isPooler = url.includes(".pooler.supabase.com");
     const isLocal = url.includes("localhost") || url.includes("127.0.0.1");
+    const plainTcp = process.env.YKP_DB_PLAIN_TCP === "true";
     _sql = postgres(url, {
       max: 10,
       prepare: false,
-      // Local Docker Postgres uses plain TCP; require SSL for all non-local hosts.
-      ssl: isPooler ? { rejectUnauthorized: false } : (isLocal ? false : "require"),
+      // Local Docker Postgres and Coolify internal Postgres use plain TCP;
+      // require SSL for all other non-local hosts.
+      ssl: isPooler ? { rejectUnauthorized: false } : (isLocal || plainTcp ? false : "require"),
     });
     _db = drizzle(_sql, { schema: fullSchema as never });
   }
