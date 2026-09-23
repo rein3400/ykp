@@ -184,3 +184,32 @@ written 20/16/31 → **task 8.2 (Moka live sync) is closed**; the Coolify schedu
 no longer required for this.
 
 Address/lat/lng of the three rows are intentionally blank — the owner fills them in the sheet.
+
+---
+
+## Execution log N5 — 2026-09-23 (HTTPS domains + URL switch)
+
+Coolify auto-generates a domain per app (`<uuid>.<ip>.sslip.io`) but the stored `fqdn` used
+an `http://` scheme, so `generateLabelsApplication` emitted **only** an `http-0-…` router —
+no `https-0-…` router with `tls.certresolver`, hence the domains 404'd (and the earlier
+`187-127-124-37` hyphen-form tests were a false negative: Traefik's rule uses the dotted
+host form).
+
+Fix applied via API, no SSH:
+
+1. `PATCH /applications/{uuid}` `domains=https://<host>` + recreate → labels now include
+   `traefik.http.routers.https-0-<uuid>.tls.certresolver=letsencrypt`; Let's Encrypt issued
+   valid certs for all 7 apps (`ssl_verify_result=0`). `POST /servers/{uuid}/proxy/restart`
+   was used once to force Traefik to re-sync the recreated containers.
+2. Switched the app-internal URLs to HTTPS (build-time → rebuilt hub + hr + warehouse +
+   investor; runtime → recreated owner + ops):
+   `NEXT_PUBLIC_YKP_*_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_FINANCE_URL`, `YKP_HUB_ORIGIN`,
+   `HUB_ORIGINS`, owner `YKP_*_URL`. `YKP_*_INTERNAL_URL` stays on the docker network.
+
+Why this mattered beyond cosmetics: hub, finance and investor set session cookies with
+`secure: NODE_ENV === 'production'`, so over plain HTTP a browser would drop the cookie and
+login would silently fail. Verified after the switch: HTTPS login → cookie → protected
+endpoint returns 200 with the cookie and 401 without it.
+
+Post-change regression pass: hub `/api/health` = ok (6/6) and all scheduled tasks fire green
+(hr + investor daily-brief SENT, moka-pos-sync ran for 2026-09-24, warehouse verify-audit-chain ok).

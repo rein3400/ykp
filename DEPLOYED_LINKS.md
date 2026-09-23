@@ -9,21 +9,29 @@
 ## Coolify (self-hosted VPS — active)
 
 Dashboard: `http://187.127.124.37:8000` (project **YKP** / environment `production`).
-Deployed from `rein3400/ykp` branch `main` @ `ca6e629`. Apps are published on host ports
-(`ports_mappings`), not via Traefik domains. Hub reaches modules server-side over the
-shared docker network (`YKP_*_INTERNAL_URL`), browsers use the public IP:port URLs.
+Deployed from `rein3400/ykp` branch `main` @ `a786aca`. **Primary access is HTTPS via
+Coolify's auto-generated `sslip.io` domains** (valid Let's Encrypt certs); every app also
+answers on its host port (`ports_mappings`) for internal/direct use. Hub reaches modules
+server-side over the shared docker network (`YKP_*_INTERNAL_URL`); browsers use the HTTPS
+domains (required for the `Secure` session cookies used by hub/finance/investor).
 
-| # | App | URL | Notes |
+| # | App | URL (open this) | Direct port |
 |---|---|---|---|
-| 1 | **Hub** (launcher) | http://187.127.124.37:3000 | login via HR user store; health probe 6/6 |
-| 2 | **HR V1** (Sheets) | http://187.127.124.37:3002 | LIVE Sheets (20 tabs, users 22, employees 23) |
-| 3 | **Finance V1** (Sheets) | http://187.127.124.37:3003 | LIVE Sheets; Moka OAuth OK, outlet map pending |
-| 4 | **Warehouse V1** | http://187.127.124.37:3005 | LIVE Sheets |
-| 5 | **Investor V1** | http://187.127.124.37:3006 | LIVE Sheets |
-| 6 | **Ops V1** | http://187.127.124.37:3007 | LIVE Sheets; AI key still empty |
-| 7 | **Owner V1** (aggregator) | http://187.127.124.37:3010 | reads live modules |
+| 1 | **Hub** (launcher) | https://l79lqzirhbingnpuipcygggt.187.127.124.37.sslip.io | :3000 |
+| 2 | **Owner V1** | https://5hwspriiojkoviflj4valbkc.187.127.124.37.sslip.io | :3010 |
+| 3 | **HR V1** (Sheets) | https://cqtltk5zbtljgfhbulgooweg.187.127.124.37.sslip.io | :3002 |
+| 4 | **Finance V1** (Sheets) | https://d3yzfwoon1q3uedheo8bgx1g.187.127.124.37.sslip.io | :3003 |
+| 5 | **Warehouse V1** | https://lxn2necwmx7kzsn7i2l4kycz.187.127.124.37.sslip.io | :3005 |
+| 6 | **Investor V1** | https://hja2sf7mlxbhqowdjp0igbcz.187.127.124.37.sslip.io | :3006 |
+| 7 | **Ops V1** | https://fchbdokhr7voynzct04agxgb.187.127.124.37.sslip.io | :3007 |
 | — | ERP hr / finance / hermez | internal only | no public port (V1 wins 3002/3003) |
 | — | Postgres / Redis | internal only | `ykp-postgres`, `ykp-redis` (healthy) |
+
+Login `owner` / (rotated 2026-09-23 — value with the owner). Hub SSO covers all modules.
+
+> The domain router was fixed by setting each app's domain to `https://…`: with an
+> `http://` scheme Coolify only generated an HTTP router (no `tls.certresolver`), which is
+> why the sslip.io hosts previously 404'd and had no certificate.
 
 **Scheduled tasks (Coolify, in-container, `CRON_SECRET` / `MOKA_SYNC_SECRET`)**
 
