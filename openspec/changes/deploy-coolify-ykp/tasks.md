@@ -161,3 +161,26 @@ rotation (`owner/owner123` + Coolify dashboard), optional ERP-trio redeploy.
 - **Ops AI stays off**: the only real LLM key in the repo is Ollama Cloud, but
   `ykp-ops-v1/src/lib/ai.ts` calls Ollama without an Authorization header. Fixing that would
   change app behaviour, i.e. outside this change's non-goal — raise a follow-up change.
+
+---
+
+## Execution log N4 — 2026-09-23 (Moka outlet map closed)
+
+Owner approved creating the missing Moka outlets. Added to the finance workbook
+`master_outlet` (ids re-checked after a first append collided with OL-008..OL-010 which were
+already taken by Laju Kopi / Uncle Masala — rows 13–15 were re-id'd to OL-011..OL-013):
+
+| row | id | brand | name |
+|---|---|---|---|
+| 13 | OL-011 | BR-001 | Funkydak Colombo |
+| 14 | OL-012 | BR-002 | Sekarpizza Tirtodipuran |
+| 15 | OL-013 | BR-003 | Suburbuns Colombo |
+
+`MOKA_OUTLET_MAP` env set on finance (`{"696752":"OL-011","772618":"OL-012","843676":"OL-013"}`)
+→ the sync bootstraps `app_settings.moka_outlet_map` (now persisted in the sheet).
+Test-fire result: all three outlets `ok` — `fin_pos_daily` written 1/1/1, `fin_pos_items`
+written 20/16/31 → **task 8.2 (Moka live sync) is closed**; the Coolify scheduled task
+`moka-pos-sync` (`0 16 * * *`) keeps it running, so the GitHub Actions workflow secrets are
+no longer required for this.
+
+Address/lat/lng of the three rows are intentionally blank — the owner fills them in the sheet.

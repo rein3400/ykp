@@ -40,29 +40,26 @@ shared docker network (`YKP_*_INTERNAL_URL`), browsers use the public IP:port UR
 
 **Still needs owner input**
 
-1. **Moka outlet map** — Moka reports three outlets that do **not** exist in `master_outlet`
-   (finance sheet has only OL-001 Funkydak Cipete, OL-002 Funkydak Kemang, OL-003 Sekarpizza
-   Demangan, OL-004 Sekarpizza Senopati, OL-005 Sekarpizza Kemang):
+1. **Moka outlet map — DONE 2026-09-23.** Three outlet rows were appended to the finance
+   workbook `master_outlet` (address/coords left blank for the owner to complete) and
+   `app_settings.moka_outlet_map` is now seeded:
 
-   | Moka key | Moka outlet id | master_outlet match |
+   | Moka outlet id | → internal | row |
    |---|---|---|
-   | `SEKARPIZZA_TIRTODIPURAN` | 772618 | none (Demangan ≠ Tirtodipuran) |
-   | `FUNKYDAK_COLOMBO` | 696752 | none |
-   | `SUBURBUNS_COLOMBO` | 843676 | none (brand BR-003 exists, no outlet) |
+   | 696752 `FUNKYDAK_COLOMBO` | OL-011 | Funkydak Colombo (BR-001) |
+   | 772618 `SEKARPIZZA_TIRTODIPURAN` | OL-012 | Sekarpizza Tirtodipuran (BR-002) |
+   | 843676 `SUBURBUNS_COLOMBO` | OL-013 | Suburbuns Colombo (BR-003) |
 
-   Fix: add the three outlet rows (or point each to an existing OL id if that is the real
-   business intent), then seed `app_settings.moka_outlet_map` = `{"772618":"OL-xxx",…}`
-   (or set env `MOKA_OUTLET_MAP` on finance and let the next sync seed it). Until then
-   `moka-pos-sync` returns `outlet … belum dipetakan` and writes nothing.
+   Test-fire wrote real POS data for today (`fin_pos_daily` 1/1/1, `fin_pos_items` 20/16/31).
+   Note: `master_outlet` also holds a pre-existing test row
+   `OUT-SMOKE-1783654408467 / Smoke Test Outlet` (from a July smoke run) that the owner may
+   want to delete.
 2. `OPENAI_API_KEY` for ops — the only real key in the repo is an **Ollama Cloud** LLM key
    (`ykp-hermez/.env`), but `ykp-ops-v1/src/lib/ai.ts` calls Ollama without an auth header
    (local-only) and OpenAI with `OPENAI_API_KEY`. AI stays off until a real OpenAI key is
    supplied, or that code path learns to send the Ollama key (behaviour change → new change).
-3. Password rotation: `owner` in the shared Sheets user store was rotated on 2026-09-23
-   (the new value is **not** committed here — ask the owner). Coolify dashboard password
-   still needs rotating from `/profile`.
-4. Telegram bot `@justatestermaybot` must stay in the target group (chat id comes from
-   the warehouse env; the hr/finance env chat id was stale).
+3. Coolify dashboard password still needs rotating from `/profile` (owner does it —
+   the API token stays valid regardless).
 
 ---
 
