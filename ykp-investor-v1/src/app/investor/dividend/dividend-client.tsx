@@ -28,17 +28,17 @@ export default function DividendClient({
       {showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-3'>
-            <select value={form.investor_id} onChange={(e) => setForm({ ...form, investor_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <select aria-label='Investor' value={form.investor_id} onChange={(e) => setForm({ ...form, investor_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Investor</option>
               {investors.map((i) => <option key={i.investor_id} value={i.investor_id}>{i.investor_name}</option>)}
             </select>
-            <input placeholder='Period (YYYY-MM)' value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='Amount' value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <input aria-label='Periode (YYYY-MM)' placeholder='Period (YYYY-MM)' value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
+            <input aria-label='Nominal' placeholder='Amount' value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
+            <select aria-label='Status' value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value='declared'>Declared</option>
               <option value='paid'>Paid</option>
             </select>
-            <input placeholder='Reference' value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
+            <input aria-label='Referensi' placeholder='Reference' value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
           </div>
           {err && <p className='text-xs text-destructive'>{err}</p>}
           <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>
@@ -46,7 +46,7 @@ export default function DividendClient({
       )}
       <div className='overflow-x-auto rounded border border-border'>
         <table className='w-full text-xs'>
-          <thead className='bg-muted text-muted-foreground'>
+          <thead className='bg-muted text-slate-600'>
             <tr>
               <th className='px-2 py-1 text-left'>Period</th><th className='px-2 py-1 text-left'>Investor</th>
               <th className='px-2 py-1 text-right'>Amount</th><th className='px-2 py-1 text-center'>Status</th>

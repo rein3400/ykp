@@ -53,7 +53,6 @@ export const POST = handler(async (req: NextRequest) => {
   // Idempotent replace: delete (invalidate) prior rows for the same key by
   // rewriting status to VOID, then append the fresh submission set.
   const existing = await readTab<Record<string, string>>(TABS.checklistSubmissions);
-  let rowIndex = 2;
   for (const r of existing) {
     if (
       r.date === date &&
@@ -62,9 +61,13 @@ export const POST = handler(async (req: NextRequest) => {
       (r.checklist_type || '').toUpperCase() === checklistType &&
       r.status !== 'VOID'
     ) {
-      await updateRow(TABS.checklistSubmissions, rowIndex, { ...r, status: 'VOID' }).catch(() => null);
+      // Resolve the stable row identity via findRow (Sheets row / pg
+      // __rownum). A dense readTab counter is wrong once Postgres
+      // __rownum has gaps from deletes.
+      if (!r.submission_id) continue;
+      const target = await findRow(TABS.checklistSubmissions, 'submission_id', r.submission_id).catch(() => null);
+      if (target) await updateRow(TABS.checklistSubmissions, target.rowIndex, { ...r, status: 'VOID' }).catch(() => null);
     }
-    rowIndex += 1;
   }
 
   const rows = body.items.map((item) => ({

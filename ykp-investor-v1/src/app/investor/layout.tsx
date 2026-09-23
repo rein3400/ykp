@@ -32,31 +32,32 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
 
   return (
     <div className='flex min-h-screen'>
-      <aside className='w-56 border-r border-border bg-muted/50 p-4 flex flex-col'>
+      <a href='#inv-main' className='sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-slate-900 focus:px-3 focus:py-2 focus:text-sm focus:text-white'>Lewati ke konten utama</a>
+      <aside className='w-56 shrink-0 border-r border-border bg-muted/50 p-4 flex flex-col md:sticky md:top-0 md:h-screen'>
         <div className='mb-4'>
           <h2 className='text-sm font-bold'>YKP Investor</h2>
-          <p className='text-[10px] text-muted-foreground'>{user.username} · {user.role}</p>
+          <p className='text-[10px] text-slate-600'>{user.username} · {user.role}</p>
         </div>
         <nav className='flex-1 space-y-0.5'>
           {NAV.map((n) => (
             <Link key={n.href} href={n.href}
               className={`block rounded px-2 py-1.5 text-xs font-medium ${
-                pathname === n.href ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
+                pathname === n.href ? 'bg-primary text-primary-foreground' : 'text-slate-600 hover:bg-muted'
               }`}>{n.label}</Link>
           ))}
           {user.role === 'owner' && (
             <Link href='/investor/admin'
               className={`block rounded px-2 py-1.5 text-xs font-medium ${
-                pathname === '/investor/admin' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
+                pathname === '/investor/admin' ? 'bg-primary text-primary-foreground' : 'text-slate-600 hover:bg-muted'
               }`}>Admin</Link>
           )}
         </nav>
         <button onClick={logout}
-          className='mt-4 w-full rounded border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted'>
+          className='mt-4 w-full rounded border border-border px-2 py-1.5 text-xs text-slate-600 hover:bg-muted'>
           Logout
         </button>
       </aside>
-      <main className='flex-1 p-6'>{children}</main>
+      <main id='inv-main' className='flex-1 p-6'>{children}</main>
     </div>
   );
 }

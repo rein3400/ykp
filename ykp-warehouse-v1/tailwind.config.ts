@@ -6,7 +6,7 @@ const config: Config = {
     extend: {
       colors: {
         border: 'hsl(214 32% 91%)',
-        muted: { DEFAULT: 'hsl(210 40% 96%)', foreground: 'hsl(215 16% 47%)' },
+        muted: { DEFAULT: 'hsl(210 40% 96%)', foreground: 'hsl(215 16% 43%)' }, // a11y: darkened from 47%→43% — #5c6b7f on #f8fafc = 5.19:1, on #f1f5f9 = 4.96:1 (axe flagged 4.48/4.28)
         card: { DEFAULT: 'hsl(0 0% 100%)', foreground: 'hsl(222 47% 11%)' },
         foreground: 'hsl(222 47% 11%)',
         background: 'hsl(0 0% 100%)',

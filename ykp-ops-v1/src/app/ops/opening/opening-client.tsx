@@ -68,10 +68,10 @@ export function OpeningClient({
   return (
     <div className='space-y-4'>
       <div className='grid gap-3 sm:grid-cols-2'>
-        <select className='rounded border px-3 py-2 text-sm' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
+        <select aria-label='Pilih outlet' className='rounded border px-3 py-2 text-sm' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
           {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
         </select>
-        <select className='rounded border px-3 py-2 text-sm' value={shiftId} onChange={(e) => setShiftId(e.target.value)}>
+        <select aria-label='Pilih shift' className='rounded border px-3 py-2 text-sm' value={shiftId} onChange={(e) => setShiftId(e.target.value)}>
           {shifts.map((s) => <option key={s.shift_id} value={s.shift_id}>{s.shift_name}</option>)}
         </select>
       </div>
@@ -94,7 +94,7 @@ export function OpeningClient({
               <li key={r.opening_id} className='rounded border p-3 text-sm'>
                 <span className='font-medium'>{r.checklist_item}</span>
                 <span className={`ml-2 rounded px-2 py-0.5 text-xs ${r.status === 'DONE' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{r.status}</span>
-                <div className='mt-1 text-xs text-slate-400'>{r.outlet_id} · {r.date} · {r.completed_by}</div>
+                <div className='mt-1 text-xs text-slate-500'>{r.outlet_id} · {r.date} · {r.completed_by}</div>
               </li>
             ))}
           </ul>

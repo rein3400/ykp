@@ -42,7 +42,7 @@ export function RegenerateButton() {
         type='button'
         onClick={regenerate}
         disabled={busy}
-        className='rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-700 disabled:opacity-50'
+        className='rounded-md bg-sky-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-800 disabled:opacity-50'
       >
         {busy ? 'Regenerating…' : 'Regenerate Summary'}
       </button>

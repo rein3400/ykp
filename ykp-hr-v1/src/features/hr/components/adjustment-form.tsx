@@ -97,7 +97,7 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
         <textarea className='input mt-1 w-full' rows={2} value={form.reason} onChange={(e) => set('reason', e.target.value)} />
       </label>
       <label className='text-sm'>
-        URL Bukti {needsBukti ? <span className='text-rose-600'>(wajib untuk Reimburse)</span> : <span className='text-slate-400'>(opsional)</span>}
+        URL Bukti {needsBukti ? <span className='text-rose-600'>(wajib untuk Reimburse)</span> : <span className='text-slate-500'>(opsional)</span>}
         <input
           type='url'
           className='input mt-1 w-full'

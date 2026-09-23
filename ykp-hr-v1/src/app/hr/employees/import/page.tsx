@@ -1,4 +1,10 @@
+import type { Metadata } from 'next';
 import { ImportEmployees } from '@/features/hr/components/import-employees';
+
+export const metadata: Metadata = {
+  title: 'Import Karyawan — YKP HR V1',
+  description: 'Import massal karyawan YKP HR V1 dari file CSV.',
+};
 
 export default function ImportEmployeesPage() {
   return (

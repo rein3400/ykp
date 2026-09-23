@@ -81,13 +81,13 @@ export function IncidentsClient({
         <h2 className='font-semibold'>Lapor Incident</h2>
         {error && <div className='text-sm text-red-600'>{error}</div>}
         <div className='grid gap-3 sm:grid-cols-2'>
-          <select className='rounded border px-3 py-2 text-sm' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
+          <select aria-label='Pilih outlet' className='rounded border px-3 py-2 text-sm' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
             {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
           </select>
-          <select className='rounded border px-3 py-2 text-sm' value={severity} onChange={(e) => setSeverity(e.target.value)}>
+          <select aria-label='Pilih severity' className='rounded border px-3 py-2 text-sm' value={severity} onChange={(e) => setSeverity(e.target.value)}>
             {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select className='rounded border px-3 py-2 text-sm' value={type} onChange={(e) => setType(e.target.value)}>
+          <select aria-label='Pilih tipe insiden' className='rounded border px-3 py-2 text-sm' value={type} onChange={(e) => setType(e.target.value)}>
             {['OPERATIONAL', 'COMPLAINT', 'SAFETY', 'EQUIPMENT', 'OTHER'].map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
           <input
@@ -259,7 +259,7 @@ function IncidentCard({ row }: { row: Record<string, string> }) {
       </div>
 
       <div className='grid gap-2 sm:grid-cols-3'>
-        <select className='rounded border px-2 py-1.5 text-xs' value={status} onChange={(e) => setStatus(e.target.value)}>
+        <select aria-label='Status insiden' className='rounded border px-2 py-1.5 text-xs' value={status} onChange={(e) => setStatus(e.target.value)}>
           {['OPEN', 'INVESTIGATING', 'ACTION_REQUIRED', 'WAITING_APPROVAL', 'RESOLVED', 'CLOSED'].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <input

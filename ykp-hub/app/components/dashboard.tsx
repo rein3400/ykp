@@ -17,6 +17,7 @@ interface Props {
   history: Record<string, number[]>;
   loading: boolean;
   onPreview: (id: AppDef["id"]) => void;
+  onOpen: (id: AppDef["id"]) => void;
   onOpenPalette: () => void;
   onRefresh: () => void;
   onLogout: () => void;
@@ -35,7 +36,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export function Dashboard(props: Props) {
-  const { session, health, history, loading, onPreview, onOpenPalette, onRefresh, onLogout } = props;
+  const { session, health, history, loading, onPreview, onOpen, onOpenPalette, onRefresh, onLogout } = props;
 
   // greeting
   const greeting = useMemo(() => {
@@ -126,6 +127,7 @@ export function Dashboard(props: Props) {
                 result={r}
                 role={session.role}
                 onPreview={onPreview}
+                onOpen={onOpen}
                 lastAccessedAt={lastAccess[app.id] ?? null}
               />
             );
@@ -182,7 +184,7 @@ function Footer({ apps, role }: { apps: AppDef[]; role: string }) {
           </p>
         </div>
       </div>
-      <div className="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
+      <div className="mt-4 text-center text-[11px] text-slate-500 dark:text-slate-400">
         © YKP Developer · Made with care for the pilot launch.
       </div>
     </footer>

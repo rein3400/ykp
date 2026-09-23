@@ -9,6 +9,13 @@ import { list, handler } from '@/lib/http';
 
 const MAX_LIMIT = 500;
 
+/**
+ * before_value/after_value bisa memuat gaji & rekening — endpoint ini PUBLIK
+ * (dibaca Hermez), jadi dua field itu selalu di-strip. Hanya metadata
+ * (actor, action, entity, timestamp, reason) yang keluar.
+ */
+const REDACTED_FIELDS = ['before_value', 'after_value'] as const;
+
 export const GET = handler(async (req) => {
   const q = new URL(req.url).searchParams;
   const entity = (q.get('entity') ?? '').toLowerCase();
@@ -24,5 +31,10 @@ export const GET = handler(async (req) => {
   if (from) rows = rows.filter((r) => (r.timestamp ?? '').slice(0, 10) >= from);
   if (to) rows = rows.filter((r) => (r.timestamp ?? '').slice(0, 10) <= to);
   rows.sort((a, b) => (b.timestamp ?? '').localeCompare(a.timestamp ?? ''));
-  return list(rows.slice(0, limit));
+  const safe = rows.slice(0, limit).map((r) => {
+    const copy: Record<string, string> = { ...r };
+    for (const f of REDACTED_FIELDS) delete copy[f];
+    return copy;
+  });
+  return list(safe);
 });

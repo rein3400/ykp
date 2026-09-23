@@ -137,7 +137,7 @@ export default function ShiftsClient({
             </button>
             <button onClick={reset} className='rounded border px-3 py-1 text-xs'>Batal</button>
           </div>
-          <p className='text-[10px] text-slate-400'>Format 24 jam. Shift lintas tengah malam (mis. 20:00–04:00) belum didukung.</p>
+          <p className='text-[10px] text-slate-500'>Format 24 jam. Shift lintas tengah malam (mis. 20:00–04:00) belum didukung.</p>
         </div>
       )}
 
@@ -181,12 +181,12 @@ export default function ShiftsClient({
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={7} className='px-2 py-3 text-center text-slate-400'>Belum ada shift.</td></tr>
+              <tr><td colSpan={7} className='px-2 py-3 text-center text-slate-500'>Belum ada shift.</td></tr>
             )}
           </tbody>
         </table>
       </div>
-      <p className='text-[10px] text-slate-400'>
+      <p className='text-[10px] text-slate-500'>
         Tips: gunakan nama yang membedakan jenisnya — contoh: <b>Reguler Shift 1</b> (Senin–Jumat), <b>Weekend Kasir Shift 1</b>, <b>Weekend Kitchen Shift 0</b>.
       </p>
     </div>

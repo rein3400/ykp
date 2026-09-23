@@ -14,18 +14,40 @@ export interface ContractTimeline {
   totalDaysToPermanent: number;
 }
 
+/**
+ * Parse a date-only "YYYY-MM-DD" string into a Date at UTC midnight.
+ *
+ * Date-only arithmetic must be timezone-independent: the previous
+ * implementation built `new Date(s + 'T00:00:00+07:00')` (WIB midnight)
+ * but all consumers read it back with UTC getters / toISOString(),
+ * shifting every date back by one day (e.g. join 2024-01-10 produced
+ * probation end 2024-03-09 instead of 2024-03-10, and the +1-day
+ * contract-start step was swallowed entirely).
+ *
+ * Strict validation: rejects malformed strings AND calendar overflow
+ * (e.g. 2024-02-30, which the Date constructor silently rolls over).
+ */
 function parseDate(s: string): Date | null {
   if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
-  const d = new Date(s + 'T00:00:00+07:00');
-  return isNaN(d.getTime()) ? null : d;
+  const y = Number(s.slice(0, 4));
+  const m = Number(s.slice(5, 7));
+  const day = Number(s.slice(8, 10));
+  if (m < 1 || m > 12 || day < 1 || day > 31) return null;
+  const d = new Date(Date.UTC(y, m - 1, day));
+  if (d.getUTCFullYear() !== y || d.getUTCMonth() !== m - 1 || d.getUTCDate() !== day) return null;
+  return d;
 }
 
 function diffDays(a: Date, b: Date): number {
   return Math.ceil((b.getTime() - a.getTime()) / 86400000);
 }
 
+/** Format a UTC-midnight date back to "YYYY-MM-DD" (no timezone shift possible). */
 function formatDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function addMonths(dateStr: string, months: number): string {
@@ -48,6 +70,16 @@ function addDays(dateStr: string, days: number): string {
   return formatDate(d);
 }
 
+/** WIB calendar date "YYYY-MM-DD" for an instant, host-TZ independent. */
+function wibDateString(d: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d);
+}
+
 export function computeTimeline(
   joinDate: string,
   employmentStatus: string,
@@ -56,10 +88,23 @@ export function computeTimeline(
 ): ContractTimeline | null {
   const join = parseDate(joinDate);
   if (!join) return null;
+  // Explicit invalid overrides must fail loudly (return null) instead of
+  // silently driving probation/contract math with rolled-over dates.
+  // Empty string / undefined means "absent" and falls back to policy below
+  // (keeps getReminderCandidates working when columns are blank).
+  if (overrides) {
+    for (const v of [overrides.probationEndDate, overrides.contractStartDate, overrides.contractEndDate]) {
+      if (v !== undefined && v !== '' && !parseDate(v)) return null;
+    }
+  }
+  // Old code round-tripped through `new Date(today.toLocaleString(...))`,
+  // which parses WIB wall time as *host-local* time — host-TZ dependent.
+  // Intl with explicit Asia/Jakarta is deterministic on any host.
   const today = todayStr ? parseDate(todayStr) ?? new Date() : new Date();
-  const todayWib = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-  const todayDate = parseDate(formatDate(todayWib)) ?? todayWib;
+  const todayDate = parseDate(wibDateString(today)) ?? today;
 
+  // Policy (UNCHANGED): 2-month probation, contract starts day after
+  // probation ends, 12-month contract, permanent eligible day after end.
   const probationEnd = overrides?.probationEndDate || addMonths(joinDate, 2);
   const contractStart = overrides?.contractStartDate || (probationEnd ? addDays(probationEnd, 1) : '');
   const contractEnd = overrides?.contractEndDate || (contractStart ? addMonths(contractStart, 12) : '');

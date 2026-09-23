@@ -36,7 +36,7 @@ const PRESENTATION: Record<AppId, { tone: AppDef["tone"]; icon: IconComponent }>
   hr: {
     tone: {
       gradient: "from-emerald-500 to-emerald-700",
-      text: "text-emerald-600 dark:text-emerald-400",
+      text: "text-emerald-700 dark:text-emerald-400",
       ring: "ring-emerald-200 dark:ring-emerald-800",
       soft: "bg-emerald-50 dark:bg-emerald-900/30"
     },
@@ -53,8 +53,8 @@ const PRESENTATION: Record<AppId, { tone: AppDef["tone"]; icon: IconComponent }>
   },
   warehouse: {
     tone: {
-      gradient: "from-amber-500 to-amber-700",
-      text: "text-amber-600 dark:text-amber-400",
+      gradient: "from-amber-600 to-amber-800",
+      text: "text-amber-700 dark:text-amber-400",
       ring: "ring-amber-200 dark:ring-amber-800",
       soft: "bg-amber-50 dark:bg-amber-900/30"
     },
@@ -71,8 +71,8 @@ const PRESENTATION: Record<AppId, { tone: AppDef["tone"]; icon: IconComponent }>
   },
   ops: {
     tone: {
-      gradient: "from-orange-500 to-orange-700",
-      text: "text-orange-600 dark:text-orange-400",
+      gradient: "from-orange-600 to-orange-800",
+      text: "text-orange-700 dark:text-orange-400",
       ring: "ring-orange-200 dark:ring-orange-800",
       soft: "bg-orange-50 dark:bg-orange-900/30"
     },

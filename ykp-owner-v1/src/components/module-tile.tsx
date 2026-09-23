@@ -43,7 +43,7 @@ export function ModuleTile({ mod, kpis, href }: {
         </span>
         <div className='flex gap-2 text-[11px]'>
           <Link href={href} className='font-medium text-primary underline-offset-2 hover:underline'>
-            Detail
+            {mod.label}
           </Link>
           <a
             href={mod.deepLink}

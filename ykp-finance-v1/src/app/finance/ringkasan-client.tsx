@@ -108,8 +108,9 @@ export default function RingkasanClient(props: {
         extra={
           <>
             <div className='w-32'>
-              <label className='mb-1 block text-[10px] font-medium text-muted-foreground'>Bulan</label>
+              <label htmlFor='fin-bulan' className='mb-1 block text-[10px] font-medium text-muted-foreground'>Bulan</label>
               <input
+                id='fin-bulan'
                 type='month'
                 value={monthOf(f.from)}
                 onChange={(e) => {
@@ -123,8 +124,9 @@ export default function RingkasanClient(props: {
               />
             </div>
             <div className='w-40'>
-              <label className='mb-1 block text-[10px] font-medium text-muted-foreground'>Payment Method</label>
+              <label htmlFor='fin-pm' className='mb-1 block text-[10px] font-medium text-muted-foreground'>Payment Method</label>
               <select
+                id='fin-pm'
                 value={pmFilter}
                 onChange={(e) => setPmFilter(e.target.value)}
                 className='w-full rounded border border-border px-2 py-1.5 text-xs bg-background'

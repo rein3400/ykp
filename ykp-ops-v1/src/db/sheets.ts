@@ -229,6 +229,9 @@ export async function updateRow(
   row: Record<string, string>
 ): Promise<void> {
   if (isMockMode()) return mockUpdateRow(tab, rowIndex, row);
+  // In Postgres mode rowIndex IS the stable __rownum (see findRow below):
+  // __rownum survives deletes/gaps, unlike a dense position. Pass through.
+  if (isPostgresMode()) { await pgUpdateRow(tab, TAB_HEADERS[tab], rowIndex, row); return; }
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const values = [headers.map((h) => row[h] ?? '')];
@@ -247,6 +250,14 @@ export async function findRow(
   keyVal: string
 ): Promise<{ row: Record<string, string>; rowIndex: number } | null> {
   if (isMockMode()) return mockFindRow(tab, keyCol, keyVal);
+  if (isPostgresMode()) {
+    // Stable identity: pgFindRow returns the gap-tolerant __rownum, which
+    // is what updateRow passes to pgUpdateRow. Never derive it from a
+    // dense position here — readTab order has no stable row numbers.
+    const found = await pgFindRow(tab, TAB_HEADERS[tab], keyCol, keyVal);
+    if (!found) return null;
+    return { row: found.row, rowIndex: found.rowNumber };
+  }
   const rows = await readTab(tab);
   const idx = rows.findIndex((r) => r[keyCol] === keyVal);
   if (idx < 0) return null;

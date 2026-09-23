@@ -46,14 +46,15 @@ export function LoginForm({ onLogin }: Props) {
           <form onSubmit={submit} className="rounded-3xl bg-white/95 backdrop-blur p-7 shadow-2xl shadow-black/40 ring-1 ring-white/20 text-slate-800">
             <div className="mb-5">
               <h2 className="text-lg font-bold">Selamat datang kembali</h2>
-              <p className="text-xs text-slate-500 mt-1">Masuk untuk mengakses 6 module.</p>
+              <p className="text-xs text-slate-600 mt-1">Masuk untuk mengakses 6 module.</p>
             </div>
 
-            <label className="block text-sm">
+            <label htmlFor="hub-username" className="block text-sm">
               <span className="text-slate-700">Username</span>
               <div className="mt-1.5 relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
+                  id="hub-username"
                   className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2.5 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -63,11 +64,12 @@ export function LoginForm({ onLogin }: Props) {
               </div>
             </label>
 
-            <label className="block text-sm mt-4">
+            <label htmlFor="hub-password" className="block text-sm mt-4">
               <span className="text-slate-700">Password</span>
               <div className="mt-1.5 relative">
                 <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
+                  id="hub-password"
                   type="password"
                   className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2.5 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"
                   value={password}
@@ -86,7 +88,7 @@ export function LoginForm({ onLogin }: Props) {
 
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || !username.trim() || !password}
               className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-600/30 hover:shadow-lg hover:-translate-y-0.5 transition focus-ring disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               {busy ? (
@@ -99,15 +101,15 @@ export function LoginForm({ onLogin }: Props) {
               )}
             </button>
 
-            <div className="mt-5 rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-500 leading-relaxed">
-              <strong className="text-slate-700">Default kredensial:</strong>{" "}
-              <code className="rounded bg-slate-200 px-1 py-0.5 font-mono">owner</code> /{" "}
-              <code className="rounded bg-slate-200 px-1 py-0.5 font-mono">owner123</code>{" "}
+            <div className="mt-5 rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-600 leading-relaxed">
+              <strong className="text-slate-800">Default kredensial:</strong>{" "}
+              <code className="rounded bg-slate-200 px-1 py-0.5 font-mono text-slate-700">owner</code> /{" "}
+              <code className="rounded bg-slate-200 px-1 py-0.5 font-mono text-slate-700">owner123</code>{" "}
               — ganti sebelum produksi.
             </div>
           </form>
 
-          <p className="mt-6 text-center text-[11px] text-slate-500">
+          <p className="mt-6 text-center text-[11px] text-slate-400">
             YKP HERMEZ AI Command Center · v0.1.0
           </p>
         </div>

@@ -5,40 +5,44 @@ import { LoginForm } from "./components/login-form";
 import { Dashboard } from "./components/dashboard";
 import { ModuleView } from "./components/module-view";
 import { CommandPalette } from "./components/command-palette";
+import { openAppUrl } from "./components/open-app";
 import { useHealth } from "./hooks/use-health";
 import { useShortcuts } from "./hooks/use-shortcuts";
 
-const HUB_SESSION_KEY = "ykp_hub_session";
 const HUB_LAST_ACCESS_KEY = "ykp_hub_last_access";
 
 interface HubSession {
   username: string;
   role: string;
-  ts: string;
+  userId: string;
 }
 
 export default function HubDashboard() {
   const [session, setSession] = useState<HubSession | null>(null);
+  const [ready, setReady] = useState(false);
   const [activeModule, setActiveModule] = useState<AppId | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   const { health, history, loading, refresh } = useHealth(30_000);
 
-  // Restore session
+  // Restore session from the httpOnly cookie (never localStorage — XSS
+  // could steal a script-readable session credential).
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const raw = localStorage.getItem(HUB_SESSION_KEY);
-      if (!raw) return;
-      const s = JSON.parse(raw) as HubSession;
-      if (Date.now() - new Date(s.ts).getTime() < 24 * 3600 * 1000) {
-        setSession(s);
-      } else {
-        localStorage.removeItem(HUB_SESSION_KEY);
-      }
-    } catch {
-      localStorage.removeItem(HUB_SESSION_KEY);
-    }
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        const d = j?.data;
+        if (d?.username) {
+          setSession({
+            username: String(d.username),
+            role: String(d.role ?? "VIEWER"),
+            userId: String(d.userId ?? d.username)
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setReady(true));
   }, []);
 
   // Persist last-accessed timestamp per module
@@ -55,9 +59,7 @@ export default function HubDashboard() {
     // (auto-login) instead of an embedded iframe. The cookie is set in a
     // top-level navigation, which browsers always allow.
     const app = APPS.find((a) => a.id === id);
-    if (app) {
-      window.open(ssoUrl(app, session?.role ?? "OWNER"), "_blank", "noopener,noreferrer");
-    }
+    if (app) openAppUrl(ssoUrl(app, session?.role ?? "OWNER"));
   }, [session]);
 
   const closeModule = useCallback(() => setActiveModule(null), []);
@@ -92,9 +94,7 @@ export default function HubDashboard() {
     // (auto-login) instead of an embedded iframe. The cookie is set in a
     // top-level navigation, which browsers always allow.
     const app = APPS.find((a) => a.id === id);
-    if (app) {
-      window.open(ssoUrl(app, session?.role ?? "OWNER"), "_blank", "noopener,noreferrer");
-    }
+    if (app) openAppUrl(ssoUrl(app, session?.role ?? "OWNER"));
   }, [session]);
 
   async function login(username: string, password: string): Promise<void> {
@@ -107,20 +107,31 @@ export default function HubDashboard() {
     if (!r.ok) {
       throw new Error(j?.error?.message ?? `Login gagal (HTTP ${r.status})`);
     }
-    const role = (j?.data?.role ?? "VIEWER").toString().toUpperCase();
-    const s: HubSession = { username, role, ts: new Date().toISOString() };
-    localStorage.setItem(HUB_SESSION_KEY, JSON.stringify(s));
-    setSession(s);
+    // Session lives in the httpOnly cookie set by the API — keep only
+    // display fields in memory, nothing credential-like in localStorage.
+    const d = j?.data ?? {};
+    setSession({
+      username,
+      role: (d.role ?? "VIEWER").toString().toUpperCase(),
+      userId: (d.userId ?? username).toString()
+    });
   }
 
   const logout = useCallback(() => {
-    localStorage.removeItem(HUB_SESSION_KEY);
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     setSession(null);
     setActiveModule(null);
   }, []);
 
   // Render
-  if (!session) return <LoginForm onLogin={login} />;
+  if (!ready) return null;
+  if (!session) {
+    return (
+      <main>
+        <LoginForm onLogin={login} />
+      </main>
+    );
+  }
 
   if (activeModule) {
     const app = APPS.find((a) => a.id === activeModule)!;
@@ -137,6 +148,7 @@ export default function HubDashboard() {
         loading={loading}
         apps={APPS}
         onPreview={previewModule}
+        onOpen={openModule}
         onOpenPalette={() => setPaletteOpen(true)}
         onRefresh={refresh}
         onLogout={logout}

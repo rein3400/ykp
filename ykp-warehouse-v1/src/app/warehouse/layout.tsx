@@ -74,11 +74,12 @@ export default function WarehouseLayout({ children }: { children: React.ReactNod
 
   return (
     <div className='flex min-h-screen'>
-      <aside className='w-56 border-r border-border bg-muted/50 p-3 flex flex-col'>
+      <a href='#wh-main' className='sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-slate-900 focus:px-3 focus:py-2 focus:text-sm focus:text-white'>Lewati ke konten utama</a>
+      <aside className='w-56 shrink-0 border-r border-border bg-muted/50 p-3 flex flex-col md:sticky md:top-0 md:h-screen'>
         <div className='mb-3'>
           <h2 className='text-sm font-bold'>YKP Warehouse</h2>
           <p className='text-[10px] text-muted-foreground'>{user.username} · {user.role}</p>
-          <p className='text-[10px] font-medium text-amber-600 mt-0.5'>TESTING</p>
+          <p className='text-[10px] font-medium text-amber-800 mt-0.5'>TESTING</p>
         </div>
         <nav className='flex-1 space-y-2 overflow-y-auto'>
           {NAV_GROUPS.map((g) => (
@@ -109,7 +110,7 @@ export default function WarehouseLayout({ children }: { children: React.ReactNod
           Logout
         </button>
       </aside>
-      <main className='flex-1 p-6'>{children}</main>
+      <main id='wh-main' className='flex-1 p-6'>{children}</main>
     </div>
   );
 }

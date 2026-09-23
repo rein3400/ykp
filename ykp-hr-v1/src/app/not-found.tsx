@@ -13,7 +13,7 @@ export default function NotFound() {
         <p className='mt-1 text-sm text-slate-600'>Halaman tidak ditemukan.</p>
         <Link
           href='/hr'
-          className='mt-4 inline-block rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700'
+          className='mt-4 inline-block rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800'
         >
           Kembali ke Ringkasan
         </Link>

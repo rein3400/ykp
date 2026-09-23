@@ -11,7 +11,8 @@
     "sheets:smoke": "tsx scripts/sheets-smoke.ts",
     "sheets:seed-user": "tsx scripts/seed-user.ts",
     "sheets:seed-trial": "tsx scripts/seed-trial-users.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prestart": "node scripts/verify-start.cjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",

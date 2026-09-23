@@ -78,7 +78,7 @@ export function WasteClient({
                 <span className='font-medium'>{r.ingredient_name}</span>
                 <span className='ml-2 text-xs text-slate-500'>{r.waste_type}</span>
                 <span className='ml-2 text-xs'>{formatIdr(r.estimated_total_value)}</span>
-                <div className='mt-1 text-xs text-slate-400'>{r.date} · {r.outlet_id}</div>
+                <div className='mt-1 text-xs text-slate-500'>{r.date} · {r.outlet_id}</div>
               </li>
             ))}
           </ul>

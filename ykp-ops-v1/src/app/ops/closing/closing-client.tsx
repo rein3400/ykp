@@ -44,7 +44,7 @@ export function ClosingClient({
         <h2 className='font-semibold'>Input Closing</h2>
         {error && <div className='text-sm text-red-600'>{error}</div>}
         <div className='grid gap-3 sm:grid-cols-2'>
-          <select className='rounded border px-3 py-2 text-sm' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
+          <select aria-label='Pilih outlet' className='rounded border px-3 py-2 text-sm' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
             {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
           </select>
           <div className='text-sm text-slate-600 self-center'>Δ kas: <b>{formatIdr(diff)}</b></div>
@@ -66,7 +66,7 @@ export function ClosingClient({
                 <span className='font-medium'>{r.outlet_id}</span>
                 <span className='ml-2 text-xs'>{formatIdr(r.cash_difference)}</span>
                 <span className='ml-2 text-xs text-slate-500'>{r.status}</span>
-                <div className='mt-1 text-xs text-slate-400'>{r.date} · closed by {r.closed_by}</div>
+                <div className='mt-1 text-xs text-slate-500'>{r.date} · closed by {r.closed_by}</div>
               </li>
             ))}
           </ul>

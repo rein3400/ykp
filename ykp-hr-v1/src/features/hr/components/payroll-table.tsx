@@ -20,6 +20,9 @@ interface Payroll {
   unlock_approved_by?: string;
   approved_by?: string;
   payment_reference?: string;
+  needs_revision_reason?: string;
+  needs_revision_by?: string;
+  needs_revision_at?: string;
 }
 
 export function PayrollTable({
@@ -197,11 +200,16 @@ export function PayrollTable({
             return (
               <React.Fragment key={row.payroll_id}>
                 <tr className={`hover:bg-slate-50${isLocked ? " bg-amber-50/50" : ""}`}>
-                  <td className="px-3 py-2 text-sm">{row.employee_name} <span className="text-slate-400 text-xs">({row.employee_id})</span></td>
+                  <td className="px-3 py-2 text-sm">{row.employee_name} <span className="text-slate-500 text-xs">({row.employee_id})</span></td>
                   <td className="px-3 py-2 text-sm">{row.basic_salary}</td>
                   <td className="px-3 py-2 text-sm font-semibold">{row.net_salary}</td>
                   <td className="px-3 py-2 text-sm">
                     <StatusBadge status={row.approval_status} />
+                    {row.approval_status === "NEEDS_REVISION" && row.needs_revision_reason && (
+                      <div className="mt-1 max-w-56 text-xs text-orange-700" title={row.needs_revision_by ? `Diminta oleh ${row.needs_revision_by}${row.needs_revision_at ? ` • ${row.needs_revision_at}` : ""}` : undefined}>
+                        Revisi: {row.needs_revision_reason}
+                      </div>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-sm">
                     <StatusBadge status={row.payment_status} />
@@ -222,7 +230,7 @@ export function PayrollTable({
                         unlocked
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-400">—</span>
+                      <span className="text-xs text-slate-500">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right">
@@ -258,7 +266,7 @@ export function PayrollTable({
                         </button>
                       )}
                       {isLocked && !canUnlock && (
-                        <span className="text-xs text-slate-400" title="Hanya owner/super_admin yang dapat unlock">locked</span>
+                        <span className="text-xs text-slate-500" title="Hanya owner/super_admin yang dapat unlock">locked</span>
                       )}
                     </div>
                   </td>

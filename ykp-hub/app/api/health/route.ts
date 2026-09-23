@@ -7,7 +7,7 @@
 import { NextResponse } from "next/server";
 import { HUB_MODULES, moduleBaseUrl, moduleProbeUrl } from "../../config";
 
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 3000;
 
 interface ProbeResult {
   status: number | null;

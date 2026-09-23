@@ -5,6 +5,9 @@ const PUBLIC = [
   '/api/auth/login',
   '/api/auth/logout',
   '/api/hr/notify/daily-brief',
+  // Scheduler cron harian (contract-reminders): route validasi CRON_SECRET
+  // sendiri, tanpa session cookie.
+  '/api/hr/notify/contract-reminders',
   // Telegram Bot webhook — authenticated via X-Telegram-Bot-Api-Secret-Token
   // inside the route, not via the session cookie.
   '/api/hr/attendance/telegram',
@@ -52,7 +55,21 @@ function base64UrlDecode(s: string): Uint8Array {
   return out;
 }
 
-export async function middleware(req: NextRequest) {
+/** Verify a configured cross-app secret without Node-only APIs in the edge runtime. */
+function matchesFinanceSecret(req: NextRequest, configured: string | undefined): boolean {
+  const secret = (configured ?? '').trim();
+  const presented = (req.headers.get('x-finance-secret') ?? '').trim();
+  if (secret.length < 32 || presented.length !== secret.length) return false;
+  const expected = new TextEncoder().encode(secret);
+  const provided = new TextEncoder().encode(presented);
+  if (provided.length !== expected.length) return false;
+  let difference = 0;
+  for (let i = 0; i < expected.length; i++) difference |= provided[i] ^ expected[i];
+  return difference === 0;
+}
+
+/** Enforce sessions except for explicitly authenticated integration endpoints. */
+export async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
@@ -69,16 +86,16 @@ export async function middleware(req: NextRequest) {
   // itself via constant-time compare of the x-finance-secret header against
   // FINANCE_NOTIFY_SECRET; no session cookie exists in a server-to-server call.
   if (pathname === '/api/hr/payroll/finance-notify' && req.method === 'POST') {
-    const financeSecret = (process.env.FINANCE_NOTIFY_SECRET ?? '').trim();
-    const provided = (req.headers.get('x-finance-secret') ?? '').trim();
-    if (financeSecret.length >= 32 && provided.length === financeSecret.length) {
-      const a = new TextEncoder().encode(provided);
-      const b = new TextEncoder().encode(financeSecret);
-      let diff = 0;
-      for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
-      if (diff === 0) return NextResponse.next();
-    }
+    if (matchesFinanceSecret(req, process.env.FINANCE_NOTIFY_SECRET)) return NextResponse.next();
     return NextResponse.json({ error: { code: 'unauthorized', message: 'Unauthorized' } }, { status: 401 });
+  }
+  // Revision requests support either service authentication or an HR session.
+  // A bad/missing service secret must still pass the normal session and route RBAC checks.
+  if (
+    pathname === '/api/hr/payroll/needs-revision' && req.method === 'POST' &&
+    matchesFinanceSecret(req, process.env.FINANCE_NOTIFY_SECRET ?? process.env.HR_NOTIFY_SECRET)
+  ) {
+    return NextResponse.next();
   }
   const cookie = req.cookies.get('ykp_hr_session')?.value;
   const secret = process.env.SESSION_SECRET ?? '';

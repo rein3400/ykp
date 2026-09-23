@@ -127,7 +127,7 @@ export default function UsersClient({
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={7} className='px-2 py-3 text-center text-slate-400'>Belum ada user.</td></tr>
+              <tr><td colSpan={7} className='px-2 py-3 text-center text-slate-500'>Belum ada user.</td></tr>
             )}
           </tbody>
         </table>

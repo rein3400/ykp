@@ -4,8 +4,18 @@ import { parseAbsenIntent, escapeHtml } from './telegram-attendance';
 describe('parseAbsenIntent', () => {
   it('recognizes clock-in commands', () => {
     expect(parseAbsenIntent('/masuk')).toBe('clock-in');
-    expect(parseAbsenIntent('/absen')).toBe('clock-in');
     expect(parseAbsenIntent('/clock_in')).toBe('clock-in');
+  });
+
+  it('/absen opens the attendance sub-menu, so it is never a clock intent', () => {
+    // Webhook route handles /absen BEFORE parseAbsenIntent is consulted:
+    // src/app/api/hr/attendance/telegram/route.ts "/absen → attendance
+    // sub-menu" branch replies with attendanceKeyboard(). The pure parser
+    // must therefore stay 'unknown' here — mapping /absen to clock-in/out
+    // would misrecord direction for an ambiguous bare command.
+    expect(parseAbsenIntent('/absen')).toBe('unknown');
+    expect(parseAbsenIntent('/ABSEN')).toBe('unknown');
+    expect(parseAbsenIntent('  /absen  ')).toBe('unknown');
   });
 
   it('recognizes clock-out commands', () => {

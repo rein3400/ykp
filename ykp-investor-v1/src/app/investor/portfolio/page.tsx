@@ -27,7 +27,7 @@ export default async function PortfolioPage() {
       </div>
       <div className='overflow-x-auto rounded border border-border'>
         <table className='w-full text-xs'>
-          <thead className='bg-muted text-muted-foreground'>
+          <thead className='bg-muted text-slate-600'>
             <tr>
               <th className='px-2 py-1 text-left'>Investor</th>
               <th className='px-2 py-1 text-left'>Brand</th>

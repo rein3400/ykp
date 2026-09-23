@@ -55,6 +55,7 @@ export default function AlertsClient({
     <div className="space-y-3">
       <div className="flex gap-2 text-xs">
         <select
+          aria-label="Filter by severity"
           value={filter.severity}
           onChange={(e) => setFilter({ ...filter, severity: e.target.value })}
           className="rounded border border-border px-2 py-1"
@@ -67,6 +68,7 @@ export default function AlertsClient({
           ))}
         </select>
         <select
+          aria-label="Filter by status"
           value={filter.status}
           onChange={(e) => setFilter({ ...filter, status: e.target.value })}
           className="rounded border border-border px-2 py-1"
@@ -117,7 +119,7 @@ export default function AlertsClient({
                       type="button"
                       disabled={busyId === a.alert_id}
                       onClick={() => updateStatus(a.alert_id, 'acknowledge')}
-                      className="rounded bg-blue-500 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
+                      className="rounded bg-blue-700 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
                     >
                       ACK
                     </button>
@@ -125,7 +127,7 @@ export default function AlertsClient({
                       type="button"
                       disabled={busyId === a.alert_id}
                       onClick={() => updateStatus(a.alert_id, 'resolve')}
-                      className="rounded bg-green-500 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
+                      className="rounded bg-green-700 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
                     >
                       Resolve
                     </button>
@@ -133,7 +135,7 @@ export default function AlertsClient({
                       type="button"
                       disabled={busyId === a.alert_id}
                       onClick={() => updateStatus(a.alert_id, 'ignore')}
-                      className="rounded bg-gray-400 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
+                      className="rounded bg-gray-600 px-2 py-0.5 text-[10px] text-white disabled:opacity-50"
                     >
                       Ignore
                     </button>

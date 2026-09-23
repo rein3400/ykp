@@ -2,14 +2,14 @@
 import { useMemo } from "react";
 
 const PALETTES = [
-  "from-blue-500 to-indigo-600",
-  "from-emerald-500 to-teal-600",
-  "from-purple-500 to-pink-600",
-  "from-orange-500 to-rose-600",
-  "from-amber-500 to-orange-600",
-  "from-sky-500 to-cyan-600",
-  "from-fuchsia-500 to-purple-600",
-  "from-rose-500 to-red-600"
+  "from-blue-600 to-indigo-700",
+  "from-emerald-700 to-teal-700",
+  "from-purple-600 to-pink-700",
+  "from-orange-700 to-rose-700",
+  "from-amber-700 to-orange-700",
+  "from-sky-700 to-cyan-700",
+  "from-fuchsia-700 to-purple-700",
+  "from-rose-700 to-red-700"
 ];
 
 function hash(s: string): number {

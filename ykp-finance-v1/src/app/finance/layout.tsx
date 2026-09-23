@@ -65,14 +65,15 @@ export default function FinanceLayout({ children }: { children: React.ReactNode 
 
   return (
     <div className='flex min-h-screen'>
+      <a href='#fin-main' className='sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-slate-900 focus:px-3 focus:py-2 focus:text-sm focus:text-white'>Lewati ke konten utama</a>
       <Toaster richColors position='top-right' />
-      <aside className='w-56 border-r border-border bg-muted/50 p-3 flex flex-col'>
-        <div className='mb-3'>
+      <aside className='w-56 shrink-0 border-r border-border bg-muted/50 p-3 flex flex-col md:sticky md:top-0 md:h-screen'>
+        <div className='mb-3 shrink-0'>
           <h2 className='text-sm font-bold'>YKP Finance</h2>
           <p className='text-[10px] text-muted-foreground'>{user.username} · {user.role}</p>
-          <p className='text-[10px] font-medium text-amber-600 mt-0.5'>TESTING</p>
+          <p className='text-[10px] font-medium text-amber-800 mt-0.5'>TESTING</p>
         </div>
-        <nav className='flex-1 space-y-2 overflow-y-auto'>
+        <nav className='min-h-0 flex-1 space-y-2 overflow-y-auto'>
           {NAV_GROUPS.map((g) => (
             <div key={g.title}>
               <p className='px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground'>{g.title}</p>
@@ -96,15 +97,15 @@ export default function FinanceLayout({ children }: { children: React.ReactNode 
         </nav>
         <button
           onClick={logout}
-          className='mt-3 w-full rounded border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted'
+          className='mt-3 w-full shrink-0 rounded border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted'
         >
           Logout
         </button>
       </aside>
-      <main className='flex-1 p-6'>
+      <main id='fin-main' className='min-w-0 flex-1 p-6'>
         {user.username === 'owner' && (
           <div className='mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800'>
-            Anda login dengan akun default <b>owner/owner123</b>. Ganti password sebelum pilot production.
+            Anda login dengan akun default <b>owner</b>. Ganti password sebelum pilot production.
           </div>
         )}
         {children}

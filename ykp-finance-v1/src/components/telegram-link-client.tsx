@@ -45,7 +45,7 @@ export function TelegramLinkClient({ linkPath }: { linkPath: string }) {
         <button
           onClick={getCode}
           disabled={busy}
-          className='mt-4 w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50'
+          className='mt-4 w-full rounded-lg bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:opacity-50'
         >
           {busy ? 'Membuat kode…' : code ? 'Buat kode baru' : 'Dapatkan Kode'}
         </button>
@@ -67,7 +67,7 @@ export function TelegramLinkClient({ linkPath }: { linkPath: string }) {
               href={deepLink}
               target='_blank'
               rel='noopener noreferrer'
-              className='mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700'
+              className='mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800'
             >
               <span>📱</span> Buka Telegram
             </a>
