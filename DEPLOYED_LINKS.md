@@ -40,12 +40,27 @@ shared docker network (`YKP_*_INTERNAL_URL`), browsers use the public IP:port UR
 
 **Still needs owner input**
 
-1. `app_settings.moka_outlet_map` rows in the finance spreadsheet — map Moka outlet ids
-   (`772618`, `696752`, `843676`) to internal outlet ids; Moka sync reports
-   `outlet … belum dipetakan` until then.
-2. `OPENAI_API_KEY` for ops (AI triage/insight) — no real key in the repo history.
-3. Rotate `owner/owner123` (shared Sheets user store — affects every deployment that
-   reads this spreadsheet) and the Coolify dashboard password.
+1. **Moka outlet map** — Moka reports three outlets that do **not** exist in `master_outlet`
+   (finance sheet has only OL-001 Funkydak Cipete, OL-002 Funkydak Kemang, OL-003 Sekarpizza
+   Demangan, OL-004 Sekarpizza Senopati, OL-005 Sekarpizza Kemang):
+
+   | Moka key | Moka outlet id | master_outlet match |
+   |---|---|---|
+   | `SEKARPIZZA_TIRTODIPURAN` | 772618 | none (Demangan ≠ Tirtodipuran) |
+   | `FUNKYDAK_COLOMBO` | 696752 | none |
+   | `SUBURBUNS_COLOMBO` | 843676 | none (brand BR-003 exists, no outlet) |
+
+   Fix: add the three outlet rows (or point each to an existing OL id if that is the real
+   business intent), then seed `app_settings.moka_outlet_map` = `{"772618":"OL-xxx",…}`
+   (or set env `MOKA_OUTLET_MAP` on finance and let the next sync seed it). Until then
+   `moka-pos-sync` returns `outlet … belum dipetakan` and writes nothing.
+2. `OPENAI_API_KEY` for ops — the only real key in the repo is an **Ollama Cloud** LLM key
+   (`ykp-hermez/.env`), but `ykp-ops-v1/src/lib/ai.ts` calls Ollama without an auth header
+   (local-only) and OpenAI with `OPENAI_API_KEY`. AI stays off until a real OpenAI key is
+   supplied, or that code path learns to send the Ollama key (behaviour change → new change).
+3. Password rotation: `owner` in the shared Sheets user store was rotated on 2026-09-23
+   (the new value is **not** committed here — ask the owner). Coolify dashboard password
+   still needs rotating from `/profile`.
 4. Telegram bot `@justatestermaybot` must stay in the target group (chat id comes from
    the warehouse env; the hr/finance env chat id was stale).
 

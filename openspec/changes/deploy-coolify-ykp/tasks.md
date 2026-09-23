@@ -141,3 +141,23 @@ Code fixes found while wiring this up (both pushed):
 
 Still open (owner): `moka_outlet_map` rows, real `OPENAI_API_KEY` for ops, credential
 rotation (`owner/owner123` + Coolify dashboard), optional ERP-trio redeploy.
+
+---
+
+## Execution log N3 — 2026-09-23 (follow-ups)
+
+- **ERP trio redeployed** from `main` (`a786aca`): erp-hr :3002, erp-finance :3003,
+  erp-hermez :3004 all report Next.js `Ready`; hermez logs `[hermez-bot] disabled`
+  (`HERMEZ_BOT_DISABLED=true`, as designed). They now run the same commit as the V1 family
+  (native `YKP_DB_PLAIN_TCP`, no sed patch) and share `ERP_SSO_SECRET` with hub/investor.
+- **Default `owner/owner123` rotated** in the shared Sheets user store via
+  `POST /api/hr/auth/change-password` (old password now 401, new one 200; hub SSO verified
+  with the new value). Value deliberately not written to the repo — see the owner.
+- **Moka outlet map cannot be derived**: Moka's three outlets
+  (`SEKARPIZZA_TIRTODIPURAN` 772618, `FUNKYDAK_COLOMBO` 696752, `SUBURBUNS_COLOMBO` 843676)
+  have no counterpart in `master_outlet` (OL-001…OL-005 are Cipete/Kemang/Demangan/Senopati/
+  Kemang). Needs an owner decision on creating the outlet rows vs reusing an existing id;
+  then seed `app_settings.moka_outlet_map` (or env `MOKA_OUTLET_MAP` on finance).
+- **Ops AI stays off**: the only real LLM key in the repo is Ollama Cloud, but
+  `ykp-ops-v1/src/lib/ai.ts` calls Ollama without an Authorization header. Fixing that would
+  change app behaviour, i.e. outside this change's non-goal — raise a follow-up change.
