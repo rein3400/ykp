@@ -12,7 +12,10 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { findHubModule, moduleBaseUrl } from "../../../config";
 
 const HR_MODULE = findHubModule("hr");
-const UPSTREAM_LOGIN = `${HR_MODULE ? moduleBaseUrl(HR_MODULE) : "http://localhost:3002"}/api/auth/login`;
+if (!HR_MODULE) {
+  throw new Error('[hub/auth] HR module missing from HUB_MODULES — NEXT_PUBLIC_YKP_HR_URL must be set at build time.');
+}
+const UPSTREAM_LOGIN = `${moduleBaseUrl(HR_MODULE)}/api/auth/login`;
 
 const COOKIE_NAME = "ykp_hub_session";
 const COOKIE_MAX_AGE = 24 * 3600;

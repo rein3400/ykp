@@ -15,14 +15,23 @@ export interface HubModuleDef {
   probeReturnsCount: boolean;
 }
 
-const VPS = "http://187.52.124.40";
+function requiredUrl(envVar: string): string {
+  const v = process.env[envVar];
+  if (!v || v.trim().length === 0) {
+    throw new Error(
+      `[hub/config] Missing required build-time env var "${envVar}". ` +
+        `Set it in Coolify build args before building the hub image.`,
+    );
+  }
+  return v;
+}
 
 export const HUB_MODULES: readonly HubModuleDef[] = [
   {
     id: "owner",
     name: "Owner Command",
     desc: "Cross-module read-only overview",
-    url: process.env.NEXT_PUBLIC_YKP_OWNER_URL ?? `${VPS}:3010`,
+    url: requiredUrl("NEXT_PUBLIC_YKP_OWNER_URL"),
     probePath: "/login",
     probeReturnsCount: false
   },
@@ -30,7 +39,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "hr",
     name: "HR",
     desc: "Attendance, employees, roster",
-    url: process.env.NEXT_PUBLIC_YKP_HR_URL ?? `${VPS}:3002`,
+    url: requiredUrl("NEXT_PUBLIC_YKP_HR_URL"),
     probePath: "/api/hr/summary/count",
     probeReturnsCount: true
   },
@@ -38,7 +47,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "finance",
     name: "Finance",
     desc: "POS, expenses, petty cash, daily summary",
-    url: process.env.NEXT_PUBLIC_YKP_FINANCE_URL ?? `${VPS}:3003`,
+    url: requiredUrl("NEXT_PUBLIC_YKP_FINANCE_URL"),
     probePath: "/api/fin/summary",
     probeReturnsCount: false
   },
@@ -46,7 +55,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "warehouse",
     name: "Warehouse",
     desc: "Stock, receiving, usage, waste",
-    url: process.env.NEXT_PUBLIC_YKP_WAREHOUSE_URL ?? `${VPS}:3005`,
+    url: requiredUrl("NEXT_PUBLIC_YKP_WAREHOUSE_URL"),
     probePath: "/api/warehouse/summary",
     probeReturnsCount: false
   },
@@ -54,7 +63,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "investor",
     name: "Investor",
     desc: "Portfolio, capital, dividends",
-    url: process.env.NEXT_PUBLIC_YKP_INVESTOR_URL ?? `${VPS}:3006`,
+    url: requiredUrl("NEXT_PUBLIC_YKP_INVESTOR_URL"),
     probePath: "/api/investor/summary",
     probeReturnsCount: false
   },
@@ -62,7 +71,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "ops",
     name: "Ops",
     desc: "Daily operations, incidents, actions",
-    url: process.env.NEXT_PUBLIC_YKP_OPS_URL ?? `${VPS}:3007`,
+    url: requiredUrl("NEXT_PUBLIC_YKP_OPS_URL"),
     probePath: "/api/ops/summary",
     probeReturnsCount: false
   }
