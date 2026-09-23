@@ -5,7 +5,7 @@
  * app/config (env-overridable, local by default).
  */
 import { NextResponse } from "next/server";
-import { HUB_MODULES, moduleBaseUrl, moduleProbeUrl } from "../../config";
+import { HUB_MODULES, moduleBaseUrl, moduleServerProbeUrl } from "../../config";
 
 const TIMEOUT_MS = 3000;
 
@@ -45,7 +45,7 @@ export async function GET() {
   const results = await Promise.all(
     HUB_MODULES.map(async (m) => {
       const base = moduleBaseUrl(m);
-      const ping = await probe(moduleProbeUrl(m), m.probeReturnsCount);
+      const ping = await probe(moduleServerProbeUrl(m), m.probeReturnsCount);
       return {
         id: m.id,
         name: m.name,

@@ -9,13 +9,11 @@
  */
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
-import { findHubModule, moduleBaseUrl } from "../../../config";
+import { findHubModule, moduleServerUrl, type HubModuleDef } from "../../../config";
 
-const HR_MODULE = findHubModule("hr");
-if (!HR_MODULE) {
+const HR_MODULE: HubModuleDef = findHubModule("hr") ?? (() => {
   throw new Error('[hub/auth] HR module missing from HUB_MODULES — NEXT_PUBLIC_YKP_HR_URL must be set at build time.');
-}
-const UPSTREAM_LOGIN = `${moduleBaseUrl(HR_MODULE)}/api/auth/login`;
+})();
 
 const COOKIE_NAME = "ykp_hub_session";
 const COOKIE_MAX_AGE = 24 * 3600;
@@ -54,10 +52,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: { code: "bad_request", message: "username dan password wajib" } }, { status: 400 });
   }
 
-  // Forward to upstream
+  // Forward to upstream (container-to-container URL when available).
+  const upstreamLogin = `${moduleServerUrl(HR_MODULE)}/api/auth/login`;
   let upstreamResp: Response;
   try {
-    upstreamResp = await fetch(UPSTREAM_LOGIN, {
+    upstreamResp = await fetch(upstreamLogin, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password })

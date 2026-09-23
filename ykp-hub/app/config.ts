@@ -92,3 +92,25 @@ export function moduleBaseUrl(def: HubModuleDef): string {
 export function moduleProbeUrl(def: HubModuleDef): string {
   return `${moduleBaseUrl(def)}${def.probePath}`;
 }
+
+/**
+ * Base URL for SERVER-SIDE calls (health probe, login proxy).
+ *
+ * The inlined NEXT_PUBLIC_* URL is a public address (Coolify host IP/domain).
+ * A container cannot always reach the host's published port — Docker hairpin
+ * NAT is off by default, so the request times out. Set
+ * `YKP_<MODULE_ID>_INTERNAL_URL` (e.g. http://<coolify-resource-uuid>:3002) to
+ * use the container-to-container address instead; browsers keep the public URL.
+ */
+export function moduleServerUrl(def: HubModuleDef): string {
+  const override = process.env[`YKP_${def.id.toUpperCase()}_INTERNAL_URL`];
+  if (override && override.trim().length > 0) {
+    return override.replace(/\/+$/, "");
+  }
+  return moduleBaseUrl(def);
+}
+
+/** Full URL a server-side probe should hit for this module. */
+export function moduleServerProbeUrl(def: HubModuleDef): string {
+  return `${moduleServerUrl(def)}${def.probePath}`;
+}
