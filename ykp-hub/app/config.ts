@@ -15,23 +15,25 @@ export interface HubModuleDef {
   probeReturnsCount: boolean;
 }
 
-function requiredUrl(envVar: string): string {
-  const v = process.env[envVar];
-  if (!v || v.trim().length === 0) {
+function requiredUrl(value: string | undefined, envVar: string): string {
+  if (!value || value.trim().length === 0) {
     throw new Error(
       `[hub/config] Missing required build-time env var "${envVar}". ` +
         `Set it in Coolify build args before building the hub image.`,
     );
   }
-  return v;
+  return value;
 }
 
+// NOTE: each URL must be read via literal dot access (process.env.X), NOT
+// process.env[varName] — Next.js only inlines the dot form into the client
+// bundle; dynamic access stays undefined in the browser and throws at load.
 export const HUB_MODULES: readonly HubModuleDef[] = [
   {
     id: "owner",
     name: "Owner Command",
     desc: "Cross-module read-only overview",
-    url: requiredUrl("NEXT_PUBLIC_YKP_OWNER_URL"),
+    url: requiredUrl(process.env.NEXT_PUBLIC_YKP_OWNER_URL, "NEXT_PUBLIC_YKP_OWNER_URL"),
     probePath: "/login",
     probeReturnsCount: false
   },
@@ -39,7 +41,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "hr",
     name: "HR",
     desc: "Attendance, employees, roster",
-    url: requiredUrl("NEXT_PUBLIC_YKP_HR_URL"),
+    url: requiredUrl(process.env.NEXT_PUBLIC_YKP_HR_URL, "NEXT_PUBLIC_YKP_HR_URL"),
     probePath: "/api/hr/summary/count",
     probeReturnsCount: true
   },
@@ -47,7 +49,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "finance",
     name: "Finance",
     desc: "POS, expenses, petty cash, daily summary",
-    url: requiredUrl("NEXT_PUBLIC_YKP_FINANCE_URL"),
+    url: requiredUrl(process.env.NEXT_PUBLIC_YKP_FINANCE_URL, "NEXT_PUBLIC_YKP_FINANCE_URL"),
     probePath: "/api/fin/summary",
     probeReturnsCount: false
   },
@@ -55,7 +57,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "warehouse",
     name: "Warehouse",
     desc: "Stock, receiving, usage, waste",
-    url: requiredUrl("NEXT_PUBLIC_YKP_WAREHOUSE_URL"),
+    url: requiredUrl(process.env.NEXT_PUBLIC_YKP_WAREHOUSE_URL, "NEXT_PUBLIC_YKP_WAREHOUSE_URL"),
     probePath: "/api/warehouse/summary",
     probeReturnsCount: false
   },
@@ -63,7 +65,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "investor",
     name: "Investor",
     desc: "Portfolio, capital, dividends",
-    url: requiredUrl("NEXT_PUBLIC_YKP_INVESTOR_URL"),
+    url: requiredUrl(process.env.NEXT_PUBLIC_YKP_INVESTOR_URL, "NEXT_PUBLIC_YKP_INVESTOR_URL"),
     probePath: "/api/investor/summary",
     probeReturnsCount: false
   },
@@ -71,7 +73,7 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     id: "ops",
     name: "Ops",
     desc: "Daily operations, incidents, actions",
-    url: requiredUrl("NEXT_PUBLIC_YKP_OPS_URL"),
+    url: requiredUrl(process.env.NEXT_PUBLIC_YKP_OPS_URL, "NEXT_PUBLIC_YKP_OPS_URL"),
     probePath: "/api/ops/summary",
     probeReturnsCount: false
   }
