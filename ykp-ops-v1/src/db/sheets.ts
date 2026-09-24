@@ -174,26 +174,66 @@ function columnLetter(n: number): string {
   return s || 'A';
 }
 
+export function mapRowsByHeader<T extends Record<string, string> = Record<string, string>>(
+  headerRow: string[],
+  rows: string[][]
+): T[] {
+  return rows.map((r) => {
+    const obj: Record<string, string> = {};
+    headerRow.forEach((h, i) => {
+      if (h) obj[h] = r[i] != null ? String(r[i]) : '';
+    });
+    return obj as T;
+  });
+}
+
 export async function readTab<T extends Record<string, string> = Record<string, string>>(
   tab: TabName
 ): Promise<T[]> {
   if (isMockMode()) return mockReadTab(tab) as T[];
   if (isPostgresMode()) return pgReadTab<T>(tab, TAB_HEADERS[tab]);
+  // Map by the sheet's own header row (row 1), not by TAB_HEADERS position:
+  // a human-added column anywhere must not silently shift every value
+  // into the wrong field (it once killed every ops login).
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const end = columnLetter(headers.length);
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: getSpreadsheetId(),
-    range: `${quoteTab(tab)}!A2:${end}`,
+    range: `${quoteTab(tab)}!A1:${end}1000`,
   });
   const rows = res.data.values ?? [];
-  return rows.map((r) => {
-    const obj: Record<string, string> = {};
-    headers.forEach((h, i) => {
-      obj[h] = r[i] != null ? String(r[i]) : '';
-    });
-    return obj as T;
-  });
+  if (rows.length < 2) return [];
+  return mapRowsByHeader<T>(rows[0] as string[], rows.slice(1) as string[][]);
+}
+
+export interface HeaderDrift {
+  tab: string;
+  missing: string[];
+  extra: string[];
+  misordered: boolean;
+}
+
+export async function auditSheetHeaders(
+  fetchHeader?: (tab: string, expectedLength: number) => Promise<string[]>
+): Promise<HeaderDrift[]> {
+  const sheets = fetchHeader ? null : getSheetsClient();
+  const out: HeaderDrift[] = [];
+  for (const tab of Object.values(TABS)) {
+    const expected = TAB_HEADERS[tab];
+    const actual = fetchHeader
+      ? await fetchHeader(tab, expected.length)
+      : ((await sheets!.spreadsheets.values.get({
+          spreadsheetId: getSpreadsheetId(),
+          range: `${quoteTab(tab)}!A1:${columnLetter(expected.length)}1`,
+        })).data.values ?? [])[0] ?? ([] as string[]);
+    const missing = expected.filter((h) => !actual.includes(h));
+    const extra = actual.filter((h) => h && !expected.includes(h));
+    const common = actual.filter((h) => expected.includes(h));
+    const misordered = common.some((h, i) => h !== expected.filter((e) => common.includes(e))[i]);
+    out.push({ tab, missing, extra, misordered });
+  }
+  return out;
 }
 
 export async function appendRows(
