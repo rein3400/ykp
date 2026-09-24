@@ -63,8 +63,17 @@ DIR[ykp-ops-v1]=ykp-ops-v1;           PORT[ykp-ops-v1]=3007
 APPS="ykp-hub ykp-owner-v1 ykp-hr-v1 ykp-finance-v1 ykp-warehouse-v1 ykp-investor-v1 ykp-ops-v1"
 
 declare -A UUID
+EXISTING_APPS="$(api GET /applications)"
 for a in $APPS; do
   say "App: $a"
+  u="$(echo "$EXISTING_APPS" | jq -r --arg n "$a" 'map(select(.name==$n))[0].uuid // empty')"
+  if [[ -n "$u" ]]; then
+    echo "  reuse existing uuid=$u"
+    UUID[$a]="$u"
+    api PATCH "/applications/$u" "$(jq -n --arg n "$a" '{custom_network_aliases:$n,is_consistent_container_name_enabled:true,custom_internal_name:$n}')" >/dev/null
+    api PATCH "/applications/$u" "$(jq -n --arg d "https://$u.$IPDOTS.sslip.io" '{domains:$d}')" >/dev/null
+    continue
+  fi
   u="$(api POST /applications/public "$(jq -n \
       --arg pu "$PROJ_UUID" --arg su "$SERVER_UUID" --arg en "$ENV_UUID" \
       --arg gr "$GIT_REPO" --arg gb "$GIT_BRANCH" --arg name "$a" \
@@ -230,6 +239,10 @@ say "Scheduled tasks (cron)"
 # from the container env instead of embedding it.
 task() { # app name freq port path header envvar
   local app="$1" name="$2" freq="$3" port="$4" path="$5" header="$6" envvar="$7"
+  if api GET "/applications/${UUID[$app]}/scheduled-tasks" | jq -e --arg n "$name" 'map(select(.name==$n))|length>0' >/dev/null; then
+    echo "  $app/$name (exists, skipped)"
+    return 0
+  fi
   api POST "/applications/${UUID[$app]}/scheduled-tasks" "$(jq -n \
     --arg n "$name" --arg f "$freq" --arg app "$app" \
     --arg c "node -e 'fetch(\"http://localhost:$port$path\",{method:\"POST\",headers:{\"$header\":process.env.$envvar}}).then(r=>r.text()).then(t=>console.log(t.slice(0,200)))'" \
@@ -248,13 +261,27 @@ task ykp-investor-v1  daily-brief        "0 15 * * *" 3006 /api/investor/notify/
 # second Moka pass at 18:00 UTC (01:00 WIB) pulls YESTERDAY, catching sales posted after
 # the 23:00 WIB close. Date is computed in-command (no prelude - Coolify 500s on that shape).
 YCMD="node -e 'fetch(\"http://localhost:3003/api/finance/pos/sync\",{method:\"POST\",headers:{\"x-moka-sync-secret\":process.env.MOKA_SYNC_SECRET},body:JSON.stringify({date:new Date(Date.now()-612e5).toJSON().slice(0,10)})}).then(r=>r.text()).then(console.log)'"
-api POST "/applications/${UUID[ykp-finance-v1]}/scheduled-tasks" "$(jq -n --arg c "$YCMD" \
-  '{name:"moka-pos-sync-yesterday",frequency:"0 18 * * *",enabled:true,timeout:120,container:"ykp-finance-v1",command:$c}')" >/dev/null
-echo "  ykp-finance-v1/moka-pos-sync-yesterday (0 18 * * *)"
+if api GET "/applications/${UUID[ykp-finance-v1]}/scheduled-tasks" | jq -e 'map(select(.name=="moka-pos-sync-yesterday"))|length>0' >/dev/null; then
+  echo "  ykp-finance-v1/moka-pos-sync-yesterday (exists, skipped)"
+else
+  api POST "/applications/${UUID[ykp-finance-v1]}/scheduled-tasks" "$(jq -n --arg c "$YCMD" \
+    '{name:"moka-pos-sync-yesterday",frequency:"0 18 * * *",enabled:true,timeout:120,container:"ykp-finance-v1",command:$c}')" >/dev/null
+  echo "  ykp-finance-v1/moka-pos-sync-yesterday (0 18 * * *)"
+fi
 
 # ---------------------------------------------------------------------------
 say "Verify"
-curl -fsS "$URL_HUB/api/health" | jq -c '{overall:.data.overall, modules:[.data.results[]|{id,reachable}]}'
+for a in $APPS; do
+  host="${UUID[$a]}.$IPDOTS.sslip.io"
+  path="/login"; [[ "$a" == "ykp-hub" ]] && path="/"
+  code="$(curl -sS -m 25 -o /dev/null -w '%{http_code}' --resolve "$host:443:$VPS_IP" "https://$host$path" 2>/dev/null || echo 000)"
+  printf '  %-18s https=%s\n' "$a" "$code"
+done
+echo "  (https=000 biasanya sertifikat belum terbit - tunggu ~1 menit lalu cek lagi)"
+HUBHOST="${UUID[ykp-hub]}.$IPDOTS.sslip.io"
+curl -fsS -m 30 --resolve "$HUBHOST:443:$VPS_IP" "$URL_HUB/api/health" \
+  | jq -c '{overall:.data.overall, modules:[.data.results[]|{id,reachable}]}' \
+  || echo "  (hub health belum bisa diakses - cek lagi sebentar lagi)"
 
 cat <<EOF
 
