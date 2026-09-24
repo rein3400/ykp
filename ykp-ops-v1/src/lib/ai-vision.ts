@@ -64,13 +64,19 @@ Analyze the attached photo and return the JSON as instructed.`;
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
   const model = process.env.AI_MODEL ?? 'gpt-4o-mini';
+  // OpenAI-compatible gateway support (e.g. OPENAI_BASE_URL=https://openrouter.ai/api/v1)
+  const baseUrl = (process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/+$/, '');
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+  };
+  if (process.env.OPENAI_HTTP_REFERER) headers['HTTP-Referer'] = process.env.OPENAI_HTTP_REFERER;
+  if (process.env.OPENAI_APP_TITLE) headers['X-Title'] = process.env.OPENAI_APP_TITLE;
+
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
       model,
       messages,
@@ -81,13 +87,13 @@ Analyze the attached photo and return the JSON as instructed.`;
   });
   if (!res.ok) {
     const text = await res.text().catch(() => 'unknown');
-    throw new Error(`OpenAI HTTP ${res.status}: ${text}`);
+    throw new Error(`AI HTTP ${res.status}: ${text}`);
   }
   const json = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
   };
   const content = json.choices?.[0]?.message?.content?.trim() ?? '';
-  if (!content) throw new Error('OpenAI returned empty content');
+  if (!content) throw new Error('AI returned empty content');
   const cleaned = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
   return JSON.parse(cleaned) as QcVisionResult;
 }

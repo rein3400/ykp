@@ -48,12 +48,19 @@ async function callOpenAI(messages: AiMessage[], options: AiOptions): Promise<st
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY is not configured');
   }
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  // Any OpenAI-compatible gateway works: set OPENAI_BASE_URL to
+  // https://openrouter.ai/api/v1 (or a LiteLLM/vLLM endpoint). Defaults to OpenAI.
+  const baseUrl = (env('OPENAI_BASE_URL') ?? 'https://api.openai.com/v1').replace(/\/+$/, '');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+  };
+  // OpenRouter attribution headers (ignored by OpenAI).
+  if (env('OPENAI_HTTP_REFERER')) headers['HTTP-Referer'] = env('OPENAI_HTTP_REFERER') as string;
+  if (env('OPENAI_APP_TITLE')) headers['X-Title'] = env('OPENAI_APP_TITLE') as string;
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
       model: getModel(),
       messages,
@@ -63,18 +70,18 @@ async function callOpenAI(messages: AiMessage[], options: AiOptions): Promise<st
   });
   if (!res.ok) {
     const text = await res.text().catch(() => 'unknown');
-    throw new Error(`OpenAI HTTP ${res.status}: ${text}`);
+    throw new Error(`AI HTTP ${res.status}: ${text}`);
   }
   const json = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
     error?: { message?: string };
   };
   if (json.error?.message) {
-    throw new Error(`OpenAI error: ${json.error.message}`);
+    throw new Error(`AI error: ${json.error.message}`);
   }
   const content = json.choices?.[0]?.message?.content?.trim() ?? '';
   if (!content) {
-    throw new Error('OpenAI returned empty content');
+    throw new Error('AI returned empty content');
   }
   return content;
 }

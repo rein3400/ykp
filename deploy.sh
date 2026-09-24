@@ -196,11 +196,15 @@ set_env "${UUID[ykp-ops-v1]}" "$(jq -n \
   --arg hub "$URL_HUB,$HUB_IP_ORIGIN" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_OPS" \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_OPS_SPREADSHEET_ID" \
-  --arg oai "${OPENAI_API_KEY:-}" \
+  --arg oai "${OPENAI_API_KEY:-}" --arg model "${AI_MODEL:-openai/gpt-4o-mini}" \
+  --arg base "${OPENAI_BASE_URL:-https://openrouter.ai/api/v1}" \
+  --arg ref "${OPENAI_HTTP_REFERER:-}" --arg title "${OPENAI_APP_TITLE:-}" \
   '[{key:"NEXT_PUBLIC_TELEGRAM_BOT_USERNAME",value:$tg,is_runtime:true,is_buildtime:true},
     {key:"SESSION_SECRET",value:$s},{key:"HUB_ORIGINS",value:$hub,is_literal:true},
     {key:"TELEGRAM_BOT_TOKEN",value:$t},{key:"TELEGRAM_CHAT_ID",value:$chat},{key:"TELEGRAM_BOT_SECRET",value:$ts},
-    {key:"AI_MODEL",value:"gpt-4o-mini"},{key:"OPENAI_API_KEY",value:$oai},
+    {key:"AI_MODEL",value:$model},{key:"OPENAI_API_KEY",value:$oai},
+    {key:"OPENAI_BASE_URL",value:$base},{key:"OPENAI_HTTP_REFERER",value:$ref},
+    {key:"OPENAI_APP_TITLE",value:$title},
     {key:"GOOGLE_SERVICE_ACCOUNT_EMAIL",value:$gsa},{key:"GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY",value:$gsk,is_literal:true},
     {key:"YKP_OPS_SPREADSHEET_ID",value:$sid},{key:"PORT",value:"3007"}]' \
   | jq 'map(.is_runtime=true)')"
