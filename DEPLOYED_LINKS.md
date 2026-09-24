@@ -40,7 +40,8 @@ Login `owner` / (rotated 2026-09-23 — value with the owner). Hub SSO covers al
 | hr-v1 | daily-brief | `0 15 * * *` (22:00 WIB) | Telegram HR brief | SENT (sent:1) |
 | hr-v1 | contract-reminders | `0 1 * * *` | contract expiry reminders | registered |
 | finance-v1 | daily-brief | `0 15 * * *` | Telegram finance brief | registered |
-| finance-v1 | moka-pos-sync | `0 16 * * *` | Moka POS → Sheets | runs; outlet map pending |
+| finance-v1 | moka-pos-sync | `0 16 * * *` | Moka POS → Sheets (today, WIB) | runs; outlet map pending |
+| finance-v1 | moka-pos-sync-yesterday | `0 18 * * *` (01:00 WIB) | Moka POS → Sheets (previous day) — catches sales posted after the 23:00 close | ✅ test-fired (2026-09-23) |
 | warehouse-v1 | daily-brief | `0 15 * * *` | Telegram warehouse brief | registered |
 | warehouse-v1 | random-audit | `0 1 * * 1` | weekly random stock audit | CREATED (W39) |
 | warehouse-v1 | verify-audit-chain | `30 16 * * *` | nightly hash-chain check | ok (112 legacy skipped) |

@@ -222,22 +222,31 @@ done
 
 # ---------------------------------------------------------------------------
 say "Scheduled tasks (cron)"
-task() {
-  local app="$1" name="$2" freq="$3" port="$4" path="$5" header="$6" secret="$7"
+# command kept short: Coolify stores it in a ~255-char column, so read the secret
+# from the container env instead of embedding it.
+task() { # app name freq port path header envvar
+  local app="$1" name="$2" freq="$3" port="$4" path="$5" header="$6" envvar="$7"
   api POST "/applications/${UUID[$app]}/scheduled-tasks" "$(jq -n \
     --arg n "$name" --arg f "$freq" --arg app "$app" \
-    --arg c "node -e 'fetch(\"http://localhost:$port$path\",{method:\"POST\",headers:{\"$header\":\"$secret\"}}).then(r=>r.text()).then(t=>console.log(t.slice(0,200)))'" \
+    --arg c "node -e 'fetch(\"http://localhost:$port$path\",{method:\"POST\",headers:{\"$header\":process.env.$envvar}}).then(r=>r.text()).then(t=>console.log(t.slice(0,200)))'" \
     '{name:$n,frequency:$f,enabled:true,timeout:120,container:$app,command:$c}')" >/dev/null
   echo "  $app/$name ($freq)"
 }
-task ykp-hr-v1        daily-brief        "0 15 * * *" 3002 /api/hr/notify/daily-brief              x-cron-secret      "$CRON_HR"
-task ykp-hr-v1        contract-reminders "0 1 * * *"  3002 /api/hr/notify/contract-reminders       x-cron-secret      "$CRON_HR"
-task ykp-finance-v1   daily-brief        "0 15 * * *" 3003 /api/finance/notify/daily-brief         x-cron-secret      "$CRON_FINANCE"
-task ykp-finance-v1   moka-pos-sync      "0 16 * * *" 3003 /api/finance/pos/sync                   x-moka-sync-secret "$MOKA_SYNC_SECRET"
-task ykp-warehouse-v1 daily-brief        "0 15 * * *" 3005 /api/warehouse/notify/daily-brief      x-cron-secret      "$CRON_WAREHOUSE"
-task ykp-warehouse-v1 random-audit       "0 1 * * 1"  3005 /api/warehouse/cron/random-audit        x-cron-secret      "$CRON_WAREHOUSE"
-task ykp-warehouse-v1 verify-audit-chain "30 16 * * *" 3005 /api/warehouse/cron/verify-audit-chain x-cron-secret      "$CRON_WAREHOUSE"
-task ykp-investor-v1  daily-brief        "0 15 * * *" 3006 /api/investor/notify/daily-brief        x-cron-secret      "$CRON_INVESTOR"
+task ykp-hr-v1        daily-brief        "0 15 * * *" 3002 /api/hr/notify/daily-brief              x-cron-secret      CRON_SECRET
+task ykp-hr-v1        contract-reminders "0 1 * * *"  3002 /api/hr/notify/contract-reminders       x-cron-secret      CRON_SECRET
+task ykp-finance-v1   daily-brief        "0 15 * * *" 3003 /api/finance/notify/daily-brief         x-cron-secret      CRON_SECRET
+task ykp-finance-v1   moka-pos-sync      "0 16 * * *" 3003 /api/finance/pos/sync                   x-moka-sync-secret MOKA_SYNC_SECRET
+task ykp-warehouse-v1 daily-brief        "0 15 * * *" 3005 /api/warehouse/notify/daily-brief      x-cron-secret      CRON_SECRET
+task ykp-warehouse-v1 random-audit       "0 1 * * 1"  3005 /api/warehouse/cron/random-audit        x-cron-secret      CRON_SECRET
+task ykp-warehouse-v1 verify-audit-chain "30 16 * * *" 3005 /api/warehouse/cron/verify-audit-chain x-cron-secret      CRON_SECRET
+task ykp-investor-v1  daily-brief        "0 15 * * *" 3006 /api/investor/notify/daily-brief        x-cron-secret      CRON_SECRET
+
+# second Moka pass at 18:00 UTC (01:00 WIB) pulls YESTERDAY, catching sales posted after
+# the 23:00 WIB close. Date is computed in-command (no prelude - Coolify 500s on that shape).
+YCMD="node -e 'fetch(\"http://localhost:3003/api/finance/pos/sync\",{method:\"POST\",headers:{\"x-moka-sync-secret\":process.env.MOKA_SYNC_SECRET},body:JSON.stringify({date:new Date(Date.now()-612e5).toJSON().slice(0,10)})}).then(r=>r.text()).then(console.log)'"
+api POST "/applications/${UUID[ykp-finance-v1]}/scheduled-tasks" "$(jq -n --arg c "$YCMD" \
+  '{name:"moka-pos-sync-yesterday",frequency:"0 18 * * *",enabled:true,timeout:120,container:"ykp-finance-v1",command:$c}')" >/dev/null
+echo "  ykp-finance-v1/moka-pos-sync-yesterday (0 18 * * *)"
 
 # ---------------------------------------------------------------------------
 say "Verify"
