@@ -97,6 +97,8 @@ indicators/**/*.json
 .env*
 !.env.example
 !.env.prod.example
+.deploy.env
+!.deploy.env.example
 
 # Keep Warehouse installs reproducible after registry resolution failures.
 !ykp-warehouse-v1/package-lock.json
