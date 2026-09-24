@@ -85,6 +85,8 @@ I() { echo "http://$1:${PORT[$1]}"; }
 URL_HUB="$(U ykp-hub)"; URL_OWNER="$(U ykp-owner-v1)"; URL_HR="$(U ykp-hr-v1)"
 URL_FINANCE="$(U ykp-finance-v1)"; URL_WAREHOUSE="$(U ykp-warehouse-v1)"
 URL_INVESTOR="$(U ykp-investor-v1)"; URL_OPS="$(U ykp-ops-v1)"
+# hub is reachable both via its HTTPS domain and via http://<ip>:3000
+HUB_IP_ORIGIN="http://$VPS_IP:3000"
 
 set_env() { api PATCH "/applications/$1/envs/bulk" "$2" >/dev/null; }
 
@@ -128,7 +130,7 @@ set_env "${UUID[ykp-owner-v1]}" "$(jq -n \
 
 say "Env: ykp-hr-v1"
 set_env "${UUID[ykp-hr-v1]}" "$(jq -n \
-  --arg hub "$URL_HUB" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_HR" --arg c "$CRON_HR" \
+  --arg hub "$URL_HUB $HUB_IP_ORIGIN" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_HR" --arg c "$CRON_HR" \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg wh "$TELEGRAM_WEBHOOK_SECRET" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_HR_SPREADSHEET_ID" \
   '[{key:"NEXT_PUBLIC_TELEGRAM_BOT_USERNAME",value:$tg,is_runtime:true,is_buildtime:true},
@@ -163,7 +165,7 @@ set_env "${UUID[ykp-finance-v1]}" "$(jq -n \
 
 say "Env: ykp-warehouse-v1"
 set_env "${UUID[ykp-warehouse-v1]}" "$(jq -n \
-  --arg hub "$URL_HUB" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_WAREHOUSE" --arg c "$CRON_WAREHOUSE" \
+  --arg hub "$URL_HUB $HUB_IP_ORIGIN" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_WAREHOUSE" --arg c "$CRON_WAREHOUSE" \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_WAREHOUSE_SPREADSHEET_ID" \
   --arg fin "$URL_FINANCE" \
@@ -177,7 +179,7 @@ set_env "${UUID[ykp-warehouse-v1]}" "$(jq -n \
 
 say "Env: ykp-investor-v1"
 set_env "${UUID[ykp-investor-v1]}" "$(jq -n \
-  --arg hub "$URL_HUB" --arg fin "$URL_FINANCE" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_INVESTOR" --arg c "$CRON_INVESTOR" \
+  --arg hub "$URL_HUB $HUB_IP_ORIGIN" --arg fin "$URL_FINANCE" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_INVESTOR" --arg c "$CRON_INVESTOR" \
   --arg sso "$ERP_SSO_SECRET" --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_INVESTOR_SPREADSHEET_ID" \
   '[{key:"NEXT_PUBLIC_TELEGRAM_BOT_USERNAME",value:$tg,is_runtime:true,is_buildtime:true},
@@ -191,7 +193,7 @@ set_env "${UUID[ykp-investor-v1]}" "$(jq -n \
 
 say "Env: ykp-ops-v1"
 set_env "${UUID[ykp-ops-v1]}" "$(jq -n \
-  --arg hub "$URL_HUB" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_OPS" \
+  --arg hub "$URL_HUB,$HUB_IP_ORIGIN" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_OPS" \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_OPS_SPREADSHEET_ID" \
   --arg oai "${OPENAI_API_KEY:-}" \

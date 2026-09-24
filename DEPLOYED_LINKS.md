@@ -251,3 +251,10 @@ Hermez dialog bot (`bot-worker.mjs`) is long-poll only; prod image `Dockerfile.h
 - Progress log: `PROGRESS.md`
 - Railway Dockerfile gotchas: memory `ykp-erp-railway-dockerfile-fix`
 - HR pilot: `ykp-hr-v1/PILOT-CHECKLIST.md`
+
+> **Hub iframe note:** the Hub embeds each module in an iframe, so the modules'
+> `frame-ancestors` CSP must list the Hub origin. `YKP_HUB_ORIGIN` (hr/warehouse/investor)
+> now accepts a space/comma-separated list and `HUB_ORIGINS` (ops) is comma-separated; both
+> are set to the Hub HTTPS domain **and** `http://<ip>:3000` so the Hub works whichever way
+> it is opened. Opening the Hub via its HTTPS domain gives working session cookies
+> (hub/finance/investor set `Secure`), so that is the recommended entry point.
