@@ -100,6 +100,7 @@ export const POST = handler(async (req: NextRequest) => {
       total_settlement: String(c.totalSettlement),
       cogs: String(c.cogs),
       gross_profit: String(c.grossProfit),
+      cogs_coverage: String(c.cogsCoverage),
       created_at: t
     };
     // Upsert by deterministic summary_id

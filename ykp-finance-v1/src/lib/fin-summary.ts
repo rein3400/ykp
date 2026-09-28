@@ -50,6 +50,8 @@ export interface DailySummaryComputed {
   totalSettlement: number;
   cogs: number;
   grossProfit: number;
+  /** 0–100: % net item yang punya cogs>0 (coverage resep di Moka). Laba kotor valid saat coverage tinggi. */
+  cogsCoverage: number;
   estimatedSurplus: number;
   topSupplier: string;
   topExpenseCategory: string;
@@ -97,14 +99,19 @@ export function sumPos(rows: Record<string, string>[], date?: string, outletId?:
 }
 
 /** COGS aktual dari fin_pos_items (item_sales Moka) untuk (date, outlet). */
-export function sumItemCogs(rows: Record<string, string>[] | undefined, date: string, outletId: string): number {
-  if (!rows) return 0;
+export function sumItemCogs(rows: Record<string, string>[] | undefined, date: string, outletId: string): { cogs: number; coverage: number } {
+  if (!rows) return { cogs: 0, coverage: 0 };
   let cogs = 0;
+  let itemNet = 0;
+  let itemNetWithCogs = 0;
   for (const r of rows) {
     if (r.date !== date || r.outlet_id !== outletId) continue;
-    cogs += num(r.cogs);
+    const n = num(r.net_sales);
+    const c = num(r.cogs);
+    itemNet += n;
+    if (c > 0) { itemNetWithCogs += n; cogs += c; }
   }
-  return cogs;
+  return { cogs, coverage: itemNet > 0 ? Math.round((itemNetWithCogs / itemNet) * 100) : 0 };
 }
 
 /** Expense total. Excludes CANCELLED/REJECTED. Expense rows are primary — links never exclude them. */
@@ -217,7 +224,8 @@ export function computeDailySummary(rows: FinanceRows, date: string, outletId: s
   const estimatedSurplus = pos.net - totalExpense - supplierCost - pettyCashOut;
   // COGS aktual dari item_sales Moka (cogs per item). Laba kotor = net − cogs.
   // Bukan pengganti estimated_surplus (yang basisnya kas) — ini laba akuntansi.
-  const cogs = sumItemCogs(rows.items, date, outletId);
+  // Coverage rendah (resep Moka belum lengkap) → gross_profit tidak ditampilkan sebagai angka final.
+  const { cogs, coverage: cogsCoverage } = sumItemCogs(rows.items, date, outletId);
   const grossProfit = cogs > 0 ? pos.net - cogs : 0;
 
   // Priority: cash_difference > settlement_mismatch > unpaid_supplier > high_expense_ratio
@@ -261,6 +269,7 @@ export function computeDailySummary(rows: FinanceRows, date: string, outletId: s
     totalSettlement: pos.totalSettlement,
     cogs,
     grossProfit,
+    cogsCoverage,
     estimatedSurplus,
     topSupplier: topSupplierForDate(rows.suppliers, date, outletId),
     topExpenseCategory: topExpenseCategoryForDate(rows.expenses, date, outletId),

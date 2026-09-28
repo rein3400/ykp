@@ -19,6 +19,8 @@ export interface FinanceKpi {
   settlement: Record<string, number>;
   totalSettlement: number;
   cogs: number;
+  /** 0–100: coverage resep COGS terkecil di outlet ber-scope (konservatif). Laba kotor valid saat ≥ 60. */
+  cogsCoverage: number;
   grossProfit: number;
 }
 
@@ -40,6 +42,11 @@ export function consolidateFinance(rows: SummaryRow[], prevRows: SummaryRow[] = 
   const settlement = settlementBreakdown(rows);
   const totalSettlement = Object.values(settlement).reduce((a, b) => a + b, 0);
   const cogs = sum(rows, 'cogs');
+  // Coverage paling rendah di antara outlet ber-omzet (konservatif: seluruh
+  // outlet harus punya resep lengkap baru laba kotor grup dianggap valid).
+  const cogsCoverage = rows
+    .filter((r) => Number(r.net_sales ?? 0) > 0)
+    .reduce((min, r) => Math.min(min, Number(r.cogs_coverage ?? 0)), 100);
   return {
     revenue,
     grossSales: sum(rows, 'gross_sales'),
@@ -53,7 +60,8 @@ export function consolidateFinance(rows: SummaryRow[], prevRows: SummaryRow[] = 
     settlement,
     totalSettlement,
     cogs,
-    grossProfit: cogs > 0 ? revenue - cogs : 0
+    cogsCoverage,
+    grossProfit: cogs > 0 && cogsCoverage >= 60 ? revenue - cogs : 0
   };
 }
 

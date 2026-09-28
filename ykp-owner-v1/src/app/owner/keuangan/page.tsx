@@ -103,11 +103,16 @@ export default async function KeuanganPage() {
             </Card>
             <Card title='Laba Kotor (Real)'>
               <p className='mb-2 text-[10px] text-muted-foreground'>Revenue − COGS aktual (item_sales Moka)</p>
-              {kpi.cogs > 0 ? (
+              {kpi.cogs > 0 && kpi.cogsCoverage >= 60 ? (
                 <div className='space-y-1 text-xs'>
                   <p className='flex justify-between'><span className='text-muted-foreground'>Revenue</span><span className='font-medium'>{idr(kpi.revenue)}</span></p>
                   <p className='flex justify-between'><span className='text-muted-foreground'>COGS aktual</span><span className='font-medium'>− {idr(kpi.cogs)}</span></p>
-                  <p className='flex justify-between border-t border-border pt-1'><span className='text-muted-foreground'>Laba kotor</span><span className='font-bold'>{idr(kpi.grossProfit)}</span></p>
+                  <p className='flex justify-between border-t border-border pt-1'><span className='text-muted-foreground'>Laba kotor (coverage {kpi.cogsCoverage}%)</span><span className='font-bold'>{idr(kpi.grossProfit)}</span></p>
+                </div>
+              ) : kpi.cogs > 0 ? (
+                <div className='space-y-1 text-xs'>
+                  <p className='flex justify-between'><span className='text-muted-foreground'>COGS terpantau</span><span className='font-medium'>{idr(kpi.cogs)}</span></p>
+                  <p className='text-[10px] text-amber-700'>⚠ Coverage resep COGS baru {kpi.cogsCoverage}% — laba kotor belum valid. Lengkapi COGS per item di Moka.</p>
                 </div>
               ) : (
                 <p className='text-xs text-muted-foreground'>COGS belum tersedia untuk tanggal ini (item sales Moka belum menyertakan biaya).</p>

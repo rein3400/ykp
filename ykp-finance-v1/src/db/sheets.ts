@@ -345,7 +345,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
     'settle_cash', 'settle_qris', 'settle_card', 'settle_transfer', 'settle_marketplace',
 
-    'total_settlement', 'cogs', 'gross_profit'
+    'total_settlement', 'cogs', 'gross_profit', 'cogs_coverage'
 
   ],
 

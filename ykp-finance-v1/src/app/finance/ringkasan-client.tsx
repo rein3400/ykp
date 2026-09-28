@@ -72,16 +72,21 @@ export default function RingkasanClient(props: {
     return Object.entries(totals).map(([k, v]) => ({ key: k, label: PM_LABELS[k], value: v }));
   }, [props.pos, f]);
 
-  // Laba kotor dari COGS aktual (fin_pos_items cogs — item_sales Moka)
+  // Laba kotor dari COGS aktual (fin_pos_items cogs — item_sales Moka).
+  // Coverage resep rendah → laba kotor tidak valid sebagai angka final.
   const grossProfitKpi = useMemo(() => {
-    let cogs = 0;
+    let cogs = 0, itemNet = 0, itemNetWithCogs = 0;
     for (const r of props.items) {
       if (r.date < f.from || r.date > f.to) continue;
       if (f.brandId && r.brand_id !== f.brandId) continue;
       if (f.outletId && r.outlet_id !== f.outletId) continue;
-      cogs += Number(r.cogs || 0);
+      const n = Number(r.net_sales || 0);
+      const c = Number(r.cogs || 0);
+      itemNet += n;
+      if (c > 0) { itemNetWithCogs += n; cogs += c; }
     }
-    return { cogs, grossProfit: cogs > 0 ? kpi.netSales - cogs : null };
+    const coverage = itemNet > 0 ? Math.round((itemNetWithCogs / itemNet) * 100) : 0;
+    return { cogs, coverage, grossProfit: cogs > 0 ? kpi.netSales - cogs : null, ready: coverage >= 60 };
   }, [props.items, f, kpi.netSales]);
 
   const posFiltered = useMemo(() => props.pos
@@ -166,12 +171,16 @@ export default function RingkasanClient(props: {
             <Kpi label='Pembelian Supplier' value={rp(kpi.supplierCost)} sub={`Dibayar ${rp(kpi.supplierPaid)}`} />
             <Kpi label='Kas Kecil Keluar' value={rp(kpi.pettyCashOut)} />
             <Kpi label='Estimasi Surplus Kas' value={rpSigned(kpi.estimatedSurplus)} tone={kpi.estimatedSurplus < 0 ? 'bad' : 'good'} sub='Kas — bukan net profit' />
-            {grossProfitKpi.grossProfit !== null && (
+            {grossProfitKpi.cogs > 0 && (
               <Kpi
-                label='Laba Kotor (Real)'
-                value={rpSigned(grossProfitKpi.grossProfit)}
-                tone={grossProfitKpi.grossProfit < 0 ? 'bad' : 'good'}
-                sub={`Net − COGS aktual ${rp(grossProfitKpi.cogs)} (Moka item sales)`}
+                label={grossProfitKpi.ready ? 'Laba Kotor (Real)' : 'COGS Terpantau'}
+                value={grossProfitKpi.ready ? rpSigned(grossProfitKpi.grossProfit ?? 0) : rp(grossProfitKpi.cogs)}
+                tone={grossProfitKpi.ready && grossProfitKpi.grossProfit !== null && grossProfitKpi.grossProfit < 0 ? 'bad' : 'default'}
+                sub={
+                  grossProfitKpi.ready
+                    ? `Net − COGS aktual ${rp(grossProfitKpi.cogs)} (coverage ${grossProfitKpi.coverage}%)`
+                    : `Coverage resep Moka ${grossProfitKpi.coverage}% — lengkapi COGS di Moka untuk laba kotor riil`
+                }
               />
             )}
             <Kpi label='Group Cash Position' value={rp(groupCash)} sub='Kas fisik + saldo kas kecil' />
