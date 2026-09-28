@@ -183,7 +183,10 @@ const sheetStore: Record<string, Record<string, string>[]> = {};
 vi.mock('../src/db/sheets', () => ({
   TABS: {
     outlets: 'master_outlet', brands: 'master_brand',
-    posDaily: 'fin_pos_daily', posItems: 'fin_pos_items', appSettings: 'app_settings'
+    posDaily: 'fin_pos_daily', posItems: 'fin_pos_items', appSettings: 'app_settings',
+    expense: 'fin_expense', supplierCost: 'fin_supplier_cost',
+    pettyCash: 'fin_petty_cash', closingCash: 'fin_closing_cash',
+    dailySummary: 'fin_daily_summary'
   },
   readTab: vi.fn(async (tab: string) => sheetStore[tab] ?? []),
   appendRows: vi.fn(async (tab: string, rows: Record<string, string>[]) => {
@@ -308,6 +311,88 @@ describe('runMokaSync orchestration', () => {
     expect(sheetStore['fin_pos_daily']).toHaveLength(1);
     expect(r2.outlets[0].daily.updated).toBe(1);
     expect(r2.outlets[0].daily.written).toBe(0);
+  });
+
+  it('fills settlement from payment_methods report (probe shape 2026-09-28) + COGS item + refresh fin_daily_summary', async () => {
+    (mokaGet as Mock).mockImplementation((_tok: string, path: string) => {
+      if (path.includes('sales_summary')) {
+        return {
+          data: { gross_sales: 4300000, discounts: 0, refunds: 0, net_sales: 3892000, gratuities: 338700, taxes: 0, total_collected: 4230700, number_of_transactions: 49 }
+        };
+      }
+      if (path.includes('item_sales')) {
+        return {
+          data: { item_sales: [
+            { name: 'Pizza Reguler', category_name: 'Pizza', item_sold: 12, gross_sales: 1200000, discount: 0, refund: 0, net_sales: 1200000, cogs: 480000, gross_profit: 720000 },
+            { name: 'Kopi Susu', category_name: 'BEVERAGES', item_sold: 10, gross_sales: 500000, discount: 0, refund: 0, net_sales: 500000, cogs: 150000, gross_profit: 350000 }
+          ] }
+        };
+      }
+      if (path.includes('payment_methods')) {
+        return {
+          data: {
+            total_number_of_transactions: 49,
+            total_collected: 4230700,
+            reports: {
+              Cash: [{ payment_type: 'Cash', collected: 217800, number_of_transactions: 5 }],
+              'Digital Payments': [{ payment_type: 'Gopay', collected: 1384900, number_of_transactions: 16 }],
+              'Online Delivery': [{ payment_type: 'GoFood', collected: 329000, number_of_transactions: 4 }, { payment_type: 'GrabFood', collected: 176000, number_of_transactions: 2 }],
+              EDC: [{ payment_type: 'BRI', collected: 434500, number_of_transactions: 4 }],
+              Other: [{ payment_type: 'Other', collected: 1688500, number_of_transactions: 18 }]
+            }
+          }
+        };
+      }
+      return { data: [] };
+    });
+
+    const r = await runMokaSync({ date: '2026-09-04', outletKey: 'GOOD', actor: 'test' });
+    expect(r.outlets[0].status).toBe('ok');
+    expect(r.outlets[0].summary?.written).toBe(1);
+
+    const daily = sheetStore['fin_pos_daily'][0];
+    expect(daily.settle_cash).toBe('217800');
+    expect(daily.settle_qris).toBe('1384900');
+    expect(daily.settle_card).toBe('434500');
+    expect(daily.settle_transfer).toBe('1688500'); // Other → Lainnya
+    expect(daily.settle_marketplace).toBe('505000'); // GoFood + GrabFood
+    expect(daily.total_settlement).toBe('4230700');
+    // reconcile basis: net + gratuity − collected = 0
+    expect(daily.settlement_difference).toBe('0');
+
+    const itemRows = sheetStore['fin_pos_items'];
+    const pizza = itemRows.find((x) => x.item_name === 'Pizza Reguler')!;
+    const kopi = itemRows.find((x) => x.item_name === 'Kopi Susu')!;
+    expect(pizza.cogs).toBe('480000');
+    expect(pizza.gross_profit).toBe('720000');
+    expect(kopi.cogs).toBe('150000');
+    expect(kopi.gross_profit).toBe('350000');
+
+    const summary = sheetStore['fin_daily_summary'][0];
+    expect(summary.summary_id).toBe('FIN-20260904-OL-001');
+    expect(summary.settle_cash).toBe('217800');
+    expect(summary.total_settlement).toBe('4230700');
+    expect(summary.cogs).toBe('630000'); // 480000 + 150000
+    expect(summary.gross_profit).toBe(String(3892000 - 630000));
+    expect(summary.net_sales).toBe('3892000');
+  });
+
+  it('falls back to legacy payments[] in sales_summary when payment_methods report is empty', async () => {
+    (mokaGet as Mock).mockImplementation((_tok: string, path: string) => {
+      if (path.includes('sales_summary')) {
+        return {
+          data: [{ date: '04/09/2026', gross_sales: 5000000, net_sales: 4800000, transaction_count: 10, payments: [{ type: 'CASH', amount: 2800000 }, { type: 'QRIS', amount: 2000000 }] }]
+        };
+      }
+      return { data: [] };
+    });
+    const r = await runMokaSync({ date: '2026-09-04', outletKey: 'GOOD', actor: 'test' });
+    expect(r.outlets[0].status).toBe('ok');
+    const daily = sheetStore['fin_pos_daily'][0];
+    expect(daily.settle_cash).toBe('2800000');
+    expect(daily.settle_qris).toBe('2000000');
+    expect(daily.total_settlement).toBe('4800000');
+    expect(daily.settlement_difference).toBe('0'); // gratuity 0 → net basis
   });
 });
 

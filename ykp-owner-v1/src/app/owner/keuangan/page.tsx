@@ -13,10 +13,21 @@ const COLUMNS: Column[] = [
   { key: 'net_sales', label: 'Revenue', format: 'idr' },
   { key: 'total_expense', label: 'Expense', format: 'idr' },
   { key: 'estimated_surplus', label: 'Est. Surplus', format: 'idr' },
+  { key: 'total_settlement', label: 'Settlement', format: 'idr' },
+  { key: 'cogs', label: 'COGS', format: 'idr' },
+  { key: 'gross_profit', label: 'Laba Kotor', format: 'idr' },
   { key: 'unpaid_supplier', label: 'Unpaid Supplier', format: 'idr' },
   { key: 'cash_difference', label: 'Selisih Kas', format: 'idr' },
   { key: 'transaction_count', label: 'Transaksi' },
   { key: 'aov', label: 'AOV', format: 'idr' }
+];
+
+const SETTLEMENT_LABELS: [string, string][] = [
+  ['settle_cash', 'Cash'],
+  ['settle_qris', 'QRIS'],
+  ['settle_card', 'Card'],
+  ['settle_transfer', 'Transfer/Lainnya'],
+  ['settle_marketplace', 'Marketplace']
 ];
 
 export default async function KeuanganPage() {
@@ -66,6 +77,44 @@ export default async function KeuanganPage() {
             ))}
           </div>
 
+          <div className='grid grid-cols-1 gap-3 lg:grid-cols-2'>
+            <Card title='Breakdown Payment Method'>
+              <p className='mb-2 text-[10px] text-muted-foreground'>Total settlement per metode (sync Moka)</p>
+              {kpi.totalSettlement > 0 ? (
+                <div className='space-y-1'>
+                  {SETTLEMENT_LABELS.map(([key, label]) => {
+                    const v = kpi.settlement[key] ?? 0;
+                    const pct = Math.round((v / kpi.totalSettlement) * 1000) / 10;
+                    return (
+                      <div key={key} className='flex items-center gap-2 text-xs'>
+                        <span className='w-32 shrink-0 text-muted-foreground'>{label}</span>
+                        <div className='h-2.5 flex-1 overflow-hidden rounded bg-muted'>
+                          <div className='h-full bg-primary/70' style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className='w-36 shrink-0 text-right font-medium'>{idr(v)}</span>
+                      </div>
+                    );
+                  })}
+                  <p className='pt-1 text-[10px] text-muted-foreground'>Total settlement: {idr(kpi.totalSettlement)}</p>
+                </div>
+              ) : (
+                <p className='text-xs text-muted-foreground'>Belum ada data settlement. Jalankan sync Moka untuk mengisi.</p>
+              )}
+            </Card>
+            <Card title='Laba Kotor (Real)'>
+              <p className='mb-2 text-[10px] text-muted-foreground'>Revenue − COGS aktual (item_sales Moka)</p>
+              {kpi.cogs > 0 ? (
+                <div className='space-y-1 text-xs'>
+                  <p className='flex justify-between'><span className='text-muted-foreground'>Revenue</span><span className='font-medium'>{idr(kpi.revenue)}</span></p>
+                  <p className='flex justify-between'><span className='text-muted-foreground'>COGS aktual</span><span className='font-medium'>− {idr(kpi.cogs)}</span></p>
+                  <p className='flex justify-between border-t border-border pt-1'><span className='text-muted-foreground'>Laba kotor</span><span className='font-bold'>{idr(kpi.grossProfit)}</span></p>
+                </div>
+              ) : (
+                <p className='text-xs text-muted-foreground'>COGS belum tersedia untuk tanggal ini (item sales Moka belum menyertakan biaya).</p>
+              )}
+            </Card>
+          </div>
+
           <Card title='Per outlet'>
             <FilterableRows rows={mod.rows} columns={COLUMNS} />
             <SourceTag source='Modul Keuangan (fin_daily_summary)' updatedAt={updated} />
@@ -73,8 +122,8 @@ export default async function KeuanganPage() {
 
           <Card title='Breakdown & detail'>
             <p className='text-xs text-muted-foreground'>
-              Breakdown metode pembayaran, aging supplier, dan detail POS tersedia di modul Keuangan
-              (endpoint publik summary tidak mengekspos rincian tersebut):
+              Aging supplier dan detail transaksi POS tersedia di modul Keuangan (endpoint publik summary
+              kini juga membawa settlement per metode + COGS aktual dari sync Moka):
             </p>
             <div className='mt-2 flex flex-wrap gap-2 text-xs'>
               <a href={moduleUrl(f, '/finance/pos')} target='_blank' rel='noopener noreferrer' className='rounded border border-border px-2 py-1 font-medium hover:bg-muted'>POS & pembayaran ↗</a>

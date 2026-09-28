@@ -16,12 +16,30 @@ export interface FinanceKpi {
   transactions: number;
   aov: number;
   momPct: number | null;
+  settlement: Record<string, number>;
+  totalSettlement: number;
+  cogs: number;
+  grossProfit: number;
+}
+
+/** Settlement per metode (settle_* di fin_daily_summary — dari sync Moka payment_methods). */
+export function settlementBreakdown(rows: SummaryRow[]): Record<string, number> {
+  return {
+    settle_cash: sum(rows, 'settle_cash'),
+    settle_qris: sum(rows, 'settle_qris'),
+    settle_card: sum(rows, 'settle_card'),
+    settle_transfer: sum(rows, 'settle_transfer'),
+    settle_marketplace: sum(rows, 'settle_marketplace')
+  };
 }
 
 export function consolidateFinance(rows: SummaryRow[], prevRows: SummaryRow[] = []): FinanceKpi {
   const revenue = sum(rows, 'net_sales');
   const transactions = sum(rows, 'transaction_count');
   const prevRevenue = sum(prevRows, 'net_sales');
+  const settlement = settlementBreakdown(rows);
+  const totalSettlement = Object.values(settlement).reduce((a, b) => a + b, 0);
+  const cogs = sum(rows, 'cogs');
   return {
     revenue,
     grossSales: sum(rows, 'gross_sales'),
@@ -31,7 +49,11 @@ export function consolidateFinance(rows: SummaryRow[], prevRows: SummaryRow[] = 
     cashDifference: sum(rows, 'cash_difference'),
     transactions,
     aov: transactions > 0 ? Math.round(revenue / transactions) : 0,
-    momPct: prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 1000) / 10 : null
+    momPct: prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 1000) / 10 : null,
+    settlement,
+    totalSettlement,
+    cogs,
+    grossProfit: cogs > 0 ? revenue - cogs : 0
   };
 }
 

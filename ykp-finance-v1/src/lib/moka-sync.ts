@@ -22,6 +22,8 @@ import {
 import { nowTimestampWib } from './format';
 import { nextSequentialIdSync } from './repo';
 import { parseIdrAmount } from './moka-importer';
+import { computeDailySummary, type FinanceRows } from './fin-summary';
+import { finSummaryId } from './id-gen';
 
 // ── app_settings K/V helpers ────────────────────────────────────────────
 
@@ -172,6 +174,54 @@ export function extractSummary(payload: unknown, dateIso: string): MokaDailySumm
   };
 }
 
+/**
+ * Extract per-method settlement from the Moka payment_methods report
+ * (v2 .../reports/payment_methods). Real shape (probe 2026-09-28):
+ * {data:{total_number_of_transactions, total_collected, reports:{
+ *   Cash:[{payment_type,collected,number_of_transactions}],
+ *   'Digital Payments':[...], EDC:[...], 'Online Delivery':[...], Other:[...]}}}
+ * Group mapping: Cash→cash, Digital Payments→qris (Gopay/BCA QR), EDC→card,
+ * Online Delivery→marketplace, anything else (incl. Other)→transfer ("Lainnya").
+ * Unknown groups fall into the Lainnya bucket so total_settlement always
+ * reconciles to total_collected.
+ */
+export function extractPaymentMethods(payload: unknown): {
+  settleCash: number;
+  settleQris: number;
+  settleCard: number;
+  settleTransfer: number;
+  settleMarketplace: number;
+  totalCollected: number;
+  hasBreakdown: boolean;
+} {
+  const empty = { settleCash: 0, settleQris: 0, settleCard: 0, settleTransfer: 0, settleMarketplace: 0, totalCollected: 0, hasBreakdown: false };
+  if (payload === null || payload === undefined) return empty;
+  const data = (payload as { data?: unknown }).data;
+  const reports = (data && typeof data === 'object' ? (data as { reports?: unknown }).reports : undefined) as
+    | Record<string, Record<string, unknown>[]>
+    | undefined;
+  if (!reports || typeof reports !== 'object') return empty;
+  const out: { settleCash: number; settleQris: number; settleCard: number; settleTransfer: number; settleMarketplace: number; totalCollected: number; hasBreakdown: boolean } = { ...empty };
+  type Bucket = 'settleCash' | 'settleQris' | 'settleCard' | 'settleTransfer' | 'settleMarketplace';
+  for (const [group, entries] of Object.entries(reports)) {
+    if (!Array.isArray(entries)) continue;
+    const bucket: Bucket =
+      /cash/i.test(group) ? 'settleCash'
+      : /digital/i.test(group) ? 'settleQris'
+      : /edc/i.test(group) ? 'settleCard'
+      : /delivery/i.test(group) ? 'settleMarketplace'
+      : 'settleTransfer';
+    for (const e of entries) {
+      if (!e || typeof e !== 'object') continue;
+      const amount = toIdrInt((e as Record<string, unknown>).collected ?? (e as Record<string, unknown>).amount);
+      out[bucket] += amount;
+      out.hasBreakdown = out.hasBreakdown || amount !== 0;
+    }
+  }
+  out.totalCollected = toIdrInt((data as { total_collected?: unknown }).total_collected);
+  return out;
+}
+
 export interface MokaItemSale {
   itemName: string;
   sku: string;
@@ -181,6 +231,8 @@ export interface MokaItemSale {
   discount: number;
   refund: number;
   netSales: number;
+  cogs: number;
+  grossProfit: number;
 }
 
 /**
@@ -216,7 +268,9 @@ export function extractItemSales(payload: unknown, dateIso: string): MokaItemSal
       grossSales: gross,
       discount,
       refund,
-      netSales: toIdrInt(pick(e, ['net_sales', 'total_net'])) || Math.max(0, gross - discount - refund)
+      netSales: toIdrInt(pick(e, ['net_sales', 'total_net'])) || Math.max(0, gross - discount - refund),
+      cogs: toIdrInt(pick(e, ['cogs', 'cost_of_goods', 'total_cogs'])),
+      grossProfit: toIdrInt(pick(e, ['gross_profit', 'grossProfit', 'total_gross_profit']))
     });
   }
   return out;
@@ -269,6 +323,7 @@ export interface OutletSyncResult {
   status: 'ok' | 'error' | 'needs_reauth';
   daily: { written: number; updated: number };
   items: { written: number; updated: number };
+  summary?: { written: number; updated: number };
   error?: string;
 }
 
@@ -356,6 +411,14 @@ function fetchReport(token: string, version: string, mokaOutletId: string, dateI
   });
 }
 
+/** Per-method settlement breakdown (v2). One extra call per outlet/day. */
+function fetchPaymentMethods(token: string, mokaOutletId: string, dateIso: string): Promise<unknown> {
+  return mokaGet(token, `/v2/outlets/${mokaOutletId}/reports/payment_methods`, {
+    start: isoToMokaDate(dateIso),
+    end: isoToMokaDate(dateIso)
+  });
+}
+
 /**
  * Run a full sync for one date across all configured outlets (or the given
  * subset). Per spec: one outlet failing must not stop the others, and the
@@ -411,12 +474,27 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
       const token = await ensureToken(cfg, opts.actor);
       await checkQuota(token);
 
-      const [summaryPayload, itemsPayload] = await Promise.all([
+      const [summaryPayload, itemsPayload, pmPayload] = await Promise.all([
         fetchReport(token, '2', cfg.mokaOutletId, date),
-        fetchReport(token, '3', cfg.mokaOutletId, date)
+        fetchReport(token, '3', cfg.mokaOutletId, date),
+        fetchPaymentMethods(token, cfg.mokaOutletId, date)
       ]);
       const summary = extractSummary(summaryPayload, date);
       const items = extractItemSales(itemsPayload, date);
+      // Settlement dari report payment_methods (sumber resmi per metode).
+      // Fallback: array payments di sales_summary (legacy), else nol.
+      const pm = extractPaymentMethods(pmPayload);
+      if (!pm.hasBreakdown && pm.totalCollected === 0) {
+        // payment_methods kosong → coba payments[] di sales_summary
+        const s = extractSummary(summaryPayload, date);
+        pm.settleCash = s?.settleCash ?? 0;
+        pm.settleQris = s?.settleQris ?? 0;
+        pm.settleCard = s?.settleCard ?? 0;
+        pm.settleTransfer = s?.settleTransfer ?? 0;
+        pm.settleMarketplace = s?.settleMarketplace ?? 0;
+      }
+      const totalSettlement =
+        pm.settleCash + pm.settleQris + pm.settleCard + pm.settleTransfer + pm.settleMarketplace;
 
       const [outlets, brands, existingDaily, existingItems] = await Promise.all([
         readTab<Record<string, string>>(TABS.outlets),
@@ -433,6 +511,9 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
       // and violates the PK on re-sync). Sheets/mock: no __rownum field →
       // physical row = index+2 (row 1 is the header).
       const pgMode = isPostgresMode();
+      // Hoisted untuk refresh fin_daily_summary di bawah (setelah daily+items upsert).
+      let dailyRow: Record<string, string> | null = null;
+      let newItemRows: Record<string, string>[] = [];
 
       if (summary) {
         const row: Record<string, string> = {
@@ -449,15 +530,17 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
           void: String(summary.void),
           tax: String(summary.tax),
           service_charge: String(summary.serviceCharge),
-          settle_cash: String(summary.settleCash),
-          settle_qris: String(summary.settleQris),
-          settle_card: String(summary.settleCard),
-          settle_transfer: String(summary.settleTransfer),
-          settle_marketplace: String(summary.settleMarketplace),
-          total_settlement: String(
-            summary.settleCash + summary.settleQris + summary.settleCard + summary.settleTransfer + summary.settleMarketplace
+          settle_cash: String(pm.settleCash),
+          settle_qris: String(pm.settleQris),
+          settle_card: String(pm.settleCard),
+          settle_transfer: String(pm.settleTransfer),
+          settle_marketplace: String(pm.settleMarketplace),
+          total_settlement: String(totalSettlement),
+          // Reconcile target = total_collected = net_sales + gratuities (+rounding).
+          // CSV/manual rows keep the old net_sales basis (gratuity mereka 0).
+          settlement_difference: String(
+            summary.netSales + summary.serviceCharge - totalSettlement
           ),
-          settlement_difference: '0',
           transaction_count: String(summary.transactionCount),
           aov: summary.transactionCount > 0 ? String(Math.round(summary.netSales / summary.transactionCount)) : '0',
           cashier: '',
@@ -495,6 +578,7 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
         for (const u of upsert.updates) await updateRow(TABS.posDaily, u.rowNumber, u.values);
         if (upsert.appends.length > 0) await appendRows(TABS.posDaily, upsert.appends);
         r.daily = { written: upsert.appends.length, updated: upsert.updates.length };
+        dailyRow = row;
       }
 
       if (items.length > 0) {
@@ -513,6 +597,8 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
           discount: String(it.discount),
           refund: String(it.refund),
           net_sales: String(it.netSales),
+          cogs: String(it.cogs),
+          gross_profit: String(it.grossProfit || Math.max(0, it.netSales - it.cogs)),
           source: 'moka',
           created_at: t
         }));
@@ -534,6 +620,72 @@ export async function runMokaSync(opts: { date: string; outletKey?: string; acto
         for (const u of upsert.updates) await updateRow(TABS.posItems, u.rowNumber, u.values);
         if (upsert.appends.length > 0) await appendRows(TABS.posItems, upsert.appends);
         r.items = { written: upsert.appends.length, updated: upsert.updates.length };
+        newItemRows = itemRows;
+      }
+
+      // ── Refresh fin_daily_summary untuk (date, outlet) ─────────────────
+      // Sync Moka adalah penulis otomatis summary: settle_* + cogs langsung
+      // segar untuk owner/hermez/warehouse lewat /api/finance/summary (publik).
+      // Alert rules tetap di jalur regenerate (sesi admin).
+      if (dailyRow) {
+        const [expenses, suppliers, petty, closing] = await Promise.all([
+          readTab<Record<string, string>>(TABS.expense),
+          readTab<Record<string, string>>(TABS.supplierCost),
+          readTab<Record<string, string>>(TABS.pettyCash),
+          readTab<Record<string, string>>(TABS.closingCash)
+        ]);
+        const posMerged = existingDaily.filter(
+          (x) => !(x.date === date && x.outlet_id === r.outlet_id)
+        );
+        posMerged.push(dailyRow);
+        const keys = new Set(newItemRows.map((x) => x.item_name));
+        const itemsForCogs = [
+          ...existingItems.filter(
+            (x) => x.date === date && x.outlet_id === r.outlet_id && !keys.has(x.item_name)
+          ),
+          ...newItemRows
+        ];
+        const rows: FinanceRows = { pos: posMerged, expenses, suppliers, petty, closing, items: itemsForCogs };
+        const c = computeDailySummary(rows, date, r.outlet_id!);
+        const summaryId = finSummaryId(date, r.outlet_id!);
+        const sRow: Record<string, string> = {
+          summary_id: summaryId,
+          date,
+          brand_id: brandId,
+          brand_name: brandName,
+          outlet_id: r.outlet_id!,
+          outlet_name: outlet?.outlet_name ?? '',
+          gross_sales: String(c.grossSales),
+          net_sales: String(c.netSales),
+          discount: String(c.discount),
+          refund: String(c.refund),
+          void: String(c.voidAmount),
+          transaction_count: String(c.transactionCount),
+          aov: String(c.aov),
+          supplier_cost: String(c.supplierCost),
+          petty_cash_out: String(c.pettyCashOut),
+          total_expense: String(c.totalExpense),
+          unpaid_supplier: String(c.unpaidSupplier),
+          cash_difference: String(c.cashDifference),
+          estimated_surplus: String(c.estimatedSurplus),
+          top_supplier: c.topSupplier,
+          top_expense_category: c.topExpenseCategory,
+          major_finance_issue: c.majorFinanceIssue,
+          recommended_action: c.recommendedAction,
+          settle_cash: String(c.settleCash),
+          settle_qris: String(c.settleQris),
+          settle_card: String(c.settleCard),
+          settle_transfer: String(c.settleTransfer),
+          settle_marketplace: String(c.settleMarketplace),
+          total_settlement: String(c.totalSettlement),
+          cogs: String(c.cogs),
+          gross_profit: String(c.grossProfit),
+          created_at: t
+        };
+        const existing = await findRow(TABS.dailySummary, 'summary_id', summaryId);
+        if (existing) await updateRow(TABS.dailySummary, existing.rowNumber, sRow);
+        else await appendRows(TABS.dailySummary, [sRow]);
+        r.summary = { written: existing ? 0 : 1, updated: existing ? 1 : 0 };
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

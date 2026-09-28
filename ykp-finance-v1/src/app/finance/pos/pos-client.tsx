@@ -188,7 +188,7 @@ function PosForm({ outlets, onClose, onSave, saving }: {
           <Input label='Cash (Rp)' type='number' value={v.settle_cash} onChange={set('settle_cash')} />
           <Input label='QRIS (Rp)' type='number' value={v.settle_qris} onChange={set('settle_qris')} />
           <Input label='Card (Rp)' type='number' value={v.settle_card} onChange={set('settle_card')} />
-          <Input label='Transfer (Rp)' type='number' value={v.settle_transfer} onChange={set('settle_transfer')} />
+          <Input label='Transfer/Lainnya (Rp)' type='number' value={v.settle_transfer} onChange={set('settle_transfer')} />
           <Input label='Marketplace (Rp)' type='number' value={v.settle_marketplace} onChange={set('settle_marketplace')} />
         </div>
       </div>

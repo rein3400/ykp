@@ -249,7 +249,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
     'item_name', 'sku', 'category', 'qty', 'gross_sales', 'discount', 'refund',
 
-    'net_sales', 'source', 'created_at'
+    'net_sales', 'source', 'created_at', 'cogs', 'gross_profit'
 
   ],
 
@@ -337,7 +337,15 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
     'estimated_surplus', 'top_supplier', 'top_expense_category',
 
-    'major_finance_issue', 'recommended_action', 'created_at'
+    'major_finance_issue', 'recommended_action', 'created_at',
+
+    // Moka settlement + actual COGS (appended 2026-09: sync menulis settle_* dari
+
+    // report payment_methods; cogs dari item_sales) — dibaca owner/hermez/warehouse
+
+    'settle_cash', 'settle_qris', 'settle_card', 'settle_transfer', 'settle_marketplace',
+
+    'total_settlement', 'cogs', 'gross_profit'
 
   ],
 

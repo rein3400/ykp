@@ -37,12 +37,13 @@ export const POST = handler(async (req: NextRequest) => {
   const body = (await req.json().catch(() => ({}))) as { date?: string; outlet_id?: string };
   const date = body.date && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : todayWib();
 
-  const [pos, expenses, suppliers, petty, closing, outlets, brands, thresholdRows, existingAlerts, existingActions] = await Promise.all([
+  const [pos, expenses, suppliers, petty, closing, posItems, outlets, brands, thresholdRows, existingAlerts, existingActions] = await Promise.all([
     readTab<Record<string, string>>(TABS.posDaily),
     readTab<Record<string, string>>(TABS.expense),
     readTab<Record<string, string>>(TABS.supplierCost),
     readTab<Record<string, string>>(TABS.pettyCash),
     readTab<Record<string, string>>(TABS.closingCash),
+    readTab<Record<string, string>>(TABS.posItems),
     readTab<Record<string, string>>(TABS.outlets),
     readTab<Record<string, string>>(TABS.brands),
     readTab<Record<string, string>>(TABS.thresholdConfig),
@@ -50,7 +51,7 @@ export const POST = handler(async (req: NextRequest) => {
     readTab<Record<string, string>>(TABS.actionTracker)
   ]);
 
-  const rows: FinanceRows = { pos, expenses, suppliers, petty, closing };
+  const rows: FinanceRows = { pos, expenses, suppliers, petty, closing, items: posItems };
   const thresholds = thresholdRows as unknown as ThresholdRow[];
   const brandName = (id: string) => brands.find((b) => b.brand_id === id)?.brand_name ?? id;
 
@@ -91,6 +92,14 @@ export const POST = handler(async (req: NextRequest) => {
       top_expense_category: c.topExpenseCategory,
       major_finance_issue: c.majorFinanceIssue,
       recommended_action: c.recommendedAction,
+      settle_cash: String(c.settleCash),
+      settle_qris: String(c.settleQris),
+      settle_card: String(c.settleCard),
+      settle_transfer: String(c.settleTransfer),
+      settle_marketplace: String(c.settleMarketplace),
+      total_settlement: String(c.totalSettlement),
+      cogs: String(c.cogs),
+      gross_profit: String(c.grossProfit),
       created_at: t
     };
     // Upsert by deterministic summary_id

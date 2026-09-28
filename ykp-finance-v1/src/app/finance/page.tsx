@@ -8,10 +8,11 @@ export const dynamic = 'force-dynamic';
 export default async function RingkasanPage() {
   const session = await getSession();
   if (!session) redirect('/login');
-  const [brands, outlets, pos, expenses, suppliers, petty, closing, alerts] = await Promise.all([
+  const [brands, outlets, pos, posItems, expenses, suppliers, petty, closing, alerts] = await Promise.all([
     readTab<Record<string, string>>(TABS.brands),
     readTab<Record<string, string>>(TABS.outlets),
     readTab<Record<string, string>>(TABS.posDaily),
+    readTab<Record<string, string>>(TABS.posItems),
     readTab<Record<string, string>>(TABS.expense),
     readTab<Record<string, string>>(TABS.supplierCost),
     readTab<Record<string, string>>(TABS.pettyCash),
@@ -23,6 +24,7 @@ export default async function RingkasanPage() {
       brands={brands}
       outlets={outlets}
       pos={pos}
+      items={posItems}
       expenses={expenses}
       suppliers={suppliers}
       petty={petty}

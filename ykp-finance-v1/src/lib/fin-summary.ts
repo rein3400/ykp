@@ -24,6 +24,8 @@ export interface FinanceRows {
   suppliers: Record<string, string>[];
   petty: Record<string, string>[];
   closing: Record<string, string>[];
+  /** fin_pos_items rows (item_sales Moka) — sumber COGS aktual. Optional. */
+  items?: Record<string, string>[];
 }
 
 export interface DailySummaryComputed {
@@ -40,6 +42,14 @@ export interface DailySummaryComputed {
   unpaidSupplier: number;
   cashDifference: number;
   settlementDifference: number;
+  settleCash: number;
+  settleQris: number;
+  settleCard: number;
+  settleTransfer: number;
+  settleMarketplace: number;
+  totalSettlement: number;
+  cogs: number;
+  grossProfit: number;
   estimatedSurplus: number;
   topSupplier: string;
   topExpenseCategory: string;
@@ -65,6 +75,7 @@ function inScope(row: Record<string, string>, date: string, outletId: string, da
 /** POS aggregates for (date, outlet). */
 export function sumPos(rows: Record<string, string>[], date?: string, outletId?: string) {
   let gross = 0, net = 0, discount = 0, refund = 0, voidAmt = 0, tx = 0, settleDiff = 0, totalSettlement = 0;
+  let settleCash = 0, settleQris = 0, settleCard = 0, settleTransfer = 0, settleMarketplace = 0;
   for (const r of rows) {
     if (date && r.date !== date) continue;
     if (outletId && r.outlet_id !== outletId) continue;
@@ -76,8 +87,24 @@ export function sumPos(rows: Record<string, string>[], date?: string, outletId?:
     tx += num(r.transaction_count);
     settleDiff += num(r.settlement_difference);
     totalSettlement += num(r.total_settlement);
+    settleCash += num(r.settle_cash);
+    settleQris += num(r.settle_qris);
+    settleCard += num(r.settle_card);
+    settleTransfer += num(r.settle_transfer);
+    settleMarketplace += num(r.settle_marketplace);
   }
-  return { gross, net, discount, refund, voidAmount: voidAmt, transactionCount: tx, settlementDifference: settleDiff, totalSettlement };
+  return { gross, net, discount, refund, voidAmount: voidAmt, transactionCount: tx, settlementDifference: settleDiff, totalSettlement, settleCash, settleQris, settleCard, settleTransfer, settleMarketplace };
+}
+
+/** COGS aktual dari fin_pos_items (item_sales Moka) untuk (date, outlet). */
+export function sumItemCogs(rows: Record<string, string>[] | undefined, date: string, outletId: string): number {
+  if (!rows) return 0;
+  let cogs = 0;
+  for (const r of rows) {
+    if (r.date !== date || r.outlet_id !== outletId) continue;
+    cogs += num(r.cogs);
+  }
+  return cogs;
 }
 
 /** Expense total. Excludes CANCELLED/REJECTED. Expense rows are primary — links never exclude them. */
@@ -188,6 +215,10 @@ export function computeDailySummary(rows: FinanceRows, date: string, outletId: s
   const cashDifference = latestCashDifference(rows.closing, date, outletId);
   const aov = pos.transactionCount > 0 ? Math.round(pos.net / pos.transactionCount) : 0;
   const estimatedSurplus = pos.net - totalExpense - supplierCost - pettyCashOut;
+  // COGS aktual dari item_sales Moka (cogs per item). Laba kotor = net − cogs.
+  // Bukan pengganti estimated_surplus (yang basisnya kas) — ini laba akuntansi.
+  const cogs = sumItemCogs(rows.items, date, outletId);
+  const grossProfit = cogs > 0 ? pos.net - cogs : 0;
 
   // Priority: cash_difference > settlement_mismatch > unpaid_supplier > high_expense_ratio
   const majorFinanceIssue =
@@ -222,6 +253,14 @@ export function computeDailySummary(rows: FinanceRows, date: string, outletId: s
     unpaidSupplier,
     cashDifference,
     settlementDifference: pos.settlementDifference,
+    settleCash: pos.settleCash,
+    settleQris: pos.settleQris,
+    settleCard: pos.settleCard,
+    settleTransfer: pos.settleTransfer,
+    settleMarketplace: pos.settleMarketplace,
+    totalSettlement: pos.totalSettlement,
+    cogs,
+    grossProfit,
     estimatedSurplus,
     topSupplier: topSupplierForDate(rows.suppliers, date, outletId),
     topExpenseCategory: topExpenseCategoryForDate(rows.expenses, date, outletId),

@@ -16,7 +16,7 @@ const PM_LABELS: Record<string, string> = {
   settle_cash: 'Cash',
   settle_qris: 'QRIS',
   settle_card: 'Card',
-  settle_transfer: 'Transfer',
+  settle_transfer: 'Transfer/Lainnya',
   settle_marketplace: 'Marketplace'
 };
 
@@ -24,6 +24,7 @@ export default function RingkasanClient(props: {
   brands: Record<string, string>[];
   outlets: Record<string, string>[];
   pos: Record<string, string>[];
+  items: Record<string, string>[];
   expenses: Record<string, string>[];
   suppliers: Record<string, string>[];
   petty: Record<string, string>[];
@@ -70,6 +71,18 @@ export default function RingkasanClient(props: {
     }
     return Object.entries(totals).map(([k, v]) => ({ key: k, label: PM_LABELS[k], value: v }));
   }, [props.pos, f]);
+
+  // Laba kotor dari COGS aktual (fin_pos_items cogs — item_sales Moka)
+  const grossProfitKpi = useMemo(() => {
+    let cogs = 0;
+    for (const r of props.items) {
+      if (r.date < f.from || r.date > f.to) continue;
+      if (f.brandId && r.brand_id !== f.brandId) continue;
+      if (f.outletId && r.outlet_id !== f.outletId) continue;
+      cogs += Number(r.cogs || 0);
+    }
+    return { cogs, grossProfit: cogs > 0 ? kpi.netSales - cogs : null };
+  }, [props.items, f, kpi.netSales]);
 
   const posFiltered = useMemo(() => props.pos
     .filter((r) => r.date >= f.from && r.date <= f.to
@@ -152,7 +165,15 @@ export default function RingkasanClient(props: {
             <Kpi label='Total Expense' value={rp(kpi.totalExpense)} sub={kpi.topExpenseCategory ? `Terbesar: ${kpi.topExpenseCategory}` : undefined} />
             <Kpi label='Pembelian Supplier' value={rp(kpi.supplierCost)} sub={`Dibayar ${rp(kpi.supplierPaid)}`} />
             <Kpi label='Kas Kecil Keluar' value={rp(kpi.pettyCashOut)} />
-            <Kpi label='Estimasi Surplus Kas' value={rpSigned(kpi.estimatedSurplus)} tone={kpi.estimatedSurplus < 0 ? 'bad' : 'good'} sub='Bukan net profit — COGS aktual belum tersedia' />
+            <Kpi label='Estimasi Surplus Kas' value={rpSigned(kpi.estimatedSurplus)} tone={kpi.estimatedSurplus < 0 ? 'bad' : 'good'} sub='Kas — bukan net profit' />
+            {grossProfitKpi.grossProfit !== null && (
+              <Kpi
+                label='Laba Kotor (Real)'
+                value={rpSigned(grossProfitKpi.grossProfit)}
+                tone={grossProfitKpi.grossProfit < 0 ? 'bad' : 'good'}
+                sub={`Net − COGS aktual ${rp(grossProfitKpi.cogs)} (Moka item sales)`}
+              />
+            )}
             <Kpi label='Group Cash Position' value={rp(groupCash)} sub='Kas fisik + saldo kas kecil' />
             <Kpi label='Outstanding Supplier' value={rp(kpi.unpaidSupplier)} tone={kpi.unpaidSupplier > 0 ? 'warn' : 'default'} sub='Accounts Payable' />
             <Kpi label='MoM Growth' value={mom === null ? 'N/A' : `${mom >= 0 ? '+' : ''}${mom.toFixed(1)}%`} sub='Net sales vs bulan lalu' tone={mom === null ? 'default' : mom >= 0 ? 'good' : 'bad'} />

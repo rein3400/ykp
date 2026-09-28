@@ -11,7 +11,7 @@ import { Card, FilterBar, Bars, rp, rpSigned, type FilterState } from '../ui';
 
 const PM_LABELS: [string, string][] = [
   ['settle_cash', 'Cash'], ['settle_qris', 'QRIS'], ['settle_card', 'Card'],
-  ['settle_transfer', 'Transfer'], ['settle_marketplace', 'Marketplace']
+  ['settle_transfer', 'Transfer/Lainnya'], ['settle_marketplace', 'Marketplace']
 ];
 
 export default function AnalyticsClient(props: {
