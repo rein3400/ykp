@@ -90,8 +90,11 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   ],
   [TABS.telegramLinkCodes]: ['code', 'user_id', 'expires_at', 'telegram_chat_id', 'consumed_at', 'created_at', 'division'],
   [TABS.users]: [
+    // Urutan harus sama persis dengan header live spreadsheet (opsi ops
+    // fix-users-header menambah department + telegram_id sebelum active_status).
+    // findRow/updateRow/appendRows memetakan kolom via array ini.
     'user_id', 'username', 'password_hash', 'role',
-    'investor_id', 'active_status', 'created_at', 'last_login_at'
+    'investor_id', 'department', 'telegram_id', 'active_status', 'created_at', 'last_login_at'
   ],
   [TABS.auditLog]: [
     'audit_id', 'timestamp', 'actor_user_id', 'actor_role', 'action',
