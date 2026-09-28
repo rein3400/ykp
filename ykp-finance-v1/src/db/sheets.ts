@@ -431,12 +431,52 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
 
 
+/**
+ * Read-through cache + 429 tolerance untuk Sheets values.get.
+ *
+ * Kuota read Sheets API dibagi satu service account di seluruh app V1 —
+ * page load paralel (halaman ringkasan = 9 readTab) + cron + app lain bisa
+ * melebihi limit per menit → 429 → halaman 500. Mitigasi:
+ *  1. Cache in-memory per tab (TTL 20s) — repeat load hampir tanpa kuota.
+ *  2. Retry dengan backoff saat 429 (2×).
+ *  3. Cache di-drop saat tab ditulis (appendRows/updateRow) supaya tak stale.
+ */
+const READ_CACHE_TTL_MS = 20_000;
+const readCache = new Map<string, { at: number; value: unknown }>();
+function dropReadCache(tab: TabName): void {
+  readCache.delete(tab);
+}
+
+const sleep = (ms: number) => new Promise<void>((r) => {
+  setTimeout(r, ms);
+});
+
+async function valuesGetWithRetry(
+  sheets: ReturnType<typeof getSheetsClient>,
+  params: { spreadsheetId: string; range: string }
+): Promise<{ data: { values?: any[][] | null } }> {
+  const delays = [2_500, 6_000];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await sheets.spreadsheets.values.get(params);
+    } catch (e) {
+      const status = (e as { status?: number; code?: number }).status ?? (e as { code?: number }).code;
+      if (status !== 429 || attempt >= delays.length) throw e;
+      await sleep(delays[attempt]);
+    }
+  }
+}
+
+
 /** Read a tab as array of objects keyed by header. Empty cells → "". */
 
 export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
 
   if (isMockMode()) return mockReadTab(tab) as T[];
   if (isPostgresMode()) return pgReadTab<T>(tab, TAB_HEADERS[tab]);
+
+  const cached = readCache.get(tab);
+  if (cached && Date.now() - cached.at < READ_CACHE_TTL_MS) return cached.value as T[];
 
   const sheets = getSheetsClient();
 
@@ -446,7 +486,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
 
   const lastCol = columnLetter(headers.length);
 
-  const res = await sheets.spreadsheets.values.get({
+  const res = await valuesGetWithRetry(sheets, {
 
     spreadsheetId: sid,
 
@@ -456,23 +496,31 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
 
   const rows = res.data.values ?? [];
 
-  if (rows.length < 2) return [];
+  const mapped: Record<string, string>[] = [];
 
-  const headerRow = rows[0] as string[];
+  if (rows.length >= 2) {
 
-  return rows.slice(1).map((row) => {
+    const headerRow = rows[0] as string[];
 
-    const obj: Record<string, string> = {};
+    for (const row of rows.slice(1)) {
 
-    headerRow.forEach((h, i) => {
+      const obj: Record<string, string> = {};
 
-      obj[h] = (row[i] as string) ?? '';
+      headerRow.forEach((h, i) => {
 
-    });
+        obj[h] = (row[i] as string) ?? '';
 
-    return obj as T;
+      });
 
-  });
+      mapped.push(obj);
+
+    }
+
+  }
+
+  readCache.set(tab, { at: Date.now(), value: mapped });
+
+  return mapped as T[];
 
 }
 
@@ -483,6 +531,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
 export async function appendRows(tab: TabName, rows: Record<string, string>[]): Promise<number> {
 
   if (rows.length === 0) return -1;
+  dropReadCache(tab);
 
   if (isMockMode()) return mockAppendRows(tab, rows);
   if (isPostgresMode()) return pgAppendRows(tab, TAB_HEADERS[tab], rows);
@@ -567,6 +616,7 @@ export async function updateRow(
 
 ): Promise<void> {
 
+  dropReadCache(tab);
   if (isMockMode()) { mockUpdateRow(tab, rowNumber, values); return; }
   if (isPostgresMode()) { await pgUpdateRow(tab, TAB_HEADERS[tab], rowNumber, values); return; }
 
