@@ -14,6 +14,7 @@ import { createHash } from 'crypto';
 import { setSession } from '@/lib/session';
 import { readTab, TABS } from '@/db/sheets';
 import { ok, handler, unauthorized, badRequest } from '@/lib/http';
+import { rateLimit, clientKey } from '@/lib/ratelimit';
 
 function hashPassword(pw: string): string {
   return createHash('sha256').update(pw).digest('hex');
@@ -33,6 +34,10 @@ function publicOrigin(req: NextRequest): string {
 }
 
 export const POST = handler(async (req: NextRequest) => {
+  const key = clientKey(req);
+  const limit = rateLimit(`login:${key}`, 10, 60_000);
+  if (!limit.ok) return unauthorized('Terlalu banyak percobaan, coba lagi nanti');
+
   const body = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
   const { username, password } = body;
   if (!username || !password) return badRequest('username and password required');

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { computeSettlement } from '@/lib/settlement';
 import { todayWib, lastNDays } from '@/lib/wib';
 import { Card, EmptyState, FilterBar, Btn, Modal, Input, Select, Th, Td, rp, rpSigned, type FilterState } from '../ui';
+import { MokaModal } from './moka-modal';
 
 const PM_FIELDS = [
   ['settle_cash', 'Cash'], ['settle_qris', 'QRIS'], ['settle_card', 'Card'],
@@ -28,6 +29,7 @@ export default function PosClient(props: {
   const [showImport, setShowImport] = useState(false);
   const [showImportItems, setShowImportItems] = useState(false);
   const [showSettlement, setShowSettlement] = useState(false);
+  const [showMoka, setShowMoka] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const rows = useMemo(() => props.pos
@@ -57,6 +59,7 @@ export default function PosClient(props: {
           <Btn variant='outline' onClick={() => setShowSettlement(true)}>Validasi Settlement</Btn>
           <Btn variant='outline' onClick={() => setShowImport(true)}>Import CSV Moka</Btn>
           <Btn variant='outline' onClick={() => setShowImportItems(true)}>Import Item CSV</Btn>
+          <Btn variant='outline' onClick={() => setShowMoka(true)}>Moka API</Btn>
           <Btn onClick={() => setShowForm(true)}>+ Tambah Transaksi</Btn>
         </div>
       </div>
@@ -141,6 +144,7 @@ export default function PosClient(props: {
       {showImport && <ImportModal onClose={() => setShowImport(false)} onDone={() => { setShowImport(false); router.refresh(); }} />}
       {showImportItems && <ImportItemsModal onClose={() => setShowImportItems(false)} onDone={() => { setShowImportItems(false); router.refresh(); }} />}
       {showSettlement && <SettlementModal rows={mismatches.length > 0 ? mismatches : rows.slice(0, 20)} onlyMismatch={mismatches.length > 0} onClose={() => setShowSettlement(false)} />}
+      {showMoka && <MokaModal onClose={() => setShowMoka(false)} onSynced={() => router.refresh()} />}
     </div>
   );
 }

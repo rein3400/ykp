@@ -20,6 +20,11 @@ interface Payroll {
   unlock_approved_by?: string;
   approved_by?: string;
   payment_reference?: string;
+  finance_notified_at?: string;
+  finance_notified_by?: string;
+  email_sent_at?: string;
+  email_sent_to?: string;
+  email_sent_status?: string;
 }
 
 export function PayrollTable({
@@ -58,12 +63,20 @@ export function PayrollTable({
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? `HTTP ${r.status}`);
       }
+      const j = await r.json().catch(() => ({}));
+      const email = j?.data?.email ?? j?.email;
       setRows((rs) =>
         rs.map((row) =>
-          row.payroll_id === id ? { ...row, approval_status: "APPROVED", approved_by: "owner" } : row
+          row.payroll_id === id ? { ...row, approval_status: "APPROVED", approved_by: "owner", email_sent_status: email?.sent ? (email.mocked ? "MOCKED" : "SENT") : row.email_sent_status, email_sent_to: email?.to ?? row.email_sent_to } : row
         )
       );
-      toast.success("Payroll disetujui");
+      if (email?.sent) {
+        toast.success(`Payroll disetujui — email slip terkirim ke ${email.to} via ${email.from} (${email.mocked ? "mock" : "SMTP"})`);
+      } else if (email?.error) {
+        toast.success(`Payroll disetujui — email gagal: ${email.error}`);
+      } else {
+        toast.success("Payroll disetujui");
+      }
       router.refresh();
     } catch (e) {
       toast.error("Gagal approve payroll", e instanceof Error ? e.message : "Terjadi kesalahan");

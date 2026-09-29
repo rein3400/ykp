@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { computeTimeline } from '@/lib/employment-contract';
 
 interface EmployeeInitial {
   employee_id?: string;
@@ -210,6 +211,21 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
         <input className='input mt-1 w-full' type='date' required value={form.join_date} onChange={(e) => set('join_date', e.target.value)} />
         {fieldErrors.join_date && <span className='mt-1 block text-xs text-red-600'>{fieldErrors.join_date}</span>}
       </label>
+      {(() => {
+        const tl = computeTimeline(form.join_date, form.employment_status);
+        if (!tl) return null;
+        return (
+          <div className='rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs'>
+            <div className='font-semibold text-amber-800'>Timeline 14 Bulan — {form.employment_status}</div>
+            <div className='mt-1 grid grid-cols-3 gap-2 text-amber-900'>
+              <div><span className='text-muted-foreground'>Probation:</span> {tl.joinDate} → {tl.probationEndDate} (2 bln)</div>
+              <div><span className='text-muted-foreground'>Kontrak:</span> {tl.contractStartDate} → {tl.contractEndDate} (1 thn)</div>
+              <div><span className='text-muted-foreground'>Tetap eligible:</span> {tl.permanentEligibleDate}</div>
+            </div>
+            <div className='mt-1 text-[11px] text-muted-foreground'>Reminder telegram HR otomatis: probation H-7, kontrak H-14.</div>
+          </div>
+        );
+      })()}
       <div className='grid grid-cols-3 gap-3'>
         <label className='text-sm'>
           Bank
