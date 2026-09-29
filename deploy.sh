@@ -38,6 +38,8 @@ SESSION_INVESTOR="${SESSION_INVESTOR:-$(gen)}"; SESSION_OPS="${SESSION_OPS:-$(ge
 CRON_HR="${CRON_HR:-$(gen)}"; CRON_FINANCE="${CRON_FINANCE:-$(gen)}"
 CRON_WAREHOUSE="${CRON_WAREHOUSE:-$(gen)}"; CRON_INVESTOR="${CRON_INVESTOR:-$(gen)}"
 ERP_SSO_SECRET="${ERP_SSO_SECRET:-$(gen)}"
+CRON_OWNER="${CRON_OWNER:-$(gen)}"
+FINANCE_NOTIFY_SECRET="${FINANCE_NOTIFY_SECRET:-$(gen)}"
 
 say() { printf '\n\033[1;34m== %s\033[0m\n' "$*"; }
 api() { curl -fsS -X "${1}" "$API${2}" "${AUTH[@]}" ${3:+-d "$3"}; }
@@ -142,7 +144,11 @@ set_env "${UUID[ykp-hr-v1]}" "$(jq -n \
   --arg hub "$URL_HUB $HUB_IP_ORIGIN" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_HR" --arg c "$CRON_HR" \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg wh "$TELEGRAM_WEBHOOK_SECRET" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_HR_SPREADSHEET_ID" \
+  --arg fns "$FINANCE_NOTIFY_SECRET" --arg sh "${SMTP_HOST:-}" --arg su "${SMTP_USER:-}" --arg sp "${SMTP_PASS:-}" --arg sf "${SMTP_FROM:-}" \
   '[{key:"NEXT_PUBLIC_TELEGRAM_BOT_USERNAME",value:$tg,is_runtime:true,is_buildtime:true},
+    {key:"FINANCE_NOTIFY_SECRET",value:$fns},
+    {key:"SMTP_HOST",value:$sh},{key:"SMTP_PORT",value:"587"},{key:"SMTP_SECURE",value:"false"},
+    {key:"SMTP_USER",value:$su},{key:"SMTP_PASS",value:$sp},{key:"SMTP_FROM",value:$sf},
     {key:"YKP_HUB_ORIGIN",value:$hub,is_runtime:true,is_buildtime:true,is_literal:true},
     {key:"SESSION_SECRET",value:$s},{key:"CRON_SECRET",value:$c},{key:"TELEGRAM_BOT_TOKEN",value:$t},
     {key:"TELEGRAM_CHAT_ID",value:$chat},{key:"TELEGRAM_WEBHOOK_SECRET",value:$wh},{key:"TELEGRAM_BOT_SECRET",value:$ts},
@@ -156,7 +162,10 @@ set_env "${UUID[ykp-finance-v1]}" "$(jq -n \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_FINANCE_SPREADSHEET_ID" \
   --arg ms "$MOKA_SYNC_SECRET" --arg mo "$MOKA_OUTLETS" --arg mm "$MOKA_OUTLET_MAP" \
+  --arg oc "${MOKA_CLIENT_ID:-}" --arg os "${MOKA_CLIENT_SECRET:-}" --arg red "$URL_FINANCE/api/moka/callback" \
+  --arg hrn "$URL_HR" --arg fns "$FINANCE_NOTIFY_SECRET" --arg hrsid "$YKP_HR_SPREADSHEET_ID" \
   --arg s1 "$MOKA_SEKARPIZZA_TIRTODIPURAN_CLIENT_ID" --arg s2 "$MOKA_SEKARPIZZA_TIRTODIPURAN_CLIENT_SECRET" --arg s3 "$MOKA_SEKARPIZZA_TIRTODIPURAN_OUTLET_ID" \
+
   --arg f1 "$MOKA_FUNKYDAK_COLOMBO_CLIENT_ID" --arg f2 "$MOKA_FUNKYDAK_COLOMBO_CLIENT_SECRET" --arg f3 "$MOKA_FUNKYDAK_COLOMBO_OUTLET_ID" \
   --arg u1 "$MOKA_SUBURBUNS_COLOMBO_CLIENT_ID" --arg u2 "$MOKA_SUBURBUNS_COLOMBO_CLIENT_SECRET" --arg u3 "$MOKA_SUBURBUNS_COLOMBO_OUTLET_ID" \
   '[{key:"NEXT_PUBLIC_TELEGRAM_BOT_USERNAME",value:$tg,is_runtime:true,is_buildtime:true},
@@ -257,6 +266,7 @@ task ykp-warehouse-v1 daily-brief        "0 15 * * *" 3005 /api/warehouse/notify
 task ykp-warehouse-v1 random-audit       "0 1 * * 1"  3005 /api/warehouse/cron/random-audit        x-cron-secret      CRON_SECRET
 task ykp-warehouse-v1 verify-audit-chain "30 16 * * *" 3005 /api/warehouse/cron/verify-audit-chain x-cron-secret      CRON_SECRET
 task ykp-investor-v1  daily-brief        "0 15 * * *" 3006 /api/investor/notify/daily-brief        x-cron-secret      CRON_SECRET
+task ykp-owner-v1     owner-daily-brief  "5 15 * * *" 3010 /api/owner/notify/daily-brief           x-cron-secret      CRON_SECRET
 
 # second Moka pass at 18:00 UTC (01:00 WIB) pulls YESTERDAY, catching sales posted after
 # the 23:00 WIB close. Date is computed in-command (no prelude - Coolify 500s on that shape).
@@ -267,6 +277,15 @@ else
   api POST "/applications/${UUID[ykp-finance-v1]}/scheduled-tasks" "$(jq -n --arg c "$YCMD" \
     '{name:"moka-pos-sync-yesterday",frequency:"0 18 * * *",enabled:true,timeout:120,container:"ykp-finance-v1",command:$c}')" >/dev/null
   echo "  ykp-finance-v1/moka-pos-sync-yesterday (0 18 * * *)"
+fi
+
+# ---------------------------------------------------------------------------
+say "Sheets upgrade (existing spreadsheets — idempotent, skip kalau fresh)"
+if [[ -n "${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}" && "${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}" != placeholder* ]]; then
+  (cd ykp-finance-v1 && node scripts/migrate-settlement-cogs.mjs || true)
+  (cd ykp-finance-v1 && node scripts/migrate-payroll-moka-checklist.mjs || true)
+else
+  echo "  (service account belum diisi — upgrade sheet di-skip)"
 fi
 
 # ---------------------------------------------------------------------------
