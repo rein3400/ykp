@@ -99,7 +99,8 @@ URL_INVESTOR="$(U ykp-investor-v1)"; URL_OPS="$(U ykp-ops-v1)"
 # hub is reachable both via its HTTPS domain and via http://<ip>:3000
 HUB_IP_ORIGIN="http://$VPS_IP:3000"
 
-set_env() { api PATCH "/applications/$1/envs/bulk" "$2" >/dev/null; }
+# Coolify v4.3.23: bulk envs expects {"data":[...]} wrapper (bukan array polos)
+set_env() { api PATCH "/applications/$1/envs/bulk" "$(jq -cn --argjson d "$2" '{data:$d}')" >/dev/null; }
 
 # ---------------------------------------------------------------------------
 say "Env: ykp-hub"
