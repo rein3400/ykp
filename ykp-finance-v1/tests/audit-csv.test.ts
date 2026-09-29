@@ -50,7 +50,7 @@ describe('logAudit writer contract (audit.ts × audit_log schema)', () => {
     else process.env.ENVIRONMENT = savedEnv;
   });
 
-  it('appends exactly one row to the audit_log tab with the full 13-column schema', async () => {
+  it('appends exactly one row to the audit_log tab with the full 14-column schema (chain_hash dari merge payroll-moka-checklist, nilainya belum aktif)', async () => {
     await logAudit({
       module: 'finance',
       action: 'create',
@@ -82,14 +82,15 @@ describe('logAudit writer contract (audit.ts × audit_log schema)', () => {
       environment: 'TESTING',
       ip_address: '',
       created_at: '2026-01-01 00:00:00',
+      chain_hash: '',
     });
 
-    // Row keys conform exactly to the audit_log header (no more, no less —
-    // notably no chain_hash: Finance has no hash-chain column by design).
+    // Row keys conform exactly to the audit_log header (no more, no less).
+    // Kolom chain_hash ikut skema (merge payroll-moka-checklist), nilainya ''
+    // sampai hash-chain diaktifkan.
     expect(Object.keys(rows[0]).sort()).toEqual(
       [...TAB_HEADERS[TABS.auditLog]].sort(),
     );
-    expect(rows[0]).not.toHaveProperty('chain_hash');
   });
 
   it('preserves before/after/actor/reason context (Revisi #27 sensitive-field audit)', async () => {

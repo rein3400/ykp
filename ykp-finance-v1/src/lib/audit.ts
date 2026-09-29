@@ -36,7 +36,9 @@ export async function logAudit(entry: AuditEntry): Promise<void> {
     approval_user_id: entry.approvalUserId ?? '',
     environment: entry.environment ?? process.env.ENVIRONMENT ?? 'TESTING',
     ip_address: entry.ipAddress ?? '',
-    created_at: nowTimestampWib()
+    created_at: nowTimestampWib(),
+    // Kolom skema (merge payroll-moka-checklist): hash-chain belum diaktifkan.
+    chain_hash: ''
   };
   try {
     await appendRows(TABS.auditLog, [row]);
