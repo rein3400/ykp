@@ -2,10 +2,21 @@
  * Operational daily summary engine.
  * Aggregates opening, KDS, QC, incidents, closing, waste, stock issues.
  */
-import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
-import { nextSequentialIdSync } from '@/lib/repo';
+import { readTab, appendRows, updateRow, TABS } from '@/db/sheets';
 import { getBrandName, getOutletName } from '@/lib/repo';
 import { todayWib, formatIdr } from '@/lib/format';
+
+async function findSummaryRow(
+  outletId: string,
+  date: string
+): Promise<{ row: Record<string, string>; rowIndex: number } | null> {
+  const rows = await readTab(TABS.summary);
+  const idx = rows.findIndex((r) => r.summary_id === `${outletId}-${date}`);
+  if (idx >= 0) return { row: rows[idx], rowIndex: idx + 2 };
+  const legacyIdx = rows.findIndex((r) => r.outlet_id === outletId && r.date === date);
+  if (legacyIdx < 0) return null;
+  return { row: rows[legacyIdx], rowIndex: legacyIdx + 2 };
+}
 
 export async function generateDailySummary(opts?: { date?: string; brandId?: string; outletId?: string }): Promise<Record<string, string>[]> {
   const date = opts?.date ?? todayWib();
@@ -57,7 +68,12 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
     const incidentCount = incidents.length;
     const highIncident = incidents.filter((r) => r.severity === 'HIGH' || r.severity === 'CRITICAL').length;
     const complaintCount = incidents.filter((r) => r.incident_type === 'COMPLAINT').length;
-    const openActions = incidents.filter((r) => r.status !== 'DONE' && r.status !== 'CANCELLED').length
+    const openActions = incidents.filter((r) => {
+      const s = (r.status || '').toUpperCase();
+      // Incident statuses end at RESOLVED/CLOSED (see incidents [id] VALID_STATUSES); keep DONE/CANCELLED for legacy rows.
+      const incidentClosed = s === 'RESOLVED' || s === 'CLOSED' || s === 'DONE' || s === 'CANCELLED';
+      return !incidentClosed;
+    }).length
       + stockRows.filter((r) => r.date === date && r.outlet_id === outletId && r.status !== 'RESOLVED').length;
 
     const closing = closingRows.filter((r) => r.date === date && r.outlet_id === outletId);
@@ -86,7 +102,7 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
       ? 'Tindak lanjut PIC outlet segera: cek opening, KDS, cashier closing.'
       : 'Pertahankan performa shift.';
 
-    const existing = await findRow(TABS.summary, 'summary_id', `${outletId}-${date}`);
+    const existing = await findSummaryRow(outletId, date);
     const row = {
       summary_id: existing?.row.summary_id ?? `${outletId}-${date}`,
       date,
@@ -123,7 +139,6 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
     if (existing) {
       await updateRow(TABS.summary, existing.rowIndex, row);
     } else {
-      row.summary_id = nextSequentialIdSync('SUM');
       await appendRows(TABS.summary, [row]);
     }
     summaries.push(row);

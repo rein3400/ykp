@@ -17,7 +17,7 @@ export interface HrPayrollRow { payroll_id: string; payroll_period: string; empl
 export function payableOf(r: HrPayrollRow): boolean {
   const approval = (r.approval_status ?? '').toUpperCase();
   const payment = (r.payment_status ?? '').toUpperCase();
-  return approval !== 'REJECTED' && payment !== 'PAID';
+  return approval !== 'REJECTED' && approval !== 'NEEDS_REVISION' && payment !== 'PAID';
 }
 
 export function periodOf(r: HrPayrollRow): string {

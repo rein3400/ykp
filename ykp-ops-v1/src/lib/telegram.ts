@@ -198,6 +198,11 @@ export function shouldPushAlert(severity: string): boolean {
   return severity === 'HIGH' || severity === 'CRITICAL';
 }
 
+/** Escape text destined for Telegram HTML parse_mode. */
+export function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export interface AlertPushInput {
   alertId: string;
   alertType?: string;
@@ -211,10 +216,10 @@ export interface AlertPushInput {
 /** Format the immediate HIGH/CRITICAL alert push message (HTML, Telegram parse_mode). */
 export function formatAlertMessage(sourceLabel: string, a: AlertPushInput): string {
   const lines: string[] = [];
-  lines.push(`<b>[${a.severity}] ${a.title}</b>`);
+  lines.push(`<b>[${a.severity}] ${escapeHtml(a.title)}</b>`);
   const meta = [a.outletName, a.date].filter((v) => Boolean(v)).join(' — ');
-  if (meta) lines.push(meta);
-  if (a.message && a.message !== a.title) lines.push(a.message);
+  if (meta) lines.push(escapeHtml(meta));
+  if (a.message && a.message !== a.title) lines.push(escapeHtml(a.message));
   lines.push(`<i>${sourceLabel}</i>`);
   return lines.join('\n');
 }

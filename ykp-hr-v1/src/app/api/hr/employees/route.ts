@@ -28,6 +28,10 @@ const insertSchema = z.object({
   employment_status: z.string().default('PROBATION'),
   contract_type: z.string().default(''),
   join_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  probation_end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
+  contract_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
+  contract_end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
+  permanent_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
   bank_name: z.string().default(''),
   bank_account: z.string().default(''),
   account_holder: z.string().default(''),
@@ -79,6 +83,12 @@ export const POST = handler(async (req) => {
   const employeeCode = employeeId.replace('EMP-', 'K-');
   const now = nowTimestampWib();
 
+  const { computeTimeline } = await import('@/lib/employment-contract');
+  const tl = computeTimeline(parsed.data.join_date, parsed.data.employment_status, undefined, {
+    probationEndDate: parsed.data.probation_end_date,
+    contractStartDate: parsed.data.contract_start_date,
+    contractEndDate: parsed.data.contract_end_date
+  });
   const row: Record<string, string> = {
     employee_id: employeeId,
     employee_code: employeeCode,
@@ -95,6 +105,10 @@ export const POST = handler(async (req) => {
     join_date: parsed.data.join_date,
     employment_status: parsed.data.employment_status,
     contract_type: parsed.data.contract_type || '',
+    probation_end_date: tl?.probationEndDate ?? parsed.data.probation_end_date ?? '',
+    contract_start_date: tl?.contractStartDate ?? parsed.data.contract_start_date ?? '',
+    contract_end_date: tl?.contractEndDate ?? parsed.data.contract_end_date ?? '',
+    permanent_date: parsed.data.permanent_date ?? '',
     department: parsed.data.department || '',
     role: parsed.data.role,
     position: parsed.data.position,

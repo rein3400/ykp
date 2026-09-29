@@ -218,4 +218,35 @@ describe('receiving route 3-way gate', () => {
     expect(alerts[0].severity).toBe('CRITICAL');
     expect(tabRows('warehouse_receiving_item')[0].scale_weight).toBe('90');
   });
+
+  it('W1 regression: every item of a multi-item receiving gets a ledger movement reference', async () => {
+    const mod = await vi.importActual<typeof import('@/lib/stock-ledger')>('@/lib/stock-ledger');
+    const spy = vi.spyOn(await import('@/lib/stock-ledger'), 'appendMovement');
+    const body = {
+      ...rcvBody,
+      items: [
+        { item_id: 'ITM-1', qty_ordered: 10, qty_delivered: 10, qty_accepted: 10, unit: 'kg', unit_price: 50000 },
+        { item_id: 'ITM-2', qty_ordered: 5, qty_delivered: 5, qty_accepted: 5, unit: 'kg', unit_price: 50000 }
+      ]
+    };
+    const res = await rcvPOST(req(body), ctx);
+    expect(res.status).toBe(201);
+    const calls = spy.mock.calls as unknown as Array<[Parameters<typeof mod.appendMovement>[0]]>;
+    expect(calls.length).toBe(2);
+    const refs = calls.map((c) => c[0].referenceId);
+    expect(new Set(refs).size).toBe(2);
+    refs.forEach((r) => expect(r).toMatch(/-/));
+    spy.mockRestore();
+  });
+
+  it('W3 regression: receiver is forced to the session user, body value ignored', async () => {
+    const body = {
+      ...rcvBody,
+      received_by: 'USR-999',
+      items: [{ item_id: 'ITM-1', qty_ordered: 10, qty_delivered: 10, qty_accepted: 10, unit: 'kg', unit_price: 50000 }]
+    };
+    const res = await rcvPOST(req(body), ctx);
+    expect(res.status).toBe(201);
+    expect(tabRows('warehouse_receiving')[0].received_by).toBe('USR-001');
+  });
 });

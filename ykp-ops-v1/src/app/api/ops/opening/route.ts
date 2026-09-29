@@ -22,7 +22,7 @@ export const POST = handler(async (req: NextRequest) => {
   const body = (await req.json().catch(() => ({}))) as {
     outlet_id?: string;
     shift_id?: string;
-    items?: Array<{ checklist_item: string; critical_flag?: string; status: string }>;
+    items?: Array<{ checklist_item: string; critical_flag?: string; status: string; notes?: string; photo_url?: string }>;
   };
   if (!body.outlet_id || !Array.isArray(body.items)) return badRequest('outlet_id and items required');
   if (body.items.length === 0) return badRequest('Tidak ada item checklist OPENING untuk di-submit. Isi master template dulu.');
@@ -39,8 +39,8 @@ export const POST = handler(async (req: NextRequest) => {
     shift_id: body.shift_id ?? '',
     checklist_item: item.checklist_item,
     status: item.status === 'DONE' ? 'DONE' : 'NOT_DONE',
-    photo_url: '',
-    notes: '',
+    photo_url: (item.photo_url ?? '').toString().slice(0, 500),
+    notes: (item.notes ?? '').toString().slice(0, 500),
     completed_by: s.userId,
     completed_at: now,
     critical_flag: item.critical_flag === 'true' ? 'true' : 'false',

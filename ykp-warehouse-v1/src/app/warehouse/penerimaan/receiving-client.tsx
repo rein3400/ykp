@@ -15,14 +15,15 @@ export default function ReceivingClient({
   const [form, setForm] = useState({
     source_type: 'SUPPLIER', supplier_id: '', destination_location_id: '',
     purchase_order_id: '', invoice_number: '', delivery_note_number: '',
-    received_by: '', verified_by: '', notes: ''
+    verified_by: '', notes: ''
   });
   const [lineItems, setLineItems] = useState<Array<{
     item_id: string; batch_number: string; expiry_date: string;
     qty_ordered: string; qty_delivered: string; qty_accepted: string;
+    scale_weight: string;
     unit: string; unit_price: string; condition_status: string;
     temperature_value: string; notes: string;
-  }>>([{ item_id: '', batch_number: '', expiry_date: '', qty_ordered: '', qty_delivered: '', qty_accepted: '', unit: 'kg', unit_price: '', condition_status: 'GOOD', temperature_value: '', notes: '' }]);
+  }>>([{ item_id: '', batch_number: '', expiry_date: '', qty_ordered: '', qty_delivered: '', qty_accepted: '', scale_weight: '', unit: 'kg', unit_price: '', condition_status: 'GOOD', temperature_value: '', notes: '' }]);
   const [list, setList] = useState(headers);
   const [err, setErr] = useState<string | null>(null);
   const [evidence, setEvidence] = useState<EvidenceFile[]>([]);
@@ -42,6 +43,7 @@ export default function ReceivingClient({
         qty_ordered: Number(it.qty_ordered || 0),
         qty_delivered: Number(it.qty_delivered || 0),
         qty_accepted: Number(it.qty_accepted || it.qty_delivered || 0),
+        scale_weight: it.scale_weight.trim() !== '' ? Number(it.scale_weight) : undefined,
         unit: it.unit,
         unit_price: Number(it.unit_price || 0),
         condition_status: it.condition_status,
@@ -63,7 +65,7 @@ export default function ReceivingClient({
     copy[idx] = { ...copy[idx], [k]: v };
     setLineItems(copy);
   };
-  const addLine = () => setLineItems([...lineItems, { item_id: '', batch_number: '', expiry_date: '', qty_ordered: '', qty_delivered: '', qty_accepted: '', unit: 'kg', unit_price: '', condition_status: 'GOOD', temperature_value: '', notes: '' }]);
+  const addLine = () => setLineItems([...lineItems, { item_id: '', batch_number: '', expiry_date: '', qty_ordered: '', qty_delivered: '', qty_accepted: '', scale_weight: '', unit: 'kg', unit_price: '', condition_status: 'GOOD', temperature_value: '', notes: '' }]);
 
   return (
     <div className='space-y-3'>
@@ -88,8 +90,8 @@ export default function ReceivingClient({
             <input placeholder='PO Number' value={form.purchase_order_id} onChange={(e) => update('purchase_order_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Invoice #' value={form.invoice_number} onChange={(e) => update('invoice_number', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Delivery Note #' value={form.delivery_note_number} onChange={(e) => update('delivery_note_number', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='Received By' value={form.received_by} onChange={(e) => update('received_by', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='Verified By' value={form.verified_by} onChange={(e) => update('verified_by', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
+            <input placeholder='Diterima Oleh (otomatis: user login)' value='Penerima = user login' readOnly disabled className='rounded border border-border bg-muted px-2 py-1 text-xs text-muted-foreground' />
+            <input placeholder='Verified By (wajib beda orang saat ada selisih)' value={form.verified_by} onChange={(e) => update('verified_by', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
           </div>
           <p className='text-xs font-medium'>Line Items</p>
           {lineItems.map((it, idx) => (
@@ -103,6 +105,7 @@ export default function ReceivingClient({
               <input placeholder='Qty Order' value={it.qty_ordered} onChange={(e) => updateLine(idx, 'qty_ordered', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Qty Delivered' value={it.qty_delivered} onChange={(e) => updateLine(idx, 'qty_delivered', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Qty Accepted' value={it.qty_accepted} onChange={(e) => updateLine(idx, 'qty_accepted', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
+              <input placeholder='Berat Timbangan (kg)' type='number' step='any' min='0' value={it.scale_weight} onChange={(e) => updateLine(idx, 'scale_weight', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Unit' value={it.unit} onChange={(e) => updateLine(idx, 'unit', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Unit Price' value={it.unit_price} onChange={(e) => updateLine(idx, 'unit_price', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <select value={it.condition_status} onChange={(e) => updateLine(idx, 'condition_status', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]'>

@@ -144,7 +144,8 @@ export const TABS = {
   // ── Config ───────────────────────────────────────────────────
 
   thresholdConfig: 'finance_threshold_config',
-
+  // Moka OAuth binding (encrypted-at-rest by Sheets ACL; one row per merchant)
+  mokaAuth: 'finance_moka_auth',
   // ── Auth + audit ─────────────────────────────────────────────
 
   users: 'users',
@@ -170,9 +171,7 @@ export type TabName = (typeof TABS)[keyof typeof TABS];
 export const TAB_HEADERS: Record<TabName, string[]> = {
 
   // ── Master ───────────────────────────────────────────────────
-
-  [TABS.brands]: ['brand_id', 'brand_name', 'brand_code', 'status', 'created_at', 'updated_at'],
-
+  [TABS.brands]: ['brand_id', 'brand_name', 'brand_code', 'email', 'status', 'created_at', 'updated_at'],
   [TABS.outlets]: [
 
     'outlet_id', 'brand_id', 'outlet_name', 'outlet_code', 'address',
@@ -401,7 +400,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
     'before_value', 'after_value', 'reason', 'user_id', 'approval_user_id',
 
-    'environment', 'ip_address', 'created_at'
+    'environment', 'ip_address', 'created_at', 'chain_hash'
 
   ],
 
@@ -424,7 +423,12 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   [TABS.appSettings]: [
 
     'setting_key', 'setting_value', 'description', 'updated_by', 'updated_at'
-
+  ],
+  // Moka OAuth binding — one row per merchant
+  [TABS.mokaAuth]: [
+    'id', 'merchant_id', 'merchant_name', 'business_id', 'outlet_ids',
+    'access_token', 'refresh_token', 'expires_at', 'scope',
+    'connected_by', 'connected_at', 'disconnected_at', 'updated_at'
   ]
 
 };
@@ -472,7 +476,7 @@ async function valuesGetWithRetry(
 
 export async function readTab<T = Record<string, string>>(tab: TabName): Promise<T[]> {
 
-  if (isMockMode()) return mockReadTab(tab) as T[];
+  if (!isPostgresMode() && isMockMode()) return mockReadTab(tab) as T[];
   if (isPostgresMode()) return pgReadTab<T>(tab, TAB_HEADERS[tab]);
 
   const cached = readCache.get(tab);
@@ -533,7 +537,7 @@ export async function appendRows(tab: TabName, rows: Record<string, string>[]): 
   if (rows.length === 0) return -1;
   dropReadCache(tab);
 
-  if (isMockMode()) return mockAppendRows(tab, rows);
+  if (!isPostgresMode() && isMockMode()) return mockAppendRows(tab, rows);
   if (isPostgresMode()) return pgAppendRows(tab, TAB_HEADERS[tab], rows);
 
   const sheets = getSheetsClient();
@@ -658,7 +662,7 @@ export async function findRow(
 
 ): Promise<{ rowNumber: number; row: Record<string, string> } | null> {
 
-  if (isMockMode()) return mockFindRow(tab, keyCol, value);
+  if (!isPostgresMode() && isMockMode()) return mockFindRow(tab, keyCol, value);
   if (isPostgresMode()) return pgFindRow(tab, TAB_HEADERS[tab], keyCol, value);
 
   const sheets = getSheetsClient();

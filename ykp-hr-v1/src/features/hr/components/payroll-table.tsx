@@ -23,6 +23,11 @@ interface Payroll {
   needs_revision_reason?: string;
   needs_revision_by?: string;
   needs_revision_at?: string;
+  finance_notified_at?: string;
+  finance_notified_by?: string;
+  email_sent_at?: string;
+  email_sent_to?: string;
+  email_sent_status?: string;
 }
 
 export function PayrollTable({
@@ -61,12 +66,20 @@ export function PayrollTable({
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? `HTTP ${r.status}`);
       }
+      const j = await r.json().catch(() => ({}));
+      const email = j?.data?.email ?? j?.email;
       setRows((rs) =>
         rs.map((row) =>
-          row.payroll_id === id ? { ...row, approval_status: "APPROVED", approved_by: "owner" } : row
+          row.payroll_id === id ? { ...row, approval_status: "APPROVED", approved_by: "owner", email_sent_status: email?.sent ? (email.mocked ? "MOCKED" : "SENT") : row.email_sent_status, email_sent_to: email?.to ?? row.email_sent_to } : row
         )
       );
-      toast.success("Payroll disetujui");
+      if (email?.sent) {
+        toast.success(`Payroll disetujui — email slip terkirim ke ${email.to} via ${email.from} (${email.mocked ? "mock" : "SMTP"})`);
+      } else if (email?.error) {
+        toast.success(`Payroll disetujui — email gagal: ${email.error}`);
+      } else {
+        toast.success("Payroll disetujui");
+      }
       router.refresh();
     } catch (e) {
       toast.error("Gagal approve payroll", e instanceof Error ? e.message : "Terjadi kesalahan");
@@ -200,7 +213,7 @@ export function PayrollTable({
             return (
               <React.Fragment key={row.payroll_id}>
                 <tr className={`hover:bg-slate-50${isLocked ? " bg-amber-50/50" : ""}`}>
-                  <td className="px-3 py-2 text-sm">{row.employee_name} <span className="text-slate-500 text-xs">({row.employee_id})</span></td>
+                  <td className="px-3 py-2 text-sm">{row.employee_name} <span className="text-slate-400 text-xs">({row.employee_id})</span></td>
                   <td className="px-3 py-2 text-sm">{row.basic_salary}</td>
                   <td className="px-3 py-2 text-sm font-semibold">{row.net_salary}</td>
                   <td className="px-3 py-2 text-sm">
@@ -230,7 +243,7 @@ export function PayrollTable({
                         unlocked
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-500">—</span>
+                      <span className="text-xs text-slate-400">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right">
@@ -266,7 +279,7 @@ export function PayrollTable({
                         </button>
                       )}
                       {isLocked && !canUnlock && (
-                        <span className="text-xs text-slate-500" title="Hanya owner/super_admin yang dapat unlock">locked</span>
+                        <span className="text-xs text-slate-400" title="Hanya owner/super_admin yang dapat unlock">locked</span>
                       )}
                     </div>
                   </td>

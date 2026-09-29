@@ -7,7 +7,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, notFound, handler } from '@/lib/http';
+import { ok, list, unauthorized, badRequest, notFound, fail, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertSupplier, assertLocation } from '@/lib/repo';
@@ -87,7 +87,9 @@ export const POST = handler(async (req: NextRequest) => {
   // Fraud control: 3-way check per item (ordered ↔ accepted ↔ scale).
   // Any variance beyond owner tolerance requires a SECOND person to verify
   // (TTD 2 orang per F1 SOP). Verifier must differ from receiver.
-  const receivedBy = body.received_by ?? s.userId;
+  // Receiver is the session user — a client-declared received_by naming
+  // someone else would defeat the receiver≠verifier gate.
+  const receivedBy = s.userId;
   const threeWay = body.items.map((it) => ({
     item: it,
     check: checkReceivingThreeWay(it.qty_ordered || 0, it.qty_accepted ?? it.qty_delivered ?? 0, it.scale_weight)
@@ -119,7 +121,7 @@ export const POST = handler(async (req: NextRequest) => {
     purchase_order_id: body.purchase_order_id ?? '',
     invoice_number: body.invoice_number ?? '',
     delivery_note_number: body.delivery_note_number ?? '',
-    received_by: body.received_by ?? s.userId,
+    received_by: receivedBy,
     verified_by: body.verified_by ?? '',
     receiving_status: 'RECEIVED',
     photo_url: body.photo_attachment_id ? `/api/warehouse/attachments/${body.photo_attachment_id}/file` : (body.photo_url ?? ''),
@@ -188,26 +190,36 @@ export const POST = handler(async (req: NextRequest) => {
     }
   }
 
-  // Auto-post ledger movements for accepted items
+  // Per-item referenceId (`RECV-…-ITM-…`) because appendMovement's
+  // duplicate guard rejects a reused reference_id and would silently drop
+  // items 2..n of the same receiving. Ledger posts are bookkeeping truth:
+  // a failure must fail the request, not return 201 with understated stock.
+  const ledgerFailures: string[] = [];
+  const criticalWriteFailures: string[] = [];
   for (const t of threeWay) {
     const it = t.item;
     const qtyAccepted = it.qty_accepted ?? it.qty_delivered;
     if (qtyAccepted > 0 && body.destination_location_id) {
-      await appendMovement({
-        movementType: 'RECEIPT',
-        direction: 'IN',
-        quantity: qtyAccepted,
-        baseUnit: it.unit,
-        unitCost: it.unit_price || 0,
-        itemId: it.item_id,
-        brandId: '',
-        outletId: '',
-        locationId: body.destination_location_id,
-        referenceType: 'receiving',
-        referenceId: receivingId,
-        createdBy: s.userId,
-        notes: `Receiving ${receivingId}`
-      }).catch((e) => console.error('[receiving] ledger post failed:', e));
+      try {
+        await appendMovement({
+          movementType: 'RECEIPT',
+          direction: 'IN',
+          quantity: qtyAccepted,
+          baseUnit: it.unit,
+          unitCost: it.unit_price || 0,
+          itemId: it.item_id,
+          brandId: '',
+          outletId: '',
+          locationId: body.destination_location_id,
+          referenceType: 'receiving',
+          referenceId: `${receivingId}-${it.item_id}`,
+          createdBy: s.userId,
+          notes: `Receiving ${receivingId}`
+        });
+      } catch (e) {
+        console.error('[receiving] ledger post failed:', e);
+        ledgerFailures.push(String(it.item_id));
+      }
     }
 
     // Create alert on discrepancy — severity escalated by owner thresholds:
@@ -263,7 +275,17 @@ export const POST = handler(async (req: NextRequest) => {
           resolved_at: '',
           resolved_by: ''
         };
-        const startRow = await appendRows(TABS.alertLog, [alertRow]).catch(() => -1);
+        let startRow: number | null = null;
+        const alertWrite = await appendRows(TABS.alertLog, [alertRow]).then(
+          (firstRow) => {
+            startRow = firstRow >= 2 ? firstRow : null;
+            return true;
+          },
+          (e) => {
+            console.error('[receiving] alert log write failed:', e);
+            return false;
+          }
+        );
         await dispatchAlertTelegram({
           alertId,
           severity: alert.severity,
@@ -275,7 +297,9 @@ export const POST = handler(async (req: NextRequest) => {
           alertRow,
         }).catch(() => null);
 
-        // Auto-create action for HIGH/CRITICAL
+        // Auto-create action for HIGH/CRITICAL — a lost tracker row means an
+        // unowned follow-up on a fraud signal, so failure is recorded and
+        // reported to the caller alongside the other write failures.
         if (shouldCreateAction(alert.severity)) {
           const actionId = nextSequentialIdSync('ACT');
           const actionRow: Record<string, string> = {
@@ -299,8 +323,16 @@ export const POST = handler(async (req: NextRequest) => {
             updated_at: now,
             completed_at: ''
           };
-          await appendRows(TABS.actionTracker, [actionRow]).catch(() => null);
+          const actionWrite = await appendRows(TABS.actionTracker, [actionRow]).then(
+            () => true,
+            (e) => {
+              console.error('[receiving] action tracker write failed:', e);
+              return false;
+            }
+          );
+          if (!actionWrite) criticalWriteFailures.push(`action:${alertId}`);
         }
+        if (!alertWrite) criticalWriteFailures.push(`alert:${alertId}`);
       }
     }
   }
@@ -381,6 +413,22 @@ export const POST = handler(async (req: NextRequest) => {
         console.error('[receiving] batch_stock upsert failed:', e);
       }
     }
+  }
+
+  if (ledgerFailures.length > 0) {
+    return fail(
+      'ledger_post_failed',
+      `Buku stok gagal dicatat untuk: ${ledgerFailures.join(', ')}. Terimaan TIDAK valid — hubungi admin, jangan input ulang.`,
+      500
+    );
+  }
+
+  if (criticalWriteFailures.length > 0) {
+    return fail(
+      'alert_write_failed',
+      `Terimaan tersimpan, tetapi alert/action gagal dicatat untuk: ${criticalWriteFailures.join(', ')}. Laporan ke owner mungkin tidak terkirim — cek alert log.`,
+      500
+    );
   }
 
   await logAudit({

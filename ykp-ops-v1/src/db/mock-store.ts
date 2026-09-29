@@ -41,18 +41,31 @@ function seed(): Record<string, Record<string, string>[]> {
       },
     ],
     [TABS.checklistTemplates]: [
-      {
-        checklist_template_id: 'CT-001', brand_id: 'BR-001', outlet_id: 'OL-001',
-        checklist_type: 'OPENING', department: 'FOH', checklist_item: 'Cek suhu chiller',
-        required_photo: 'true', target_value: '4C', tolerance_value: '1C',
-        critical_flag: 'true', active_status: 'active',
-      },
-      {
-        checklist_template_id: 'CT-002', brand_id: 'BR-001', outlet_id: 'OL-001',
-        checklist_type: 'OPENING', department: 'Kitchen', checklist_item: 'Cek stok oil',
-        required_photo: 'false', target_value: '', tolerance_value: '',
-        critical_flag: 'false', active_status: 'active',
-      },
+      // —— SOP Opening FnB (20 item sample — 5 kategori) ——
+      // Kitchen
+      { checklist_template_id: 'CT-OP-01', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Kitchen', checklist_item: 'Cek suhu chiller (1–4°C)', required_photo: 'true', target_value: '1–4°C', tolerance_value: '1°C', critical_flag: 'true', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-02', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Kitchen', checklist_item: 'Cek suhu freezer (-18°C)', required_photo: 'true', target_value: '-18°C', tolerance_value: '2°C', critical_flag: 'true', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-03', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Kitchen', checklist_item: 'Cek stok bahan baku & tanggal kadaluarsa (FIFO)', required_photo: 'false', target_value: 'FIFO', tolerance_value: '', critical_flag: 'true', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-04', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Kitchen', checklist_item: 'Bersihkan kompor, grill & fryer', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-05', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Kitchen', checklist_item: 'Mise en place kitchen (bumbu, saus, potongan)', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-06', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Kitchen', checklist_item: 'Cek stok minyak goreng & kejernihan', required_photo: 'false', target_value: 'jernih', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-07', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Kitchen', checklist_item: 'Cek wastafel, sabun & lap bersih', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      // Bar
+      { checklist_template_id: 'CT-OP-08', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Bar', checklist_item: 'Cek mesin kopi (espresso, grinder, steam)', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-09', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Bar', checklist_item: 'Cek stok es, syrup & susu', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-10', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Bar', checklist_item: 'Mise en place bar (garnish, gelas, sedotan)', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-11', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Bar', checklist_item: 'Bersihkan area bar & display', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      // FOH
+      { checklist_template_id: 'CT-OP-12', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'FOH', checklist_item: 'Bersihkan lantai, meja, kursi & kaca', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-13', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'FOH', checklist_item: 'Setting meja & alat makan (cutlery, tisu, saus)', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-14', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'FOH', checklist_item: 'Cek toilet: bersih, tisu, sabun, pewangi', required_photo: 'true', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-15', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'FOH', checklist_item: 'Cek AC, lampu & musik', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-16', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'FOH', checklist_item: 'Cek POS aktif & uang kecil (cash float)', required_photo: 'true', target_value: 'Rp 500.000', tolerance_value: '', critical_flag: 'true', active_status: 'active' },
+      // Hygiene & Safety
+      { checklist_template_id: 'CT-OP-17', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Hygiene', checklist_item: 'Staff cuci tangan & pakai APD (celemek, hairnet, sarung tangan)', required_photo: 'true', target_value: '', tolerance_value: '', critical_flag: 'true', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-18', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Hygiene', checklist_item: 'Tempat sampah kosong & ganti lining baru', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-19', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Hygiene', checklist_item: 'Cek APAR & jalur evakuasi bebas halangan', required_photo: 'true', target_value: '', tolerance_value: '', critical_flag: 'true', active_status: 'active' },
+      { checklist_template_id: 'CT-OP-20', brand_id: 'BR-001', outlet_id: 'OL-001', checklist_type: 'OPENING', department: 'Hygiene', checklist_item: 'Briefing pagi & pembagian tugas shift', required_photo: 'false', target_value: '', tolerance_value: '', critical_flag: 'false', active_status: 'active' },
       {
         checklist_template_id: 'CT-003', brand_id: 'BR-001', outlet_id: 'OL-001',
         checklist_type: 'CLOSING', department: 'FOH', checklist_item: 'Kasir tutup & hitung kas',
@@ -161,7 +174,9 @@ export function mockUpdateRow(
 ): void {
   const s = getStore();
   const idx = rowIndex - 2;
-  if (!s[tab] || idx < 0 || idx >= s[tab].length) return;
+  if (!s[tab] || idx < 0 || idx >= s[tab].length) {
+    throw new Error(`mockUpdateRow: ${tab} row ${rowIndex} out of range (len ${s[tab]?.length ?? 0})`);
+  }
   s[tab][idx] = { ...s[tab][idx], ...row };
 }
 

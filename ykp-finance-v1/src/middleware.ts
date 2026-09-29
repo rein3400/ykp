@@ -2,18 +2,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 // Keep cookie name inline — do NOT import from session.ts (Node crypto breaks Edge Runtime).
 const SESSION_COOKIE = 'ykp_finance_session';
-const PUBLIC = [
-  '/login',
-  '/api/auth/login',
-  '/api/auth/logout',
-  '/api/finance/notify/daily-brief',
-  // Internal Telegram-approval endpoint (Fase 4): the route authenticates
-  // callers itself via the shared x-bot-secret header — never session-based.
-  '/api/internal/approval',
-  // Moka API sync (spec moka-live-sync): route authenticates itself — admin
-  // session OR x-moka-sync-secret (platform cron). Gated by MOKA_SYNC_ENABLED.
-  '/api/finance/pos/sync'
-];
+const PUBLIC = ['/api/internal/approval', '/api/moka/callback', '/login', '/api/auth/login', '/api/auth/logout', '/api/finance/notify/daily-brief', '/api/finance/telegram/link/consume',
+  // Moka API sync (spec moka-live-sync): route authenticates itself via
+  // x-moka-sync-secret (cron) — bukan bot-secret/session.
+  '/api/finance/pos/sync'];
+// Public read endpoints for the Hermez / owner hub layer (GET only;
+// mutations on these resources stay session-protected)
 const PUBLIC_GET_PREFIXES = [
   '/api/finance/summary',
   '/api/finance/alerts',
@@ -23,6 +17,7 @@ const PUBLIC_GET_PREFIXES = [
 ];
 
 async function verify(token: string, secret: string): Promise<boolean> {
+  try {
   const parts = token.split('.');
   if (parts.length !== 3) return false;
   if (secret.length < 32) return false;
@@ -40,7 +35,14 @@ async function verify(token: string, secret: string): Promise<boolean> {
   if (provided.length !== expected.length) return false;
   let diff = 0;
   for (let i = 0; i < expected.length; i++) diff |= expected[i] ^ provided[i];
-  return diff === 0;
+  if (diff !== 0) return false;
+  const header = JSON.parse(new TextDecoder().decode(base64UrlDecode(parts[0])));
+  const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(parts[1])));
+  return header.alg === 'HS256' && typeof payload.exp === 'number' &&
+    Number.isFinite(payload.exp) && payload.exp > Math.floor(Date.now() / 1000);
+  } catch {
+    return false;
+  }
 }
 
 function base64UrlDecode(s: string): Uint8Array {
@@ -57,10 +59,18 @@ export async function middleware(req: NextRequest) {
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
-  // Public read endpoints for Hermez (GET only; route-level auth still applies
-  // where sensitive — these are aggregate reads for the owner hub layer).
+  // Public read endpoints for Hermez / owner hub layer (GET only;
+  // mutations on these resources stay session-protected). These are
+  // sensitive financial reads — require a valid x-bot-secret (Hermez) or a
+  // session cookie. This prevents anonymous exposure of financial data.
   if (req.method === 'GET' && PUBLIC_GET_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return NextResponse.next();
+    const botSecret = process.env.TELEGRAM_BOT_SECRET;
+    const hasBotSecret = botSecret && req.headers.get('x-bot-secret') === botSecret;
+    if (hasBotSecret) return NextResponse.next();
+    // Fall back to session auth for these GET endpoints.
+    const cookie = req.cookies.get(SESSION_COOKIE)?.value;
+    if (cookie && (await verify(cookie, process.env.SESSION_SECRET ?? ''))) return NextResponse.next();
+    return NextResponse.json({ error: { code: 'unauthorized', message: 'Unauthorized' } }, { status: 401 });
   }
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;
   const secret = process.env.SESSION_SECRET ?? '';

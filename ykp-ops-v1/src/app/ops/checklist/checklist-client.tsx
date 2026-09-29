@@ -156,6 +156,8 @@ export function ChecklistClient({
         </button>
       </div>
 
+      <TemplateManager templates={templates} onChanged={() => router.refresh()} />
+
       <div className='rounded-xl border bg-white p-4'>
         <h2 className='mb-3 font-semibold'>Riwayat Verifikasi</h2>
         {submissions.length === 0 ? (
@@ -212,6 +214,127 @@ function CheckRow({
         onChange={(e) => onSet({ notes: e.target.value })}
         className='w-full rounded border px-2 py-1 text-xs sm:w-56'
       />
+    </div>
+  );
+}
+
+function TemplateManager({ templates, onChanged }: { templates: Record<string, string>[]; onChanged: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [item, setItem] = useState('');
+  const [dept, setDept] = useState('Kitchen');
+  const [type, setType] = useState('OPENING');
+  const [critical, setCritical] = useState(false);
+  const [photo, setPhoto] = useState(false);
+  const [target, setTarget] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const active = templates.filter((t) => (t.active_status || 'active').toLowerCase() === 'active');
+
+  async function add() {
+    if (!item.trim()) { setMsg('Nama item wajib diisi'); return; }
+    setBusy(true); setMsg('');
+    try {
+      const res = await fetch('/api/ops/checklist-templates', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          brand_id: 'BR-001',
+          outlet_id: '',
+          checklist_type: type,
+          department: dept,
+          checklist_item: item.trim(),
+          critical_flag: critical ? 'true' : 'false',
+          required_photo: photo ? 'true' : 'false',
+          target_value: target
+        })
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j?.error?.message ?? `HTTP ${res.status}`);
+      setMsg(`✓ "${item.trim()}" ditambahkan ke ${type}/${dept}`);
+      setItem(''); setTarget(''); setCritical(false); setPhoto(false);
+      onChanged();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Gagal menambah template');
+    } finally { setBusy(false); }
+  }
+
+  async function toggleActive(id: string, current: string) {
+    setBusy(true);
+    try {
+      const res = await fetch('/api/ops/checklist-templates', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ checklist_template_id: id, active_status: current === 'active' ? 'inactive' : 'active' })
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error?.message ?? `HTTP ${res.status}`);
+      }
+      onChanged();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Gagal mengubah template');
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className='rounded-xl border bg-white p-4'>
+      <button onClick={() => setOpen(!open)} className='flex w-full items-center justify-between text-left'>
+        <span className='font-semibold'>Kelola Master Template <span className='text-xs font-normal text-slate-400'>({active.length} item aktif)</span></span>
+        <span className='text-xs text-slate-500'>{open ? '▲ tutup' : '▼ buka'}</span>
+      </button>
+
+      {open && (
+        <div className='mt-4 space-y-4'>
+          <div className='rounded-lg border bg-slate-50 p-3'>
+            <div className='text-xs font-semibold text-slate-700'>Tambah Item Baru</div>
+            <div className='mt-2 grid gap-2 sm:grid-cols-2'>
+              <input value={item} onChange={(e) => setItem(e.target.value)} placeholder='Nama item checklist…' className='rounded border px-2 py-1 text-sm' />
+              <input value={target} onChange={(e) => setTarget(e.target.value)} placeholder='Target (opsional, mis. 1–4°C)' className='rounded border px-2 py-1 text-sm' />
+              <select value={type} onChange={(e) => setType(e.target.value)} className='rounded border px-2 py-1 text-sm'>
+                <option value='OPENING'>OPENING</option>
+                <option value='CLOSING'>CLOSING</option>
+                <option value='GENERAL'>GENERAL</option>
+              </select>
+              <select value={dept} onChange={(e) => setDept(e.target.value)} className='rounded border px-2 py-1 text-sm'>
+                <option>Kitchen</option><option>Bar</option><option>FOH</option><option>Hygiene</option><option>Umum</option>
+              </select>
+            </div>
+            <div className='mt-2 flex flex-wrap items-center gap-4 text-xs'>
+              <label className='flex items-center gap-1'>
+                <input type='checkbox' checked={critical} onChange={(e) => setCritical(e.target.checked)} /> Kritikal
+              </label>
+              <label className='flex items-center gap-1'>
+                <input type='checkbox' checked={photo} onChange={(e) => setPhoto(e.target.checked)} /> Foto wajib
+              </label>
+              <button onClick={add} disabled={busy} className='rounded bg-slate-900 px-3 py-1 text-xs text-white disabled:opacity-50'>
+                {busy ? '…' : '+ Tambah Template'}
+              </button>
+            </div>
+            {msg && <div className='mt-2 text-xs text-slate-600'>{msg}</div>}
+          </div>
+
+          <div className='max-h-80 space-y-1 overflow-y-auto'>
+            {active.map((t) => (
+              <div key={t.checklist_template_id} className='flex items-center gap-2 rounded border p-2 text-xs'>
+                <span className='font-mono text-slate-400'>{t.checklist_template_id}</span>
+                <span className='rounded bg-slate-100 px-1.5 py-0.5'>{t.checklist_type}</span>
+                <span className='rounded bg-blue-50 px-1.5 py-0.5 text-blue-700'>{t.department || 'Umum'}</span>
+                <span className='flex-1 truncate'>{t.checklist_item}</span>
+                {t.critical_flag === 'true' && <span className='rounded bg-red-100 px-1 py-0.5 font-semibold text-red-700'>KRITIKAL</span>}
+                {t.required_photo === 'true' && <span title='Foto wajib'>📷</span>}
+                {t.target_value && <span className='text-slate-500'>target: {t.target_value}</span>}
+                <button onClick={() => toggleActive(t.checklist_template_id, t.active_status ?? 'active')} disabled={busy} className='ml-1 rounded border px-2 py-0.5 text-slate-600 hover:bg-slate-50 disabled:opacity-50'>
+                  Nonaktifkan
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className='text-xs text-slate-400'>Item dinonaktifkan tidak muncul di form pengisian & tetap tersimpan untuk riwayat. Untuk mengubah teks item, edit tab <code className='rounded bg-slate-100 px-1'>master_checklist_template</code> di Google Sheets.</p>
+        </div>
+      )}
     </div>
   );
 }
