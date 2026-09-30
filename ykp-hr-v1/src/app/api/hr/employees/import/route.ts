@@ -16,31 +16,45 @@ import { assertBrand, assertOutlet, nextSequentialIdSync } from '@/lib/repo';
 const MAX_ROWS = 5000;
 const MAX_BYTES = 5_000_000; // 5 MB
 
+/** RFC-style CSV split berikut quoted multiline — delimiter koma ATAU titik-koma (Excel ID). */
 function csvToRows(text: string): Record<string, string>[] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map((h) => h.trim().replace(/^﻿/, ''));
-  return lines.slice(1).map((line) => {
-    const values: string[] = [];
-    let cur = '';
-    let inQuote = false;
-    for (const ch of line) {
+  const sample = text.slice(0, 2000).replace(/\r/g, '');
+  const semi = (sample.match(/;/g) || []).length;
+  const comma = (sample.match(/,/g) || []).length;
+  const delim = comma >= semi ? ',' : ';';
+  const records: string[][] = [];
+  let cur: string[] = [];
+  let cell = '';
+  let inQuote = false;
+  const pushCell = () => { cur.push(cell.trim()); cell = ''; };
+  const pushRecord = () => { if (cur.length > 1 || (cur[0] && cur[0] !== '')) records.push(cur); cur = []; };
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuote) {
       if (ch === '"') {
-        inQuote = !inQuote;
-      } else if (ch === ',' && !inQuote) {
-        values.push(cur.trim());
-        cur = '';
+        if (text[i + 1] === '"') { cell += '"'; i++; }
+        else inQuote = false;
       } else {
-        cur += ch;
+        cell += ch;
       }
+      continue;
     }
-    values.push(cur.trim());
+    if (ch === '"') { inQuote = true; continue; }
+    if (ch === delim) { pushCell(); continue; }
+    if (ch === '\n') { pushCell(); pushRecord(); continue; }
+    if (ch === '\r') continue;
+    cell += ch;
+  }
+  pushCell();
+  pushRecord();
+  if (records.length < 2) return [];
+  const headers = records[0].map((h) => h.trim().replace(/^\ufeff/, ''));
+  return records.slice(1).map((values) => {
     const row: Record<string, string> = {};
-    headers.forEach((h, i) => (row[h] = (values[i] ?? '').replace(/^"|"$/g, '').replace(/""/g, '"')));
+    headers.forEach((h, i) => (row[h] = (values[i] ?? '')));
     return row;
   });
 }
-
 export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
