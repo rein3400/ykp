@@ -33,6 +33,13 @@ export interface PayrollEmployeeRow {
   paid: boolean;
   approval_status: string;
   payment_status: string;
+  needs_revision: boolean;
+  needs_revision_reason: string;
+  finance_notified: boolean;
+  email_sent_status: string;
+  bank_name: string;
+  bank_account: string;
+  account_holder: string;
 }
 
 export interface PayrollOverview {
@@ -104,7 +111,14 @@ export function aggregatePayroll(
       payable: isPayable,
       paid: isPaid,
       approval_status: r.approval_status,
-      payment_status: r.payment_status
+      payment_status: r.payment_status,
+      needs_revision: (r.approval_status ?? '').toUpperCase() === 'NEEDS_REVISION',
+      needs_revision_reason: r.needs_revision_reason ?? '',
+      finance_notified: Boolean(r.finance_notified_at),
+      email_sent_status: r.email_sent_status ?? '',
+      bank_name: r.bank_name ?? '',
+      bank_account: r.bank_account ?? '',
+      account_holder: r.account_holder ?? ''
     });
   }
 

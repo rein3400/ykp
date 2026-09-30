@@ -54,6 +54,41 @@ export function PayrollTable({
 
   const canUnlock = userRole === "owner" || userRole === "super_admin";
 
+  async function validatePayment(id: string) {
+    setBusyId(id);
+    try {
+      const r = await fetch("/api/hr/payroll/validate-payment", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ payroll_id: id }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error?.message ?? `HTTP ${r.status}`);
+      const email = j?.data?.email;
+      setRows((rs) =>
+        rs.map((row) =>
+          row.payroll_id === id
+            ? {
+                ...row,
+                payment_status: "PAID",
+                locked_status: "LOCKED",
+                email_sent_status: email?.sent ? (email.mocked ? "MOCKED" : "SENT") : row.email_sent_status,
+                email_sent_to: email?.to ?? row.email_sent_to,
+              }
+            : row
+        )
+      );
+      if (email?.sent) toast.success(`Pembayaran divalidasi — slip gaji terkirim ke ${email.to} (${email.mocked ? "mock" : "SMTP"})`);
+      else if (email?.error) toast.success(`Pembayaran divalidasi — slip belum terkirim: ${email.error}`);
+      else toast.success("Pembayaran divalidasi");
+      router.refresh();
+    } catch (e) {
+      toast.error("Gagal validasi pembayaran", e instanceof Error ? e.message : "Terjadi kesalahan");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function approve(id: string) {
     setBusyId(id);
     try {
@@ -256,6 +291,17 @@ export function PayrollTable({
                           className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                         >
                           {busyId === row.payroll_id ? "…" : "Setujui"}
+                        </button>
+                      )}
+                      {isApproved && isUnpaid && !isLocked && (
+                        <button
+                          type="button"
+                          onClick={() => validatePayment(row.payroll_id)}
+                          disabled={busyId !== null}
+                          className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                          title="Validasi terima bukti transfer + kirim slip gaji via email"
+                        >
+                          Validasi Pembayaran
                         </button>
                       )}
                       {isApproved && isUnpaid && !isLocked && (

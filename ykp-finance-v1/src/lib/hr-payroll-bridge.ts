@@ -12,7 +12,7 @@ import { isMockMode, mockReadTab } from '@/db/mock-store';
 import { google } from 'googleapis';
 import type { sheets_v4 } from 'googleapis';
 
-export interface HrPayrollRow { payroll_id: string; payroll_period: string; employee_id: string; employee_name: string; brand_id: string; outlet_id: string; basic_salary: string; attendance_deduction: string; overtime_pay: string; bonus_total: string; penalty_total: string; allowance_total: string; cash_advance_deduction: string; bpjs_deduction: string; tax_deduction: string; gross_salary: string; net_salary: string; approval_status: string; payment_status: string; payment_date: string; created_at: string; finance_notified_at: string; finance_notified_by: string; email_sent_at: string; email_sent_to: string; email_sent_status: string; }
+export interface HrPayrollRow { payroll_id: string; payroll_period: string; employee_id: string; employee_name: string; brand_id: string; outlet_id: string; basic_salary: string; needs_revision_reason?: string; bank_name?: string; bank_account?: string; account_holder?: string; attendance_deduction: string; overtime_pay: string; bonus_total: string; penalty_total: string; allowance_total: string; cash_advance_deduction: string; bpjs_deduction: string; tax_deduction: string; gross_salary: string; net_salary: string; approval_status: string; payment_status: string; payment_date: string; created_at: string; finance_notified_at: string; finance_notified_by: string; email_sent_at: string; email_sent_to: string; email_sent_status: string; }
 
 export function payableOf(r: HrPayrollRow): boolean {
   const approval = (r.approval_status ?? '').toUpperCase();
@@ -41,11 +41,46 @@ export async function readHrPayroll(): Promise<HrPayrollRow[]> {
   const values = res.data.values ?? [];
   if (values.length < 2) return [];
   const headers = values[0] as string[];
-  return normalizeRows(values.slice(1).map((row) => {
+  const rows = normalizeRows(values.slice(1).map((row) => {
     const obj: Record<string, string> = {};
     headers.forEach((h, i) => { obj[h] = (row[i] as string) ?? ''; });
     return obj;
   }));
+
+  // Rekening karyawan ada di master_employee (hr_payroll tidak menyimpannya).
+  try {
+    const empRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.YKP_HR_SPREADSHEET_ID,
+      range: 'master_employee!A1:AL2000'
+    });
+    const ev = empRes.data.values ?? [];
+    if (ev.length >= 2) {
+      const eh = ev[0] as string[];
+      const ei = (name: string) => eh.indexOf(name);
+      const [iId, iBank, iAcct, iHolder] = [ei('employee_id'), ei('bank_name'), ei('bank_account'), ei('account_holder')];
+      const byId = new Map<string, { bank_name: string; bank_account: string; account_holder: string }>();
+      for (const row of ev.slice(1)) {
+        const id = String(row[iId] ?? '');
+        if (!id) continue;
+        byId.set(id, {
+          bank_name: String(row[iBank] ?? ''),
+          bank_account: String(row[iAcct] ?? ''),
+          account_holder: String(row[iHolder] ?? '')
+        });
+      }
+      for (const r of rows) {
+        const bank = byId.get(r.employee_id);
+        if (bank) {
+          r.bank_name = bank.bank_name;
+          r.bank_account = bank.bank_account;
+          r.account_holder = bank.account_holder;
+        }
+      }
+    }
+  } catch {
+    // best-effort: rekening kosong bila master_employee tidak terbaca
+  }
+  return rows;
 }
 
 function normalizeRows(rows: Record<string, string>[]): HrPayrollRow[] {
@@ -57,6 +92,10 @@ function normalizeRows(rows: Record<string, string>[]): HrPayrollRow[] {
     brand_id: r.brand_id ?? '',
     outlet_id: r.outlet_id ?? '',
     basic_salary: r.basic_salary ?? '0',
+    needs_revision_reason: r.needs_revision_reason ?? '',
+    bank_name: r.bank_name ?? '',
+    bank_account: r.bank_account ?? '',
+    account_holder: r.account_holder ?? '',
     attendance_deduction: r.attendance_deduction ?? '0',
     overtime_pay: r.overtime_pay ?? '0',
     bonus_total: r.bonus_total ?? '0',

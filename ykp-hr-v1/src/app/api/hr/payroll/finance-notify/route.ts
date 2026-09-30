@@ -56,6 +56,8 @@ export const POST = handler(async (req) => {
     for (const pid of payroll_ids) {
       const found = await findRow(TABS.payroll, 'payroll_id', pid);
       if (!found) continue;
+      // Baris yang sedang masa revisi TIDAK boleh ditandai transfer (queue terkunci).
+      if ((found.row.approval_status ?? '').toUpperCase() === 'NEEDS_REVISION') continue;
       await updateRow(TABS.payroll, found.rowNumber, { ...found.row, finance_notified_at: now, finance_notified_by: actorId, updated_at: now });
       updated++;
     }
@@ -79,6 +81,8 @@ export const POST = handler(async (req) => {
       if (found.row.payroll_period !== payroll_period) continue;
       if (brand_id && found.row.brand_id !== brand_id) continue;
       if (found.row.finance_notified_at) continue;
+      // Baris yang sedang masa revisi TIDAK boleh ditandai transfer (queue terkunci).
+      if ((found.row.approval_status ?? '').toUpperCase() === 'NEEDS_REVISION') continue;
       // Never write to a row whose identity does not match the candidate.
       if (found.row.payroll_id !== pid) continue;
       await updateRow(TABS.payroll, found.rowNumber, { ...found.row, finance_notified_at: now, finance_notified_by: actorId, updated_at: now });

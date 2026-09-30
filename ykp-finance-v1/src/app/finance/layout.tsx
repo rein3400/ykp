@@ -35,6 +35,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/finance/alerts', label: 'Alert' },
       { href: '/finance/actions', label: 'Action Tracker' },
+      { href: '/finance/audit', label: 'Audit Trail' },
       { href: '/finance/settings', label: 'Pengaturan' },
       { href: '/finance/telegram', label: 'Telegram' }
     ]
