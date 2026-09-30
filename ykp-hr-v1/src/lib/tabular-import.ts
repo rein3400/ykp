@@ -69,15 +69,27 @@ export function cellToString(v: unknown): string {
   return String(v).trim();
 }
 
-/** Baris matriks (header + data) → array of objects keyed by header. */
+/**
+ * Baris matriks → array of objects keyed by header.
+ * Header DICARI (bukan diasumsikan baris pertama) — template Excel karyawan
+ * memuat baris judul + instruksi sebelum header asli.
+ */
 export function recordsToRecords(records: unknown[][]): Record<string, string>[] {
   if (records.length < 2) return [];
-  const headers = (records[0] ?? []).map((h) => cellToString(h).replace(/^\ufeff/, ''));
-  return records.slice(1).map((values) => {
-    const row: Record<string, string> = {};
-    headers.forEach((h, i) => (row[h] = cellToString(values[i])));
-    return row;
-  });
+  let headerIdx = records.findIndex((r) =>
+    (r ?? []).some((c) => cellToString(c).replace(/^\ufeff/, '').toLowerCase() === 'full_name')
+  );
+  if (headerIdx === -1) headerIdx = 0;
+  const headerRow = records[headerIdx] ?? [];
+  const headers = headerRow.map((h) => cellToString(h).replace(/^\ufeff/, ''));
+  return records
+    .slice(headerIdx + 1)
+    .filter((r) => (r ?? []).some((c) => cellToString(c) !== ''))
+    .map((values) => {
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => (row[h] = cellToString(values[i])));
+      return row;
+    });
 }
 
 /** True bila buffer diawali signature ZIP (xlsx adalah arsip zip). */
@@ -94,8 +106,17 @@ export async function parseTabularFile(file: File): Promise<Record<string, strin
   const buf = new Uint8Array(await file.arrayBuffer());
   if (isXlsxName(file.name) || looksLikeZip(buf)) {
     const { default: readXlsxFile } = await import('read-excel-file/node');
-    const rows = (await readXlsxFile(Buffer.from(buf))) as unknown as unknown[][];
-    return recordsToRecords(rows);
+    const parsed = (await readXlsxFile(Buffer.from(buf))) as unknown;
+    // read-excel-file v9 bisa mengembalikan [{ sheet, data }] atau baris langsung.
+    const matrix: unknown[][] =
+      Array.isArray(parsed) &&
+      parsed.length === 1 &&
+      parsed[0] !== null &&
+      typeof parsed[0] === 'object' &&
+      Array.isArray((parsed[0] as { data?: unknown }).data)
+        ? ((parsed[0] as { data: unknown[][] }).data)
+        : (parsed as unknown[][]);
+    return recordsToRecords(matrix);
   }
   const text = new TextDecoder('utf-8').decode(buf);
   return csvToRows(text);

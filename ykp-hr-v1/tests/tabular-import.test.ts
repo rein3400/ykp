@@ -34,6 +34,16 @@ describe('tabular-import (CSV/Excel)', () => {
     expect(recs).toEqual([{ full_name: 'Sari', outlet_id: 'OL-012' }]);
   });
 
+  it('menemukan baris header walau ada judul + instruksi di atas (template Excel)', () => {
+    const recs = recordsToRecords([
+      ['TEMPLATE 3 — DATA KARYAWAN', null, null],
+      ['HR/Admin · Impor ke: HR', null, null],
+      ['full_name', 'outlet_id', 'basic_salary'],
+      ['Amirul', 'OL-012', 0]
+    ]);
+    expect(recs).toEqual([{ full_name: 'Amirul', outlet_id: 'OL-012', basic_salary: '0' }]);
+  });
+
   it('mengenali nama file xlsx', () => {
     expect(isXlsxName('Data Karyawan.xlsx')).toBe(true);
     expect(isXlsxName('data.csv')).toBe(false);
