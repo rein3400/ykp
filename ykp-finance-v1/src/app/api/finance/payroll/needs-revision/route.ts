@@ -55,9 +55,11 @@ export const POST = handler(async (req: NextRequest) => {
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
       const message = j.error?.message ?? `HR menolak permintaan revisi: HTTP ${res.status}`;
+      // Teruskan pesan asli HR apa adanya (404 bisa berarti payroll tidak ada,
+      // bukan berarti endpoint hilang) supaya Finance melihat sebab sebenarnya.
       if (res.status === 401) return unauthorized(`HR menolak kredensial service (${message})`);
       if (res.status === 403) return forbidden(message);
-      if (res.status === 404) return fail('not_found', 'Endpoint needs-revision tidak ditemukan di aplikasi HR — deploy HR belum memuat fitur ini', 404);
+      if (res.status === 404) return fail('not_found', message, 404);
       if (res.status === 409) return fail('conflict', message, 409);
       return badRequest(message);
     }
