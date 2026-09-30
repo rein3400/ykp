@@ -73,7 +73,9 @@ export const TABS = {
   dailySummary: 'hr_daily_summary',
   // Auth + audit
   users: 'users',
-  auditLog: 'audit_log',
+  // Tab audit khusus HR — terpisah dari finance `audit_log` (skema kolom beda;
+  // berbagi satu tab menyebabkan tulisan saling bertabrakan).
+  auditLog: 'hr_audit_log',
   // App settings (key/value: SMTP config, dsb)
   appSettings: 'app_settings',
   // Hermez alert log (brief §11)

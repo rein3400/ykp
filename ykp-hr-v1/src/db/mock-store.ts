@@ -59,7 +59,7 @@ const TAB = {
   adjustments: 'hr_adjustment',
   dailySummary: 'hr_daily_summary',
   users: 'users',
-  auditLog: 'audit_log',
+  auditLog: 'hr_audit_log',
   appSettings: 'app_settings',
   hermezAlerts: 'hermes_alert_log',
   telegramDeliveryLog: 'telegram_delivery_log'
