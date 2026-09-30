@@ -72,11 +72,13 @@ export function AdjustmentForm({ employees }: { employees: { id: string; name: s
           Tipe
           <select className='input mt-1 w-full' value={form.adjustment_type} onChange={(e) => set('adjustment_type', e.target.value)}>
             <option value='BONUS'>Bonus</option>
-            <option value='PENALTY'>Penalty</option>
+            <option value='INCENTIVE'>Insentif</option>
+            <option value='PENALTY'>Penalti</option>
             <option value='OVERTIME'>Lembur</option>
             <option value='ALLOWANCE'>Tunjangan</option>
             <option value='CASH_ADVANCE'>Kasbon</option>
             <option value='REIMBURSEMENT'>Reimburse</option>
+            <option value='OTHER_DEDUCTION'>Potongan lain</option>
           </select>
         </label>
         <label className='text-sm'>

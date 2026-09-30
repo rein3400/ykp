@@ -48,6 +48,40 @@ export function computeLateMinutes(scheduled: string, actual: string, tolerance:
   return Math.max(0, gross - tolerance);
 }
 
+/** Overtime minutes after scheduled shift end; supports shifts crossing midnight. */
+export function computeOvertimeMinutes(scheduledIn: string, scheduledOut: string, actualOut: string): number {
+  if (!scheduledIn || !scheduledOut || !actualOut) return 0;
+  const toMinute = (s: string) => {
+    const [h, m] = s.split(':').map(Number);
+    return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : NaN;
+  };
+  const start = toMinute(scheduledIn);
+  let end = toMinute(scheduledOut);
+  let actual = toMinute(actualOut);
+  if (![start, end, actual].every(Number.isFinite)) return 0;
+  if (end <= start) end += 1440;
+  if (actual < start) actual += 1440;
+  return Math.max(0, actual - end);
+}
+
+function telegramGeoError(classification: string, distance: number, radius: number): ServiceError {
+  if (classification === 'NO_COORDS') return { status: 400, code: 'gps_required', message: 'Kirim lokasi GPS Telegram untuk melanjutkan absensi.' };
+  if (classification === 'NO_OUTLET_GEO') return { status: 503, code: 'outlet_geo_unconfigured', message: 'Koordinat/radius outlet belum valid. Hubungi HR; absensi GPS belum dapat diverifikasi.' };
+  return { status: 400, code: 'outside_radius', message: `Di luar radius outlet (${distance}m > ${radius}m). Absensi ditolak; hubungi HR bila ada masalah lokasi.` };
+}
+
+async function checkTelegramGeo(employeeId: string, latitude?: number | string, longitude?: number | string) {
+  const employee = await findRow(TABS.employees, 'employee_id', employeeId);
+  const outletId = employee?.row.outlet_id ?? '';
+  const outlet = outletId ? await findRow(TABS.outlets, 'outlet_id', outletId) : null;
+  const verdict = classifyLocation(parseGeoPoint(latitude, longitude), outlet?.row ? {
+    latitude: Number(outlet.row.latitude),
+    longitude: Number(outlet.row.longitude),
+    attendanceRadiusM: Number(outlet.row.attendance_radius_m)
+  } : null);
+  return { verdict, employee: employee?.row };
+}
+
 const MISSING_REF: ServiceError = { status: 400, code: 'missing_ref', message: 'Missing ref' };
 
 /**
@@ -93,32 +127,31 @@ export async function performClockIn(input: {
   let lonStr = '';
   let radiusStr = '';
   const reportedGeo = parseGeoPoint(input.latitude, input.longitude);
+  const isTelegramStaff = input.source === 'telegram' && !GEO_EXEMPT_ROLES.has((input.actor.role ?? '').toLowerCase());
+  if (isTelegramStaff) {
+    const { verdict } = await checkTelegramGeo(input.employeeId, input.latitude, input.longitude);
+    checkInLocation = verdict.classification;
+    if (verdict.radiusMeters) radiusStr = String(verdict.radiusMeters);
+    if (verdict.classification !== 'INSIDE_RADIUS') {
+      return { ok: false, error: telegramGeoError(verdict.classification, verdict.distanceMeters, verdict.radiusMeters) };
+    }
+  }
   if (reportedGeo) {
     latStr = String(reportedGeo.latitude);
     lonStr = String(reportedGeo.longitude);
-    const outlet = outletId ? await findRow(TABS.outlets, 'outlet_id', outletId) : null;
-    const verdict = classifyLocation(reportedGeo, outlet?.row
-      ? {
-          latitude: Number(outlet.row.latitude),
-          longitude: Number(outlet.row.longitude),
-          attendanceRadiusM: Number(outlet.row.attendance_radius_m)
-        }
-      : null);
-    checkInLocation = verdict.classification;
-    radiusStr = verdict.radiusMeters ? String(verdict.radiusMeters) : '';
-    if (verdict.outsideRadius) {
-      // Management roles are mobile (meetings, audits, multiple outlets) —
-      // they clock in from anywhere (AGENTS.md §5). The row still records
-      // OUTSIDE_RADIUS so the trail is honest.
-      if (!GEO_EXEMPT_ROLES.has((input.actor.role ?? '').toLowerCase())) {
-        return {
-          ok: false,
-          error: {
-            status: 400,
-            code: 'bad_request',
-            message: `Clock-in di luar radius outlet (${verdict.distanceMeters}m > ${verdict.radiusMeters}m). Ajukan koreksi manual.`
+    if (!isTelegramStaff) {
+      const outlet = outletId ? await findRow(TABS.outlets, 'outlet_id', outletId) : null;
+      const verdict = classifyLocation(reportedGeo, outlet?.row
+        ? {
+            latitude: Number(outlet.row.latitude),
+            longitude: Number(outlet.row.longitude),
+            attendanceRadiusM: Number(outlet.row.attendance_radius_m)
           }
-        };
+        : null);
+      checkInLocation = verdict.classification;
+      radiusStr = verdict.radiusMeters ? String(verdict.radiusMeters) : '';
+      if (verdict.outsideRadius && !GEO_EXEMPT_ROLES.has((input.actor.role ?? '').toLowerCase())) {
+        return { ok: false, error: telegramGeoError(verdict.classification, verdict.distanceMeters, verdict.radiusMeters) };
       }
     }
   }
@@ -195,6 +228,8 @@ export type ClockOutOutcome =
 /** Clock an employee out by attendance_id. */
 export async function performClockOut(input: {
   attendanceId: string;
+  latitude?: number | string;
+  longitude?: number | string;
   actor: AttendanceActor;
   source: 'web' | 'telegram';
 }): Promise<ClockOutOutcome> {
@@ -208,9 +243,25 @@ export async function performClockOut(input: {
   }
 
   const timeNow = formatTimeWib(new Date());
+  const isTelegramStaff = input.source === 'telegram' && !GEO_EXEMPT_ROLES.has((input.actor.role ?? '').toLowerCase());
+  let checkOutLocation = found.row.check_out_location ?? '';
+  let checkOutGeoNote = '';
+  if (isTelegramStaff) {
+    const { verdict } = await checkTelegramGeo(found.row.employee_id, input.latitude, input.longitude);
+    if (verdict.classification !== 'INSIDE_RADIUS') {
+      return { ok: false, error: telegramGeoError(verdict.classification, verdict.distanceMeters, verdict.radiusMeters) };
+    }
+    checkOutLocation = verdict.classification;
+    checkOutGeoNote = `clock-out GPS=${String(input.latitude)},${String(input.longitude)} radius=${verdict.radiusMeters}m`;
+  }
+  const overtimeMinutes = computeOvertimeMinutes(found.row.scheduled_check_in, found.row.scheduled_check_out, timeNow);
+  const notes = [found.row.notes, `clock-out source=${input.source}`, checkOutGeoNote].filter(Boolean).join(' | ');
   const updated = {
     ...found.row,
     actual_check_out: timeNow,
+    check_out_location: checkOutLocation,
+    overtime_minutes: String(overtimeMinutes),
+    notes,
     updated_at: nowTimestampWib()
   };
   await updateRow(TABS.attendance, found.rowNumber, updated);

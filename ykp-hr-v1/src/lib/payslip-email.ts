@@ -75,6 +75,7 @@ tr.total td{font-weight:700;border-top:1px solid #d1d5db;padding-top:8px}
 <tr><th>Gaji Pokok</th><td class="amount">${formatIdr(p.basic_salary)}</td></tr>
 <tr><th>Lembur</th><td class="amount">${formatIdr(p.overtime_pay)}</td></tr>
 <tr><th>Bonus</th><td class="amount">${formatIdr(p.bonus_total)}</td></tr>
+<tr><th>Insentif</th><td class="amount">${formatIdr(p.incentive_total)}</td></tr>
 <tr><th>Tunjangan</th><td class="amount">${formatIdr(p.allowance_total)}</td></tr>
 <tr class="total"><th>Gross</th><td class="amount">${formatIdr(p.gross_salary)}</td></tr>
 </table></div>

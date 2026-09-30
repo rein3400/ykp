@@ -328,7 +328,8 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'email_sent_to',
     'email_sent_status',
     'created_at',
-    'updated_at'
+    'updated_at',
+    'incentive_total'
   ],
   [TABS.adjustments]: [
     'adjustment_id',

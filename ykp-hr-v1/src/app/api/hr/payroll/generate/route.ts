@@ -10,6 +10,7 @@ import { handler, badRequest, unauthorized, forbidden, ok, conflict } from '@/li
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { computePayroll, type PayrollInput, periodDays, attendanceDeduction, overtimePay, hourlyRate } from '@/features/hr/lib/payroll';
+import { summarizePayrollAdjustments } from '@/features/hr/lib/payroll-adjustments';
 import { z } from 'zod';
 
 const schema = z.object({ period: z.string().regex(/^\d{4}-\d{2}$/) });
@@ -102,9 +103,8 @@ export const POST = handler(async (req) => {
     const absentDays = attInPeriod.filter((a) => a.attendance_status === 'ABSENT').length;
 
     const lateMinutes = attInPeriod.reduce((s, a) => s + Number(a.late_minutes || 0), 0);
-    const overtimeHours = Math.round(
-      attInPeriod.reduce((s, a) => s + Number(a.overtime_minutes || 0), 0) / 60
-    );
+    const overtimeMinutes = attInPeriod.reduce((s, a) => s + Number(a.overtime_minutes || 0), 0);
+    const overtimeHours = Math.round((overtimeMinutes / 60) * 100) / 100;
 
     const approvedLeaves = leaves.filter(
       (l) => l.employee_id === e.employee_id && l.approval_status === 'APPROVED'
@@ -124,13 +124,8 @@ export const POST = handler(async (req) => {
     const empAdj = adjustments.filter(
       (a) => a.employee_id === e.employee_id && a.approval_status === 'APPROVED' && a.payroll_period === parsed.data.period
     );
-    const bonus = empAdj.filter((a) => a.adjustment_type === 'BONUS').reduce((s, a) => s + Number(a.amount), 0);
-    const penalty = empAdj.filter((a) => a.adjustment_type === 'PENALTY').reduce((s, a) => s + Number(a.amount), 0);
-    const allowance = empAdj.filter((a) => a.adjustment_type === 'ALLOWANCE').reduce((s, a) => s + Number(a.amount), 0);
-    const cashAdvance = empAdj.filter((a) => a.adjustment_type === 'CASH_ADVANCE').reduce((s, a) => s + Number(a.amount), 0);
-    const overtime = empAdj.filter((a) => a.adjustment_type === 'OVERTIME').reduce((s, a) => s + Number(a.amount), 0);
-    const reimburse = empAdj.filter((a) => a.adjustment_type === 'REIMBURSEMENT').reduce((s, a) => s + Number(a.amount), 0);
-    const other = empAdj.filter((a) => !['BONUS', 'PENALTY', 'ALLOWANCE', 'CASH_ADVANCE', 'OVERTIME', 'REIMBURSEMENT'].includes(a.adjustment_type)).reduce((s, a) => s + Number(a.amount), 0);
+    const adjustmentTotals = summarizePayrollAdjustments(empAdj);
+    const { bonus, incentive, penalty, allowance, cashAdvance, overtime, reimbursement, otherDeduction } = adjustmentTotals;
 
     const input: PayrollInput = {
       employee_id: e.employee_id,
@@ -146,13 +141,13 @@ export const POST = handler(async (req) => {
       unpaid_leave_days: unpaidLeaveDays,
       late_minutes: lateMinutes,
       overtime_hours: overtimeHours,
-      bonus: bonus + overtime + reimburse,
+      bonus: bonus + incentive + overtime + reimbursement,
       penalty: penalty,
       allowance: allowance,
       cash_advance: cashAdvance,
       bpjs_deduction: 0,
       tax_deduction: 0,
-      other_deduction: other
+      other_deduction: otherDeduction
     };
     const result = computePayroll(input);
 
@@ -173,16 +168,17 @@ export const POST = handler(async (req) => {
       attendance_deduction: String(result.attendance_deduction),
       overtime_hours: String(overtimeHours),
       overtime_pay: String(result.overtime_pay),
-      bonus_total: String(result.bonus_total),
+      bonus_total: String(Math.max(0, result.bonus_total - incentive)),
+      incentive_total: String(incentive),
       penalty_total: String(result.penalty_total),
       allowance_total: String(result.allowance_total),
       cash_advance_deduction: String(result.cash_advance_deduction),
       bpjs_deduction: '0',
       tax_deduction: '0',
-      other_deduction: String(other),
+      other_deduction: String(otherDeduction),
       gross_salary: String(result.gross_salary),
       net_salary: String(result.net_salary),
-      calculation_status: 'FINAL',
+      calculation_status: 'DRAFT',
       approval_status: 'PENDING',
       payment_status: 'UNPAID',
       payment_date: '',

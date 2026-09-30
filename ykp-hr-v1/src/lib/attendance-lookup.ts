@@ -51,12 +51,17 @@ export async function findEmployeeByTelegramId(chatId: number | string): Promise
   const id = String(chatId).trim();
   if (!id) return null;
   const rows = await readTab<EmployeeRow>(TABS.employees);
-  // Iterate from the end — recently onboarded employees are more likely to
-  // absen, and the last rows are the most recently appended.
+  // Legacy direct binding remains supported.
   for (let i = rows.length - 1; i >= 0; i--) {
     if ((rows[i].telegram_id ?? '').trim() === id) return rows[i];
   }
-  return null;
+  // Current registration flow links Telegram to users first; resolve that
+  // account to its employee so newly linked staff use the same attendance path.
+  const users = await readTab<Record<string, string>>(TABS.users);
+  const user = users.find((u) => (u.telegram_id ?? '').trim() === id && (u.active_status || 'active').toLowerCase() === 'active');
+  if (!user?.employee_id) return null;
+  const employee = rows.find((r) => r.employee_id === user.employee_id);
+  return employee ?? null;
 }
 
 /**

@@ -45,7 +45,6 @@ import {
 import { safeEqual } from '@/lib/cron';
 import { POST as hrLinkConsume } from '@/app/api/hr/telegram/link/consume/route';
 import { POST as hrClockIn } from '@/app/api/hr/telegram/clock-in/route';
-import { POST as hrClockOut } from '@/app/api/hr/telegram/clock-out/route';
 import { POST as hrMe } from '@/app/api/hr/telegram/me/route';
 import { POST as hrSchedule } from '@/app/api/hr/telegram/schedule/route';
 import { POST as hrLeave } from '@/app/api/hr/telegram/leave/route';
@@ -190,24 +189,19 @@ export const POST = handler(async (req) => {
       await reply(r.data ? meText(r.data) : notLinkedText(r.errorMessage));
       return ok({ ok: true });
     }
-    if (data === 'att:clock-in') {
-      await answerCallbackQuery(token, cb.id, 'Clock-in…');
-      const r = await callInternal('/api/hr/telegram/clock-in', hrClockIn, { telegram_chat_id: String(fromId) });
-      await reply(clockInText(r));
-      return ok({ ok: true });
-    }
-    if (data === 'att:clock-out') {
-      await answerCallbackQuery(token, cb.id, 'Clock-out…');
-      const r = await callInternal('/api/hr/telegram/clock-out', hrClockOut, { telegram_chat_id: String(fromId) });
-      await reply(clockOutText(r));
+    if (data === 'att:clock-in' || data === 'att:clock-out') {
+      await answerCallbackQuery(token, cb.id, 'Kirim lokasi kamu');
+      await reply(
+        data === 'att:clock-in'
+          ? '📍 Kirim lokasi GPS untuk absen masuk. Lokasi harus berada di dalam radius outlet.'
+          : '📍 Kirim lokasi GPS untuk absen pulang. Lokasi harus berada di dalam radius outlet.',
+        locationReplyMarkup()
+      );
       return ok({ ok: true });
     }
     if (data === 'att:location') {
       await answerCallbackQuery(token, cb.id, 'Kirim lokasi kamu');
-      await reply(
-        '📍 Kirim lokasi kamu untuk absen masuk dengan deteksi GPS. Tekan tombol di bawah.',
-        locationReplyMarkup()
-      );
+      await reply('📍 Kirim lokasi GPS untuk absensi masuk/pulang. Sistem menentukan aksi dari status absensi terbuka.', locationReplyMarkup());
       return ok({ ok: true });
     }
     await answerCallbackQuery(token, cb.id, 'Perintah tidak dikenal');
@@ -248,13 +242,11 @@ export const POST = handler(async (req) => {
 
   // ── self-service commands (resolved via users.telegram_id) ────────────
   if (/^\/clock-?in$/i.test(text)) {
-    const r = await callInternal('/api/hr/telegram/clock-in', hrClockIn, { telegram_chat_id: String(fromId) });
-    await reply(clockInText(r));
+    await reply('📍 Kirim lokasi GPS untuk absen masuk. Lokasi harus berada di dalam radius outlet.', locationReplyMarkup());
     return ok({ ok: true });
   }
   if (/^\/clock-?out$/i.test(text)) {
-    const r = await callInternal('/api/hr/telegram/clock-out', hrClockOut, { telegram_chat_id: String(fromId) });
-    await reply(clockOutText(r));
+    await reply('📍 Kirim lokasi GPS untuk absen pulang. Lokasi harus berada di dalam radius outlet.', locationReplyMarkup());
     return ok({ ok: true });
   }
   if (/^\/me$/i.test(text)) {
@@ -322,49 +314,55 @@ export const POST = handler(async (req) => {
 
   const intent = parseAbsenIntent(msg.text);
 
-  if (intent === 'clock-in') {
-    const loc = msg.location;
-    // Brief §6.3 + AGENTS.md §5: Telegram bot flow is /masuk → bot asks for
-    // location → employee sends location → bot checks radius. A /masuk with
-    // no location is NOT recorded (unlike the web fallback); we ask for the
-    // location first. This avoids recording clock-ins with no geofence
-    // check from Telegram, where the location button is always available.
-    if (!loc) {
-      await reply(
-        'Kirim lokasi Anda untuk absen masuk. Tekan tombol "Kirim Lokasi" di bawah, atau kirim lokasi via 📎 (paperclip) → Location.',
-        locationReplyMarkup()
-      );
+  // Telegram GPS is required for both punch-in and punch-out. With an open
+  // attendance row, a shared location reply closes the shift; otherwise it
+  // starts the shift. This keeps button, /masuk, /pulang and linked-user paths
+  // on the same geo-enforced service.
+  if (msg.location) {
+    const latitude = Number(msg.location.latitude);
+    const longitude = Number(msg.location.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      await reply('Lokasi GPS tidak valid. Coba kirim ulang lokasi Anda.');
       return ok({ ok: true });
     }
-    // Validate finite lat/lon at the webhook boundary so a malformed Telegram
-    // payload never produces a NaN that reaches the service (never 500).
-    const lat = Number(loc.latitude);
-    const lon = Number(loc.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-      await reply('Lokasi yang dikirim tidak valid. Coba kirim ulang lokasi Anda.');
-      return ok({ ok: true });
+    const open = await findOpenAttendance(employee.employee_id);
+    if (open) {
+      const out = await performClockOut({
+        attendanceId: open.attendance_id,
+        latitude,
+        longitude,
+        actor: { userId: actorUserId, role: actorRole, employeeId: employee.employee_id },
+        source: 'telegram'
+      });
+      if (!out.ok) {
+        await reply(`❌ Gagal absen pulang: ${escapeHtml(out.error.message)}`);
+        return ok({ ok: true, error: out.error });
+      }
+      await reply(`✅ Absen pulang tercatat.\nJam: ${escapeHtml(out.row.actual_check_out)}\nLembur: ${escapeHtml(out.row.overtime_minutes)} menit.`);
+      return ok({ ok: true, attendance_id: open.attendance_id });
     }
-    const result = await performClockIn({
+    const clockIn = await performClockIn({
       employeeId: employee.employee_id,
-      latitude: lat,
-      longitude: lon,
+      latitude,
+      longitude,
       actor: { userId: actorUserId, role: actorRole, employeeId: employee.employee_id },
       source: 'telegram'
     });
-    if (!result.ok) {
-      await reply(`❌ Gagal absen masuk: ${escapeHtml(result.error.message)}`);
-      return ok({ ok: true, error: result.error });
+    if (!clockIn.ok) {
+      await reply(`❌ Gagal absen masuk: ${escapeHtml(clockIn.error.message)}`);
+      return ok({ ok: true, error: clockIn.error });
     }
-    if (result.already) {
-      await reply('ℹ️ Sudah absen masuk hari ini sebelumnya.');
+    if (clockIn.already) {
+      await reply('ℹ️ Sudah absen masuk hari ini. Jika ingin absen pulang, pastikan absensi masih terbuka lalu kirim lokasi.');
       return ok({ ok: true, already: true });
     }
-    const r = result.row;
-    const locLabel = r.check_in_location === 'INSIDE_RADIUS' ? 'di dalam radius outlet' : 'tanpa lokasi';
-    await reply(
-      `✅ Absen masuk tercatat.\n\nJam: ${escapeHtml(r.actual_check_in)}\nStatus: ${escapeHtml(r.attendance_status)}\nLokasi: ${locLabel}`
-    );
-    return ok({ ok: true, attendance_id: r.attendance_id });
+    await reply(`✅ Absen masuk tercatat.\nJam: ${escapeHtml(clockIn.row.actual_check_in)}\nStatus: ${escapeHtml(clockIn.row.attendance_status)}\nLokasi: ${escapeHtml(clockIn.row.check_in_location)}`);
+    return ok({ ok: true, attendance_id: clockIn.row.attendance_id });
+  }
+
+  if (intent === 'clock-in') {
+    await reply('📍 Kirim lokasi GPS untuk absen masuk. Lokasi harus berada di dalam radius outlet.', locationReplyMarkup());
+    return ok({ ok: true });
   }
 
   if (intent === 'clock-out') {
@@ -373,50 +371,7 @@ export const POST = handler(async (req) => {
       await reply('Belum ada absen masuk yang terbuka untuk hari ini.');
       return ok({ ok: true });
     }
-    const result = await performClockOut({
-      attendanceId: open.attendance_id,
-      actor: { userId: actorUserId, role: actorRole, employeeId: employee.employee_id },
-      source: 'telegram'
-    });
-    if (!result.ok) {
-      await reply(`❌ Gagal absen pulang: ${escapeHtml(result.error.message)}`);
-      return ok({ ok: true, error: result.error });
-    }
-    await reply(`✅ Absen pulang tercatat.\n\nJam: ${escapeHtml(result.row.actual_check_out)}`);
-    return ok({ ok: true, attendance_id: open.attendance_id });
-  }
-
-  // Bare location message from a legacy-bound employee = clock-in with GPS.
-  if (msg.location) {
-    const lat = Number(msg.location.latitude);
-    const lon = Number(msg.location.longitude);
-    if (Number.isFinite(lat) && Number.isFinite(lon)) {
-      const result = await performClockIn({
-        employeeId: employee.employee_id,
-        latitude: lat,
-        longitude: lon,
-        actor: { userId: actorUserId, role: actorRole, employeeId: employee.employee_id },
-        source: 'telegram'
-      });
-      if (result.ok && !result.already) {
-        const r = result.row;
-        const locLabel = r.check_in_location === 'INSIDE_RADIUS' ? 'di dalam radius outlet' : 'tanpa lokasi';
-        await reply(
-          `✅ Absen masuk tercatat.\n\nJam: ${escapeHtml(r.actual_check_in)}\nStatus: ${escapeHtml(r.attendance_status)}\nLokasi: ${locLabel}`
-        );
-        return ok({ ok: true, attendance_id: r.attendance_id });
-      }
-      if (result.ok && result.already) {
-        await reply('ℹ️ Sudah absen masuk hari ini sebelumnya.');
-        return ok({ ok: true, already: true });
-      }
-      if (!result.ok) {
-        const errMsg = result.error?.message ?? 'gagal';
-        await reply(`❌ Gagal absen masuk: ${escapeHtml(errMsg)}`);
-        return ok({ ok: true, error: result.error });
-      }
-    }
-    await reply('Lokasi yang dikirim tidak valid. Coba kirim ulang lokasi Anda.');
+    await reply('📍 Kirim lokasi GPS untuk absen pulang. Lokasi harus berada di dalam radius outlet.', locationReplyMarkup());
     return ok({ ok: true });
   }
 
@@ -441,15 +396,6 @@ function clockInText(r: InternalResult): string {
   const status = d.attendance_status === 'LATE' ? 'TERLAMBAT' : 'HADIR';
   const late = Number(d.late_minutes || 0) > 0 ? ` (telat ${d.late_minutes} menit)` : '';
   return `✅ Clock-in berhasil pukul ${d.actual_check_in ?? '-'} — ${status}${late}.`;
-}
-
-function clockOutText(r: InternalResult): string {
-  if (r.status === 404) return notLinkedText(r.errorMessage) === r.errorMessage
-    ? '❌ Belum ada clock-in hari ini, atau akun belum dihubungkan.'
-    : notLinkedText(r.errorMessage);
-  if (!r.data) return `⚠️ Clock-out gagal: ${r.errorMessage ?? r.status}.`;
-  const d = r.data as Record<string, string>;
-  return `✅ Clock-out berhasil pukul ${d.actual_check_out ?? '-'}.`;
 }
 
 function meText(data: Record<string, unknown>): string {

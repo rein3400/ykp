@@ -215,6 +215,8 @@ export default function PayrollClient(props: {
                             <span className='text-[10px] text-muted-foreground'>terkunci — menunggu HR</span>
                           ) : e.paid ? (
                             <span className='text-[10px] text-muted-foreground'>selesai</span>
+                          ) : !e.ready_for_finance ? (
+                            <span className='text-[10px] text-muted-foreground'>menunggu review/approve HR</span>
                           ) : (
                             <div className='flex flex-wrap gap-1'>
                               <button

@@ -9,7 +9,6 @@ import { handler, badRequest, unauthorized, forbidden, conflict, ok, notFound } 
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { z } from 'zod';
-import { getBrandEmail, buildPayslipEmailHtml, sendPayslipEmail } from '@/lib/payslip-email';
 
 const schema = z.object({
   payroll_id: z.string().min(1),
@@ -74,50 +73,19 @@ export const POST = handler(async (req) => {
     reason: isRevision ? parsed.data.reason!.trim() : undefined,
   });
 
-  let emailResult: { sent: boolean; mocked: boolean; to?: string; from?: string; error?: string } | undefined;
-  if (parsed.data.decision === 'APPROVE') {
-    try {
-      const brandConfig = await getBrandEmail(found.row.brand_id);
-      const empRow = await findRow(TABS.employees, 'employee_id', found.row.employee_id);
-      const employeeEmail = (empRow?.row.email as string ?? '').trim();
-      if (employeeEmail && brandConfig) {
-        const { subject, html, text } = buildPayslipEmailHtml({
-          employeeName: found.row.employee_name,
-          payrollPeriod: found.row.payroll_period,
-          brandName: brandConfig.brandName,
-          brandId: found.row.brand_id,
-          payroll: updated
-        });
-        const sent = await sendPayslipEmail({
-          to: employeeEmail,
-          fromEmail: brandConfig.email,
-          fromName: brandConfig.brandName,
-          subject, html, text
-        });
-        emailResult = { sent: sent.sent, mocked: sent.mocked, to: employeeEmail, from: brandConfig.email, error: sent.error };
-        const emailStatus = sent.sent ? (sent.mocked ? 'MOCKED' : 'SENT') : 'FAILED';
-        const emailAt = nowTimestampWib();
-        const payrollWithEmail = {
-          ...updated,
-          email_sent_at: emailAt,
-          email_sent_to: employeeEmail,
-          email_sent_status: emailStatus,
-          updated_at: emailAt
-        };
-        await updateRow(TABS.payroll, found.rowNumber, payrollWithEmail);
-        await logAudit({
-          actorUserId: session.userId,
-          actorRole: session.role,
-          action: `payslip_email:${emailStatus}`,
-          entity: 'payroll',
-          entityId: parsed.data.payroll_id
-        });
-        return ok({ ...payrollWithEmail, email: emailResult });
-      }
-    } catch {
-      // best-effort: approve tetap sukses walau email gagal
-    }
+  if (isApprove) {
+    // Payroll yang approved langsung terlihat pada antrean Finance dari shared
+    // HR payroll source; tidak diperlukan tombol/notifikasi kedua. Email slip
+    // baru dikirim setelah Finance transfer dan HR menjalankan validasi PAID.
+    await logAudit({
+      actorUserId: session.userId,
+      actorRole: session.role,
+      action: 'finance_queue_ready',
+      entity: 'payroll',
+      entityId: parsed.data.payroll_id,
+      afterValue: 'APPROVED + LOCKED; visible to Finance queue'
+    });
   }
 
-  return ok({ ...updated, email: emailResult });
+  return ok(updated);
 });

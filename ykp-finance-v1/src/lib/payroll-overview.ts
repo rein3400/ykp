@@ -30,6 +30,7 @@ export interface PayrollEmployeeRow {
   gross: number;
   net: number;
   payable: boolean;
+  ready_for_finance: boolean;
   paid: boolean;
   approval_status: string;
   payment_status: string;
@@ -109,6 +110,7 @@ export function aggregatePayroll(
       gross: n('gross_salary'),
       net,
       payable: isPayable,
+      ready_for_finance: ['APPROVED', 'READY_TO_PAY'].includes((r.approval_status ?? '').toUpperCase()) && !isPaid,
       paid: isPaid,
       approval_status: r.approval_status,
       payment_status: r.payment_status,

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { performClockIn, performClockOut, computeLateMinutes } from './attendance-service';
+import { performClockIn, performClockOut, computeLateMinutes, computeOvertimeMinutes } from './attendance-service';
 
 // Force the in-memory mock DB so these tests exercise the real write path
 // (assertEmployee, geofence, roster/shift lookup, append/update) without
@@ -7,6 +7,18 @@ import { performClockIn, performClockOut, computeLateMinutes } from './attendanc
 process.env.USE_MOCK_DB = 'true';
 delete process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 delete process.env.YKP_HR_SPREADSHEET_ID;
+
+describe('computeOvertimeMinutes', () => {
+  it('counts minutes after scheduled shift end', () => {
+    expect(computeOvertimeMinutes('09:00', '16:00', '16:00')).toBe(0);
+    expect(computeOvertimeMinutes('09:00', '16:00', '16:35')).toBe(35);
+  });
+
+  it('handles an overnight shift', () => {
+    expect(computeOvertimeMinutes('16:00', '23:00', '23:45')).toBe(45);
+    expect(computeOvertimeMinutes('20:00', '04:00', '04:30')).toBe(30);
+  });
+});
 
 describe('computeLateMinutes', () => {
   it('returns 0 when on time or within tolerance', () => {
@@ -30,11 +42,21 @@ describe('performClockIn / performClockOut (mock store)', () => {
     // each test below still asserts its own contract.
   });
 
-  it('clocks in without coordinates and returns a PRESENT/LATE row', async () => {
+  it('requires GPS for Telegram clock-in by employee', async () => {
     const r = await performClockIn({
       employeeId,
       actor: { userId: 'USR-TEST', role: 'employee', employeeId },
       source: 'telegram'
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('gps_required');
+  });
+
+  it('allows a web clock-in without Telegram GPS flow', async () => {
+    const r = await performClockIn({
+      employeeId,
+      actor: { userId: 'USR-TEST', role: 'employee', employeeId },
+      source: 'web'
     });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -88,12 +110,26 @@ describe('performClockIn / performClockOut (mock store)', () => {
     expect(open.ok).toBe(true);
     if (!open.ok) return;
 
-    const out = await performClockOut({
+    const missingGps = await performClockOut({
       attendanceId: open.row.attendance_id,
       actor: { userId: 'USR-TEST', role: 'employee', employeeId: 'EMP-006' },
       source: 'telegram'
     });
+    expect(missingGps.ok).toBe(false);
+    if (!missingGps.ok) expect(missingGps.error.code).toBe('gps_required');
+
+    const out = await performClockOut({
+      attendanceId: open.row.attendance_id,
+      latitude: -6.2607,
+      longitude: 106.8105,
+      actor: { userId: 'USR-TEST', role: 'employee', employeeId: 'EMP-006' },
+      source: 'telegram'
+    });
     expect(out.ok).toBe(true);
-    if (out.ok) expect(out.row.actual_check_out).toMatch(/^\d{2}:\d{2}$/);
+    if (out.ok) {
+      expect(out.row.actual_check_out).toMatch(/^\d{2}:\d{2}$/);
+      expect(out.row.check_out_location).toBe('INSIDE_RADIUS');
+      expect(Number(out.row.overtime_minutes)).toBeGreaterThanOrEqual(0);
+    }
   });
 });

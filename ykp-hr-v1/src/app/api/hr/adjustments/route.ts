@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 const insertSchema = z.object({
   employee_id: z.string().min(1),
-  adjustment_type: z.enum(['BONUS', 'PENALTY', 'OVERTIME', 'ALLOWANCE', 'CASH_ADVANCE', 'REIMBURSEMENT', 'OTHER']),
+  adjustment_type: z.enum(['BONUS', 'INCENTIVE', 'PENALTY', 'OVERTIME', 'ALLOWANCE', 'CASH_ADVANCE', 'REIMBURSEMENT', 'OTHER', 'OTHER_DEDUCTION']),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   amount: z.coerce.number().min(0),
   reason: z.string().default(''),

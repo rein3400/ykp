@@ -17,7 +17,7 @@ export interface HrPayrollRow { payroll_id: string; payroll_period: string; empl
 export function payableOf(r: HrPayrollRow): boolean {
   const approval = (r.approval_status ?? '').toUpperCase();
   const payment = (r.payment_status ?? '').toUpperCase();
-  return approval !== 'REJECTED' && approval !== 'NEEDS_REVISION' && payment !== 'PAID';
+  return ['APPROVED', 'READY_TO_PAY'].includes(approval) && payment !== 'PAID';
 }
 
 export function periodOf(r: HrPayrollRow): string {
@@ -36,7 +36,7 @@ export async function readHrPayroll(): Promise<HrPayrollRow[]> {
   const sheets: sheets_v4.Sheets = google.sheets({ version: 'v4', auth });
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.YKP_HR_SPREADSHEET_ID,
-    range: 'hr_payroll!A1:AL2000'
+    range: 'hr_payroll!A1:AZ2000'
   });
   const values = res.data.values ?? [];
   if (values.length < 2) return [];

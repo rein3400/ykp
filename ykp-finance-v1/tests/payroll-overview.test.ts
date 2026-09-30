@@ -17,11 +17,13 @@ function row(over: Partial<HrPayrollRow> = {}): HrPayrollRow {
 }
 
 describe('payableOf', () => {
-  it('counts UNPAID+APPROVED as payable, excludes PAID and REJECTED case-insensitively', () => {
+  it('only counts approved ready rows as payable; PENDING/revision/paid are excluded', () => {
     expect(payableOf(row())).toBe(true);
+    expect(payableOf(row({ approval_status: 'READY_TO_PAY' }))).toBe(true);
     expect(payableOf(row({ payment_status: 'paid' }))).toBe(false);
     expect(payableOf(row({ approval_status: 'rejected' }))).toBe(false);
-    expect(payableOf(row({ payment_status: 'PENDING', approval_status: 'PENDING' }))).toBe(true);
+    expect(payableOf(row({ approval_status: 'NEEDS_REVISION' }))).toBe(false);
+    expect(payableOf(row({ payment_status: 'PENDING', approval_status: 'PENDING' }))).toBe(false);
   });
 });
 
@@ -65,6 +67,17 @@ describe('aggregatePayroll', () => {
     expect(o2.totals.employee_count).toBe(1);
     const o3 = aggregatePayroll(rows, {}, '', {});
     expect(o3.totals.employee_count).toBe(3);
+  });
+
+  it('HR-generated PENDING rows stay out of Finance payable queue until HR approves', () => {
+    const rows = [
+      row({ net_salary: '3000000', approval_status: 'PENDING' }),
+      row({ payroll_id: 'PR-Y', employee_id: 'EMP-2', net_salary: '2000000', approval_status: 'APPROVED', payment_status: 'UNPAID' })
+    ];
+    const result = aggregatePayroll(rows, {}, '2026-08');
+    expect(result.totals.payable_total).toBe(2_000_000);
+    expect(result.per_employee.find((x) => x.payroll_id === 'PR-X')?.ready_for_finance).toBe(false);
+    expect(result.per_employee.find((x) => x.payroll_id === 'PR-Y')?.ready_for_finance).toBe(true);
   });
 
   it('REJECTED rows contribute nothing to payable but stay in totals', () => {
