@@ -187,6 +187,33 @@ export function mapRowsByHeader<T extends Record<string, string> = Record<string
   });
 }
 
+/**
+ * Read-through cache + 429 tolerance (kuota read Sheets dibagi satu service
+ * account di seluruh app V1 — tanpa ini halaman bisa 500 saat kuota tersentuh).
+ * Setiap write (append/update) mengosongkan cache supaya tidak tampil data basi.
+ */
+const READ_CACHE_TTL_MS = 20_000;
+const readCache = new Map<string, { at: number; value: unknown }>();
+function invalidateReadCache(): void { readCache.clear(); }
+
+const sheetSleep = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve, ms); });
+
+async function valuesGetWithRetry(
+  sheets: ReturnType<typeof getSheetsClient>,
+  params: { spreadsheetId: string; range: string }
+): Promise<{ data: { values?: any[][] | null } }> {
+  const delays = [2_500, 6_000];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await sheets.spreadsheets.values.get(params);
+    } catch (e) {
+      const status = (e as { status?: number; code?: number }).status ?? (e as { code?: number }).code;
+      if (status !== 429 || attempt >= delays.length) throw e;
+      await sheetSleep(delays[attempt]);
+    }
+  }
+}
+
 export async function readTab<T extends Record<string, string> = Record<string, string>>(
   tab: TabName
 ): Promise<T[]> {
@@ -198,13 +225,17 @@ export async function readTab<T extends Record<string, string> = Record<string, 
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const end = columnLetter(headers.length);
-  const res = await sheets.spreadsheets.values.get({
+  const hit = readCache.get(tab);
+  if (hit && Date.now() - hit.at < READ_CACHE_TTL_MS) return hit.value as T[];
+  const res = await valuesGetWithRetry(sheets, {
     spreadsheetId: getSpreadsheetId(),
     range: `${quoteTab(tab)}!A1:${end}1000`,
   });
   const rows = res.data.values ?? [];
-  if (rows.length < 2) return [];
-  return mapRowsByHeader<T>(rows[0] as string[], rows.slice(1) as string[][]);
+  if (rows.length < 2) { readCache.set(tab, { at: Date.now(), value: [] }); return []; }
+  const mapped = mapRowsByHeader<T>(rows[0] as string[], rows.slice(1) as string[][]);
+  readCache.set(tab, { at: Date.now(), value: mapped as unknown });
+  return mapped;
 }
 
 export interface HeaderDrift {
@@ -240,6 +271,7 @@ export async function appendRows(
   tab: TabName,
   rows: Record<string, string>[]
 ): Promise<{ startRow: number }> {
+  invalidateReadCache();
   if (isMockMode()) return mockAppendRows(tab, rows);
   if (isPostgresMode()) {
     await pgAppendRows(tab, TAB_HEADERS[tab], rows);
@@ -268,6 +300,7 @@ export async function updateRow(
   rowIndex: number,
   row: Record<string, string>
 ): Promise<void> {
+  invalidateReadCache();
   if (isMockMode()) return mockUpdateRow(tab, rowIndex, row);
   // In Postgres mode rowIndex IS the stable __rownum (see findRow below):
   // __rownum survives deletes/gaps, unlike a dense position. Pass through.
