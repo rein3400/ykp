@@ -10,7 +10,7 @@ import type { NextConfig } from 'next';
  */
 // YKP_HUB_ORIGIN accepts one or more origins (space/comma separated) so the Hub
 // can embed this app whether it is opened via its HTTPS domain or the host IP.
-const HUB_ORIGINS = (process.env.YKP_HUB_ORIGIN ?? 'http://187.52.124.40:3000')
+const HUB_ORIGINS = (process.env.YKP_HUB_ORIGIN ?? 'http://localhost:3000')
   .split(/[\s,]+/)
   .map((o) => o.trim())
   .filter(Boolean);
