@@ -57,6 +57,9 @@ export default function UsersClient({
   }
 
   async function changeRole(userId: string, role: string) {
+    // Dropdown role langsung tersimpan — konfirmasi dulu agar tidak terklik tak sengaja
+    // (insiden: role akun owner sempat berubah jadi viewer).
+    if (!window.confirm(`Ubah role user ${userId} menjadi "${role}"?`)) return;
     const r = await fetch('/api/hr/users', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: userId, role })
