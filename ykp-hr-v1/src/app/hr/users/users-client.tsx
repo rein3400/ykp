@@ -6,19 +6,32 @@ const ROLES = [
   'brand_manager', 'outlet_manager', 'supervisor', 'employee', 'viewer'
 ];
 
+interface EmployeeOption {
+  employee_id: string;
+  full_name: string;
+  outlet_id?: string;
+}
+
 export default function UsersClient({
-  users, brands, outlets
+  users, brands, outlets, employees
 }: {
   users: Record<string, string>[];
   brands: Record<string, string>[];
   outlets: Record<string, string>[];
+  employees: EmployeeOption[];
 }) {
   const [list, setList] = useState(users);
   const [showForm, setShowForm] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [form, setForm] = useState({
-    username: '', password: '', role: 'viewer', brand_id: '', outlet_id: '', active_status: 'active'
+    username: '', password: '', role: 'employee', brand_id: '', outlet_id: '', employee_id: '', active_status: 'active'
   });
+
+  const employeeLabel = (id: string) => {
+    if (!id) return '—';
+    const emp = employees.find((e) => e.employee_id === id);
+    return emp ? `${emp.full_name} (${emp.employee_id})` : id;
+  };
 
   async function create() {
     setErr(null);
@@ -29,7 +42,7 @@ export default function UsersClient({
     if (!r.ok) { setErr(j.error?.message ?? 'Gagal'); return; }
     setList([...list, j.data]);
     setShowForm(false);
-    setForm({ username: '', password: '', role: 'viewer', brand_id: '', outlet_id: '', active_status: 'active' });
+    setForm({ username: '', password: '', role: 'employee', brand_id: '', outlet_id: '', employee_id: '', active_status: 'active' });
   }
 
   async function toggleActive(userId: string, current: string) {
@@ -53,6 +66,16 @@ export default function UsersClient({
     setList(list.map((u) => u.user_id === userId ? j.data : u));
   }
 
+  async function changeEmployee(userId: string, employeeId: string) {
+    const r = await fetch('/api/hr/users', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, employee_id: employeeId })
+    });
+    const j = await r.json();
+    if (!r.ok) { setErr(j.error?.message ?? 'Gagal'); return; }
+    setList(list.map((u) => u.user_id === userId ? j.data : u));
+  }
+
   return (
     <div className='space-y-3'>
       <button
@@ -70,6 +93,10 @@ export default function UsersClient({
             <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className='rounded border px-2 py-1 text-xs'>
               {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
+            <select aria-label='Karyawan' value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} className='rounded border px-2 py-1 text-xs'>
+              <option value=''>— Karyawan (untuk absen bot) —</option>
+              {employees.map((e) => <option key={e.employee_id} value={e.employee_id}>{e.full_name} ({e.employee_id})</option>)}
+            </select>
             <select value={form.brand_id} onChange={(e) => setForm({ ...form, brand_id: e.target.value })} className='rounded border px-2 py-1 text-xs'>
               <option value=''>Semua Brand</option>
               {brands.map((b) => <option key={b.brand_id} value={b.brand_id}>{b.brand_name}</option>)}
@@ -79,6 +106,9 @@ export default function UsersClient({
               {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
             </select>
           </div>
+          <p className='text-[10px] text-slate-500'>
+            Pilih <b>Karyawan</b> agar akun ini terhubung ke data absensi/payroll dan bisa absen via bot Telegram.
+          </p>
           <button onClick={create} className='rounded bg-slate-900 px-3 py-1 text-xs font-medium text-white'>Simpan</button>
         </div>
       )}
@@ -89,7 +119,8 @@ export default function UsersClient({
               <th className='px-2 py-1 text-left'>ID</th>
               <th className='px-2 py-1 text-left'>Username</th>
               <th className='px-2 py-1 text-left'>Role</th>
-              <th className='px-2 py-1 text-left'>Brand</th>
+              <th className='px-2 py-1 text-left'>Karyawan</th>
+              <th className='px-2 py-1 text-left'>Telegram</th>
               <th className='px-2 py-1 text-left'>Outlet</th>
               <th className='px-2 py-1 text-left'>Status</th>
               <th className='px-2 py-1 text-left'>Aksi</th>
@@ -109,7 +140,22 @@ export default function UsersClient({
                     {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </td>
-                <td className='px-2 py-1'>{brands.find((b) => b.brand_id === u.brand_id)?.brand_name || '—'}</td>
+                <td className='px-2 py-1'>
+                  <select
+                    value={u.employee_id || ''}
+                    onChange={(e) => changeEmployee(u.user_id, e.target.value)}
+                    className='max-w-44 rounded border px-1 py-0.5 text-[10px]'
+                    title='Hubungkan akun ke data karyawan'
+                  >
+                    <option value=''>— belum terhubung —</option>
+                    {employees.map((e) => <option key={e.employee_id} value={e.employee_id}>{e.full_name} ({e.employee_id})</option>)}
+                  </select>
+                </td>
+                <td className='px-2 py-1'>
+                  {u.telegram_id
+                    ? <span className='rounded bg-sky-100 px-1 text-[10px] font-medium text-sky-800'>✓ terhubung</span>
+                    : <span className='rounded bg-slate-100 px-1 text-[10px] text-slate-600'>belum</span>}
+                </td>
                 <td className='px-2 py-1'>{outlets.find((o) => o.outlet_id === u.outlet_id)?.outlet_name || '—'}</td>
                 <td className='px-2 py-1'>
                   <span className={`rounded px-1 text-[10px] font-medium ${
@@ -127,12 +173,21 @@ export default function UsersClient({
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={7} className='px-2 py-3 text-center text-slate-500'>Belum ada user.</td></tr>
+              <tr><td colSpan={8} className='px-2 py-3 text-center text-slate-500'>Belum ada user.</td></tr>
             )}
           </tbody>
         </table>
       </div>
       <div className='rounded border border-amber-200 bg-amber-50 p-3 text-[10px] text-amber-900'>
+        <p className='font-semibold mb-1'>Cara menghubungkan karyawan ke Telegram:</p>
+        <ol className='list-decimal pl-4 space-y-0.5'>
+          <li>Pastikan kolom <b>Karyawan</b> sudah diisi (pilih nama karyawan).</li>
+          <li>Karyawan login ke aplikasi HR dengan akun ini, lalu buka menu <b>Telegram</b>.</li>
+          <li>Klik <b>Dapatkan Kode</b> → klik <b>Buka Telegram</b> → tekan <b>Start</b> di bot.</li>
+          <li>Kolom <b>Telegram</b> di tabel ini berubah menjadi <b>✓ terhubung</b>.</li>
+        </ol>
+      </div>
+      <div className='rounded border border-slate-200 p-3 text-[10px] text-slate-600'>
         <p className='font-semibold mb-1'>Permission checklist (revisi item 26):</p>
         <ul className='list-disc pl-4 space-y-0.5'>
           <li>Staff/employee tidak bisa melihat payroll orang lain</li>
