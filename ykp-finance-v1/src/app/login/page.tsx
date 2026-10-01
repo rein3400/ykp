@@ -1,9 +1,7 @@
 'use client';
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +21,7 @@ export default function LoginPage() {
       if (!r.ok) {
         setErr(j.error?.message ?? 'Login gagal');
       } else {
-        router.push('/finance');
+        window.location.assign('/finance');
       }
     } catch {
       setErr('Network error');

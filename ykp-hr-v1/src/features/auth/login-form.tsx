@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 /**
  * Login form. Submit prefers FormData DOM values so browser automation
@@ -9,7 +8,6 @@ import { useRouter } from 'next/navigation';
  * lags behind the controlled inputs.
  */
 export function LoginForm() {
-  const router = useRouter();
   const [u, setU] = useState('');
   const [p, setP] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -44,11 +42,10 @@ export function LoginForm() {
       }
       const j = await r.json().catch(() => ({}));
       if (j?.data?.mustChangePassword) {
-        router.push('/change-password');
+        window.location.assign('/change-password');
       } else {
-        router.push('/hr');
+        window.location.assign('/hr');
       }
-      router.refresh();
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Login gagal');
     } finally {

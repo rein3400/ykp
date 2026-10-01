@@ -1,10 +1,9 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -32,8 +31,9 @@ function LoginForm() {
         redirect && redirect.startsWith('/') && !redirect.startsWith('//')
           ? redirect
           : '/ops';
-      router.push(dest);
-      router.refresh();
+      // Full navigation: pastikan cookie sesi ikut terkirim pada request pertama
+      // (navigasi RSC bisa mendahului cookie -> middleware menolak, harus klik 2x).
+      window.location.assign(dest);
     } catch {
       setError('Network error');
     } finally {
