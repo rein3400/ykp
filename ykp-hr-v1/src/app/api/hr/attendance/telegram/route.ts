@@ -94,10 +94,11 @@ async function callInternal(path: string, fn: (req: Request, ctx: typeof CTX) =>
  */
 const MODULE_CONSUME_URLS = (
   process.env.YKP_MODULE_CONSUME_URLS ??
-  'http://127.0.0.1:3003/api/finance/telegram/link/consume,' +
-    'http://127.0.0.1:3005/api/warehouse/telegram/link/consume,' +
-    'http://127.0.0.1:3006/api/investor/telegram/link/consume,' +
-    'http://127.0.0.1:3007/api/ops/telegram/link/consume'
+  // Coolify internal service names (bukan 127.0.0.1 — modul lain beda container).
+  'http://ykp-finance-v1:3003/api/finance/telegram/link/consume,' +
+    'http://ykp-warehouse-v1:3005/api/warehouse/telegram/link/consume,' +
+    'http://ykp-investor-v1:3006/api/investor/telegram/link/consume,' +
+    'http://ykp-ops-v1:3007/api/ops/telegram/link/consume'
 )
   .split(',')
   .map((s) => s.trim())
