@@ -21,9 +21,32 @@ let cached: sheets_v4.Sheets | null = null;
 
 // In-memory read cache (TTL) to avoid bursting Google Sheets read quota
 // (60 reads/min/user). Any write clears the whole cache.
-const READ_CACHE_TTL_MS = 10_000;
+const READ_CACHE_TTL_MS = 20_000;
 const readCache = new Map<string, { at: number; rows: Record<string, string>[] }>();
 function invalidateReadCache(): void { readCache.clear(); }
+
+const sleep = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve, ms); });
+
+/**
+ * values.get dengan toleransi 429 (kuota read dibagi satu service account di
+ * seluruh app V1). Retry backoff 2x lalu lempar — page gagal hanya bila kuota
+ * benar-benar habis > ~9 detik.
+ */
+async function valuesGetWithRetry(
+  sheets: sheets_v4.Sheets,
+  params: { spreadsheetId: string; range: string }
+): Promise<{ data: { values?: unknown[][] | null } }> {
+  const delays = [2500, 6000];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await sheets.spreadsheets.values.get(params);
+    } catch (e) {
+      const status = (e as { status?: number; code?: number }).status ?? (e as { code?: number }).code;
+      if (status !== 429 || attempt >= delays.length) throw e;
+      await sleep(delays[attempt]);
+    }
+  }
+}
 
 export function getSheetsClient(): sheets_v4.Sheets {
   if (cached) return cached;
@@ -450,7 +473,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
   const sid = getSpreadsheetId();
   const headers = TAB_HEADERS[tab];
   const lastCol = columnLetter(headers.length);
-  const res = await sheets.spreadsheets.values.get({
+  const res = await valuesGetWithRetry(sheets, {
     spreadsheetId: sid,
     range: `${quoteTab(tab)}!A1:${lastCol}1000`
   });
@@ -555,7 +578,7 @@ export async function findRow(
   if (colIdx < 0) throw new Error(`Column ${keyCol} not in ${tab}`);
   // Fetch the full tab (up to header count) so we can compare by keyCol AND return the whole row.
   const lastCol = columnLetter(headers.length);
-  const res = await sheets.spreadsheets.values.get({
+  const res = await valuesGetWithRetry(sheets, {
     spreadsheetId: sid,
     range: `${quoteTab(tab)}!A1:${lastCol}`
   });
