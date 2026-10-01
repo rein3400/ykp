@@ -11,6 +11,6 @@ import { createLinkCode } from '@/lib/telegram';
 export const POST = handler(async (req) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  const code = createLinkCode(s.userId);
+  const code = await createLinkCode(s.userId);
   return ok({ code, expiresInSeconds: 600 });
 });
