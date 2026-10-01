@@ -286,6 +286,7 @@ if [[ -n "${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}" && "${GOOGLE_SERVICE_ACCOUNT_EMAIL:
   (cd ykp-finance-v1 && node scripts/migrate-settlement-cogs.mjs || true)
   (cd ykp-finance-v1 && node scripts/migrate-payroll-moka-checklist.mjs || true)
   (cd ykp-hr-v1 && node scripts/migrate-payroll-schema.mjs || true)
+  (cd ykp-hr-v1 && node scripts/migrate-brand-email.mjs || true)
 else
   echo "  (service account belum diisi — upgrade sheet di-skip)"
 fi
