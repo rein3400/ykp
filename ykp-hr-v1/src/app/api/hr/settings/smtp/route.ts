@@ -15,7 +15,13 @@ const saveSchema = z.object({
   smtp_port: z.string().regex(/^\d{1,5}$/).optional(),
   smtp_user: z.string().email('smtp_user harus email valid'),
   smtp_pass: z.string().max(200).optional(),
-  smtp_secure: z.enum(['true', 'false']).optional(),
+  // Google Sheets menyimpan nilai apa adanya; UI lama mengirim 'FALSE'.
+  // Terima case-insensitive lalu normalisasi ke lowercase.
+  smtp_secure: z
+    .string()
+    .transform((v) => v.toLowerCase())
+    .pipe(z.enum(['true', 'false']))
+    .optional(),
   smtp_from_name: z.string().min(2).max(80).optional()
 });
 

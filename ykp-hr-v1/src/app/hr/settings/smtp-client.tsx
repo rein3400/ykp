@@ -40,7 +40,7 @@ export default function SmtpClient() {
             smtp_port: j.data.smtp_port || '587',
             smtp_user: j.data.smtp_user || '',
             smtp_pass: j.data.smtp_pass || '',
-            smtp_secure: j.data.smtp_secure || 'false',
+            smtp_secure: String(j.data.smtp_secure ?? 'false').toLowerCase() === 'true' ? 'true' : 'false',
             smtp_from_name: j.data.smtp_from_name || 'YKP HR'
           });
           setConfigured(j.data.configured === 'true');
