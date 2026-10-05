@@ -8,8 +8,8 @@
 - [ ] 2.1 Add self-approval guard to `leaves/approve` (reject APPROVE on own request, allow REJECT, audit the attempt)
 - [ ] 2.2 Add self-approval guard to `adjustments/approve` (same semantics)
 - [ ] 2.3 Add self-approval guard to `lateness/approve` (same semantics)
-- [ ] 2.4 Add self-approval guard to `payroll/approve` (APPROVE + NEEDS_REVISION denied on self, REJECT allowed)
-- [ ] 2.5 Add vitest cases: self-approve rejected, self-reject allowed, other-approve allowed
+- [x] 2.4 ~~Add self-approval guard to `payroll/approve`~~ — REMOVED 2026-10-05: payroll auto-approve (`payroll-auto-approve` change) makes generator = approver by design; a SoD guard here would contradict the client-approved one-click generate flow. Not implemented, not planned.
+- [ ] 2.5 Add vitest cases: self-approve rejected, self-reject allowed, other-approve allowed (adjustments/leaves/lateness only)
 
 ## 3. Regenerate audit trail (spec: regenerate audit trail)
 

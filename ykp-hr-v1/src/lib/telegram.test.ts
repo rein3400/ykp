@@ -1,8 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import {
   shouldPushAlert, shouldNotifyNewAlert, formatAlertMessage, composeHrDailyBrief,
   createLinkCode, consumeLinkCode, resolveRecipients
 } from '@/lib/telegram';
+import { findRow, readTab, TABS } from '@/db/sheets';
+
+beforeAll(() => {
+  process.env.USE_MOCK_DB = 'true';
+  delete process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  delete process.env.YKP_HR_SPREADSHEET_ID;
+});
 
 describe('shouldPushAlert', () => {
   it('pushes only HIGH/CRITICAL', () => {
@@ -82,22 +89,36 @@ describe('composeHrDailyBrief', () => {
   });
 });
 
-describe('createLinkCode / consumeLinkCode', () => {
-  it('generates a 6-char code and binds chat id to user', async () => {
-    const code = createLinkCode('USR-001');
+describe('createLinkCode / consumeLinkCode (sheets-backed, restart-safe)', () => {
+  it('generates a 6-char code, persists a hashed row, and binds chat id to user', async () => {
+    const code = await createLinkCode('USR-001');
     expect(code).toMatch(/^[A-Z2-9]{6}$/);
+    // Persistence check: the row exists in the tab (a restart cannot lose it),
+    // and the plaintext code never lands in storage — only its sha256.
+    const all = await readTab<Record<string, string>>(TABS.telegramLinkCodes);
+    const stored = all.find((r) => r.user_id === 'USR-001' && !r.consumed_at && r.expires_at > r.created_at);
+    expect(stored).toBeDefined();
+    const { createHash } = await import('node:crypto');
+    expect(stored!.code_hash).toBe(createHash('sha256').update(code.toUpperCase()).digest('hex'));
+    expect(JSON.stringify(stored)).not.toContain(code);
     const userId = await consumeLinkCode(code, '551234001');
     expect(userId).toBe('USR-001');
+    const bound = await findRow(TABS.users, 'user_id', 'USR-001');
+    expect(bound?.row.telegram_id).toBe('551234001');
   });
   it('rejects an invalid code', async () => {
     const userId = await consumeLinkCode('ZZZZZZ', '551234001');
     expect(userId).toBeNull();
   });
   it('rejects a code after it is consumed once', async () => {
-    const code = createLinkCode('USR-002');
+    const code = await createLinkCode('USR-002');
     await consumeLinkCode(code, '551234002');
     const again = await consumeLinkCode(code, '551234003');
     expect(again).toBeNull();
+  });
+  it('rejects a malformed code defensively', async () => {
+    expect(await consumeLinkCode('', '551234001')).toBeNull();
+    expect(await consumeLinkCode('a-b-!!', '551234001')).toBeNull();
   });
 });
 

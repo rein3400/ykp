@@ -5,7 +5,11 @@ import { getReminderCandidates } from '@/lib/employment-contract';
 import { sendTelegram } from '@/lib/telegram';
 import { todayWib } from '@/lib/format';
 
-export const GET = handler(async () => {
+export const GET = handler(async (req) => {
+  // Preview contains employee PII — the cron-secret guard is mandatory on GET too
+  // (owner/debug tooling; the unauthenticated variant leaked names/ids/statuses).
+  if (!isCronAuthorized(req)) return unauthorized('Invalid or missing CRON_SECRET');
+
   const employees = await readTab<Record<string, string>>(TABS.employees);
   const today = todayWib();
   const candidates = getReminderCandidates(employees, today);

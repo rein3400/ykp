@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # deploy.sh — provision + deploy the full YKP V1 family onto a Coolify server.
 #

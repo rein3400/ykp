@@ -1,6 +1,7 @@
 /**
- * Approve a payroll row. PENDING -> APPROVED, sets approved_by + updated_at.
- * Owner/HR Admin/Finance Admin only.
+ * Approve a payroll row (legacy path). PENDING -> APPROVED, sets approved_by + updated_at.
+ * Owner/super_admin only per RBAC. Happy path no longer needs this call: generate
+ * auto-approves (payroll-auto-approve) — kept idempotent for already-APPROVED rows.
  */
 import { updateRow, TABS, findRow } from '@/db/sheets';
 import { getSession } from '@/lib/session';
@@ -33,6 +34,10 @@ export const POST = handler(async (req) => {
     if (!['PENDING', 'APPROVED'].includes(found.row.approval_status)) {
       return conflict(`Payroll is ${found.row.approval_status}, cannot request revision`);
     }
+  } else if (decision === 'APPROVE' && found.row.approval_status === 'APPROVED') {
+    // Auto-approve: generate sudah menyelesaikan baris dalam state APPROVED
+    // (payroll-auto-approve) — approve ulang bersifat idempotent, tanpa write.
+    return ok(found.row);
   } else if (found.row.approval_status !== 'PENDING') {
     return conflict(`Payroll is ${found.row.approval_status}, cannot decide`);
   }

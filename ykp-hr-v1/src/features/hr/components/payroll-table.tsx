@@ -105,7 +105,16 @@ export function PayrollTable({
       const email = j?.data?.email ?? j?.email;
       setRows((rs) =>
         rs.map((row) =>
-          row.payroll_id === id ? { ...row, approval_status: "APPROVED", approved_by: "owner", email_sent_status: email?.sent ? (email.mocked ? "MOCKED" : "SENT") : row.email_sent_status, email_sent_to: email?.to ?? row.email_sent_to } : row
+          row.payroll_id === id
+            ? {
+                ...row,
+                approval_status: "APPROVED",
+                locked_status: "LOCKED",
+                payment_status: "READY_TO_PAY",
+                email_sent_status: email?.sent ? (email.mocked ? "MOCKED" : "SENT") : row.email_sent_status,
+                email_sent_to: email?.to ?? row.email_sent_to,
+              }
+            : row
         )
       );
       if (email?.sent) {
@@ -113,7 +122,7 @@ export function PayrollTable({
       } else if (email?.error) {
         toast.success(`Payroll disetujui — email gagal: ${email.error}`);
       } else {
-        toast.success("Payroll disetujui");
+        toast.success("Payroll legacy disetujui — terkunci & masuk antrean Finance");
       }
       router.refresh();
     } catch (e) {
@@ -264,7 +273,10 @@ export function PayrollTable({
                   </td>
                   <td className="px-3 py-2 text-sm">
                     {isLocked ? (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 border border-amber-200" title={row.locked_at ? `Locked at ${row.locked_at}` : undefined}>
+                      <span
+                        className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 border border-amber-200"
+                        title={row.locked_at ? `Terkunci sejak ${row.locked_at} — Generate Payroll otomatis mengunci (auto-approve) atau approval legacy${row.locked_by ? ` oleh ${row.locked_by}` : ""}` : "Terkunci"}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                           <path fillRule="evenodd" d="M10 1a4 4 0 00-4 4v2H5a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2V9a2 2 0 00-2-2h-1V5a4 4 0 00-4-4zm2 6V5a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
                         </svg>
@@ -293,18 +305,18 @@ export function PayrollTable({
                           {busyId === row.payroll_id ? "…" : "Setujui"}
                         </button>
                       )}
-                      {isApproved && isUnpaid && !isLocked && (
+                      {isApproved && isUnpaid && (
                         <button
                           type="button"
                           onClick={() => validatePayment(row.payroll_id)}
                           disabled={busyId !== null}
                           className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-                          title="Validasi terima bukti transfer + kirim slip gaji via email"
+                          title="Validasi terima bukti transfer + kirim slip gaji via email (bisa pada baris terkunci — stamp pembayaran, bukan edit angka)"
                         >
                           Validasi Pembayaran
                         </button>
                       )}
-                      {isApproved && isUnpaid && !isLocked && (
+                      {isApproved && isUnpaid && (
                         <button
                           type="button"
                           onClick={() => toggleMarkPaid(row.payroll_id)}

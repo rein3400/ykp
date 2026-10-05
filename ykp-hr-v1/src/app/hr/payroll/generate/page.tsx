@@ -42,7 +42,7 @@ export default function GeneratePayrollPage() {
           <input type='month' className='input mt-1 w-full' value={period} onChange={(e) => setPeriod(e.target.value)} />
         </label>
         <p className='text-xs text-muted-foreground'>
-          Generate membuat draft semua karyawan aktif, menarik presensi/lembur dan komponen manual yang sudah disetujui (bonus, insentif, penalti, tunjangan, kasbon, potongan lain). HR meninjau lalu menyetujui; payroll yang disetujui otomatis masuk antrean Finance sebagai READY_TO_PAY dan terkunci. Setelah Finance transfer, HR validasi pembayaran untuk mengirim slip gaji. Re-generate aman: baris PAID/LOCKED tidak disentuh, baris NEEDS_REVISION dihitung ulang dan kembali PENDING.
+          Satu klik: Generate membuat payroll semua karyawan aktif, menarik presensi/lembur dan komponen manual yang sudah disetujui (bonus, insentif, penalti, tunjangan, kasbon, potongan lain), lalu langsung MENGUNCI data (lock otomatis) dan menandai READY_TO_PAY — baris langsung terlihat di antrean Finance sebagai HARUS DIBAYAR tanpa tombol approve tambahan. Setelah Finance transfer, HR validasi pembayaran untuk mengirim slip gaji. Re-generate: baris yang sudah terkunci (LOCKED/PAID) tidak bisa dihitung ulang selama masih ada baris LOCKED di periode itu — owner/super_admin harus Unlock dulu dengan alasan; baris NEEDS_REVISION ikut dihitung ulang dan dikunci kembali.
         </p>
         {error && <div className='text-sm text-red-600'>{error}</div>}
         {result && <div className='text-sm text-green-700'>Generated {result.count} payroll rows.</div>}

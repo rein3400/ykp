@@ -104,7 +104,9 @@ export const TABS = {
   // Hermez alert log (brief §11)
   hermezAlerts: 'hermes_alert_log',
   // Telegram delivery log (notification wiring)
-  telegramDeliveryLog: 'telegram_delivery_log'
+  telegramDeliveryLog: 'telegram_delivery_log',
+  // One-time Telegram link codes (hashed), restart-safe (hr-hardening-demo-fixes)
+  telegramLinkCodes: 'hr_telegram_link_codes'
 } as const;
 
 export type TabName = (typeof TABS)[keyof typeof TABS];
@@ -459,6 +461,13 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'sent_at',
     'error_message',
     'created_at'
+  ],
+  [TABS.telegramLinkCodes]: [
+    'code_hash',
+    'user_id',
+    'created_at',
+    'expires_at',
+    'consumed_at'
   ]
 };
 

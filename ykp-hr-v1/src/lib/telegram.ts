@@ -9,8 +9,9 @@
  * helper here resolves without throwing.
  */
 import { appendRows, readTab, findRow, updateRow, TABS } from '@/db/sheets';
-import { nowTimestampWib } from './format';
+import { formatTimestampWib, nowTimestampWib } from './format';
 import { nextSequentialIdSync } from './repo';
+import { createHash } from 'node:crypto';
 
 export interface TelegramMessage {
   sourceModule: string;
@@ -172,30 +173,49 @@ export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: 
 
 const CODE_TTL_MS = 10 * 60_000; // 10 minutes
 
-/** In-memory pending link codes: code → { userId, expiresAt }. */
-const pendingCodes = new Map<string, { userId: string; expiresAt: number }>();
+/** SHA-256 of the normalized code — the plaintext code is never stored. */
+function hashCode(code: string): string {
+  return createHash('sha256').update(code.trim().toUpperCase()).digest('hex');
+}
 
-/** Generate a fresh 6-char link code bound to a user id. */
-export function createLinkCode(userId: string): string {
+/**
+ * Generate a fresh 6-char link code bound to a user id, persisted in the
+ * `hr_telegram_link_codes` tab (hashed) so it survives container restarts.
+ */
+export async function createLinkCode(userId: string): Promise<string> {
   const code = Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
-  pendingCodes.set(code, { userId, expiresAt: Date.now() + CODE_TTL_MS });
-  // Opportunistic cleanup.
-  for (const [k, v] of pendingCodes) if (v.expiresAt < Date.now()) pendingCodes.delete(k);
+  const now = nowTimestampWib();
+  const expiresAt = formatTimestampWib(new Date(Date.now() + CODE_TTL_MS));
+  await appendRows(TABS.telegramLinkCodes, [{
+    code_hash: hashCode(code),
+    user_id: userId,
+    created_at: now,
+    expires_at: expiresAt,
+    consumed_at: ''
+  }]);
   return code;
 }
 
 /**
  * Consume a link code and bind the Telegram chat id to the user.
- * Returns the bound user_id, or null if the code is invalid/expired.
+ * Restart-safe + one-time: hash lookup in the tab, TTL + consumed_at checks.
+ * Returns the bound user_id, or null if the code is invalid/expired/used.
  */
 export async function consumeLinkCode(code: string, telegramChatId: string): Promise<string | null> {
-  const entry = pendingCodes.get((code || '').trim().toUpperCase());
-  if (!entry || entry.expiresAt < Date.now()) return null;
-  pendingCodes.delete(entry.userId ? code.trim().toUpperCase() : '');
-  const user = await findRow(TABS.users, 'user_id', entry.userId).catch(() => null);
+  const normalized = (code || '').trim().toUpperCase();
+  if (!/^[A-Z0-9]{6}$/.test(normalized)) return null;
+  const now = nowTimestampWib();
+  const found = await findRow(TABS.telegramLinkCodes, 'code_hash', hashCode(normalized)).catch(() => null);
+  if (!found) return null;
+  if (found.row.consumed_at) return null;
+  if ((found.row.expires_at || '') < now) return null;
+  const userId = found.row.user_id;
+  if (!userId) return null;
+  await updateRow(TABS.telegramLinkCodes, found.rowNumber, { ...found.row, consumed_at: now }).catch(() => null);
+  const user = await findRow(TABS.users, 'user_id', userId).catch(() => null);
   if (!user) return null;
   await updateRow(TABS.users, user.rowNumber, { ...user.row, telegram_id: telegramChatId }).catch(() => null);
-  return entry.userId;
+  return userId;
 }
 
 /** Look up the telegram chat id bound to a user id (for inbound identity checks). */

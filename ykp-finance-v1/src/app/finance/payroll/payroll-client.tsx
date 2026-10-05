@@ -216,7 +216,7 @@ export default function PayrollClient(props: {
                           ) : e.paid ? (
                             <span className='text-[10px] text-muted-foreground'>selesai</span>
                           ) : !e.ready_for_finance ? (
-                            <span className='text-[10px] text-muted-foreground'>menunggu review/approve HR</span>
+                            <span className='text-[10px] text-muted-foreground'>menunggu approve HR — baris legacy sebelum auto-approve Generate</span>
                           ) : (
                             <div className='flex flex-wrap gap-1'>
                               <button
@@ -286,6 +286,50 @@ export default function PayrollClient(props: {
             )}
           </Card>
         </>
+      )}
+
+      {revisionFor && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4' role='dialog' aria-modal='true'>
+          <div className='w-full max-w-md space-y-3 rounded-lg bg-background p-4 shadow-xl'>
+            <div>
+              <h2 className='text-base font-semibold'>Minta Revisi Payroll</h2>
+              <p className='text-xs text-muted-foreground'>
+                {revisionFor.name} ({revisionFor.id}) — antrean terkunci selama masa revisi; HR akan memperbaiki lalu generate ulang.
+              </p>
+            </div>
+            <label className='block text-sm font-medium'>
+              Catatan alasan revisi (wajib)
+              <textarea
+                value={revisionReason}
+                onChange={(e) => setRevisionReason(e.target.value)}
+                rows={3}
+                autoFocus
+                className='mt-1 w-full rounded border border-border bg-background px-3 py-2 text-sm'
+                placeholder='Mis: nominal lembur salah, cek ulang data presensi lembur'
+              />
+            </label>
+            {revisionError && <div className='text-xs text-red-600'>{revisionError}</div>}
+            <div className='flex justify-end gap-2'>
+              <button
+                type='button'
+                disabled={busyId !== null}
+                onClick={() => { setRevisionFor(null); setRevisionReason(''); setRevisionError(''); }}
+                className='rounded border border-border px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50'
+              >
+                Batal
+              </button>
+              <button
+                type='button'
+                disabled={busyId !== null || revisionReason.trim().length < 5}
+                onClick={() => void submitRevision()}
+                className='rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50'
+                title='Kirim permintaan revisi ke HR (wajib alasan, minimal 5 karakter)'
+              >
+                {busyId ? 'Mengirim…' : 'Kirim Revisi'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

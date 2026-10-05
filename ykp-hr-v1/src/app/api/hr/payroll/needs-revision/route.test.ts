@@ -45,6 +45,25 @@ async function seedApprovedPayroll(payrollId: string): Promise<void> {
   }]);
 }
 
+/** Auto-approve generate result: locked + ready to pay (payroll-auto-approve). */
+async function seedLockedReadyPayroll(payrollId: string): Promise<void> {
+  const { appendRows, TABS } = await import('@/db/sheets');
+  await appendRows(TABS.payroll, [{
+    payroll_id: payrollId,
+    payroll_period: '2026-09',
+    employee_id: 'EMP-001',
+    employee_name: 'Seed Locked',
+    approval_status: 'APPROVED',
+    payment_status: 'READY_TO_PAY',
+    locked_status: 'LOCKED',
+    locked_at: '2026-09-01 00:00:00',
+    locked_by: 'USR-HR',
+    approved_by: 'USR-HR',
+    created_at: '2026-09-01 00:00:00',
+    updated_at: '2026-09-01 00:00:00'
+  }]);
+}
+
 describe('POST /api/hr/payroll/needs-revision (MOM 1 Sep 2026)', () => {
   it('rejects missing/short reason with 400', async () => {
     asRole('owner');
@@ -114,5 +133,47 @@ describe('POST /api/hr/payroll/needs-revision (MOM 1 Sep 2026)', () => {
       ctx
     );
     expect(res.status).toBe(404);
+  });
+
+  it('accepts LOCKED unpaid rows (auto-approve generate) and unlocks them', async () => {
+    asRole('owner');
+    await seedLockedReadyPayroll('PR-NR-LCK');
+    const res = await POST(
+      req({ payroll_id: 'PR-NR-LCK', reason: 'nominal lembur salah, generate ulang' }),
+      ctx
+    );
+    expect(res.status).toBe(200);
+    const j = await res.json();
+    expect(j.data.approval_status).toBe('NEEDS_REVISION');
+    expect(j.data.locked_status).toBe('UNLOCKED');
+    const stored = await import('@/db/sheets');
+    const row = (await stored.findRow(stored.TABS.payroll, 'payroll_id', 'PR-NR-LCK'))?.row;
+    expect(row?.locked_status).toBe('UNLOCKED');
+    expect(row?.locked_at).toBe('');
+  });
+
+  it('PAID locked rows stay conflicted with 409', async () => {
+    asRole('owner');
+    const { appendRows, TABS } = await import('@/db/sheets');
+    await appendRows(TABS.payroll, [{
+      payroll_id: 'PR-NR-PAID',
+      payroll_period: '2026-08',
+      employee_id: 'EMP-001',
+      employee_name: 'Seed Paid',
+      approval_status: 'APPROVED',
+      payment_status: 'PAID',
+      locked_status: 'LOCKED',
+      created_at: '2026-08-01 00:00:00',
+      updated_at: '2026-08-01 00:00:00'
+    }]);
+    const res = await POST(
+      req({ payroll_id: 'PR-NR-PAID', reason: 'sudah dibayar, tidak boleh revisi' }),
+      ctx
+    );
+    expect(res.status).toBe(409);
+    const stored = await import('@/db/sheets');
+    const row = (await stored.findRow(stored.TABS.payroll, 'payroll_id', 'PR-NR-PAID'))?.row;
+    expect(row?.approval_status).toBe('APPROVED');
+    expect(row?.locked_status).toBe('LOCKED');
   });
 });

@@ -11,7 +11,9 @@
  * calls it with their HR session cookie.
  *
  * Transition: APPROVED + unpaid  →  NEEDS_REVISION (+reason/by/at).
- * PAID / LOCKED rows are rejected (use unlock flow instead).
+ * LOCKED-but-unpaid rows ARE accepted: with generate auto-approve (payroll-auto-approve)
+ * every generated row starts LOCKED, so revision unlocks it for editing/regeneration.
+ * PAID rows are rejected (nothing left to revise — use unlock flow instead).
  */
 import { updateRow, TABS, findRow } from '@/db/sheets';
 import { getSession } from '@/lib/session';
@@ -52,7 +54,9 @@ export const POST = handler(async (req) => {
     return conflict(`Only APPROVED (Ready to Pay) payroll can be sent back, current: ${found.row.approval_status || '-'}`);
   }
   if (found.row.payment_status === 'PAID') return conflict('Already paid — use unlock flow instead');
-  if (found.row.locked_status === 'LOCKED') return conflict('Payroll is locked — unlock first');
+  // LOCKED rows are unlocked together with the transition: auto-approve generate
+  // (payroll-auto-approve) starts every row LOCKED, otherwise revision would dead-end.
+  const wasLocked = found.row.locked_status === 'LOCKED';
 
   const now = nowTimestampWib();
   const updated = {
@@ -61,7 +65,10 @@ export const POST = handler(async (req) => {
     needs_revision_reason: parsed.data.reason,
     needs_revision_by: actorUserId,
     needs_revision_at: now,
-    updated_at: now
+    updated_at: now,
+    ...(wasLocked
+      ? { locked_status: 'UNLOCKED', locked_at: '', locked_by: '' }
+      : {})
   };
   await updateRow(TABS.payroll, found.rowNumber, updated);
   await logAudit({

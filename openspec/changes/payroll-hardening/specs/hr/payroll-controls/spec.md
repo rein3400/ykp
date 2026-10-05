@@ -7,7 +7,11 @@
 The system SHALL reject an approval decision when the deciding user is the
 requester (`created_by` of the target row equals the session user).
 
-- Applies to: leave approval, adjustment approval, lateness approval, payroll approval.
+- Applies to: leave approval, adjustment approval, lateness approval.
+- **Excludes payroll**: the payroll approve/generate action is deliberately
+  exempt — `payroll-auto-approve` (2026-10-05 owner decision) makes Generate
+  lock + auto-approve rows in one action (generator = approver by design),
+  so a payroll SoD guard would contradict the shipped client expectation.
 - Rejection MUST return 403 with an explicit self-approval message.
 - REJECT decisions on own requests MAY be allowed (rejecting oneself harms no one); APPROVE and NEEDS_REVISION on own requests MUST be rejected.
 - Audit log MUST record rejected self-approval attempts (actor, entity, entity id).
@@ -21,6 +25,11 @@ requester (`created_by` of the target row equals the session user).
 
 - **WHEN** user U submits a REJECT decision on their own PENDING leave request
 - **THEN** the request transitions to REJECTED normally.
+
+#### Scenario: payroll self-generate auto-approve is accepted
+
+- **WHEN** the same user runs payroll generate that auto-approves (per `payroll-auto-approve`)
+- **THEN** no self-approval error is raised; the audit log records the single combined generate action.
 
 ### Requirement: Regenerate audit trail
 

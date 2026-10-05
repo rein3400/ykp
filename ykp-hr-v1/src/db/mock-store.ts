@@ -62,7 +62,8 @@ const TAB = {
   auditLog: 'hr_audit_log',
   appSettings: 'app_settings',
   hermezAlerts: 'hermes_alert_log',
-  telegramDeliveryLog: 'telegram_delivery_log'
+  telegramDeliveryLog: 'telegram_delivery_log',
+  telegramLinkCodes: 'hr_telegram_link_codes'
 } as const;
 
 function seed(): Record<string, Record<string, string>[]> {
@@ -223,7 +224,9 @@ function seed(): Record<string, Record<string, string>[]> {
     // ── telegram_delivery_log ───────────────────────────────────
     [TAB.telegramDeliveryLog]: [
       { delivery_id: 'DLV-001', source_module: 'HR', source_reference_id: 'ALR-001', message_type: 'ALERT', recipient: '551234001', message_id: 'tg-1001', status: 'SENT', retry_count: '0', sent_at: tw, error_message: '', created_at: tw }
-    ]
+    ],
+    // ── hr_telegram_link_codes ──────────────────────────────────
+    [TAB.telegramLinkCodes]: []
   };
 }
 

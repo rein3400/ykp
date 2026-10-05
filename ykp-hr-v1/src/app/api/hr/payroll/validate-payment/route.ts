@@ -17,6 +17,7 @@ import { handler, badRequest, unauthorized, forbidden, conflict, notFound, ok } 
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib, todayWib } from '@/lib/format';
 import { getBrandEmail, buildPayslipEmailHtml, sendPayslipEmail } from '@/lib/payslip-email';
+import { buildPayslipPdfAttachment } from '@/lib/payslip-pdf';
 import { z } from 'zod';
 
 const schema = z.object({ payroll_id: z.string().min(1) });
@@ -81,7 +82,15 @@ export const POST = handler(async (req) => {
         fromName: brandConfig.brandName,
         subject,
         html,
-        text
+        text,
+        // Formal PDF attachment (client 2026-10: "lampiran file formal slip gaji").
+        attachment: await buildPayslipPdfAttachment({
+          payrollRow: updated,
+          employeeName: found.row.employee_name ?? '',
+          brandName: brandConfig.brandName,
+          brandId: found.row.brand_id,
+          payrollPeriod: found.row.payroll_period
+        })
       });
       emailResult = { sent: sent.sent, mocked: sent.mocked, to: employeeEmail, from: brandConfig.email, error: sent.error };
       const emailStatus = sent.sent ? (sent.mocked ? 'MOCKED' : 'SENT') : 'FAILED';

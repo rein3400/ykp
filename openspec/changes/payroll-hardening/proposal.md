@@ -1,10 +1,10 @@
 ## Why
 
-HR payroll controls money leaving the company, but verification (2026-09-07) found the requester can approve their own request on all four HR approval routes, payroll regenerate overwrites pre-approval figures without a before/after trail, and the finance transfer notification carries no amount to reconcile against. Finance and warehouse already enforce separation of duties; HR does not. Fix before pilot, while data is still synthetic.
+HR payroll controls money leaving the company, but verification (2026-09-07) found the requester can approve their own request on three HR approval routes (payroll later got auto-approve by design — see `payroll-auto-approve`), payroll regenerate overwrites pre-approval figures without a before/after trail, and the finance transfer notification carries no amount to reconcile against. Finance and warehouse already enforce separation of duties; HR does not. Fix before pilot, while data is still synthetic.
 
 ## What Changes
 
-- **A. SoD guard on 4 HR approval routes** (`leaves/approve`, `adjustments/approve`, `lateness/approve`, `payroll/approve`): reject when `created_by === session.userId` (same 2-line pattern finance already uses).
+- **A. SoD guard on 3 HR approval routes** (`leaves/approve`, `adjustments/approve`, `lateness/approve`): reject when `created_by === session.userId` (same 2-line pattern finance already uses). Payroll is deliberately excluded from A since 2026-10-05: `payroll-auto-approve` (owner decision, client feedback) makes Generate lock + auto-approve rows in one action (generator = approver by design) — a payroll self-approval guard would contradict that behaviour. See `openspec/changes/payroll-auto-approve/`.
 - **B. Regenerate audit trail** (`payroll/generate`): log before/after per overwritten row (or period snapshot) so approvers see figure history.
 - **C. Scope honesty label**: approve UI + payslip show "belum termasuk BPJS/pajak" (engine hardcodes both to 0 per V1 scope).
 - **D. Transfer reconciliation** (`payroll/finance-notify`): accept optional transfer amount per row; flag mismatch vs approved net.

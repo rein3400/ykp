@@ -113,13 +113,14 @@ export async function sendPayslipEmail(opts: {
   subject: string;
   html: string;
   text: string;
+  attachment?: { filename: string; content: Buffer };
 }): Promise<SendResult> {
   const cfg = await getSmtpConfig();
   const smtpHost = cfg.host;
   const smtpUser = cfg.user;
   const smtpPass = cfg.pass;
   if (!smtpHost || !smtpUser || !smtpPass) {
-    console.log(`[payslip-email MOCK] From: ${opts.fromName} <${opts.fromEmail}> To: ${opts.to} Subject: ${opts.subject}`);
+    console.log(`[payslip-email MOCK] From: ${opts.fromName} <${opts.fromEmail}> To: ${opts.to} Subject: ${opts.subject}${opts.attachment ? ` (attachment: ${opts.attachment.filename}, skipped in mock)` : ''}`);
     return { sent: true, mocked: true, messageId: `mock-${Date.now()}` };
   }
   try {
@@ -135,7 +136,8 @@ export async function sendPayslipEmail(opts: {
       to: opts.to,
       subject: opts.subject,
       html: opts.html,
-      text: opts.text
+      text: opts.text,
+      ...(opts.attachment ? { attachments: [{ filename: opts.attachment.filename, content: opts.attachment.content }] } : {})
     });
     return { sent: true, mocked: false, messageId: info.messageId };
   } catch (e) {

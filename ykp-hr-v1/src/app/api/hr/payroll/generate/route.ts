@@ -1,7 +1,9 @@
 /**
  * Generate payroll for a YYYY-MM period.
  * Reads: employees, attendance, adjustments, lateness_rules
- * Writes: hr_payroll with status PENDING
+ * Writes: hr_payroll with auto-approve state APPROVED + READY_TO_PAY + LOCKED
+ * (client 2026-10 feedback: Generate Payroll langsung mengunci data dan
+ * terkirim ke Finance tanpa tombol approve tambahan; owner unlock tersedia).
  */
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
@@ -179,12 +181,15 @@ export const POST = handler(async (req) => {
       gross_salary: String(result.gross_salary),
       net_salary: String(result.net_salary),
       calculation_status: 'DRAFT',
-      approval_status: 'PENDING',
-      payment_status: 'UNPAID',
+      approval_status: 'APPROVED',
+      payment_status: 'READY_TO_PAY',
+      locked_status: 'LOCKED',
+      locked_at: now,
+      locked_by: session.userId,
       payment_date: '',
       payment_reference: '',
       payslip_url: '',
-      approved_by: '',
+      approved_by: session.userId,
       created_at: now,
       updated_at: now
     });
@@ -222,7 +227,7 @@ export const POST = handler(async (req) => {
     action: 'generate',
     entity: 'payroll',
     entityId: parsed.data.period,
-    afterValue: `${rows.length} rows`
+    afterValue: `${rows.length} rows; auto-approve ON: APPROVED+READY_TO_PAY+LOCKED (generator=approver: ${session.userId})`
   });
 
   return ok({ period: parsed.data.period, count: rows.length });
