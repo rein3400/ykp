@@ -1,7 +1,7 @@
 # YKP Hermez — Deployed Production Links
 
-> Last verified: **2026-09-23** (Coolify self-hosted VPS deploy)
-> Source of truth for live URLs. Update this file every deploy.  
+> Last verified: **2026-10-06** (client-feedback wave deployed from branch `main` @ `88b10de` "fix: feedback task")
+> Source of truth for live URLs. Update this file every deploy.
 > Production code source: branch `origin/stagging` @ `5ad8271` (deep-test fixes 2026-07-22: Hub SSO token baked, Hermez SUPER_ADMIN SSO + ops-summary route, Finance form banner). Prior `1243c84` = security cutover 2026-07-21.
 
 ---
@@ -28,6 +28,16 @@ domains (required for the `Secure` session cookies used by hub/finance/investor)
 | — | Postgres / Redis | internal only | `ykp-postgres`, `ykp-redis` (healthy) |
 
 Login `owner` / (rotated 2026-09-23 — value with the owner). Hub SSO covers all modules.
+
+**Client-feedback wave 2026-10-06 (branch main @ `88b10de`) — HR + Finance payroll lifecycle**
+Implemented via 3 OpenSpec changes (`payroll-auto-approve`, `hr-hardening-demo-fixes`, `finance-payroll-demo-checklist`):
+
+1. **Generate Payroll auto-approve**: HR Generate → langsung `APPROVED+READY_TO_PAY+LOCKED` (tanpa tombol approve tambahan); Finance melihat HARUS DIBAYAR; owner unlock tetap. Legacy approve route idempotent untuk baris PENDING lama.
+2. **Needs Revision jalan untuk locked rows** (dulu dead-end 409): revisi → `NEEDS_REVISION + UNLOCKED` + wajib alasan; popup wajib-alasan ditambahkan di Finance; antrean terkunci selama revisi.
+3. **Validasi Pembayaran muncul untuk baris terkunci**; slips sekarang menyertakan **lampiran PDF** (`Slip-Gaji-<periode>-<nama>.pdf`, pdfkit — dependency baru di hr-v1).
+4. **Kerentanan PII ditutup**: `GET /api/hr/notify/contract-reminders` sekarang wajib `x-cron-secret` (401 anonim).
+5. **Link code Telegram tahan restart**: tab baru `hr_telegram_link_codes` (SHA-256 hashed) — **JALANKAN `npm run sheets:bootstrap` SEKALI di prod setelah deploy ini** (idempotent; membuat tab).
+6. Owner steps yang masih menunggu (verifikasi live 2026-10): SMTP `SMTP_HOST/USER/PASS` + tes kirim, geo 4 outlet client (Sekar Pizza Colombo/Tirtodipuran, Funkydak Demangan, Suburbun Demangan) di `master_outlet`, roster hari demo, test-fire `contract-reminders`.
 
 > The domain router was fixed by setting each app's domain to `https://…`: with an
 > `http://` scheme Coolify only generated an HTTP router (no `tls.certresolver`), which is

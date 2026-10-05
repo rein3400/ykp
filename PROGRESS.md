@@ -1,11 +1,21 @@
 # YKP HERMEZ AI COMMAND CENTER — Progress
 
 > Single source of truth untuk semua track. Update tiap ada perubahan.
-> Last update: 2026-07-18
+> Last update: 2026-10-06
 
 ---
 
 ## ✅ Completed
+
+### HR/Finance payroll feedback wave — 3 OpenSpec changes (2026-10-06)
+
+Client demo feedback (probation/contract reminders, bot absensi GPS, SMTP, payroll lifecycle) → implemented + dev-verified via three changes, pushed `main` @ `88b10de`:
+- **`payroll-auto-approve`** (hr-v1): Generate Payroll auto-approves & locks (`APPROVED+READY_TO_PAY+LOCKED`, generator=approver by design), Setujui deprecasi (legacy route idempotent), needs-revision accepts locked unpaid rows (→ NEEDS_REVISION+UNLOCKED), SoD `payroll-hardening` narrowed. hr-v1 tests 188+.
+- **`hr-hardening-demo-fixes`** (hr-v1): GET contract-reminders secret-gated (PII leak ditutup); Telegram link codes persist di tab baru `hr_telegram_link_codes` (hashed, one-time, TTL, restart-safe). Run `sheets:bootstrap` sekali di prod. hr-v1 tests 191+.
+- **`finance-payroll-demo-checklist`** (finance-v1 + hr-v1): popup wajib-alasan Minta Revisi (submitRevision dead code → wired), Validasi Pembayaran/Tandai Dibayar muncul utk baris locked, payslip email + **lampiran PDF pdfkit** (`Slip-Gaji-*.pdf`, dependency baru). Finance 168 tests, hr 194.
+- Verifikasi live di prod = owner steps: SMTP config, geo 4 outlet (Sekar Pizza Colombo/Tirtodipuran, Funkydak Demangan, Suburbun Demangan), roster, test-fire cron — see `DEPLOYED_LINKS.md`.
+
+Known residual gaps (not in client checklist, flagged for next scope): potongan telat belum masuk payroll (`lateDeduction` dead code; `hr_lateness` tidak pernah ditulis kode), foto absensi diabaikan bot Telegram, Summary Harian tetap butuh Regenerate manual.
 
 ### AI integration in ykp-ops-v1 (2026-07-18)
 

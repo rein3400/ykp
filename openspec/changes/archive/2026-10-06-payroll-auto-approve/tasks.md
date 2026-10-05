@@ -27,4 +27,4 @@
 ## 5. Verification & handoff
 
 - [x] 5.1 Manual E2E on dev: hr_admin → /hr/payroll/generate → row APPROVED+LOCKED → Finance /finance/payroll shows row in "HARUS DIBAYAR" → Minta Revisi → row NEEDS_REVISION+UNLOCKED → regenerate re-locks — DONE via hr-v1 dev HTTP (mock DB): generate 2025-06 count=12 semuanya APPROVED+READY_TO_PAY+LOCKED (approved_by=generator USR-002); owner idempotent approve 200 no-op; cross-app Minta Revisi (x-finance-secret) → NEEDS_REVISION+UNLOCKED (dulu dead-end 409); re-generate 409 saat masih ada LOCKED; setelah owner unlock 11 baris (EMP-001 sudah unlocked via revisi), regenerate → semua re-locked APPROVED lagi. Finance "HARUS DIBAYAR" verifikasi diliput oleh unit test payableOf (kontrak shared-tab tak berubah; mock DB tidak bisa meniru baca Sheets lintas-app).
-- [ ] 5.2 Update DEPLOYED_LINKS.md/PROGRESS.md notes after deploy (post-apply, owner deploy step)
+- [x] 5.2 Update DEPLOYED_LINKS.md/PROGRESS.md notes after deploy (post-apply, owner deploy step) — DONE 2026-10-06: deploy branch main @ 88b10de oleh owner; wave summary ditulis ke kedua file
