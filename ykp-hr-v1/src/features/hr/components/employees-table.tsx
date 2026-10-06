@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatIdr } from '@/lib/format';
 import { computeTimeline } from '@/lib/employment-contract';
+import { STATUS_LABELS, normalizeEmploymentStatus } from '@/lib/master-data';
 import { useToast } from '@/components/toast';
 import { useConfirm } from '@/components/confirm-dialog';
 
@@ -147,7 +148,10 @@ export function EmployeesTable({
                 <td>{e.salary_type || 'MONTHLY'}</td>
                 <td>
                   <span className={activeBadge(e.active_status)}>
-                    {e.employment_status || '-'}
+                    {(() => {
+                      const st = normalizeEmploymentStatus(e.employment_status);
+                      return st ? STATUS_LABELS[st] : (e.employment_status || '-');
+                    })()}
                   </span>
                 </td>
                 <td className='font-mono text-xs'>

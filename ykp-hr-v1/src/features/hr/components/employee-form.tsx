@@ -201,8 +201,8 @@ export function EmployeeForm({ initial, mode }: { initial?: EmployeeInitial; mod
           Status Kerja
           <select className='input mt-1 w-full' value={form.employment_status} onChange={(e) => set('employment_status', e.target.value)}>
             <option value='PROBATION'>Probation</option>
-            <option value='CONTRACT'>Kontrak</option>
-            <option value='PERMANENT'>Tetap</option>
+            <option value='CONTRACT'>Contract</option>
+            <option value='PERMANENT'>Permanent</option>
           </select>
         </label>
       </div>
