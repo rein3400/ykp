@@ -28,26 +28,30 @@ async function main(): Promise<void> {
   // (re-runnable after partial/legacy states, incl. left-over duplicate rows).
   const finallyActiveIds = new Set(plan.filter((p) => p.action !== 'DEACTIVATE').map((p) => p.id));
   const activeEntityIds = new Set(
-    [...employees, ...users].filter((r) => ['active', '1'].includes(r.active_status)).map((r) => r.employee_id || r.user_id)
+    [...employees, ...users]
+      .filter((r) => ['active', '1'].includes(r.active_status))
+      .map((r) => (r.employee_id || r.user_id || '').trim())
+      .filter(Boolean)
   );
   // Rows (not entities): duplicate sheet rows for one entity id are handled
   // explicitly — every row must end referencing an active outlet.
-  const employeeRows = employees.filter((e) => e.employee_id).map((e) => ({ tab: TABS.employees as 'master_employee', keyCol: 'employee_id', id: e.employee_id, row: e }));
-  const userRows = users.filter((u) => u.user_id).map((u) => ({ tab: TABS.users as 'users', keyCol: 'user_id', id: u.user_id, row: u }));
+  const employeeRows = employees.filter((e) => (e.employee_id ?? '').trim()).map((e) => ({ tab: TABS.employees as 'master_employee', keyCol: 'employee_id', id: e.employee_id.trim(), row: e }));
+  const userRows = users.filter((u) => (u.user_id ?? '').trim()).map((u) => ({ tab: TABS.users as 'users', keyCol: 'user_id', id: u.user_id.trim(), row: u }));
   const allRows = [...employeeRows, ...userRows];
   const byEntity = new Map<string, typeof allRows>();
   for (const r of allRows) byEntity.set(r.id, [...(byEntity.get(r.id) ?? []), r]);
-  for (const [id, rows] of byEntity) {
-    if (rows.length > 1) console.log(`DUPLICATE ${id}: ${rows.length} sheet rows share this id (reassign/verify will fix every row)`);
+  for (const rows of byEntity.values()) {
+    if (rows.length > 1) console.log(`DUPLICATE ${rows[0].id}: ${rows.length} sheet rows share this id (reassign/verify will fix every row)`);
   }
+  const outletOf = (row: Record<string, string>): string => (row.outlet_id ?? '').trim();
   const references = allRows.filter((r) =>
-    r.row.outlet_id && !finallyActiveIds.has(r.row.outlet_id) && ['active', '1'].includes(r.row.active_status)
+    outletOf(r.row) && !finallyActiveIds.has(outletOf(r.row)) && ['active', '1'].includes(r.row.active_status)
   );
   // Validate reassign mapping against the live plan.
   for (const [entityId, targetId] of reassign) {
     if (!activeEntityIds.has(entityId)) throw new Error(`--reassign: "${entityId}" is not an active employee/user id`);
     const rows = byEntity.get(entityId) ?? [];
-    if (!rows.length || !rows.some((r) => !finallyActiveIds.has(r.row.outlet_id))) {
+    if (!rows.length || !rows.some((r) => outletOf(r.row) && !finallyActiveIds.has(outletOf(r.row)))) {
       console.log(`NOTE --reassign: "${entityId}" references only active outlets already — ignored`);
     }
     if (!finallyActiveIds.has(targetId)) throw new Error(`--reassign: target "${targetId}" is not active in this migration plan`);
@@ -111,16 +115,17 @@ async function main(): Promise<void> {
   // (2) Reassign EVERY sheet row of the mapped entities (handles duplicate rows).
   for (const [entityId, targetId] of reassign) {
     for (const entry of byEntity.get(entityId) ?? []) {
-      if (finallyActiveIds.has(entry.row.outlet_id) || entry.row.outlet_id === targetId) continue;
-      const fresh = await findRow(entry.tab, entry.keyCol, entry.id);
-      if (!fresh || fresh.row.outlet_id !== entry.row.outlet_id) {
+      const sourceOutlet = outletOf(entry.row);
+    if (!sourceOutlet || finallyActiveIds.has(sourceOutlet) || sourceOutlet === targetId) continue;
+      const fresh = await findRow(entry.tab, entry.keyCol, entry.id.trim());
+      if (!fresh || outletOf(fresh.row) !== sourceOutlet) {
         throw new Error(`Reference changed since plan: ${entityId} (${entry.keyCol})`);
       }
       await updateRow(entry.tab, fresh.rowNumber, { ...fresh.row, outlet_id: targetId, updated_at: now });
       await logAudit({
         actorUserId: 'script', actorRole: 'system', action: 'master_data:reassign',
         entity: entry.tab === TABS.employees ? 'employee' : 'user', entityId,
-        beforeValue: entry.row.outlet_id, afterValue: targetId
+        beforeValue: sourceOutlet, afterValue: targetId
       });
     }
   }
@@ -158,7 +163,7 @@ async function main(): Promise<void> {
   const endEmployees = await readTab<Record<string, string>>(TABS.employees);
   const endUsers = await readTab<Record<string, string>>(TABS.users);
   const stray = [...endEmployees, ...endUsers].filter((r) =>
-    r.outlet_id && !finallyActiveIds.has(r.outlet_id) && ['active', '1'].includes(r.active_status)
+    (r.outlet_id ?? '').trim() && !finallyActiveIds.has((r.outlet_id ?? '').trim()) && ['active', '1'].includes(r.active_status)
   );
   if (stray.length) {
     console.log('\n!!! STRAY REFERENCES (still pointing at inactive outlet):');
