@@ -106,7 +106,7 @@ export default function UsersClient({
             </select>
             <select value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} className='rounded border px-2 py-1 text-xs'>
               <option value=''>Semua Outlet</option>
-              {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
+              {outlets.filter((o) => ['active', '1'].includes((o.status ?? '').trim().toLowerCase())).map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
             </select>
           </div>
           <p className='text-[10px] text-slate-500'>

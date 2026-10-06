@@ -291,12 +291,13 @@ for a in $APPS; do
   path="/login"; [[ "$a" == "ykp-hub" ]] && path="/"
   code="$(curl -sS -m 25 -o /dev/null -w '%{http_code}' --resolve "$host:443:$VPS_IP" "https://$host$path" 2>/dev/null || echo 000)"
   printf '  %-18s https=%s\n' "$a" "$code"
+  [[ "$code" =~ ^(200|301|302|303|307|308)$ ]] || { printf 'HTTPS verification failed: %s\n' "$a" >&2; exit 1; }
 done
 echo "  (https=000 biasanya sertifikat belum terbit - tunggu ~1 menit lalu cek lagi)"
 HUBHOST="${UUID[ykp-hub]}.$IPDOTS.sslip.io"
 curl -fsS -m 30 --resolve "$HUBHOST:443:$VPS_IP" "$URL_HUB/api/health" \
-  | jq -c '{overall:.data.overall, modules:[.data.results[]|{id,reachable}]}' \
-  || echo "  (hub health belum bisa diakses - cek lagi sebentar lagi)"
+  | jq -e '.data.overall == "ok" and (.data.results | length > 0) and all(.data.results[]; .httpStatus >= 200 and .httpStatus < 300)' >/dev/null
+printf '%s\n' 'All module health probes returned successful HTTP responses.'
 
 cat <<EOF
 

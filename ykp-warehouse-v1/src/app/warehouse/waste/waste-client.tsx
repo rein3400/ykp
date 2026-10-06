@@ -51,7 +51,7 @@ export default function WasteClient({
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             <select value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Outlet</option>
-              {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
+              {outlets.filter((o) => ['active', '1'].includes((o.status ?? '').trim().toLowerCase())).map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
             </select>
             <select value={form.location_id} onChange={(e) => setForm({ ...form, location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Lokasi *</option>

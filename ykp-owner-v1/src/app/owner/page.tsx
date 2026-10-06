@@ -73,12 +73,12 @@ export default async function OwnerHome() {
       <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5'>
         <div className='rounded-lg border border-border bg-background p-3'>
           <p className='text-[10px] text-muted-foreground'>Estimasi Surplus Kas</p>
-          <p className='text-base font-bold'>{idr(h.estimasiSurplusKas)}</p>
+          <p className='text-base font-bold'>{ov.modules.finance.reachable ? idr(h.estimasiSurplusKas) : 'Data tidak tersedia'}</p>
         </div>
         <div className='rounded-lg border border-border bg-background p-3'>
           <p className='text-[10px] text-muted-foreground'>Revenue vs rata-rata 7 hari</p>
           <p className='text-base font-bold'>
-            {idr(h.revenueToday)}
+            {ov.modules.finance.reachable ? idr(h.revenueToday) : 'Data tidak tersedia'}
             {revDelta !== null && (
               <span className={`ml-1 text-[11px] font-semibold ${revDelta >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {revDelta >= 0 ? '+' : ''}{revDelta}%
@@ -88,7 +88,7 @@ export default async function OwnerHome() {
         </div>
         <div className='rounded-lg border border-border bg-background p-3'>
           <p className='text-[10px] text-muted-foreground'>Staf hadir / telat</p>
-          <p className='text-base font-bold'>{h.staffPresent} / {h.staffLate}</p>
+          <p className='text-base font-bold'>{ov.modules.hr.reachable ? `${h.staffPresent} / ${h.staffLate}` : 'Data tidak tersedia'}</p>
         </div>
         <div className='rounded-lg border border-border bg-background p-3'>
           <p className='text-[10px] text-muted-foreground'>Stok kritis</p>

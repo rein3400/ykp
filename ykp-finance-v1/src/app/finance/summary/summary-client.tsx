@@ -80,7 +80,7 @@ export default function SummaryClient(props: {
         <div className='w-52'>
           <Select label='Outlet' value={outletId} onChange={setOutletId}>
             <option value=''>Semua Outlet</option>
-            {props.outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
+            {props.outlets.filter((o) => ['active', '1'].includes((o.status ?? '').trim().toLowerCase())).map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
           </Select>
         </div>
         {availableDates.length > 0 && !availableDates.includes(date) && (
