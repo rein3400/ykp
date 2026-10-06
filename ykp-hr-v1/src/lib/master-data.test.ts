@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   REAL_OUTLETS, CANONICAL_STATUSES, STATUS_LABELS,
-  normalizeEmploymentStatus, isDummyOutletName, planOutletMigration, assertSheetsMigrationEnvironment, isActiveOutletStatus
+  normalizeEmploymentStatus, isDummyOutletName, planOutletMigration, assertSheetsMigrationEnvironment, isActiveOutletStatus, activeMigrationEntityIds
 } from './master-data';
 
 describe('REAL_OUTLETS (client 2026-10-06)', () => {
@@ -49,6 +49,15 @@ describe('safe outlet migration', () => {
     expect(() => assertSheetsMigrationEnvironment({ USE_POSTGRES: 'true' })).toThrow();
     expect(() => assertSheetsMigrationEnvironment({ USE_MOCK_DB: 'true' })).toThrow();
     expect(() => assertSheetsMigrationEnvironment({ GOOGLE_SERVICE_ACCOUNT_EMAIL: 'test', GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: 'test', YKP_HR_SPREADSHEET_ID: 'test' })).not.toThrow();
+  });
+});
+
+describe('active entity identity', () => {
+  it('uses user_id for linked user rows instead of employee_id', () => {
+    expect(activeMigrationEntityIds(
+      [{ employee_id: 'EMP-020', active_status: 'active' }],
+      [{ user_id: 'USR-022', employee_id: 'EMP-020', active_status: 'active' }]
+    )).toEqual(new Set(['EMP-020', 'USR-022']));
   });
 });
 

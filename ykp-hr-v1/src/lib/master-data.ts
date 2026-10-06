@@ -51,6 +51,16 @@ export function isActiveOutletStatus(status: string | undefined): boolean {
   return ['active', '1'].includes((status ?? '').trim().toLowerCase());
 }
 
+export function activeMigrationEntityIds(
+  employees: Record<string, string>[],
+  users: Record<string, string>[]
+): Set<string> {
+  return new Set([
+    ...employees.filter((row) => isActiveOutletStatus(row.active_status)).map((row) => row.employee_id?.trim()),
+    ...users.filter((row) => isActiveOutletStatus(row.active_status)).map((row) => row.user_id?.trim())
+  ].filter((id): id is string => Boolean(id)));
+}
+
 export function assertSheetsMigrationEnvironment(env: Record<string, string | undefined>): void {
   if (env.USE_MOCK_DB === 'true' || env.USE_POSTGRES === 'true') {
     throw new Error('Migration requires real Google Sheets, not mock or Postgres');

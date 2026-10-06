@@ -2,7 +2,7 @@ import { readTab, updateRow, appendRows, findRow, TABS } from '../src/db/sheets'
 import { logAudit } from '../src/lib/audit';
 import { nowTimestampWib } from '../src/lib/format';
 import {
-  normalizeEmploymentStatus, assertSheetsMigrationEnvironment,
+  normalizeEmploymentStatus, assertSheetsMigrationEnvironment, activeMigrationEntityIds,
   planOutletMigration, type OutletMigrationRow
 } from '../src/lib/master-data';
 
@@ -27,12 +27,7 @@ async function main(): Promise<void> {
   // outlet outside this set are moved; this makes the migration convergent
   // (re-runnable after partial/legacy states, incl. left-over duplicate rows).
   const finallyActiveIds = new Set(plan.filter((p) => p.action !== 'DEACTIVATE').map((p) => p.id));
-  const activeEntityIds = new Set(
-    [...employees, ...users]
-      .filter((r) => ['active', '1'].includes(r.active_status))
-      .map((r) => (r.employee_id || r.user_id || '').trim())
-      .filter(Boolean)
-  );
+  const activeEntityIds = activeMigrationEntityIds(employees, users);
   // Rows (not entities): duplicate sheet rows for one entity id are handled
   // explicitly — every row must end referencing an active outlet.
   const employeeRows = employees.filter((e) => (e.employee_id ?? '').trim()).map((e) => ({ tab: TABS.employees as 'master_employee', keyCol: 'employee_id', id: e.employee_id.trim(), row: e }));
