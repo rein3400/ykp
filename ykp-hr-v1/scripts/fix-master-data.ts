@@ -41,7 +41,7 @@ async function main(): Promise<void> {
     if (rows.length > 1) console.log(`DUPLICATE ${id}: ${rows.length} sheet rows share this id (reassign/verify will fix every row)`);
   }
   const references = allRows.filter((r) =>
-    !finallyActiveIds.has(r.row.outlet_id) && ['active', '1'].includes(r.row.active_status)
+    r.row.outlet_id && !finallyActiveIds.has(r.row.outlet_id) && ['active', '1'].includes(r.row.active_status)
   );
   // Validate reassign mapping against the live plan.
   for (const [entityId, targetId] of reassign) {
@@ -158,7 +158,7 @@ async function main(): Promise<void> {
   const endEmployees = await readTab<Record<string, string>>(TABS.employees);
   const endUsers = await readTab<Record<string, string>>(TABS.users);
   const stray = [...endEmployees, ...endUsers].filter((r) =>
-    ['active', '1'].includes(r.active_status) && r.outlet_id && !finallyActiveIds.has(r.outlet_id)
+    r.outlet_id && !finallyActiveIds.has(r.outlet_id) && ['active', '1'].includes(r.active_status)
   );
   if (stray.length) {
     console.log('\n!!! STRAY REFERENCES (still pointing at inactive outlet):');
