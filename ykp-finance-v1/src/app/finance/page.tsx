@@ -27,7 +27,7 @@ export default async function RingkasanPage() {
       pos={operationalRows(pos, outlets)}
       items={operationalRows(posItems, outlets)}
       expenses={operationalRows(expenses, outlets)}
-      suppliers={operationalRows(suppliers, outlets)}
+      suppliers={suppliers}
       petty={operationalRows(petty, outlets)}
       closing={operationalRows(closing, outlets)}
       alerts={operationalRows(alerts, outlets)}

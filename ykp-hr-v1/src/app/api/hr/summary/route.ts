@@ -4,11 +4,17 @@
  */
 import { readTab, TABS } from '@/db/sheets';
 import { handler, list, badRequest } from '@/lib/http';
+import { isActiveOutletStatus } from '@/lib/master-data';
 
 export const GET = handler(async (req) => {
   const url = new URL(req.url);
   const date = url.searchParams.get('date');
-  const all = await readTab<Record<string, string>>(TABS.dailySummary);
+  const [summary, outlets] = await Promise.all([
+    readTab<Record<string, string>>(TABS.dailySummary),
+    readTab<Record<string, string>>(TABS.outlets)
+  ]);
+  const activeIds = new Set(outlets.filter((outlet) => isActiveOutletStatus(outlet.status)).map((outlet) => outlet.outlet_id));
+  const all = summary.filter((row) => !row.outlet_id || activeIds.has(row.outlet_id));
   if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return badRequest('date must be YYYY-MM-DD');
   const filtered = date ? all.filter((r) => r.date === date) : all;
   return list(filtered);

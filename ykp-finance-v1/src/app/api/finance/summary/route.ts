@@ -7,6 +7,7 @@ import { NextRequest } from 'next/server';
 import { readTab, TABS } from '@/db/sheets';
 import { ok, handler } from '@/lib/http';
 import { todayWib } from '@/lib/format';
+import { operationalRows } from '@/lib/operational-data';
 
 export const GET = handler(async (req: NextRequest) => {
   const q = req.nextUrl.searchParams;
@@ -14,7 +15,11 @@ export const GET = handler(async (req: NextRequest) => {
   const outletId = q.get('outlet_id') ?? '';
   const brandId = q.get('brand_id') ?? '';
 
-  const rows = await readTab<Record<string, string>>(TABS.dailySummary);
+  const [summary, outlets] = await Promise.all([
+    readTab<Record<string, string>>(TABS.dailySummary),
+    readTab<Record<string, string>>(TABS.outlets)
+  ]);
+  const rows = operationalRows(summary, outlets);
   let filtered = rows.filter((r) =>
     r.date === date
     && (!outletId || r.outlet_id === outletId)

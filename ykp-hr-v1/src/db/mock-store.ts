@@ -283,6 +283,8 @@ function getStore(): Record<string, Record<string, string>[]> {
 }
 
 export function isMockMode(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
+  if ((process.env.USE_POSTGRES ?? '').toLowerCase() === 'true') return false;
   if (process.env.USE_MOCK_DB === 'true') return true;
   if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) return true;
   if (!process.env.YKP_HR_SPREADSHEET_ID) return true;

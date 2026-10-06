@@ -17,7 +17,7 @@ import { todayWib, num } from './format';
 import { mockOverview } from './mock';
 
 export function isMockForced(): boolean {
-  return (process.env.YKP_OWNER_MOCK ?? '').toLowerCase() === 'true';
+  return process.env.NODE_ENV !== 'production' && (process.env.YKP_OWNER_MOCK ?? '').toLowerCase() === 'true';
 }
 
 function dateDaysAgo(today: string, days: number): string {
@@ -116,7 +116,7 @@ export async function getOverview(): Promise<OwnerOverview> {
   const anyReachable = summaryResults.some((r) => r.reachable);
 
   // All modules unreachable → full mock fallback so the demo still works.
-  if (!anyReachable) return mockOverview(new Date(), false);
+  if (!anyReachable && process.env.NODE_ENV !== 'production') return mockOverview(new Date(), false);
 
   // Phase 2: counts + per-module extras (alerts/actions/purchase recs) +
   // finance 7d history, in parallel.

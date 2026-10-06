@@ -28,17 +28,17 @@ AUTH=(-H "Authorization: Bearer $COOLIFY_TOKEN" -H "Content-Type: application/js
 IPDOTS="$(printf '%s' "$VPS_IP" | tr '-' '.')"
 gen() { openssl rand -hex 32; }
 
-# secrets with auto-generation fallback
-HUB_SESSION_SECRET="${HUB_SESSION_SECRET:-$(gen)}"
-SESSION_HUB="${SESSION_HUB:-$(gen)}"
-SESSION_OWNER="${SESSION_OWNER:-$(gen)}";  SESSION_HR="${SESSION_HR:-$(gen)}"
-SESSION_FINANCE="${SESSION_FINANCE:-$(gen)}"; SESSION_WAREHOUSE="${SESSION_WAREHOUSE:-$(gen)}"
-SESSION_INVESTOR="${SESSION_INVESTOR:-$(gen)}"; SESSION_OPS="${SESSION_OPS:-$(gen)}"
-CRON_HR="${CRON_HR:-$(gen)}"; CRON_FINANCE="${CRON_FINANCE:-$(gen)}"
-CRON_WAREHOUSE="${CRON_WAREHOUSE:-$(gen)}"; CRON_INVESTOR="${CRON_INVESTOR:-$(gen)}"
-ERP_SSO_SECRET="${ERP_SSO_SECRET:-$(gen)}"
-CRON_OWNER="${CRON_OWNER:-$(gen)}"
-FINANCE_NOTIFY_SECRET="${FINANCE_NOTIFY_SECRET:-$(gen)}"
+for dependency in curl jq openssl; do
+  command -v "$dependency" >/dev/null || { printf 'Missing dependency: %s\n' "$dependency" >&2; exit 1; }
+done
+for key in HUB_SESSION_SECRET SESSION_HUB SESSION_OWNER SESSION_HR SESSION_FINANCE SESSION_WAREHOUSE SESSION_INVESTOR SESSION_OPS CRON_HR CRON_FINANCE CRON_WAREHOUSE CRON_INVESTOR CRON_OWNER ERP_SSO_SECRET FINANCE_NOTIFY_SECRET; do
+  [[ ${#key} -gt 0 && ${!key:-} != '' ]] || { printf 'Missing persistent secret: %s (generate once and securely retain it)\n' "$key" >&2; exit 1; }
+  value="${!key}"
+  [[ ${#value} -ge 32 ]] || { printf 'Secret must contain at least 32 characters: %s\n' "$key" >&2; exit 1; }
+done
+for key in GOOGLE_SERVICE_ACCOUNT_EMAIL GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY YKP_HR_SPREADSHEET_ID YKP_FINANCE_SPREADSHEET_ID YKP_WAREHOUSE_SPREADSHEET_ID YKP_INVESTOR_SPREADSHEET_ID YKP_OPS_SPREADSHEET_ID; do
+  [[ ${!key:-} != '' && ${!key} != placeholder* ]] || { printf 'Missing live Sheets configuration: %s\n' "$key" >&2; exit 1; }
+done
 
 say() { printf '\n\033[1;34m== %s\033[0m\n' "$*"; }
 api() { curl -fsS -X "${1}" "$API${2}" "${AUTH[@]}" ${3:+-d "$3"}; }
@@ -165,7 +165,6 @@ set_env "${UUID[ykp-finance-v1]}" "$(jq -n \
   --arg oc "${MOKA_CLIENT_ID:-}" --arg os "${MOKA_CLIENT_SECRET:-}" --arg red "$URL_FINANCE/api/moka/callback" \
   --arg hrn "$URL_HR" --arg fns "$FINANCE_NOTIFY_SECRET" --arg hrsid "$YKP_HR_SPREADSHEET_ID" \
   --arg s1 "$MOKA_SEKARPIZZA_TIRTODIPURAN_CLIENT_ID" --arg s2 "$MOKA_SEKARPIZZA_TIRTODIPURAN_CLIENT_SECRET" --arg s3 "$MOKA_SEKARPIZZA_TIRTODIPURAN_OUTLET_ID" \
-
   --arg f1 "$MOKA_FUNKYDAK_COLOMBO_CLIENT_ID" --arg f2 "$MOKA_FUNKYDAK_COLOMBO_CLIENT_SECRET" --arg f3 "$MOKA_FUNKYDAK_COLOMBO_OUTLET_ID" \
   --arg u1 "$MOKA_SUBURBUNS_COLOMBO_CLIENT_ID" --arg u2 "$MOKA_SUBURBUNS_COLOMBO_CLIENT_SECRET" --arg u3 "$MOKA_SUBURBUNS_COLOMBO_OUTLET_ID" \
   '[{key:"NEXT_PUBLIC_TELEGRAM_BOT_USERNAME",value:$tg,is_runtime:true,is_buildtime:true},
@@ -280,15 +279,9 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-say "Sheets upgrade (existing spreadsheets — idempotent, skip kalau fresh)"
-if [[ -n "${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}" && "${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}" != placeholder* ]]; then
-  (cd ykp-finance-v1 && node scripts/migrate-settlement-cogs.mjs || true)
-  (cd ykp-finance-v1 && node scripts/migrate-payroll-moka-checklist.mjs || true)
-  (cd ykp-hr-v1 && node scripts/migrate-payroll-schema.mjs || true)
-  (cd ykp-hr-v1 && node scripts/migrate-brand-email.mjs || true)
-else
-  echo "  (service account belum diisi — upgrade sheet di-skip)"
-fi
+say "Sheets schema prerequisite"
+printf '%s\n' 'Automatic legacy workbook migrations are disabled: they read a separate .deploy.env and may target the wrong workbook.'
+printf '%s\n' 'Validate required tabs and schema against the selected environment before accepting this deployment; no ledger/master migration is applied here.'
 
 # ---------------------------------------------------------------------------
 say "Verify"
