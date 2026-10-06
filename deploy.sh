@@ -239,6 +239,7 @@ for a in $APPS; do
     [[ "$s" =~ ^(finished|failed)$ ]] && break; sleep 15
   done
   echo "  $a -> ${s:-unknown}"
+  [[ "$s" == finished ]] || { printf 'Deployment did not finish successfully: %s\n' "$a" >&2; exit 1; }
 done
 
 # ---------------------------------------------------------------------------

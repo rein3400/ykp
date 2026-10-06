@@ -10,6 +10,12 @@ describe('ops-summary', () => {
     mockReset();
   });
 
+  it('does not generate operational summaries for inactive outlets', async () => {
+    await appendRows(TABS.outlets, [{ outlet_id: 'OL-CLOSED', outlet_name: 'Closed', brand_id: 'BR-001', status: 'inactive' }]);
+    const items = await generateDailySummary({ date: todayWib() });
+    expect(items.some((item) => item.outlet_id === 'OL-CLOSED')).toBe(false);
+  });
+
   it('generates summary for active outlets', async () => {
     const date = todayWib();
     await appendRows(TABS.opening, [{

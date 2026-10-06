@@ -19,7 +19,7 @@ export const GET = handler(async (req: NextRequest) => {
     readTab<Record<string, string>>(TABS.dailySummary),
     readTab<Record<string, string>>(TABS.outlets)
   ]);
-  const rows = operationalRows(summary, outlets);
+  const rows = q.get('date') ? summary : operationalRows(summary, outlets);
   let filtered = rows.filter((r) =>
     r.date === date
     && (!outletId || r.outlet_id === outletId)

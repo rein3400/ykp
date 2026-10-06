@@ -30,6 +30,7 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
   const briefingRows = await readTab(TABS.briefing);
 
   const outlets = (await readTab(TABS.outlets)).filter((o) =>
+    ['active', '1'].includes((o.status ?? '').trim().toLowerCase()) &&
     (!opts?.brandId || o.brand_id === opts.brandId) &&
     (!opts?.outletId || o.outlet_id === opts.outletId)
   );
