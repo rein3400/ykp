@@ -26,5 +26,9 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/next.config.ts ./next.config.ts
+# One-off ops scripts (e.g. sheets:fix-master-data) need scripts/ + src + tsconfig (tsx path aliases).
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 EXPOSE 3002
 CMD ["sh", "-c", "PORT=${PORT:-3002} npx next start -p $PORT -H 0.0.0.0"]
