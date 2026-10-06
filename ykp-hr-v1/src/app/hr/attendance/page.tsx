@@ -12,7 +12,7 @@ export default async function AttendancePage() {
 
   const [employees, outlets] = await Promise.all([
     readTab<{ employee_id: string; full_name: string; outlet_id: string; brand_id: string; active_status: string }>(TABS.employees),
-    readTab<{ outlet_id: string; brand_id: string; outlet_name: string; active_status: string }>(TABS.outlets)
+    readTab<{ outlet_id: string; brand_id: string; outlet_name: string; status: string }>(TABS.outlets)
   ]);
 
   const role = session.role;
@@ -51,7 +51,7 @@ export default async function AttendancePage() {
   // Picker shows only ACTIVE outlets (client 2026-10: dummy locations must not appear);
   // historic display maps elsewhere still read the full tab.
   const outletOptions = scopedOutlets
-    .filter((o) => o.active_status === 'active' || o.active_status === '1')
+    .filter((o) => o.status === 'active' || o.status === '1')
     .map((o) => ({ id: o.outlet_id, name: o.outlet_name }));
 
   return (
