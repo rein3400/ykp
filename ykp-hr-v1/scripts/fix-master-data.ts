@@ -23,29 +23,36 @@ async function main(): Promise<void> {
     readTab<Record<string, string>>(TABS.users)
   ]);
   const plan = planOutletMigration(outlets, brands);
-  const deactivatedIds = new Set(plan.filter((p) => p.action === 'DEACTIVATE').map((p) => p.id));
-  const activatingIds = new Set(plan.filter((p) => p.action !== 'DEACTIVATE').map((p) => p.id));
+  // End-state active ids (ADD_ACTIVE/RENAME_ACTIVATE/KEEP) — references to ANY
+  // outlet outside this set are moved; this makes the migration convergent
+  // (re-runnable after partial/legacy states, incl. left-over duplicate rows).
+  const finallyActiveIds = new Set(plan.filter((p) => p.action !== 'DEACTIVATE').map((p) => p.id));
   const activeEntityIds = new Set(
     [...employees, ...users].filter((r) => ['active', '1'].includes(r.active_status)).map((r) => r.employee_id || r.user_id)
   );
-  const entityById = new Map<string, { tab: typeof TABS.employees | typeof TABS.users; row: Record<string, string> }>();
-  for (const e of employees) if (e.employee_id) entityById.set(e.employee_id, { tab: TABS.employees, row: e });
-  for (const u of users) if (u.user_id) entityById.set(u.user_id, { tab: TABS.users, row: u });
-  const references = [...employees, ...users].filter((r) =>
-    deactivatedIds.has(r.outlet_id) && ['active', '1'].includes(r.active_status)
+  // Rows (not entities): duplicate sheet rows for one entity id are handled
+  // explicitly — every row must end referencing an active outlet.
+  const employeeRows = employees.filter((e) => e.employee_id).map((e) => ({ tab: TABS.employees as 'master_employee', keyCol: 'employee_id', id: e.employee_id, row: e }));
+  const userRows = users.filter((u) => u.user_id).map((u) => ({ tab: TABS.users as 'users', keyCol: 'user_id', id: u.user_id, row: u }));
+  const allRows = [...employeeRows, ...userRows];
+  const byEntity = new Map<string, typeof allRows>();
+  for (const r of allRows) byEntity.set(r.id, [...(byEntity.get(r.id) ?? []), r]);
+  for (const [id, rows] of byEntity) {
+    if (rows.length > 1) console.log(`DUPLICATE ${id}: ${rows.length} sheet rows share this id (reassign/verify will fix every row)`);
+  }
+  const references = allRows.filter((r) =>
+    !finallyActiveIds.has(r.row.outlet_id) && ['active', '1'].includes(r.row.active_status)
   );
   // Validate reassign mapping against the live plan.
   for (const [entityId, targetId] of reassign) {
     if (!activeEntityIds.has(entityId)) throw new Error(`--reassign: "${entityId}" is not an active employee/user id`);
-    if (!entityById.has(entityId) || !deactivatedIds.has(entityById.get(entityId)!.row.outlet_id)) {
-      throw new Error(`--reassign: "${entityId}" does not currently reference a deactivated outlet`);
+    const rows = byEntity.get(entityId) ?? [];
+    if (!rows.length || !rows.some((r) => !finallyActiveIds.has(r.row.outlet_id))) {
+      console.log(`NOTE --reassign: "${entityId}" references only active outlets already — ignored`);
     }
-    if (!activatingIds.has(targetId)) throw new Error(`--reassign: target "${targetId}" is not active in this migration plan`);
+    if (!finallyActiveIds.has(targetId)) throw new Error(`--reassign: target "${targetId}" is not active in this migration plan`);
   }
-  const uncovered = references.filter((r) => {
-    const id = (r.employee_id || r.user_id);
-    return !reassign.has(id);
-  });
+  const uncovered = references.filter((r) => !reassign.has(r.id));
   const statusPlan = employees.map((employee) => ({
     employee,
     normalized: normalizeEmploymentStatus(employee.employment_status)
@@ -57,12 +64,11 @@ async function main(): Promise<void> {
     else if (normalized !== employee.employment_status) console.log('NORMALIZE:', employee.employee_id, employee.employment_status, normalized);
   }
   for (const reference of references) {
-    const id = reference.employee_id || reference.user_id;
-    const target = reassign.get(id);
-    console.log(target ? `REASSIGN ${id} ${reference.outlet_id} → ${target}` : `BLOCKING REFERENCE: ${id} ${reference.outlet_id}`);
+    const target = reassign.get(reference.id);
+    console.log(target ? `REASSIGN ${reference.id} ${reference.row.outlet_id} → ${target}` : `BLOCKING REFERENCE: ${reference.id} ${reference.row.outlet_id}`);
   }
   for (const entityId of reassign.keys()) {
-    if (!references.some((r) => (r.employee_id || r.user_id) === entityId)) {
+    if (!references.some((r) => r.id === entityId)) {
       console.log(`IGNORED --reassign ${entityId}: no longer blocked`);
     }
   }
@@ -70,7 +76,7 @@ async function main(): Promise<void> {
   if (uncovered.length) {
     throw new Error(
       'Active employees/users reference outlets to deactivate. Pass --reassign-<ENTITY_ID>=<OL-XXX> for: '
-      + uncovered.map((r) => `--reassign-${r.employee_id || r.user_id}=<active-OL-id>`).join(' ')
+      + uncovered.map((r) => `--reassign-${r.id}=<active-OL-id>`).join(' ')
     );
   }
 
@@ -102,24 +108,23 @@ async function main(): Promise<void> {
     });
   }
 
-  // (2) Reassign active references off condemned outlets, then deactivate safely.
+  // (2) Reassign EVERY sheet row of the mapped entities (handles duplicate rows).
   for (const [entityId, targetId] of reassign) {
-    const entity = entityById.get(entityId)!;
-    if (entity.row.outlet_id === targetId) continue;
-    const keyCol = entity.tab === TABS.employees ? 'employee_id' : 'user_id';
-    const found = await findRow(entity.tab, keyCol, entityId);
-    if (!found || found.row.outlet_id !== entity.row.outlet_id) throw new Error(`Reference changed since plan: ${entityId}`);
-    await updateRow(entity.tab, found.rowNumber, { ...found.row, outlet_id: targetId, updated_at: now });
-    await logAudit({
-      actorUserId: 'script', actorRole: 'system', action: 'master_data:reassign',
-      entity: entity.tab === TABS.employees ? 'employee' : 'user', entityId,
-      beforeValue: entity.row.outlet_id, afterValue: targetId
-    });
+    for (const entry of byEntity.get(entityId) ?? []) {
+      if (finallyActiveIds.has(entry.row.outlet_id) || entry.row.outlet_id === targetId) continue;
+      const fresh = await findRow(entry.tab, entry.keyCol, entry.id);
+      if (!fresh || fresh.row.outlet_id !== entry.row.outlet_id) {
+        throw new Error(`Reference changed since plan: ${entityId} (${entry.keyCol})`);
+      }
+      await updateRow(entry.tab, fresh.rowNumber, { ...fresh.row, outlet_id: targetId, updated_at: now });
+      await logAudit({
+        actorUserId: 'script', actorRole: 'system', action: 'master_data:reassign',
+        entity: entry.tab === TABS.employees ? 'employee' : 'user', entityId,
+        beforeValue: entry.row.outlet_id, afterValue: targetId
+      });
+    }
   }
-  const stillBlocked = references.filter((r) => {
-    const id = (r.employee_id || r.user_id);
-    return !reassign.has(id);
-  });
+  const stillBlocked = references.filter((r) => !reassign.has(r.id));
   if (stillBlocked.length) throw new Error('Unresolved references after reassignment; aborting deactivation');
 
   // (3) Deactivate dummy outlets.
@@ -148,7 +153,21 @@ async function main(): Promise<void> {
   }
   const remaining = planOutletMigration(await readTab<OutletMigrationRow>(TABS.outlets), brands);
   if (remaining.some((operation) => operation.action !== 'KEEP')) throw new Error('Post-migration outlet verification failed; rerun dry-run');
-  console.log('Verified: four active outlets; historic rows preserved. GPS coordinates were not changed.');
+  // End-state reference verification: every ACTIVE employee/user row must
+  // point at one of the four active outlets (covers duplicate rows too).
+  const endEmployees = await readTab<Record<string, string>>(TABS.employees);
+  const endUsers = await readTab<Record<string, string>>(TABS.users);
+  const stray = [...endEmployees, ...endUsers].filter((r) =>
+    ['active', '1'].includes(r.active_status) && r.outlet_id && !finallyActiveIds.has(r.outlet_id)
+  );
+  if (stray.length) {
+    console.log('\n!!! STRAY REFERENCES (still pointing at inactive outlet):');
+    for (const r of stray) console.log(`    ${r.employee_id || r.user_id} → ${r.outlet_id}`);
+    console.log('Fix: add --reassign-<id>=<active-OL-id> and re-run.');
+    process.exitCode = 1;
+    return;
+  }
+  console.log('Verified: four active outlets, all active employee/user rows point at them; historic rows + GPS coordinates preserved.');
 }
 
 main().catch((error: unknown) => { console.error(error); process.exitCode = 1; });
