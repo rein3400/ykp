@@ -32,7 +32,10 @@ beforeEach(() => {
       { employee_id: 'EMP-1', full_name: 'Fixture One', outlet_id: 'OL-1', brand_id: 'BR-1', active_status: 'active' },
       { employee_id: 'EMP-2', full_name: 'Fixture Two', outlet_id: 'OL-2', brand_id: 'BR-2', active_status: 'active' }
     ],
-    [TABS.outlets]: [{ outlet_id: 'OL-1', brand_id: 'BR-1', outlet_name: 'Fixture Outlet' }],
+    [TABS.outlets]: [
+      { outlet_id: 'OL-1', brand_id: 'BR-1', outlet_name: 'Fixture Outlet', status: 'active' },
+      { outlet_id: 'OL-2', brand_id: 'BR-2', outlet_name: 'Fixture Outlet Two', status: 'active' }
+    ],
     [TABS.brands]: [{ brand_id: 'BR-1', brand_name: 'Fixture Brand' }]
   };
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -47,6 +50,18 @@ async function renderOverview(): Promise<string> {
 }
 
 describe('HR overview partial data reads', () => {
+  it('excludes inactive outlets and their operational data without changing stored history', async () => {
+    state.rows[TABS.outlets][1].status = 'inactive';
+    state.rows[TABS.attendance] = [{ attendance_id: 'A-2', outlet_id: 'OL-2', employee_id: 'EMP-2' }];
+    state.rows[TABS.dailySummary] = [{ date: '2026-10-07', outlet_id: 'OL-2' }];
+    await renderOverview();
+    expect(state.props.outlets).toEqual([state.rows[TABS.outlets][0]]);
+    expect(state.props.employees).toEqual([state.rows[TABS.employees][0]]);
+    expect(state.props.attendance).toEqual([]);
+    expect(state.props.recentSummary).toEqual([]);
+    expect(state.rows[TABS.outlets]).toHaveLength(2);
+  });
+
   it('renders healthy data without a degradation warning', async () => {
     expect(await renderOverview()).not.toContain('Sebagian data gagal dimuat');
     expect(state.props.employees).toHaveLength(2);

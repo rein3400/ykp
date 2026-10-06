@@ -2,6 +2,7 @@ import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import RingkasanClient from './ringkasan-client';
+import { activeOutlets, operationalRows } from '@/lib/operational-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,14 +23,14 @@ export default async function RingkasanPage() {
   return (
     <RingkasanClient
       brands={brands}
-      outlets={outlets}
-      pos={pos}
-      items={posItems}
-      expenses={expenses}
-      suppliers={suppliers}
-      petty={petty}
-      closing={closing}
-      alerts={alerts}
+      outlets={activeOutlets(outlets)}
+      pos={operationalRows(pos, outlets)}
+      items={operationalRows(posItems, outlets)}
+      expenses={operationalRows(expenses, outlets)}
+      suppliers={operationalRows(suppliers, outlets)}
+      petty={operationalRows(petty, outlets)}
+      closing={operationalRows(closing, outlets)}
+      alerts={operationalRows(alerts, outlets)}
     />
   );
 }

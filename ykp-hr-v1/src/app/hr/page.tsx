@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { todayWib, nowTimestampWib } from '@/lib/format';
 import { getSession } from '@/lib/session';
+import { isActiveOutletStatus } from '@/lib/master-data';
 import { redirect } from 'next/navigation';
 import { HrOverviewClient } from '@/features/hr/components/hr-overview-client';
 
@@ -20,7 +21,7 @@ export interface Roster {
   shift_id: string; roster_status: string;
 }
 export interface Brand { brand_id: string; brand_name: string }
-export interface Outlet { outlet_id: string; brand_id: string; outlet_name: string }
+export interface Outlet { outlet_id: string; brand_id: string; outlet_name: string; status?: string }
 export interface DailySummary {
   date: string; brand_id: string; brand_name: string;
   outlet_id: string; outlet_name: string;
@@ -89,6 +90,17 @@ export default async function HrOverview() {
     scopedOutlets = session.outletId ? outlets.filter((o) => o.outlet_id === session.outletId) : [];
     scopedSummary = session.outletId ? recent.filter((s) => s.outlet_id === session.outletId) : [];
   }
+
+  const activeOutlets = scopedOutlets.filter((outlet) => isActiveOutletStatus(outlet.status));
+  const activeOutletIds = new Set(activeOutlets.map((outlet) => outlet.outlet_id));
+  const operational = <T extends { outlet_id: string }>(rows: T[]): T[] =>
+    rows.filter((row) => !row.outlet_id || activeOutletIds.has(row.outlet_id));
+  scopedOutlets = activeOutlets;
+  scopedEmployees = operational(scopedEmployees);
+  scopedAttendance = operational(scopedAttendance);
+  scopedLeaves = operational(scopedLeaves);
+  scopedRosters = operational(scopedRosters);
+  scopedSummary = operational(scopedSummary);
 
   return (
     <div className='space-y-6'>
