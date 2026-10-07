@@ -14,6 +14,11 @@ function request(cookie?: string, headers: Record<string,string>={}) {
 afterEach(()=>vi.unstubAllEnvs());
 describe('Finance middleware credentials',()=>{
  it('denies anonymous financial reads',async()=>expect((await middleware(request())).status).toBe(401));
+ it('allows only GET on the non-sensitive health count endpoint', async () => {
+   expect((await middleware(new NextRequest('http://localhost/api/finance/summary/count'))).status).toBe(200);
+   expect((await middleware(new NextRequest('http://localhost/api/finance/summary/count', { method: 'POST' }))).status).toBe(401);
+   expect((await middleware(new NextRequest('http://localhost/api/finance/summary/count/private'))).status).toBe(401);
+ });
  it.each([0,1,undefined,'99999999999'])('denies expired or invalid expiry %s',async exp=>{
   vi.stubEnv('SESSION_SECRET',secret);
   expect((await middleware(request(token(exp)))).status).toBe(401);

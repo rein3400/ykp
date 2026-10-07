@@ -1,11 +1,5 @@
-/**
- * Hub health probe — checks each local YKP app via its public probe path
- * (summary count endpoint where one exists, /login for the owner dashboard)
- * and extracts record counts where possible. App registry + URLs live in
- * app/config (env-overridable, local by default).
- */
-import { NextResponse } from "next/server";
-import { HUB_MODULES, moduleBaseUrl, moduleServerProbeUrl } from "../../config";
+import { NextResponse } from 'next/server';
+import { HUB_MODULES, moduleBaseUrl, moduleServerProbeUrl } from '../../config';
 
 const TIMEOUT_MS = 3000;
 
@@ -21,44 +15,40 @@ async function probe(url: string, expectCount: boolean): Promise<ProbeResult> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+    const response = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
     let recordCount: number | null = null;
-    if (expectCount && r.ok) {
+    if (expectCount && response.ok) {
+      const body = await response.text();
       try {
-        const j = await r.json();
-        // finance/warehouse/ops/investor shape: {data:{count}}; hr shape: {data:{total}}
-        const c = j?.data?.count ?? j?.data?.total ?? null;
-        recordCount = typeof c === "number" ? c : null;
+        const json = JSON.parse(body);
+        const count = json?.data?.count ?? json?.data?.total ?? null;
+        recordCount = typeof count === 'number' ? count : null;
       } catch {
-        // body not JSON — leave null
+        return { status: response.status, ms: Date.now() - start, recordCount: null, error: 'Invalid health response' };
       }
     }
-    return { status: r.status, ms: Date.now() - start, recordCount };
-  } catch (e) {
-    return { status: null, ms: Date.now() - start, recordCount: null, error: e instanceof Error ? e.message : "unknown" };
+    return { status: response.status, ms: Date.now() - start, recordCount };
+  } catch (error) {
+    return { status: null, ms: Date.now() - start, recordCount: null, error: error instanceof Error ? error.message : 'unknown' };
   } finally {
     clearTimeout(timer);
   }
 }
 
 export async function GET() {
-  const results = await Promise.all(
-    HUB_MODULES.map(async (m) => {
-      const base = moduleBaseUrl(m);
-      const ping = await probe(moduleServerProbeUrl(m), m.probeReturnsCount);
-      return {
-        id: m.id,
-        name: m.name,
-        url: base,
-        pingMs: ping.ms,
-        httpStatus: ping.status,
-        reachable: ping.status != null && ping.status < 500,
-        recordCount: ping.recordCount
-      };
-    })
-  );
-
-  const upCount = results.filter((r) => r.reachable).length;
-  const overall = upCount === results.length ? "ok" : upCount > 0 ? "degraded" : "down";
+  const results = await Promise.all(HUB_MODULES.map(async (module) => {
+    const ping = await probe(moduleServerProbeUrl(module), module.probeReturnsCount);
+    return {
+      id: module.id,
+      name: module.name,
+      url: moduleBaseUrl(module),
+      pingMs: ping.ms,
+      httpStatus: ping.status,
+      reachable: ping.status !== null && ping.status >= 200 && ping.status < 300 && !ping.error,
+      recordCount: ping.recordCount
+    };
+  }));
+  const upCount = results.filter((result) => result.reachable).length;
+  const overall = upCount === results.length ? 'ok' : upCount > 0 ? 'degraded' : 'down';
   return NextResponse.json({ data: { overall, results, ts: new Date().toISOString() } });
 }

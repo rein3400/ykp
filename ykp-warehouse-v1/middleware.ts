@@ -46,6 +46,7 @@ function base64UrlDecode(s: string): Uint8Array {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  if (req.method === 'GET' && pathname === '/api/warehouse/summary/count') return NextResponse.next();
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
