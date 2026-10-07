@@ -5,7 +5,7 @@ import { handler, badRequest, unauthorized, forbidden, conflict, ok, notFound } 
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { z } from 'zod';
-import { leaveDecisionReason, formatTelegramLeave } from '@/lib/leave-decision';
+import { leaveDecisionReason, formatTelegramLeave, linkedTelegramChatId } from '@/lib/leave-decision';
 import { sendTelegram } from '@/lib/telegram';
 
 const schema = z.object({ leave_id: z.string().min(1), decision: z.enum(['APPROVE', 'REJECT']), reason: z.string().default('') });
@@ -54,7 +54,7 @@ export const POST = handler(async (req) => {
   let notification: { status: string; sent: number; failed: number } = { status: 'UNLINKED', sent: 0, failed: 0 };
   try {
     const users = await readTab<Record<string, string>>(TABS.users);
-    const recipients = new Set(users.filter((user) => user.employee_id === found.row.employee_id && ['active', '1'].includes((user.active_status ?? '').trim().toLowerCase())).map((user) => user.telegram_id?.trim()).filter(Boolean));
+    const recipients = new Set(users.filter((user) => user.employee_id === found.row.employee_id && ['active', '1'].includes((user.active_status ?? '').trim().toLowerCase())).map((user) => linkedTelegramChatId(user.telegram_id)).filter((chatId): chatId is string => chatId !== null));
     for (const recipient of recipients) {
       const delivery = await sendTelegram({ sourceModule: 'HR', sourceReferenceId: parsed.data.leave_id, messageType: 'LEAVE_DECISION', recipient, text: `Keputusan pengajuan cuti\n${formatTelegramLeave(updated)}` });
       notification = { status: delivery.status, sent: notification.sent + delivery.sent, failed: notification.failed + delivery.failed };
