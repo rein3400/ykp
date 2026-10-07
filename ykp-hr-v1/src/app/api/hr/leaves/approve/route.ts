@@ -5,6 +5,7 @@ import { handler, badRequest, unauthorized, forbidden, conflict, ok, notFound } 
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { z } from 'zod';
+import { leaveDecisionReason } from '@/lib/leave-decision';
 
 const schema = z.object({ leave_id: z.string().min(1), decision: z.enum(['APPROVE', 'REJECT']), reason: z.string().default('') });
 
@@ -17,6 +18,13 @@ export const POST = handler(async (req) => {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.message);
 
+  let reason: string;
+  try {
+    reason = leaveDecisionReason(parsed.data.decision, parsed.data.reason);
+  } catch (error) {
+    return badRequest(error instanceof Error ? error.message : 'Alasan tidak valid');
+  }
+
   const found = await findRow(TABS.leaves, 'leave_id', parsed.data.leave_id);
   if (!found) return notFound('Leave not found');
   if (found.row.approval_status !== 'PENDING') return conflict('Leave already decided');
@@ -26,7 +34,7 @@ export const POST = handler(async (req) => {
     approval_status: parsed.data.decision === 'APPROVE' ? 'APPROVED' : 'REJECTED',
     approved_by: session.userId,
     approved_at: nowTimestampWib(),
-    rejection_reason: parsed.data.reason
+    rejection_reason: reason
   };
   await updateRow(TABS.leaves, found.rowNumber, updated);
   await logAudit({

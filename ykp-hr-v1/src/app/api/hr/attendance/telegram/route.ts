@@ -43,6 +43,7 @@ import {
   type TelegramUpdate
 } from '@/lib/telegram-attendance';
 import { safeEqual } from '@/lib/cron';
+import { formatTelegramLeave } from '@/lib/leave-decision';
 import { POST as hrLinkConsume } from '@/app/api/hr/telegram/link/consume/route';
 import { POST as hrClockIn } from '@/app/api/hr/telegram/clock-in/route';
 import { POST as hrMe } from '@/app/api/hr/telegram/me/route';
@@ -421,7 +422,7 @@ function meText(data: Record<string, unknown>): string {
   if (leaves.length > 0) {
     lines.push('', '<b>Cuti terakhir:</b>');
     for (const l of leaves.slice(0, 3)) {
-      lines.push(`• ${escapeHtml(l.leave_type)} ${escapeHtml(l.start_date)}–${escapeHtml(l.end_date)} (${escapeHtml(l.approval_status || '-')})`);
+      lines.push(formatTelegramLeave(l));
     }
   }
   return lines.join('\n');
