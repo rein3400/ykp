@@ -1,6 +1,6 @@
 # YKP Hermez — Deployed Production Links
 
-> Last verified: **2026-10-07** — all seven Coolify YKP applications report completed deployment at `main @ 3779169`. HR data health: HTTP 200, `status=ok`, no failed tabs. Hub probes: Owner/HR/Investor/Ops HTTP 200; Finance/Warehouse HTTP 401 (reachable, but data access is NOT verified). Dashboard data-integrity rollout remains partial; no clean-VPS provisioning test has been performed.
+> Last verified: **2026-10-07 16:15 WIB** — all 7 Coolify apps redeployed & verified at `main @ 5a39cc2`. Hub `/api/health`: **overall "ok"**, all 6 modules HTTP 200 (HR count 556, Finance count 40, Warehouse count 0). SSLIP DNS was flaky from remote shells; verify via `--resolve` if needed. Remaining NOT live-verified: closing/bot/threshold acceptance, dummy-data cleansing audit, VPS-new provisioning test.
 > Source of truth for live URLs. Update this file every deploy.
 > Production code source: branch `origin/stagging` @ `5ad8271` (deep-test fixes 2026-07-22: Hub SSO token baked, Hermez SUPER_ADMIN SSO + ops-summary route, Finance form banner). Prior `1243c84` = security cutover 2026-07-21.
 
@@ -9,7 +9,7 @@
 ## Coolify (self-hosted VPS — active)
 
 Dashboard: `http://187.127.124.37:8000` (project **YKP** / environment `production`).
-Deployed from `rein3400/ykp` branch `main` @ `3779169` (verified 2026-10-07). **Primary access is HTTPS via
+Deployed from `rein3400/ykp` branch `main` @ `5a39cc2` (verified 2026-10-07 16:15 WIB). **Primary access is HTTPS via
 Coolify's auto-generated `sslip.io` domains** (valid Let's Encrypt certs); every app also
 answers on its host port (`ports_mappings`) for internal/direct use. Hub reaches modules
 server-side over the shared docker network (`YKP_*_INTERNAL_URL`); browsers use the HTTPS
