@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { fixedConversionFactor } from '@/lib/unit-conversion';
 
 export default function UnitConversionClient({
   conversions, items, canWrite
@@ -12,6 +13,15 @@ export default function UnitConversionClient({
   const [form, setForm] = useState<Record<string, string>>({ item_id: '', from_unit: '', to_unit: '', conversion_factor: '' });
   const [list, setList] = useState(conversions);
   const [err, setErr] = useState<string | null>(null);
+
+  const fixedFactor = fixedConversionFactor(form.from_unit, form.to_unit);
+  function changeUnit(field: 'from_unit' | 'to_unit', value: string) {
+    setForm((previous) => {
+      const next = { ...previous, [field]: value };
+      const fixed = fixedConversionFactor(next.from_unit, next.to_unit);
+      return { ...next, conversion_factor: fixed === null ? '' : String(fixed) };
+    });
+  }
 
   async function create() {
     setErr(null);
@@ -37,10 +47,11 @@ export default function UnitConversionClient({
               <option value=''>Pilih Item *</option>
               {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
             </select>
-            <input placeholder='Dari Unit *' value={form.from_unit} onChange={(e) => setForm({ ...form, from_unit: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='Ke Unit *' value={form.to_unit} onChange={(e) => setForm({ ...form, to_unit: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <input placeholder='Faktor *' value={form.conversion_factor} onChange={(e) => setForm({ ...form, conversion_factor: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
+            <input placeholder='Dari Unit *' value={form.from_unit} onChange={(e) => changeUnit('from_unit', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
+            <input placeholder='Ke Unit *' value={form.to_unit} onChange={(e) => changeUnit('to_unit', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
+            <input placeholder='Faktor *' readOnly={fixedFactor !== null} value={form.conversion_factor} onChange={(e) => setForm({ ...form, conversion_factor: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
           </div>
+          <p className='text-xs text-muted-foreground'>{fixedFactor !== null ? 'Faktor satuan baku terisi otomatis (1 kg = 1.000 gram; 1 liter = 1.000 ml).' : 'Isi faktor kemasan manual per item. Konversi kg ke ml bergantung pada bahan, bukan konversi baku.'}</p>
           {err && <p className='text-xs text-destructive'>{err}</p>}
           <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>
         </div>
