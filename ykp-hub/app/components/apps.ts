@@ -128,8 +128,6 @@ export const SSO_ROLE: Partial<Record<AppId, string>> = {
  * unauthenticated role minting.
  */
 export function ssoUrl(app: AppDef, role: string): string {
-  if (!ROLE_SSO_APPS.has(app.id)) return app.url;
-  const r = encodeURIComponent(SSO_ROLE[app.id] ?? role ?? "OWNER");
-  const token = encodeURIComponent(process.env.NEXT_PUBLIC_ERP_SSO_SECRET ?? "");
-  return `${app.url}/api/auth/login?role=${r}&token=${token}&redirect=/`;
+  void role;
+  return app.url;
 }

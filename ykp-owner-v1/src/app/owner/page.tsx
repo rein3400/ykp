@@ -93,13 +93,13 @@ export default async function OwnerHome() {
         <div className='rounded-lg border border-border bg-background p-3'>
           <p className='text-[10px] text-muted-foreground'>Stok kritis</p>
           <p className={`text-base font-bold ${h.criticalStockCount > 0 ? 'text-destructive' : ''}`}>
-            {h.criticalStockCount} item
+            {ov.modules.warehouse.reachable ? `${h.criticalStockCount} item` : 'Data tidak tersedia'}
           </p>
         </div>
         <div className='rounded-lg border border-border bg-background p-3'>
           <p className='text-[10px] text-muted-foreground'>Insiden HIGH/CRITICAL</p>
           <p className={`text-base font-bold ${h.openHighCriticalIncidents > 0 ? 'text-destructive' : ''}`}>
-            {h.openHighCriticalIncidents}
+            {ov.modules.ops.reachable ? h.openHighCriticalIncidents : 'Data tidak tersedia'}
           </p>
         </div>
       </div>

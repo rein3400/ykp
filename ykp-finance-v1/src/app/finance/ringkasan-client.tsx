@@ -157,7 +157,7 @@ export default function RingkasanClient(props: {
         }
       />
 
-      {!hasData ? (
+      {!hasData && unpaid.length === 0 ? (
         <EmptyState
           message={'Belum ada transaksi POS.\nImport CSV Moka atau tambah transaksi manual untuk memulai.'}
           ctaLabel='Buka Pendapatan POS'

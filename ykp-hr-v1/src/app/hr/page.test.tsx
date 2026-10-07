@@ -89,6 +89,16 @@ describe('HR overview partial data reads', () => {
     expect(console.error).toHaveBeenCalledTimes(7);
   });
 
+  it('scopes leaves by employee identity when leave rows have no outlet fields', async () => {
+    state.role = 'outlet_manager';
+    state.rows[TABS.leaves] = [
+      { leave_id: 'L-1', employee_id: 'EMP-1' },
+      { leave_id: 'L-2', employee_id: 'EMP-2' }
+    ];
+    await renderOverview();
+    expect(state.props.leaves).toEqual([state.rows[TABS.leaves][0]]);
+  });
+
   it('retains outlet scoping when an unrelated tab fails', async () => {
     state.role = 'outlet_manager'; state.failed.add(TABS.attendance);
     await renderOverview();

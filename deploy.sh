@@ -117,7 +117,6 @@ set_env "${UUID[ykp-hub]}" "$(jq -n \
     {key:"NEXT_PUBLIC_YKP_INVESTOR_URL",value:$i,is_runtime:true,is_buildtime:true,is_literal:true},
     {key:"NEXT_PUBLIC_YKP_OPS_URL",value:$p,is_runtime:true,is_buildtime:true,is_literal:true},
     {key:"NEXT_PUBLIC_APP_URL",value:$app,is_runtime:true,is_buildtime:true,is_literal:true},
-    {key:"NEXT_PUBLIC_ERP_SSO_SECRET",value:$sso,is_runtime:true,is_buildtime:true,is_literal:true},
     {key:"ERP_SSO_SECRET",value:$sso,is_runtime:true,is_buildtime:false,is_literal:true},
     {key:"HUB_SESSION_SECRET",value:$hs,is_runtime:true},
     {key:"SESSION_SECRET",value:$ss,is_runtime:true},

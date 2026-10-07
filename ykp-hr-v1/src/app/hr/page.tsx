@@ -98,7 +98,8 @@ export default async function HrOverview() {
   scopedOutlets = activeOutlets;
   scopedEmployees = operational(scopedEmployees);
   scopedAttendance = operational(scopedAttendance);
-  scopedLeaves = operational(scopedLeaves);
+  const permittedEmployeeIds = new Set(scopedEmployees.map((employee) => employee.employee_id));
+  scopedLeaves = scopedLeaves.filter((leave) => permittedEmployeeIds.has(leave.employee_id));
   scopedRosters = operational(scopedRosters);
   scopedSummary = operational(scopedSummary);
 
