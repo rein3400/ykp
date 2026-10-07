@@ -50,16 +50,16 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     name: "Finance",
     desc: "POS, expenses, petty cash, daily summary",
     url: requiredUrl(process.env.NEXT_PUBLIC_YKP_FINANCE_URL, "NEXT_PUBLIC_YKP_FINANCE_URL"),
-    probePath: "/api/fin/summary",
-    probeReturnsCount: false
+    probePath: "/api/finance/summary/count",
+    probeReturnsCount: true
   },
   {
     id: "warehouse",
     name: "Warehouse",
     desc: "Stock, receiving, usage, waste",
     url: requiredUrl(process.env.NEXT_PUBLIC_YKP_WAREHOUSE_URL, "NEXT_PUBLIC_YKP_WAREHOUSE_URL"),
-    probePath: "/api/warehouse/summary",
-    probeReturnsCount: false
+    probePath: "/api/warehouse/summary/count",
+    probeReturnsCount: true
   },
   {
     id: "investor",
