@@ -205,7 +205,7 @@ export function FilterBar({
   onChange: (v: FilterState) => void;
   extra?: React.ReactNode;
 }) {
-  const scopedOutlets = value.brandId ? outlets.filter((o) => o.brand_id === value.brandId) : outlets;
+  const scopedOutlets = outlets.filter((outlet) => ['active', '1'].includes((outlet.status ?? '').trim().toLowerCase()) && (!value.brandId || outlet.brand_id === value.brandId));
   return (
     <div className='flex flex-wrap items-end gap-2 rounded border border-border bg-background p-2'>
       <div className='w-36'>

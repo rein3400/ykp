@@ -1,11 +1,12 @@
-import { updateRow, TABS, findRow } from '@/db/sheets';
+import { updateRow, readTab, TABS, findRow } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, conflict, ok, notFound } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { z } from 'zod';
-import { leaveDecisionReason } from '@/lib/leave-decision';
+import { leaveDecisionReason, formatTelegramLeave } from '@/lib/leave-decision';
+import { sendTelegram } from '@/lib/telegram';
 
 const schema = z.object({ leave_id: z.string().min(1), decision: z.enum(['APPROVE', 'REJECT']), reason: z.string().default('') });
 
@@ -29,6 +30,11 @@ export const POST = handler(async (req) => {
   if (!found) return notFound('Leave not found');
   if (found.row.approval_status !== 'PENDING') return conflict('Leave already decided');
 
+  const employee = await findRow(TABS.employees, 'employee_id', found.row.employee_id);
+  if (!employee) return notFound('Employee not found');
+  if (session.outletId && employee.row.outlet_id !== session.outletId) return forbidden();
+  if (session.brandId && employee.row.brand_id !== session.brandId) return forbidden();
+
   const updated = {
     ...found.row,
     approval_status: parsed.data.decision === 'APPROVE' ? 'APPROVED' : 'REJECTED',
@@ -45,5 +51,17 @@ export const POST = handler(async (req) => {
     entityId: parsed.data.leave_id,
     reason: parsed.data.reason
   });
-  return ok(updated);
+  let notification: { status: string; sent: number; failed: number } = { status: 'UNLINKED', sent: 0, failed: 0 };
+  try {
+    const users = await readTab<Record<string, string>>(TABS.users);
+    const recipients = new Set(users.filter((user) => user.employee_id === found.row.employee_id && ['active', '1'].includes((user.active_status ?? '').trim().toLowerCase())).map((user) => user.telegram_id?.trim()).filter(Boolean));
+    for (const recipient of recipients) {
+      const delivery = await sendTelegram({ sourceModule: 'HR', sourceReferenceId: parsed.data.leave_id, messageType: 'LEAVE_DECISION', recipient, text: `Keputusan pengajuan cuti\n${formatTelegramLeave(updated)}` });
+      notification = { status: delivery.status, sent: notification.sent + delivery.sent, failed: notification.failed + delivery.failed };
+    }
+  } catch (error) {
+    notification = { status: 'FAILED', sent: 0, failed: 1 };
+    console.error('[leave:notification]', error instanceof Error ? error.name : 'Delivery error');
+  }
+  return ok({ ...updated, notification });
 });
