@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { opsMenuText, validateIncidentCommand, opsDeepLink } from './ops-telegram';
+import { opsMenuText, validateIncidentCommand, opsDeepLink, routeOpsUpdate } from './ops-telegram';
+
+describe('routeOpsUpdate', () => {
+  it('routes menu/help/start and empty text to the menu', () => {
+    for (const t of ['/start', '/menu', '/help', '', '  ']) expect(routeOpsUpdate(t).kind).toBe('menu');
+  });
+  it('routes /briefing and /insiden TEXT', () => {
+    expect(routeOpsUpdate('/briefing').kind).toBe('briefing');
+    expect(routeOpsUpdate('/insiden AC bocor di kitchen')).toEqual({ kind: 'incident', text: 'AC bocor di kitchen' });
+    expect(routeOpsUpdate('/insiden')).toEqual({ kind: 'incident', text: '' });
+  });
+  it('routes a valid link code and uppercases it', () => {
+    expect(routeOpsUpdate('/link abc234')).toEqual({ kind: 'link', code: 'ABC234' });
+  });
+  it('treats anything else as unknown', () => {
+    expect(routeOpsUpdate('halo').kind).toBe('unknown');
+    expect(routeOpsUpdate('/link nope').kind).toBe('unknown');
+  });
+});
 
 describe('ops telegram menu', () => {
   it('lists every operational menu and gives each a web deep-link', () => {

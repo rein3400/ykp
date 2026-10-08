@@ -38,6 +38,25 @@ export function opsMenuText(baseUrl: string): string {
   ].join('\n');
 }
 
+export type OpsUpdateRoute =
+  | { kind: 'menu' }
+  | { kind: 'briefing' }
+  | { kind: 'incident'; text: string }
+  | { kind: 'link'; code: string }
+  | { kind: 'unknown' };
+
+/** Classify a text message from the Ops bot. Pure + case-insensitive. */
+export function routeOpsUpdate(text: string | undefined): OpsUpdateRoute {
+  const t = (text ?? '').trim();
+  if (/^\/(start|menu|help)\b/i.test(t) || t === '') return { kind: 'menu' };
+  if (/^\/briefing\b/i.test(t)) return { kind: 'briefing' };
+  const link = t.match(/^\/link\s+([A-Z2-9]{6})$/i);
+  if (link) return { kind: 'link', code: link[1].toUpperCase() };
+  const incident = t.match(/^\/insiden(?:\s+([\s\S]+))?$/i);
+  if (incident) return { kind: 'incident', text: (incident[1] ?? '').trim() };
+  return { kind: 'unknown' };
+}
+
 /** Parse + validate an incident report coming from the bot. Throws on invalid input. */
 export function validateIncidentCommand(input: { title?: string; incident_type?: string; severity?: string }): IncidentCommand {
   const title = (input.title ?? '').trim();
