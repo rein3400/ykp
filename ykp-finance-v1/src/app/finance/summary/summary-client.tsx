@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { todayWib } from '@/lib/wib';
 import { can, type Role } from '@/lib/rbac';
+import { activeOutlets } from '@/lib/operational-data';
 import { Card, EmptyState, Btn, Th, Td, Badge, Input, Select, rp, rpSigned } from '../ui';
 
 export default function SummaryClient(props: {
@@ -80,7 +81,7 @@ export default function SummaryClient(props: {
         <div className='w-52'>
           <Select label='Outlet' value={outletId} onChange={setOutletId}>
             <option value=''>Semua Outlet</option>
-            {props.outlets.filter((o) => ['active', '1'].includes((o.status ?? '').trim().toLowerCase())).map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
+            {activeOutlets(props.outlets).map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
           </Select>
         </div>
         {availableDates.length > 0 && !availableDates.includes(date) && (
