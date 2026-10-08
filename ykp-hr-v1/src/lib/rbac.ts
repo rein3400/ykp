@@ -101,7 +101,7 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     master: ALL
   },
   hr_admin: {
-    employee: ['view', 'create', 'update', 'export'],
+    employee: ['view', 'create', 'update', 'export', 'delete'],
     attendance: ['view', 'create', 'update', 'export'],
     roster: ['view', 'create', 'update', 'export'],
     leave: ['view', 'approve', 'export'],

@@ -304,6 +304,14 @@ export function mockAppendRows(tab: string, rows: Record<string, string>[]): num
   return start;
 }
 
+export function mockDeleteRow(tab: string, rowNumber: number): void {
+  const s = getStore();
+  const idx = rowNumber - 2;
+  if (idx < 0 || !s[tab]?.[idx]) throw new Error(`mock row ${rowNumber} not found in ${tab}`);
+  s[tab].splice(idx, 1);
+  persistStore(s);
+}
+
 export function mockUpdateRow(tab: string, rowNumber: number, values: Record<string, string>): void {
   const s = getStore();
   const idx = rowNumber - 2;

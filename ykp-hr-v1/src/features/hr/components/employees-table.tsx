@@ -31,12 +31,14 @@ export function EmployeesTable({
   data,
   brandById,
   outletById,
-  canEdit
+  canEdit,
+  canDelete = false
 }: {
   data: Employee[];
   brandById: Map<string, string>;
   outletById: Map<string, string>;
   canEdit: boolean;
+  canDelete?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -65,6 +67,31 @@ export function EmployeesTable({
       router.refresh();
     } catch (e) {
       toast.error('Gagal menonaktifkan', e instanceof Error ? e.message : 'Terjadi kesalahan');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function remove(id: string, name: string) {
+    const ok = await confirm({
+      title: `Hapus permanen ${name}?`,
+      description: `Karyawan ${id} akan dihapus dari daftar (salah input). Hanya berhasil bila belum punya absensi/payroll/cuti/akun. Untuk data yang sudah dipakai, gunakan Nonaktifkan.`,
+      confirmLabel: 'Hapus permanen',
+      cancelLabel: 'Batal',
+      tone: 'danger'
+    });
+    if (!ok) return;
+    setBusyId(id);
+    try {
+      const r = await fetch(`/api/hr/employees/${id}`, { method: 'DELETE' });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j?.error?.message ?? 'Gagal');
+      }
+      toast.success('Karyawan dihapus', name);
+      router.refresh();
+    } catch (e) {
+      toast.error('Gagal menghapus', e instanceof Error ? e.message : 'Terjadi kesalahan');
     } finally {
       setBusyId(null);
     }
@@ -184,6 +211,17 @@ export function EmployeesTable({
                         onClick={() => deactivate(e.employee_id, e.full_name)}
                       >
                         {busyId === e.employee_id ? '…' : 'Nonaktifkan'}
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        type='button'
+                        className='btn-ghost text-red-700'
+                        title='Hapus permanen (khusus salah input, tanpa riwayat)'
+                        disabled={busyId === e.employee_id}
+                        onClick={() => remove(e.employee_id, e.full_name)}
+                      >
+                        Hapus
                       </button>
                     )}
                   </td>

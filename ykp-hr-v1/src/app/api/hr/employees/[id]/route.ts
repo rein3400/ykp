@@ -1,8 +1,8 @@
-import { findRow, updateRow, TABS } from '@/db/sheets';
+import { deleteRow, findRow, readTab, updateRow, TABS } from '@/db/sheets';
 import { assertBrand, assertOutlet } from '@/lib/repo';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
-import { handler, badRequest, missingRef, notFound, unauthorized, forbidden, ok } from '@/lib/http';
+import { handler, badRequest, missingRef, notFound, unauthorized, forbidden, conflict, ok } from '@/lib/http';
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { z } from 'zod';
@@ -100,6 +100,60 @@ export const PUT = handler(async (req, ctx) => {
   });
 
   return ok(merged);
+});
+
+/**
+ * Hard-delete a mistakenly entered employee. Only safe when NOTHING operational
+ * references the record; otherwise the history would break. Referenced rows must
+ * stay deactivated instead. Deleting also frees the name for re-entry.
+ */
+export const DELETE = handler(async (_req, ctx) => {
+  const session = await getSession();
+  if (!session) return unauthorized();
+  if (!can(session.role as Role, 'delete', 'employee')) return forbidden();
+
+  const id = ctx?.params?.id;
+  if (!id) return badRequest('id required');
+
+  const found = await findRow(TABS.employees, 'employee_id', id);
+  if (!found) return notFound('employee not found');
+
+  const referenced = (rows: Record<string, string>[], col: string) => rows.some((row) => row[col] === id);
+  const [attendance, roster, lateness, leaves, payroll, adjustments, users, employees] = await Promise.all([
+    readTab<Record<string, string>>(TABS.attendance),
+    readTab<Record<string, string>>(TABS.roster),
+    readTab<Record<string, string>>(TABS.lateness),
+    readTab<Record<string, string>>(TABS.leaves),
+    readTab<Record<string, string>>(TABS.payroll),
+    readTab<Record<string, string>>(TABS.adjustments),
+    readTab<Record<string, string>>(TABS.users),
+    readTab<Record<string, string>>(TABS.employees)
+  ]);
+  const blockers = [
+    referenced(attendance, 'employee_id') && 'attendance',
+    referenced(roster, 'employee_id') && 'roster',
+    referenced(lateness, 'employee_id') && 'lateness',
+    referenced(leaves, 'employee_id') && 'leave',
+    referenced(payroll, 'employee_id') && 'payroll',
+    referenced(adjustments, 'employee_id') && 'adjustment',
+    referenced(users, 'employee_id') && 'user account',
+    employees.some((row) => row.supervisor_id === id) && 'supervisor link'
+  ].filter((domain): domain is string => Boolean(domain));
+  if (blockers.length) {
+    return conflict(`Karyawan tidak bisa dihapus karena masih direferensikan: ${blockers.join(', ')}. Nonaktifkan saja agar riwayat tetap aman.`);
+  }
+
+  await deleteRow(TABS.employees, found.rowNumber);
+  await logAudit({
+    actorUserId: session.userId,
+    actorRole: session.role,
+    action: 'delete',
+    entity: 'employee',
+    entityId: id,
+    beforeValue: JSON.stringify(found.row),
+    reason: 'mistaken input removal'
+  });
+  return ok({ employee_id: id, deleted: true });
 });
 
 function pickChanges(before: Record<string, string>, after: Record<string, string>) {

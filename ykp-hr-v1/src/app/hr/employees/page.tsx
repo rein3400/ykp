@@ -51,6 +51,7 @@ export default async function EmployeesPage() {
   const brandById = new Map(brands.map((b) => [b.brand_id, b.brand_name]));
   const outletById = new Map(outlets.map((o) => [o.outlet_id, o.outlet_name]));
   const canEdit = session ? can(session.role as Role, 'update', 'employee') : false;
+  const canDelete = session ? can(session.role as Role, 'delete', 'employee') : false;
   const reminders = getReminderCandidates(employees as unknown as Record<string, string>[], todayWib());
 
   return (
@@ -89,6 +90,7 @@ export default async function EmployeesPage() {
             brandById={brandById}
             outletById={outletById}
             canEdit={canEdit}
+            canDelete={canDelete}
           />
         )}
       </div>

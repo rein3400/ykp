@@ -12,8 +12,8 @@
  * because Sheets has no FK constraints.
  */
 import { google, type sheets_v4 } from 'googleapis';
-import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow } from './mock-store';
-import { isPostgresMode, pgReadTab, pgAppendRows, pgUpdateRow, pgFindRow } from './postgres';
+import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow, mockDeleteRow } from './mock-store';
+import { isPostgresMode, pgReadTab, pgAppendRows, pgUpdateRow, pgFindRow, pgDeleteRow } from './postgres';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
@@ -568,6 +568,57 @@ export async function updateRow(
     range: `${quoteTab(tab)}!A${rowNumber}:${lastCol}${rowNumber}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: { values: [arr] }
+  });
+}
+
+/**
+ * Physically remove one data row (by 1-based sheet row). Sheets has no delete
+ * API we call directly: the last data row is copied into the target slot and
+ * the trailing row is cleared, keeping the block contiguous. Callers re-resolve
+ * row numbers via findRow, so the swapped row's new position is safe.
+ */
+export async function deleteRow(tab: TabName, rowNumber: number): Promise<void> {
+  invalidateReadCache();
+  if (isMockMode()) { mockDeleteRow(tab, rowNumber); return; }
+  if (isPostgresMode()) { await pgDeleteRow(tab, rowNumber); return; }
+  const sheets = getSheetsClient();
+  const sid = getSpreadsheetId();
+  const headers = TAB_HEADERS[tab];
+  const lastCol = columnLetter(headers.length);
+  const res = await valuesGetWithRetry(sheets, {
+    spreadsheetId: sid,
+    range: `${quoteTab(tab)}!A1:${lastCol}`
+  });
+  const rows = res.data.values ?? [];
+  const lastDataRow = (() => {
+    for (let i = rows.length - 1; i >= 1; i--) {
+      if ((rows[i] ?? []).some((cell) => (cell ?? '') !== '')) return i + 1;
+    }
+    return 1;
+  })();
+  if (rowNumber > lastDataRow || rowNumber < 2) throw new Error(`Row ${rowNumber} is not a data row in ${tab}`);
+  const blank = headers.map(() => '');
+  if (rowNumber === lastDataRow) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: sid,
+      range: `${quoteTab(tab)}!A${rowNumber}:${lastCol}${rowNumber}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [blank] }
+    });
+    return;
+  }
+  const lastValues = headers.map((_, idx) => (rows[lastDataRow - 1]?.[idx] ?? '') as string);
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sid,
+    range: `${quoteTab(tab)}!A${rowNumber}:${lastCol}${rowNumber}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [lastValues] }
+  });
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sid,
+    range: `${quoteTab(tab)}!A${lastDataRow}:${lastCol}${lastDataRow}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [blank] }
   });
 }
 

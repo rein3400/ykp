@@ -110,6 +110,11 @@ export async function pgUpdateRow(
   await p.query(`UPDATE ${q(tab)} SET ${setParts.join(', ')} WHERE __rownum = $1`, params);
 }
 
+export async function pgDeleteRow(tab: string, rowNumber: number): Promise<void> {
+  const p = getPgPool();
+  await p.query(`DELETE FROM ${q(tab)} WHERE __rownum = $1`, [rowNumber]);
+}
+
 /** Find the row whose keyCol === value. Returns Sheets-style { rowNumber, row }. */
 export async function pgFindRow(
   tab: string,
