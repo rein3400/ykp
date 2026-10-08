@@ -38,7 +38,7 @@ interface Employee {
   permanent_date: string;
 }
 interface Brand { brand_id: string; brand_name: string }
-interface Outlet { outlet_id: string; brand_id: string; outlet_name: string }
+interface Outlet { outlet_id: string; brand_id: string; outlet_name: string; outlet_code?: string; status?: string }
 
 export default async function EmployeesPage() {
   const [session, employees, brands, outlets] = await Promise.all([
@@ -49,7 +49,9 @@ export default async function EmployeesPage() {
   ]);
 
   const brandById = new Map(brands.map((b) => [b.brand_id, b.brand_name]));
-  const outletById = new Map(outlets.map((o) => [o.outlet_id, o.outlet_name]));
+  // Show the outlet CODE (shared with Finance settings) next to the name so HR
+  // can match records across modules without leaving this screen.
+  const outletById = new Map(outlets.map((o) => [o.outlet_id, o.outlet_code ? `${o.outlet_name} (${o.outlet_code})` : o.outlet_name]));
   const canEdit = session ? can(session.role as Role, 'update', 'employee') : false;
   const canDelete = session ? can(session.role as Role, 'delete', 'employee') : false;
   const reminders = getReminderCandidates(employees as unknown as Record<string, string>[], todayWib());

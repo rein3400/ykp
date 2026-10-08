@@ -12,12 +12,14 @@ import { assertEmployee, nextSequentialId } from '@/lib/repo';
 import { handler, badRequest, unauthorized, ok, notFound } from '@/lib/http';
 import { formatTimeWib, nowTimestampWib, todayWib } from '@/lib/format';
 import { classifyLocation, parseGeoPoint } from '@/lib/attendance-geo';
+import { resolveAttendanceOutlet } from '@/lib/multi-location';
 import { z } from 'zod';
 
 const schema = z.object({
   telegram_chat_id: z.string().min(1),
   latitude: z.union([z.number(), z.string()]).optional(),
   longitude: z.union([z.number(), z.string()]).optional(),
+  outlet_id: z.string().optional(),
 });
 
 function botAuthorized(req: Request): boolean {
@@ -65,12 +67,25 @@ export const POST = handler(async (req) => {
 
   const emp = await findRow(TABS.employees, 'employee_id', employeeId);
   const employee = emp?.row;
-  const outletId = employee?.outlet_id ?? '';
+
+  // Multi-location: roaming roles may choose any active outlet; others are tied
+  // to their home outlet. GPS radius is ALWAYS enforced against the chosen outlet.
+  let outletRow: Record<string, string> = {};
+  try {
+    const outletsTab = await readTab<Record<string, string>>(TABS.outlets);
+    const resolved = resolveAttendanceOutlet({
+      role: user.role, homeOutletId: employee?.outlet_id, requestedOutletId: parsed.data.outlet_id, outlets: outletsTab.map((o) => ({ outlet_id: o.outlet_id ?? '', outlet_name: o.outlet_name, status: o.status }))
+    });
+    outletRow = outletsTab.find((o) => o.outlet_id === resolved.outlet_id) ?? {};
+  } catch (e) {
+    return badRequest(e instanceof Error ? e.message : 'Outlet tidak valid');
+  }
+  const outletId = outletRow.outlet_id ?? '';
 
   // Bot punches require a valid GPS point and a configured outlet geofence.
   const reported = parseGeoPoint(parsed.data.latitude, parsed.data.longitude);
   if (!reported) return badRequest('Kirim lokasi GPS Telegram sebelum absen masuk.');
-  const outlet = outletId ? await findRow(TABS.outlets, 'outlet_id', outletId) : null;
+  const outlet = { row: outletRow };
   const verdict = classifyLocation(reported, outlet?.row ? {
     latitude: Number(outlet.row.latitude),
     longitude: Number(outlet.row.longitude),
