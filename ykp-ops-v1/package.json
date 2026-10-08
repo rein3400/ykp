@@ -10,7 +10,8 @@
     "sheets:bootstrap": "tsx --env-file-if-exists=.env scripts/bootstrap-sheets.ts",
     "sheets:smoke": "tsx --env-file-if-exists=.env scripts/sheets-smoke.ts",
     "sheets:seed-user": "tsx --env-file-if-exists=.env scripts/seed-user.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sheets:clone-closing-templates": "tsx scripts/clone-closing-templates.ts"
   },
   "dependencies": {
     "googleapis": "^144.0.0",
