@@ -1,6 +1,7 @@
 # YKP Hermez — Deployed Production Links
 
-> Last verified: **2026-10-07 16:15 WIB** — all 7 Coolify apps redeployed & verified at `main @ 5a39cc2`. Hub `/api/health`: **overall "ok"**, all 6 modules HTTP 200 (HR count 556, Finance count 40, Warehouse count 0). SSLIP DNS was flaky from remote shells; verify via `--resolve` if needed. Remaining NOT live-verified: closing/bot/threshold acceptance, dummy-data cleansing audit, VPS-new provisioning test.
+> Last verified: **2026-10-08 14:53 WIB** — all 7 Coolify apps deployed & verified at `main @ 405a889`. Hub `/api/health`: **overall "ok"**, all 6 modules HTTP 200 (HR 568, Finance 43, Warehouse 0). Added in this wave: HR guarded employee hard-delete; Finance daily report uses shared active-outlet helper; Ops `sheets:clone-closing-templates` script (+ scripts/src now in ops image).
+> STILL OPEN (not done): warehouse master item/supplier purge needs its own storage delete primitive + backup manifest; threshold→SPV-Ops recipient wiring; Ops full Telegram reporting menu (hermez bot is HR-only, long-poll); closing templates must be created in prod via the clone script; dummy cleansing audit for other workbooks; SSO secret rotation; new-VPS provisioning test. SSLIP DNS flaky from remote shells — use `--resolve`.
 > Source of truth for live URLs. Update this file every deploy.
 > Production code source: branch `origin/stagging` @ `5ad8271` (deep-test fixes 2026-07-22: Hub SSO token baked, Hermez SUPER_ADMIN SSO + ops-summary route, Finance form banner). Prior `1243c84` = security cutover 2026-07-21.
 
