@@ -25,6 +25,11 @@ export const POST = handler(async (req: NextRequest) => {
   if (!body.warning_value && !body.high_value && !body.critical_value) {
     return badRequest('at least one of warning/high/critical_value is required');
   }
+  // Recipient for stock alerts (SPV Ops). A selector (role:/user:/dept:/hod:) or a raw chat id.
+  const recipient = (body.notify_recipient ?? '').trim();
+  if (recipient && !/^(role|user|dept|hod):.+$/.test(recipient) && !/^\d{5,15}$/.test(recipient)) {
+    return badRequest('notify_recipient harus role:/user:/dept:/hod: atau chat id numerik');
+  }
 
   const id = nextSequentialIdSync('THR');
   const row: Record<string, string> = {
@@ -38,6 +43,7 @@ export const POST = handler(async (req: NextRequest) => {
     high_value: body.high_value ?? '',
     critical_value: body.critical_value ?? '',
     unit: body.unit ?? '',
+    notify_recipient: recipient,
     active_status: 'active',
     updated_by: s.userId,
     updated_at: nowTimestampWib()

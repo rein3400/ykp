@@ -12,7 +12,8 @@
     "sheets:seed-user": "tsx --env-file-if-exists=.env scripts/seed-user.ts",
     "sheets:mega-seed": "tsx --env-file-if-exists=.env scripts/mega-seed.ts",
     "seed:master-items": "tsx --env-file-if-exists=.env scripts/seed-master-items.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sheets:purge-dummy-masters": "tsx scripts/purge-dummy-masters.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.7",

@@ -13,6 +13,8 @@ import { nextSequentialIdSync } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
 import { bookStock } from '@/lib/stock-ledger';
 import { computeRecommendation } from '@/lib/inventory-engine';
+import { stockAlertLevel, thresholdRecipient } from '@/lib/stock-threshold';
+import { sendTelegram } from '@/lib/telegram';
 
 export const GET = handler(async () => {
   // Public read — middleware allows GET without auth (Hermez integration)
@@ -119,6 +121,28 @@ export const POST = handler(async (req: NextRequest) => {
 
   if (recommendations.length > 0) {
     await appendRows(TABS.purchaseRecommendation, recommendations);
+  }
+
+  // Notify the configured SPV-Ops recipient for low/overstock breaches.
+  const thresholds = (await readTab<Record<string, string>>(TABS.inventoryThreshold))
+    .filter((t) => t.active_status === 'active' && thresholdRecipient(t));
+  let alertsSent = 0;
+  for (const rec of recommendations) {
+    const threshold = thresholds.find((t) => (!t.item_id || t.item_id === rec.item_id) && (!t.outlet_id || t.outlet_id === rec.outlet_id));
+    if (!threshold) continue;
+    const level = rec.priority === 'CRITICAL' || rec.priority === 'HIGH' ? 'LOW' : stockAlertLevel(Number(rec.available_stock), threshold);
+    if (!level) continue;
+    const delivery = await sendTelegram({
+      sourceModule: 'warehouse_stock_threshold',
+      sourceReferenceId: rec.recommendation_id,
+      messageType: level === 'LOW' ? 'STOCK_LOW' : 'STOCK_OVER',
+      recipient: thresholdRecipient(threshold),
+      text: [
+        `<b>${level === 'LOW' ? 'Stok menipis' : 'Stok berlebih'}: ${rec.item_name} (${rec.item_id})</b>`,
+        `Outlet ${rec.outlet_id || '-'} · tersedia ${rec.available_stock} · reorder point ${rec.reorder_point}`
+      ].join('\n')
+    }).catch(() => null);
+    if (delivery?.sent) alertsSent += 1;
   }
 
   await logAudit({

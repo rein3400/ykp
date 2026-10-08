@@ -91,6 +91,11 @@ export async function pgAppendRows(
 }
 
 /** Update the row whose __rownum === rowNumber. Values keyed by column header. */
+export async function pgDeleteRow(tab: string, rowNumber: number): Promise<void> {
+  const p = getPgPool();
+  await p.query(`DELETE FROM ${q(tab)} WHERE __rownum = $1`, [rowNumber]);
+}
+
 export async function pgUpdateRow(
   tab: string,
   headers: string[],

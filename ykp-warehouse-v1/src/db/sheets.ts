@@ -15,8 +15,8 @@
  * structured tables. FK validation is done in the repository layer (lib/repo.ts).
  */
 import { google, type sheets_v4 } from 'googleapis';
-import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow } from './mock-store';
-import { isPostgresMode, pgReadTab, pgAppendRows, pgUpdateRow, pgFindRow } from './postgres';
+import { isMockMode, mockReadTab, mockAppendRows, mockUpdateRow, mockFindRow, mockDeleteRow } from './mock-store';
+import { isPostgresMode, pgReadTab, pgAppendRows, pgUpdateRow, pgFindRow, pgDeleteRow } from './postgres';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
@@ -154,7 +154,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
   [TABS.inventoryThreshold]: [
     'threshold_id', 'brand_id', 'outlet_id', 'location_id', 'item_id',
     'threshold_type', 'warning_value', 'high_value', 'critical_value',
-    'unit', 'active_status', 'updated_by', 'updated_at'
+    'unit', 'notify_recipient', 'active_status', 'updated_by', 'updated_at'
   ],
   // ── Stock movement ledger §15 ────────────────────────────────
   [TABS.stockMovement]: [
@@ -483,6 +483,34 @@ export async function updateRow(
     valueInputOption: 'RAW',
     requestBody: { values: [arr] }
   });
+}
+
+/**
+ * Physically remove one data row (1-based sheet row). Sheets: move the last data
+ * row into the target slot and clear the trailing row (keeps the block contiguous).
+ * Postgres: DELETE by __rownum. Mock: splice.
+ */
+export async function deleteRow(tab: TabName, rowNumber: number): Promise<void> {
+  invalidateReadCache();
+  if (isMockMode()) { mockDeleteRow(tab, rowNumber); return; }
+  if (isPostgresMode()) { await pgDeleteRow(tab, rowNumber); return; }
+  const sheets = getSheetsClient();
+  const sid = getSpreadsheetId();
+  const headers = TAB_HEADERS[tab];
+  const lastCol = columnLetter(headers.length);
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: sid, range: `${quoteTab(tab)}!A1:${lastCol}` });
+  const rows = res.data.values ?? [];
+  const lastDataRow = (() => {
+    for (let i = rows.length - 1; i >= 1; i--) if ((rows[i] ?? []).some((c) => (c ?? '') !== '')) return i + 1;
+    return 1;
+  })();
+  if (rowNumber < 2 || rowNumber > lastDataRow) throw new Error(`Row ${rowNumber} is not a data row in ${tab}`);
+  const blank = headers.map(() => '');
+  const write = (range: string, values: string[]) => sheets.spreadsheets.values.update({ spreadsheetId: sid, range: `${quoteTab(tab)}!${range}`, valueInputOption: 'RAW', requestBody: { values: [values] } });
+  if (rowNumber === lastDataRow) { await write(`A${rowNumber}:${lastCol}${rowNumber}`, blank); return; }
+  const lastValues = headers.map((_, idx) => (rows[lastDataRow - 1]?.[idx] ?? '') as string);
+  await write(`A${rowNumber}:${lastCol}${rowNumber}`, lastValues);
+  await write(`A${lastDataRow}:${lastCol}${lastDataRow}`, blank);
 }
 
 /** Find the 1-based sheet row of the first row whose key column matches value. Returns null if not found. */
