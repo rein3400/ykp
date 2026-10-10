@@ -13,7 +13,8 @@
     "test": "vitest run",
     "sheets:clone-closing-templates": "tsx scripts/clone-closing-templates.ts",
     "sheets:import-suburbun-opening": "tsx --env-file-if-exists=.env scripts/import-suburbun-opening.ts",
-    "sheets:import-opening-pdfs": "tsx --env-file-if-exists=.env scripts/import-opening-pdfs.ts"
+    "sheets:import-opening-pdfs": "tsx --env-file-if-exists=.env scripts/import-opening-pdfs.ts",
+    "sheets:import-closing-pdfs": "tsx --env-file-if-exists=.env scripts/import-closing-pdfs.ts"
   },
   "dependencies": {
     "googleapis": "^144.0.0",
