@@ -17,10 +17,11 @@ export default async function ClosingPage() {
   const templates = (await readTab(TABS.checklistTemplates)).filter((template) => (!template.outlet_id || outletIds.has(template.outlet_id)) && (!template.brand_id || brandIds.has(template.brand_id)));
   const shifts = await readTab(TABS.shifts);
   return (
-    <div className='space-y-4'>
-      <div>
-        <h1 className='text-2xl font-bold'>Closing Checklist</h1>
-        <p className='text-sm text-slate-500'>Checklist tutup outlet berdasarkan template SOP.</p>
+    <div className='mx-auto w-full min-w-0 max-w-5xl space-y-6'>
+      <div className='py-2'>
+        <p className='mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500'>Operasional / Penutupan outlet</p>
+        <h1 className='text-3xl font-semibold tracking-tight text-slate-900'>Closing Checklist</h1>
+        <p className='mt-2 max-w-xl text-sm leading-6 text-slate-500'>Tutup hari dengan tertib. Periksa setiap tugas sesuai SOP, lengkapi catatan, lalu simpan laporan penutupan.</p>
       </div>
       <ClosingClient rows={rows} outlets={outlets} templates={templates} shifts={shifts} date={todayWib()} />
     </div>
