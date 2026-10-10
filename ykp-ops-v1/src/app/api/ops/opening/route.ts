@@ -12,7 +12,7 @@ export const GET = handler(async () => {
   if (!s) return unauthorized();
   if (!can(s.role as Role, 'view', 'opening')) return forbidden();
   const rows = await readTab(TABS.opening);
-  return list(rows);
+  return list(rows.filter((row) => (!s.outletId || row.outlet_id === s.outletId) && (!s.brandId || row.brand_id === s.brandId)));
 });
 
 export const POST = handler(async (req: NextRequest) => {

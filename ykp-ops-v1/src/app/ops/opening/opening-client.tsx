@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { selectChecklistTemplates } from '@/lib/checklist';
 
 type ItemState = {
   checklist_item: string;
@@ -42,13 +43,9 @@ export function OpeningClient({
   const [success, setSuccess] = useState('');
 
   const selectedTemplates = useMemo(() => {
-    const opening = templates.filter((t) => (t.checklist_type || '').toUpperCase() === 'OPENING' && (t.active_status || 'active').toLowerCase() === 'active');
-    if (outletId) {
-      const byOutlet = opening.filter((t) => !t.outlet_id || t.outlet_id === outletId);
-      if (byOutlet.length > 0) return byOutlet;
-    }
-    return opening;
-  }, [templates, outletId]);
+    const outlet = outlets.find((row) => row.outlet_id === outletId);
+    return outlet ? selectChecklistTemplates(templates, 'OPENING', outletId, outlet.brand_id ?? '') : [];
+  }, [templates, outletId, outlets]);
 
   const [items, setItems] = useState<ItemState[]>(() =>
     selectedTemplates.map((t) => ({
@@ -150,7 +147,7 @@ export function OpeningClient({
   return (
     <div className='space-y-4'>
       <div className='rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs'>
-        <div className='font-semibold text-amber-800'>SOP Opening FnB — 20 item (5 kategori: Kitchen / Bar / FOH / Hygiene)</div>
+        <div className='font-semibold text-amber-800'>SOP Opening — {selectedTemplates.length} item ({new Set(selectedTemplates.map((template) => template.department || 'Umum')).size} kategori)</div>
         <div className='mt-1 text-amber-700'>Isi manual per item: centang DONE, tambah catatan & link foto jika diperlukan (wajib foto untuk item bertanda 📷). Item <span className='rounded bg-red-100 px-1 font-medium text-red-700'>KRITIKAL</span> harus DONE sebelum buka.</div>
       </div>
 
@@ -279,8 +276,7 @@ function QuickAddTemplate({ outletId, onAdded }: { outletId: string; onAdded: ()
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          brand_id: 'BR-001',
-          outlet_id: '',
+          outlet_id: outletId,
           checklist_type: 'OPENING',
           department: dept,
           checklist_item: item.trim(),

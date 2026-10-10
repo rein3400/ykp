@@ -2,8 +2,8 @@ export function selectChecklistTemplates(
   templates: Record<string, string>[], type: string, outletId: string, brandId: string
 ): Record<string, string>[] {
   return templates.filter((template) =>
-    template.checklist_type?.toUpperCase() === type &&
-    ['active', '1'].includes((template.active_status ?? '').trim().toLowerCase()) &&
+    (template.checklist_type || 'GENERAL').toUpperCase() === type &&
+    ['active', '1'].includes((template.active_status || 'active').trim().toLowerCase()) &&
     (!template.outlet_id || template.outlet_id === outletId) &&
     (!template.brand_id || template.brand_id === brandId)
   );

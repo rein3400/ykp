@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { selectChecklistTemplates } from '@/lib/checklist';
 
 export function ChecklistClient({
   templates,
@@ -42,7 +43,7 @@ export function ChecklistClient({
     [activeTemplates]
   );
   const [type, setType] = useState(types[0] ?? 'GENERAL');
-  const filtered = useMemo(() => activeTemplates.filter((t) => (t.checklist_type || 'GENERAL').toUpperCase() === type), [activeTemplates, type]);
+  const filtered = useMemo(() => selectChecklistTemplates(activeTemplates, type, outletId, outlets.find((row) => row.outlet_id === outletId)?.brand_id ?? ''), [activeTemplates, type, outletId, outlets]);
   const departments = useMemo(() => Array.from(new Set(filtered.map((t) => t.department || ''))).filter(Boolean), [filtered]);
 
   // Per-item selection state keyed by template id.
@@ -156,7 +157,7 @@ export function ChecklistClient({
         </button>
       </div>
 
-      <TemplateManager templates={templates} onChanged={() => router.refresh()} />
+      <TemplateManager templates={templates} outletId={outletId} onChanged={() => router.refresh()} />
 
       <div className='rounded-xl border bg-white p-4'>
         <h2 className='mb-3 font-semibold'>Riwayat Verifikasi</h2>
@@ -218,7 +219,7 @@ function CheckRow({
   );
 }
 
-function TemplateManager({ templates, onChanged }: { templates: Record<string, string>[]; onChanged: () => void }) {
+function TemplateManager({ templates, outletId, onChanged }: { templates: Record<string, string>[]; outletId: string; onChanged: () => void }) {
   const [open, setOpen] = useState(false);
   const [item, setItem] = useState('');
   const [dept, setDept] = useState('Kitchen');
@@ -240,8 +241,7 @@ function TemplateManager({ templates, onChanged }: { templates: Record<string, s
         headers: { 'content-type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          brand_id: 'BR-001',
-          outlet_id: '',
+          outlet_id: outletId,
           checklist_type: type,
           department: dept,
           checklist_item: item.trim(),
