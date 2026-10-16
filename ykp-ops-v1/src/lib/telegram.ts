@@ -9,6 +9,7 @@
  */
 import { appendRows, readTab, findRow, updateRow, TABS } from '@/db/sheets';
 import { nowTimestampWib } from './format';
+import { telegramBotToken } from './bot-token';
 import { nextSequentialIdSync } from './repo';
 
 export interface TelegramMessage {
@@ -106,7 +107,7 @@ export async function resolveRecipients(recipient: string): Promise<string[]> {
 export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: string; status: string; sent: number; failed: number }> {
   const deliveryId = nextSequentialIdSync('TDL');
   const now = nowTimestampWib();
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = telegramBotToken();
 
   const logDelivery = (chatId: string, status: string, messageId: string, errorMessage: string, sentAt: string, retryCount: number) =>
     appendRows(TABS.telegramDeliveryLog, [{
@@ -124,7 +125,7 @@ export async function sendTelegram(msg: TelegramMessage): Promise<{ deliveryId: 
     }]).catch(() => null);
 
   if (!token) {
-    await logDelivery(msg.recipient || '', 'FAILED', '', 'TELEGRAM_BOT_TOKEN not configured', '', 0);
+    await logDelivery(msg.recipient || '', 'FAILED', '', 'TELEGRAM bot token not configured (TELEGRAM_OPS_BOT_TOKEN/TELEGRAM_BOT_TOKEN)', '', 0);
     return { deliveryId, status: 'FAILED', sent: 0, failed: 1 };
   }
 

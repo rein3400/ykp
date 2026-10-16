@@ -36,6 +36,9 @@ for key in HUB_SESSION_SECRET SESSION_HUB SESSION_OWNER SESSION_HR SESSION_FINAN
   value="${!key}"
   [[ ${#value} -ge 32 ]] || { printf 'Secret must contain at least 32 characters: %s\n' "$key" >&2; exit 1; }
 done
+for key in TELEGRAM_OPS_WEBHOOK_SECRET TELEGRAM_WEBHOOK_SECRET TELEGRAM_BOT_SECRET; do
+  [[ -z "${!key:-}" || ${#!key} -ge 32 ]] || { printf 'When set, %s must be >= 32 characters\n' "$key" >&2; exit 1; }
+done
 for key in GOOGLE_SERVICE_ACCOUNT_EMAIL GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY YKP_HR_SPREADSHEET_ID YKP_FINANCE_SPREADSHEET_ID YKP_WAREHOUSE_SPREADSHEET_ID YKP_INVESTOR_SPREADSHEET_ID YKP_OPS_SPREADSHEET_ID; do
   [[ ${!key:-} != '' && ${!key} != placeholder* ]] || { printf 'Missing live Sheets configuration: %s\n' "$key" >&2; exit 1; }
 done
@@ -161,7 +164,6 @@ set_env "${UUID[ykp-finance-v1]}" "$(jq -n \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_FINANCE_SPREADSHEET_ID" \
   --arg ms "$MOKA_SYNC_SECRET" --arg mo "$MOKA_OUTLETS" --arg mm "$MOKA_OUTLET_MAP" \
-  --arg oc "${MOKA_CLIENT_ID:-}" --arg os "${MOKA_CLIENT_SECRET:-}" --arg red "$URL_FINANCE/api/moka/callback" \
   --arg hrn "$URL_HR" --arg fns "$FINANCE_NOTIFY_SECRET" --arg hrsid "$YKP_HR_SPREADSHEET_ID" \
   --arg s1 "$MOKA_SEKARPIZZA_TIRTODIPURAN_CLIENT_ID" --arg s2 "$MOKA_SEKARPIZZA_TIRTODIPURAN_CLIENT_SECRET" --arg s3 "$MOKA_SEKARPIZZA_TIRTODIPURAN_OUTLET_ID" \
   --arg f1 "$MOKA_FUNKYDAK_COLOMBO_CLIENT_ID" --arg f2 "$MOKA_FUNKYDAK_COLOMBO_CLIENT_SECRET" --arg f3 "$MOKA_FUNKYDAK_COLOMBO_OUTLET_ID" \
@@ -170,6 +172,8 @@ set_env "${UUID[ykp-finance-v1]}" "$(jq -n \
     {key:"SESSION_SECRET",value:$s},{key:"CRON_SECRET",value:$c},{key:"ENVIRONMENT",value:"PRODUCTION"},
     {key:"TELEGRAM_BOT_TOKEN",value:$t},{key:"TELEGRAM_CHAT_ID",value:$chat},{key:"TELEGRAM_BOT_SECRET",value:$ts},
     {key:"GOOGLE_SERVICE_ACCOUNT_EMAIL",value:$gsa},{key:"GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY",value:$gsk,is_literal:true},
+    {key:"YKP_HR_SPREADSHEET_ID",value:$hrsid},{key:"HR_NOTIFY_URL",value:$hrn},{key:"YKP_HR_APP_URL",value:$hrn},
+    {key:"FINANCE_NOTIFY_SECRET",value:$fns},
     {key:"YKP_FINANCE_SPREADSHEET_ID",value:$sid},{key:"MOKA_SYNC_ENABLED",value:"true"},
     {key:"MOKA_SYNC_SECRET",value:$ms},{key:"MOKA_OUTLETS",value:$mo},{key:"MOKA_OUTLET_MAP",value:$mm,is_literal:true},
     {key:"MOKA_SEKARPIZZA_TIRTODIPURAN_CLIENT_ID",value:$s1},{key:"MOKA_SEKARPIZZA_TIRTODIPURAN_CLIENT_SECRET",value:$s2},
@@ -212,12 +216,15 @@ set_env "${UUID[ykp-ops-v1]}" "$(jq -n \
   --arg hub "$URL_HUB,$HUB_IP_ORIGIN" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_OPS" \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_OPS_SPREADSHEET_ID" \
+  --arg obot "${TELEGRAM_OPS_BOT_TOKEN:-}" --arg owh "${TELEGRAM_OPS_WEBHOOK_SECRET:-}" --arg opub "$URL_OPS" \
   --arg oai "${OPENAI_API_KEY:-}" --arg model "${AI_MODEL:-openai/gpt-4o-mini}" \
   --arg base "${OPENAI_BASE_URL:-https://openrouter.ai/api/v1}" \
   --arg ref "${OPENAI_HTTP_REFERER:-}" --arg title "${OPENAI_APP_TITLE:-}" \
   '[{key:"NEXT_PUBLIC_TELEGRAM_BOT_USERNAME",value:$tg,is_runtime:true,is_buildtime:true},
     {key:"SESSION_SECRET",value:$s},{key:"HUB_ORIGINS",value:$hub,is_literal:true},
     {key:"TELEGRAM_BOT_TOKEN",value:$t},{key:"TELEGRAM_CHAT_ID",value:$chat},{key:"TELEGRAM_BOT_SECRET",value:$ts},
+    {key:"TELEGRAM_OPS_BOT_TOKEN",value:$obot},{key:"TELEGRAM_OPS_WEBHOOK_SECRET",value:$owh},
+    {key:"OPS_PUBLIC_URL",value:$opub},{key:"NEXT_PUBLIC_OPS_URL",value:$opub,is_runtime:true,is_buildtime:true,is_literal:true},
     {key:"AI_MODEL",value:$model},{key:"OPENAI_API_KEY",value:$oai},
     {key:"OPENAI_BASE_URL",value:$base},{key:"OPENAI_HTTP_REFERER",value:$ref},
     {key:"OPENAI_APP_TITLE",value:$title},
@@ -279,9 +286,16 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-say "Sheets schema prerequisite"
-printf '%s\n' 'Automatic legacy workbook migrations are disabled: they read a separate .deploy.env and may target the wrong workbook.'
-printf '%s\n' 'Validate required tabs and schema against the selected environment before accepting this deployment; no ledger/master migration is applied here.'
+say "Sheets tabs (read-only check)"
+probe() { # app port path
+  local host="${UUID[$1]}.$IPDOTS.sslip.io"
+  curl -fsS -m 30 --resolve "$host:443:$VPS_IP" "https://$host/api/$2" 2>/dev/null || echo '{}'
+}
+hr_probe="$(probe ykp-hr-v1 hr/summary/count)"
+printf '  hr        status=%s failed=%s\n' "$(echo "$hr_probe" | jq -r '.status // "unknown"')" "$(echo "$hr_probe" | jq -c '.failed // []')"
+printf '  finance   records=%s\n' "$(probe ykp-finance-v1 fin/summary | jq -r '.data.count // .data.total_items // "n/a"' 2>/dev/null || echo n/a)"
+printf '  warehouse records=%s\n' "$(probe ykp-warehouse-v1 warehouse/summary/count | jq -r '.data.count // "n/a"' 2>/dev/null || echo n/a)"
+echo "  (tab bootstrap is idempotent; run once per module inside its container if a tab is reported missing)"
 
 # ---------------------------------------------------------------------------
 say "Verify"
@@ -313,8 +327,16 @@ Done. YKP V1 family on $COOLIFY_URL
 Login: owner / <password from the shared Sheets user store>
 
 Manual follow-ups (once per target server):
-  1. Moka outlet map — add the 3 outlet rows to master_outlet if missing; MOKA_OUTLET_MAP is
-     already passed above and seeds app_settings on first sync.
-  2. ops AI — set a real OPENAI_API_KEY (empty = AI disabled).
-  3. Rotate the default owner password in the shared Sheets user store.
+  1. Sheets tabs — in each container run:  npm run sheets:bootstrap
+     (idempotent: creates/syncs master + operational tabs, incl. hr_telegram_link_codes,
+      master_checklist_template, ops_checklist_submission. Re-run if the check above shows a failed tab.)
+  2. Ops bot — register the webhook once with the dedicated token from .deploy.env:
+       curl "https://api.telegram.org/bot\$TELEGRAM_OPS_BOT_TOKEN/setWebhook?url=$URL_OPS/api/ops/telegram/webhook&secret_token=\$TELEGRAM_OPS_WEBHOOK_SECRET"
+     HR webhook likewise: /api/hr/attendance/telegram with TELEGRAM_WEBHOOK_SECRET.
+  3. Email sender — set the SMTP account + App Password in HR > Pengaturan Email, then Send Test.
+  4. Moka outlet map — add the 3 outlet rows to master_outlet if missing (MOKA_OUTLET_MAP seeds app_settings on first sync).
+  5. Ops AI — set a real OPENAI_API_KEY (empty = AI disabled).
+  6. Rotate the default owner password in the shared Sheets user store.
+  7. SOP templates — optional, per outlet: npm run sheets:clone-closing-templates,
+     npm run sheets:import-opening-pdfs, npm run sheets:import-closing-pdfs, npm run sheets:import-suburbun-opening.
 EOF
