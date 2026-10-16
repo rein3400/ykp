@@ -16,7 +16,8 @@ import { findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { logAudit } from '@/lib/audit';
 import { handler, badRequest, unauthorized, forbidden, conflict, notFound, ok, fail } from '@/lib/http';
-import { smtpConfig, sendMail } from '@/lib/smtp';
+import { sendMail } from '@/lib/smtp';
+import { getSmtpConfig } from '@/lib/app-settings';
 import { Buffer } from 'node:buffer';
 import { z } from 'zod';
 import { buildPayslipHtml } from '@/lib/payslip-html';
@@ -34,8 +35,8 @@ export const POST = handler(async (req) => {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return badRequest('payroll_id wajib diisi');
 
-  const cfg = smtpConfig();
-  if (!cfg) {
+  const cfg = await getSmtpConfig();
+  if (!cfg.host || !cfg.user || !cfg.pass) {
     return fail(
       'smtp_not_configured',
       'SMTP belum dikonfigurasi (SMTP_HOST/SMTP_USER/SMTP_PASS). Minta kredensial 1 email pengirim ke developer.',
@@ -59,6 +60,7 @@ export const POST = handler(async (req) => {
   const emailAt = new Date().toISOString();
   try {
     const { messageId } = await sendMail({
+      config: { host: cfg.host, port: Number(cfg.port), secure: cfg.secure === 'true', user: cfg.user, pass: cfg.pass, from: cfg.user },
       to: email,
       subject: `Slip Gaji ${row.payroll_period} — ${row.employee_name}`,
       html: `<p>Yth. ${row.employee_name},</p><p>Terlampir slip gaji periode ${row.payroll_period}. Dokumen ini bersifat rahasia.</p>`,

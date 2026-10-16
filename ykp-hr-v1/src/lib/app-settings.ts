@@ -35,7 +35,7 @@ export async function getSmtpConfig(): Promise<SmtpConfig> {
     host: get('smtp_host', process.env.SMTP_HOST ?? ''),
     port: get('smtp_port', process.env.SMTP_PORT ?? '587'),
     user: get('smtp_user', process.env.SMTP_USER ?? ''),
-    pass: get('smtp_pass', process.env.SMTP_PASS ?? ''),
+    pass: byKey.has('smtp_pass') ? (byKey.get('smtp_pass') ?? '').trim() : (process.env.SMTP_PASS ?? ''),
     secure: get('smtp_secure', process.env.SMTP_SECURE ?? 'false'),
     from_name: get('smtp_from_name', 'YKP HR')
   };

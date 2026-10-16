@@ -230,8 +230,9 @@ export async function sendMail(opts: {
   html: string;
   attachments?: Attachment[];
   timeoutMs?: number;
+  config?: SmtpConfig;
 }): Promise<{ messageId: string }> {
-  const cfg = smtpConfig();
+  const cfg = opts.config ?? smtpConfig();
   if (!cfg) throw new Error('SMTP not configured (SMTP_HOST/SMTP_USER/SMTP_PASS)');
   const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@ykp-hr>`;
   const raw = buildMimeMessage({

@@ -20,6 +20,7 @@ vi.mock('@/db/sheets', () => ({
 }));
 vi.mock('@/lib/session', () => ({ getSession: async () => ({ userId: 'USR-HR', role: 'hr_admin' }) }));
 vi.mock('@/lib/audit', () => ({ logAudit: async () => undefined }));
+vi.mock('@/lib/app-settings', () => ({ getSmtpConfig: async () => ({ host: 'localhost', port: '1025', secure: 'false', user: 'ykp.erp@gmail.com', pass: 'test-only', from_name: 'YKP ERP' }) }));
 vi.mock('@/lib/smtp', () => ({
   smtpConfig: () => ({ host: 'localhost', port: 1025 }),
   sendMail: () => state.sendMail()

@@ -22,7 +22,7 @@ export function getBrandStyle(brandId: string) {
 export async function getBrandEmail(brandId: string): Promise<BrandEmailConfig | null> {
   const found = await findRow(TABS.brands, 'brand_id', brandId);
   if (!found) return null;
-  const email = (found.row.email as string ?? '').trim();
+  const email = (await getSmtpConfig()).user.trim();
   const brandName = (found.row.brand_name as string ?? brandId).trim();
   if (!email) return null;
   return { email, brandName };
@@ -120,8 +120,7 @@ export async function sendPayslipEmail(opts: {
   const smtpUser = cfg.user;
   const smtpPass = cfg.pass;
   if (!smtpHost || !smtpUser || !smtpPass) {
-    console.log(`[payslip-email MOCK] From: ${opts.fromName} <${opts.fromEmail}> To: ${opts.to} Subject: ${opts.subject}${opts.attachment ? ` (attachment: ${opts.attachment.filename}, skipped in mock)` : ''}`);
-    return { sent: true, mocked: true, messageId: `mock-${Date.now()}` };
+    return { sent: false, mocked: false, error: 'SMTP belum dikonfigurasi lengkap pada Pengaturan Email HR' };
   }
   try {
     const nodemailer = await import('nodemailer');
@@ -132,7 +131,7 @@ export async function sendPayslipEmail(opts: {
       auth: { user: smtpUser, pass: smtpPass }
     });
     const info = await transporter.sendMail({
-      from: `${opts.fromName} <${opts.fromEmail}>`,
+      from: `${cfg.from_name} <${smtpUser}>`,
       to: opts.to,
       subject: opts.subject,
       html: opts.html,
