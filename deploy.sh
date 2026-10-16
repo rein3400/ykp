@@ -233,20 +233,32 @@ set_env "${UUID[ykp-ops-v1]}" "$(jq -n \
   | jq 'map(.is_runtime=true)')"
 
 # ---------------------------------------------------------------------------
-say "Deploy (first build)"
-for a in ykp-hr-v1 ykp-finance-v1 ykp-warehouse-v1 ykp-investor-v1 ykp-ops-v1 ykp-owner-v1 ykp-hub; do
-  api POST "/deploy?uuid=${UUID[$a]}&force=false" >/dev/null && echo "  queued $a"
-done
-
-say "Waiting for builds…"
-for a in $APPS; do
+# Sequential by default: 7 parallel Next.js builds OOM-kill small VPS (1 vCPU / 4 GB).
+# Set DEPLOY_SEQUENTIAL=0 to queue all builds at once (large boxes only).
+DEPLOY_SEQUENTIAL=${DEPLOY_SEQUENTIAL:-1}
+wait_build() { # app
+  local status
   for _ in $(seq 1 120); do
-    s="$(api GET "/deployments/applications/${UUID[$a]}" | jq -r '.deployments[0].status // empty')"
-    [[ "$s" =~ ^(finished|failed)$ ]] && break; sleep 15
+    status="$(api GET "/deployments/applications/${UUID[$1]}" | jq -r '.deployments[0].status // empty')"
+    [[ "$status" =~ ^(finished|failed)$ ]] && break; sleep 15
   done
-  echo "  $a -> ${s:-unknown}"
-  [[ "$s" == finished ]] || { printf 'Deployment did not finish successfully: %s\n' "$a" >&2; exit 1; }
-done
+  echo "  $1 -> ${status:-unknown}"
+  [[ "$status" == finished ]] || { printf 'Deployment did not finish successfully: %s\n' "$1" >&2; exit 1; }
+}
+
+say "Deploy (first build; $([[ $DEPLOY_SEQUENTIAL == 1 ]] && echo sequential || echo parallel))"
+if [[ $DEPLOY_SEQUENTIAL == 1 ]]; then
+  for a in ykp-hr-v1 ykp-finance-v1 ykp-warehouse-v1 ykp-investor-v1 ykp-ops-v1 ykp-owner-v1 ykp-hub; do
+    api POST "/deploy?uuid=${UUID[$a]}&force=false" >/dev/null && echo "  queued $a"
+    wait_build "$a"
+  done
+else
+  for a in ykp-hr-v1 ykp-finance-v1 ykp-warehouse-v1 ykp-investor-v1 ykp-ops-v1 ykp-owner-v1 ykp-hub; do
+    api POST "/deploy?uuid=${UUID[$a]}&force=false" >/dev/null && echo "  queued $a"
+  done
+  say "Waiting for builds…"
+  for a in $APPS; do wait_build "$a"; done
+fi
 
 # ---------------------------------------------------------------------------
 say "Scheduled tasks (cron)"
@@ -335,7 +347,10 @@ Manual follow-ups (once per target server):
      HR webhook likewise: /api/hr/attendance/telegram with TELEGRAM_WEBHOOK_SECRET.
   3. Email sender — set the SMTP account + App Password in HR > Pengaturan Email, then Send Test.
   4. Moka outlet map — add the 3 outlet rows to master_outlet if missing (MOKA_OUTLET_MAP seeds app_settings on first sync).
-  5. Ops AI — set a real OPENAI_API_KEY (empty = AI disabled).
+  5. VPS resources — with <=2 vCPU / <8 GB RAM: add swap + enable Coolify's docker cleanup
+       fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+     (keep DEPLOY_SEQUENTIAL=1 so builds never run in parallel on small boxes).
+  6. Ops AI — set a real OPENAI_API_KEY (empty = AI disabled).
   6. Rotate the default owner password in the shared Sheets user store.
   7. SOP templates — optional, per outlet: npm run sheets:clone-closing-templates,
      npm run sheets:import-opening-pdfs, npm run sheets:import-closing-pdfs, npm run sheets:import-suburbun-opening.
