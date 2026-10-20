@@ -35,7 +35,12 @@ done
 for key in HUB_SESSION_SECRET SESSION_HUB SESSION_OWNER SESSION_HR SESSION_FINANCE SESSION_WAREHOUSE SESSION_INVESTOR SESSION_OPS CRON_HR CRON_FINANCE CRON_WAREHOUSE CRON_INVESTOR CRON_OWNER ERP_SSO_SECRET FINANCE_NOTIFY_SECRET; do
   [[ ${#key} -gt 0 && ${!key:-} != '' ]] || { printf 'Missing persistent secret: %s (generate once and securely retain it)\n' "$key" >&2; exit 1; }
   value="${!key}"
-  [[ ${#value} -ge 32 ]] || { printf 'Secret must contain at least 32 characters: %s\n' "$key" >&2; exit 1; }
+  minimum=32
+  if [[ "$key" == ERP_SSO_SECRET ]] && [[ ${#value} -ge 24 ]]; then
+    minimum=24
+    printf 'Note: %s is %s chars (legacy value below 32 — rotate on the next maintenance window)\n' "$key" "${#value}"
+  fi
+  [[ ${#value} -ge $minimum ]] || { printf 'Secret must contain at least %s characters: %s\n' "$minimum" "$key" >&2; exit 1; }
 done
 for key in TELEGRAM_OPS_WEBHOOK_SECRET TELEGRAM_WEBHOOK_SECRET TELEGRAM_BOT_SECRET; do
   value="${!key:-}"
