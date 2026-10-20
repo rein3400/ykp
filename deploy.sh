@@ -261,6 +261,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+MIGRATION_MODE="${MIGRATION_MODE:-1}"
+[[ "$MIGRATION_MODE" == 0 || "$MIGRATION_MODE" == 1 ]] || { printf 'MIGRATION_MODE must be 0 or 1\n' >&2; exit 1; }
+if [[ "$MIGRATION_MODE" == 1 ]]; then
+  say "Migration staging: scheduled tasks not provisioned"
+  printf '%s\n' 'Old server remains scheduler owner. No webhook registration or data migration is performed.'
+else
 say "Scheduled tasks (cron)"
 # command kept short: Coolify stores it in a ~255-char column, so read the secret
 # from the container env instead of embedding it.
@@ -295,6 +301,8 @@ else
   api POST "/applications/${UUID[ykp-finance-v1]}/scheduled-tasks" "$(jq -n --arg c "$YCMD" \
     '{name:"moka-pos-sync-yesterday",frequency:"0 18 * * *",enabled:true,timeout:120,container:"ykp-finance-v1",command:$c}')" >/dev/null
   echo "  ykp-finance-v1/moka-pos-sync-yesterday (0 18 * * *)"
+fi
+
 fi
 
 # ---------------------------------------------------------------------------
