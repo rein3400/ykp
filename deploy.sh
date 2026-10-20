@@ -82,7 +82,7 @@ for a in $APPS; do
     echo "  reuse existing uuid=$u"
     UUID[$a]="$u"
     api PATCH "/applications/$u" "$(jq -n --arg n "$a" '{custom_network_aliases:$n,is_consistent_container_name_enabled:true,custom_internal_name:$n}')" >/dev/null
-    api PATCH "/applications/$u" "$(jq -n --arg d "https://$u.$IPDOTS.sslip.io" '{domains:$d}')" >/dev/null
+    api PATCH "/applications/$u" "$(jq -n --arg d "$(FULL_DOMAINS "$a")" '{domains:$d}')" >/dev/null
     continue
   fi
   u="$(api POST /applications/public "$(jq -n \
@@ -96,11 +96,24 @@ for a in $APPS; do
   # stable docker-network hostname (hub reaches modules container-to-container)
   api PATCH "/applications/$u" "$(jq -n --arg n "$a" '{custom_network_aliases:$n,is_consistent_container_name_enabled:true,custom_internal_name:$n}')" >/dev/null
   # https scheme -> Traefik emits an https router + Let's Encrypt cert (http:// gives http-only, no TLS)
-  api PATCH "/applications/$u" "$(jq -n --arg d "https://$u.$IPDOTS.sslip.io" '{domains:$d}')" >/dev/null
-  UUID[$a]="$u"; echo "  uuid=$u"
+  api PATCH "/applications/$u" "$(jq -n --arg d "$(FULL_DOMAINS "$a")" '{domains:$d}')" >/dev/null
+  UUID[$a]="$u"; echo "  uuid=$u domains=$(FULL_DOMAINS "$a")"
 done
 
-U() { echo "https://${UUID[$1]}.$IPDOTS.sslip.io"; }
+# Permanent domains: set DOMAIN_BASE (e.g. ykp.my.id) to attach per-app subdomains; sslip stays as fallback.
+DOMAIN_BASE="${DOMAIN_BASE:-}"
+declare -A SUB
+SUB[ykp-hub]=hub; SUB[ykp-owner-v1]=owner; SUB[ykp-hr-v1]=hr
+SUB[ykp-finance-v1]=finance; SUB[ykp-warehouse-v1]=warehouse
+SUB[ykp-investor-v1]=investor; SUB[ykp-ops-v1]=ops
+U() {
+  if [[ -n "$DOMAIN_BASE" ]]; then echo "https://${SUB[$1]}.$DOMAIN_BASE"; else echo "https://${UUID[$1]}.$IPDOTS.sslip.io"; fi
+}
+FULL_DOMAINS() { # app — attach uuid-sslip AND permanent domain, avoiding duplicates
+  local sslip="https://${UUID[$1]}.$IPDOTS.sslip.io" perm=""
+  [[ -n "$DOMAIN_BASE" ]] && perm="https://${SUB[$1]}.$DOMAIN_BASE"
+  [[ -n "$perm" ]] && echo "$sslip,$perm" || echo "$sslip"
+}
 I() { echo "http://$1:${PORT[$1]}"; }
 URL_HUB="$(U ykp-hub)"; URL_OWNER="$(U ykp-owner-v1)"; URL_HR="$(U ykp-hr-v1)"
 URL_FINANCE="$(U ykp-finance-v1)"; URL_WAREHOUSE="$(U ykp-warehouse-v1)"
@@ -328,7 +341,7 @@ echo "  (tab bootstrap is idempotent; run once per module inside its container i
 # ---------------------------------------------------------------------------
 say "Verify"
 for a in $APPS; do
-  host="${UUID[$a]}.$IPDOTS.sslip.io"
+  host="$(U "$a" | sed "s#https://##")"
   path="/login"; [[ "$a" == "ykp-hub" ]] && path="/"
   code="$(curl -sS -m 25 -o /dev/null -w '%{http_code}' --resolve "$host:443:$VPS_IP" "https://$host$path" 2>/dev/null || echo 000)"
   if [[ ! "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
