@@ -26,7 +26,8 @@ GIT_REPO="${GIT_REPO:-https://github.com/rein3400/ykp.git}"; GIT_BRANCH="${GIT_B
 COOLIFY_URL="${COOLIFY_URL%/}"; API="$COOLIFY_URL/api/v1"
 AUTH=(-H "Authorization: Bearer $COOLIFY_TOKEN" -H "Content-Type: application/json" -H "Accept: application/json")
 IPDOTS="$(printf '%s' "$VPS_IP" | tr '-' '.')"
-gen() { openssl rand -hex 32; }
+MIGRATION_MODE="${MIGRATION_MODE:-1}"
+[[ "$MIGRATION_MODE" == 0 || "$MIGRATION_MODE" == 1 ]] || { printf 'MIGRATION_MODE must be 0 or 1\n' >&2; exit 1; }
 
 for dependency in curl jq openssl; do
   command -v "$dependency" >/dev/null || { printf 'Missing dependency: %s\n' "$dependency" >&2; exit 1; }
@@ -37,7 +38,8 @@ for key in HUB_SESSION_SECRET SESSION_HUB SESSION_OWNER SESSION_HR SESSION_FINAN
   [[ ${#value} -ge 32 ]] || { printf 'Secret must contain at least 32 characters: %s\n' "$key" >&2; exit 1; }
 done
 for key in TELEGRAM_OPS_WEBHOOK_SECRET TELEGRAM_WEBHOOK_SECRET TELEGRAM_BOT_SECRET; do
-  [[ -z "${!key:-}" || ${#!key} -ge 32 ]] || { printf 'When set, %s must be >= 32 characters\n' "$key" >&2; exit 1; }
+  value="${!key:-}"
+  [[ -z "$value" || ${#value} -ge 32 ]] || { printf 'When set, %s must be >= 32 characters\n' "$key" >&2; exit 1; }
 done
 for key in GOOGLE_SERVICE_ACCOUNT_EMAIL GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY YKP_HR_SPREADSHEET_ID YKP_FINANCE_SPREADSHEET_ID YKP_WAREHOUSE_SPREADSHEET_ID YKP_INVESTOR_SPREADSHEET_ID YKP_OPS_SPREADSHEET_ID; do
   [[ ${!key:-} != '' && ${!key} != placeholder* ]] || { printf 'Missing live Sheets configuration: %s\n' "$key" >&2; exit 1; }
@@ -135,10 +137,10 @@ set_env "${UUID[ykp-hub]}" "$(jq -n \
 say "Env: ykp-owner-v1"
 set_env "${UUID[ykp-owner-v1]}" "$(jq -n \
   --arg h "$URL_HR" --arg f "$URL_FINANCE" --arg w "$URL_WAREHOUSE" --arg o "$URL_OPS" --arg i "$URL_INVESTOR" \
-  --arg s "$SESSION_OWNER" --arg t "$TELEGRAM_BOT_SECRET" \
+  --arg s "$SESSION_OWNER" --arg t "$TELEGRAM_BOT_SECRET" --arg c "$CRON_OWNER" \
   '[{key:"YKP_HR_URL",value:$h},{key:"YKP_FINANCE_URL",value:$f},{key:"YKP_WAREHOUSE_URL",value:$w},
     {key:"YKP_OPS_URL",value:$o},{key:"YKP_INVESTOR_URL",value:$i},{key:"SESSION_SECRET",value:$s},
-    {key:"TELEGRAM_BOT_SECRET",value:$t},{key:"YKP_OWNER_MOCK",value:"false"},{key:"PORT",value:"3010"}]' \
+    {key:"TELEGRAM_BOT_SECRET",value:$t},{key:"CRON_SECRET",value:$c},{key:"YKP_OWNER_MOCK",value:"false"},{key:"PORT",value:"3010"}]' \
   | jq 'map(.is_runtime=true)')"
 
 say "Env: ykp-hr-v1"
@@ -261,8 +263,6 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-MIGRATION_MODE="${MIGRATION_MODE:-1}"
-[[ "$MIGRATION_MODE" == 0 || "$MIGRATION_MODE" == 1 ]] || { printf 'MIGRATION_MODE must be 0 or 1\n' >&2; exit 1; }
 if [[ "$MIGRATION_MODE" == 1 ]]; then
   say "Migration staging: scheduled tasks not provisioned"
   printf '%s\n' 'Old server remains scheduler owner. No webhook registration or data migration is performed.'
