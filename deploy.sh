@@ -243,6 +243,9 @@ set_env "${UUID[ykp-ops-v1]}" "$(jq -n \
 # Sequential by default: 7 parallel Next.js builds OOM-kill small VPS (1 vCPU / 4 GB).
 # Set DEPLOY_SEQUENTIAL=0 to queue all builds at once (large boxes only).
 DEPLOY_SEQUENTIAL=${DEPLOY_SEQUENTIAL:-1}
+deploy_app() { # app — Coolify 4.4 moved POST /deploy to /applications/{uuid}/start
+  api POST "/applications/${UUID[$1]}/start" >/dev/null 2>&1 || api POST "/deploy?uuid=${UUID[$1]}&force=false" >/dev/null
+}
 wait_build() { # app
   local status
   for _ in $(seq 1 120); do
@@ -256,12 +259,12 @@ wait_build() { # app
 say "Deploy (first build; $([[ $DEPLOY_SEQUENTIAL == 1 ]] && echo sequential || echo parallel))"
 if [[ $DEPLOY_SEQUENTIAL == 1 ]]; then
   for a in ykp-hr-v1 ykp-finance-v1 ykp-warehouse-v1 ykp-investor-v1 ykp-ops-v1 ykp-owner-v1 ykp-hub; do
-    api POST "/deploy?uuid=${UUID[$a]}&force=false" >/dev/null && echo "  queued $a"
+    deploy_app "$a" && echo "  queued $a"
     wait_build "$a"
   done
 else
   for a in ykp-hr-v1 ykp-finance-v1 ykp-warehouse-v1 ykp-investor-v1 ykp-ops-v1 ykp-owner-v1 ykp-hub; do
-    api POST "/deploy?uuid=${UUID[$a]}&force=false" >/dev/null && echo "  queued $a"
+    deploy_app "$a" && echo "  queued $a"
   done
   say "Waiting for builds…"
   for a in $APPS; do wait_build "$a"; done
