@@ -321,8 +321,8 @@ probe() { # app port path
 }
 hr_probe="$(probe ykp-hr-v1 hr/summary/count)"
 printf '  hr        status=%s failed=%s\n' "$(echo "$hr_probe" | jq -r '.status // "unknown"')" "$(echo "$hr_probe" | jq -c '.failed // []')"
-printf '  finance   records=%s\n' "$(probe ykp-finance-v1 fin/summary | jq -r '.data.count // .data.total_items // "n/a"' 2>/dev/null || echo n/a)"
-printf '  warehouse records=%s\n' "$(probe ykp-warehouse-v1 warehouse/summary/count | jq -r '.data.count // "n/a"' 2>/dev/null || echo n/a)"
+printf '  finance   count=%s\n' "$(probe ykp-finance-v1 finance/summary/count | jq -r '.data.count // "n/a"' 2>/dev/null || echo n/a)"
+printf '  warehouse count=%s\n' "$(probe ykp-warehouse-v1 warehouse/summary/count | jq -r '.data.count // "n/a"' 2>/dev/null || echo n/a)"
 echo "  (tab bootstrap is idempotent; run once per module inside its container if a tab is reported missing)"
 
 # ---------------------------------------------------------------------------
@@ -331,6 +331,10 @@ for a in $APPS; do
   host="${UUID[$a]}.$IPDOTS.sslip.io"
   path="/login"; [[ "$a" == "ykp-hub" ]] && path="/"
   code="$(curl -sS -m 25 -o /dev/null -w '%{http_code}' --resolve "$host:443:$VPS_IP" "https://$host$path" 2>/dev/null || echo 000)"
+  if [[ ! "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
+    # Hairpin-NAT frequently blocks self-connect via public IP; retry loopback.
+    code="$(curl -sk -m 25 -o /dev/null -w '%{http_code}' --resolve "$host:443:127.0.0.1" "https://$host$path" 2>/dev/null || echo 000)"
+  fi
   printf '  %-18s https=%s\n' "$a" "$code"
   [[ "$code" =~ ^(200|301|302|303|307|308)$ ]] || { printf 'HTTPS verification failed: %s\n' "$a" >&2; exit 1; }
 done
