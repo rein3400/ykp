@@ -30,6 +30,13 @@ async function main() {
       });
       console.log(`+ sheet ${tab}`);
     }
+    if (existingTitles.has(tab)) {
+      const current = await sheets.spreadsheets.values.get({ spreadsheetId, range: `'${tab}'!1:1` });
+      if (current.data.values?.[0]?.some((cell) => String(cell).trim() !== '')) {
+        console.log(`  preserving existing headers: ${tab}`);
+        continue;
+      }
+    }
     const endCol = columnLetter(headers.length);
     await sheets.spreadsheets.values.update({
       spreadsheetId,

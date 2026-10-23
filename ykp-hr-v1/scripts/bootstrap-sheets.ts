@@ -75,7 +75,13 @@ async function ensureTab(sheets: ReturnType<typeof getSheetsClient>, sid: string
       }
     });
   }
-  // Always rewrite header row (idempotent if identical)
+  if (exists) {
+    const current = await sheets.spreadsheets.values.get({ spreadsheetId: sid, range: `'${tab}'!1:1` });
+    if (current.data.values?.[0]?.some((cell) => String(cell).trim() !== '')) {
+      console.log(`[bootstrap] preserving existing headers: ${tab}`);
+      return;
+    }
+  }
   const headers = TAB_HEADERS[tab];
   const lastCol = columnLetter(headers.length);
   await sheets.spreadsheets.values.update({

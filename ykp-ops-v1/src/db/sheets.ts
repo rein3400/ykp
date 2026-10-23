@@ -223,13 +223,11 @@ export async function readTab<T extends Record<string, string> = Record<string, 
   // a human-added column anywhere must not silently shift every value
   // into the wrong field (it once killed every ops login).
   const sheets = getSheetsClient();
-  const headers = TAB_HEADERS[tab];
-  const end = columnLetter(headers.length);
   const hit = readCache.get(tab);
   if (hit && Date.now() - hit.at < READ_CACHE_TTL_MS) return hit.value as T[];
   const res = await valuesGetWithRetry(sheets, {
     spreadsheetId: getSpreadsheetId(),
-    range: `${quoteTab(tab)}!A1:${end}1000`,
+    range: `${quoteTab(tab)}!A:ZZ`,
   });
   const rows = res.data.values ?? [];
   if (rows.length < 2) { readCache.set(tab, { at: Date.now(), value: [] }); return []; }
