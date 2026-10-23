@@ -23,7 +23,7 @@ const NAV_GROUPS = [
     title: 'Transaksi',
     items: [
       { href: '/warehouse/penerimaan', label: 'Receiving' },
-      { href: '/warehouse/pemakaian', label: 'Stock Issue' },
+      { href: '/warehouse/stock-issue', label: 'Stock Issue' },
       { href: '/warehouse/transfer', label: 'Transfer' },
       { href: '/warehouse/waste', label: 'Waste' },
       { href: '/warehouse/opname', label: 'Stock Opname' },
