@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { opsMenuText, validateIncidentCommand, opsDeepLink, routeOpsUpdate } from './ops-telegram';
 
 describe('routeOpsUpdate', () => {
+  it('consumes the dashboard start payload as a link command', () => {
+    expect(routeOpsUpdate('/start ABC234')).toEqual({ kind: 'link', code: 'ABC234' });
+  });
   it('routes menu/help/start and empty text to the menu', () => {
     for (const t of ['/start', '/menu', '/help', '', '  ']) expect(routeOpsUpdate(t).kind).toBe('menu');
   });

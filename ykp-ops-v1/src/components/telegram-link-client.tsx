@@ -9,14 +9,11 @@ import { useState } from 'react';
  *   2. Tap "Buka Telegram" → deep-link t.me/<bot>?start=<KODE> opens Telegram
  *      and the bot auto-connects (no typing).
  */
-export function TelegramLinkClient({ linkPath }: { linkPath: string }) {
+export function TelegramLinkClient({ linkPath, botUsername }: { linkPath: string; botUsername: string }) {
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Bot username from env (set NEXT_PUBLIC_TELEGRAM_BOT_USERNAME). Fallback
-  // to a placeholder so the page still renders in dev.
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'justatestermaybot';
   const deepLink = code ? `https://t.me/${botUsername}?start=${code}` : null;
 
   async function getCode() {
