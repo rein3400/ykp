@@ -181,10 +181,10 @@ export function createLinkCode(userId: string): string {
 export async function consumeLinkCode(code: string, telegramChatId: string): Promise<string | null> {
   const entry = pendingCodes.get((code || '').trim().toUpperCase());
   if (!entry || entry.expiresAt < Date.now()) return null;
+  const user = await findRow(TABS.users, 'user_id', entry.userId);
+  if (!user || !['active', '1'].includes((user.row.active_status ?? '').trim().toLowerCase())) return null;
+  await updateRow(TABS.users, user.rowIndex, { ...user.row, telegram_id: telegramChatId });
   pendingCodes.delete(code.trim().toUpperCase());
-  const user = await findRow(TABS.users, 'user_id', entry.userId).catch(() => null);
-  if (!user) return null;
-  await updateRow(TABS.users, user.rowIndex, { ...user.row, telegram_id: telegramChatId }).catch(() => null);
   return entry.userId;
 }
 
