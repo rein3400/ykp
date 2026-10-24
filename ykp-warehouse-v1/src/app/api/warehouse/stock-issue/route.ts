@@ -11,7 +11,7 @@ import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
-import { appendMovement } from '@/lib/stock-ledger';
+import { appendMovement, bookStock } from '@/lib/stock-ledger';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 
 export const GET = handler(async (req: NextRequest) => {
@@ -50,8 +50,31 @@ export const POST = handler(async (req: NextRequest) => {
     }>;
   };
 
-  if (!body.items || body.items.length === 0) return badRequest('At least one item is required');
+  if (!Array.isArray(body.items) || body.items.length === 0) return badRequest('At least one item is required');
   if (!body.source_location_id) return badRequest('source_location_id is required');
+  if (body.destination_location_id && body.destination_location_id === body.source_location_id) return badRequest('Lokasi asal dan tujuan tidak boleh sama');
+  for (const [index, item] of body.items.entries()) {
+    const requested = Number(item.requested_qty);
+    const issued = item.issued_qty === undefined || item.issued_qty === null ? requested : Number(item.issued_qty);
+    if (!item || typeof item.item_id !== 'string' || !item.item_id.trim()) return badRequest(`Baris ${index + 1}: item wajib diisi`);
+    if (!Number.isFinite(requested) || requested < 0) return badRequest(`Baris ${index + 1}: qty diminta tidak valid`);
+    if (!Number.isFinite(issued) || issued < 0) return badRequest(`Baris ${index + 1}: qty keluar tidak valid`);
+    if (issued > requested) return badRequest(`Baris ${index + 1}: qty keluar melebihi qty diminta`);
+    if (!item.unit || typeof item.unit !== 'string') return badRequest(`Baris ${index + 1}: satuan wajib diisi`);
+  }
+  // Validate availability for every OUT leg BEFORE writing anything.
+  const outByKey = new Map<string, number>();
+  for (const item of body.items) {
+    const issued = Number(item.issued_qty ?? item.requested_qty ?? 0);
+    if (!(issued > 0)) continue;
+    const key = `${item.item_id}|${body.source_location_id}`;
+    outByKey.set(key, (outByKey.get(key) ?? 0) + issued);
+  }
+  for (const [key, total] of outByKey) {
+    const [itemId, locationId] = key.split('|');
+    const available = await bookStock(itemId, locationId);
+    if (total > available) return badRequest(`Stok tidak cukup: ${itemId} di ${locationId} tersedia ${available}, diminta ${total}`);
+  }
 
   try {
     for (const it of body.items) await assertItem(it.item_id);
@@ -104,12 +127,14 @@ export const POST = handler(async (req: NextRequest) => {
   }
   await appendRows(TABS.stockIssueItem, detailRows);
 
-  // Auto-post ledger: ISSUE from source, TRANSFER_IN to destination if applicable
-  for (const it of body.items) {
-    const issuedQty = it.issued_qty || it.requested_qty || 0;
-    if (issuedQty <= 0) continue;
+  // Auto-post ledger. Each line/leg gets its own reference id: one business
+  // issue produces many movements, so reusing issueId would be rejected as a
+  // duplicate (and previously the failure was swallowed, leaving stock wrong).
+  const postedMovements: string[] = [];
+  for (const [lineIndex, it] of body.items.entries()) {
+    const issuedQty = Number(it.issued_qty ?? it.requested_qty ?? 0);
+    if (!(issuedQty > 0)) continue;
 
-    // ISSUE from source
     await appendMovement({
       movementType: 'ISSUE',
       direction: 'OUT',
@@ -121,10 +146,11 @@ export const POST = handler(async (req: NextRequest) => {
       outletId: body.outlet_id ?? '',
       locationId: body.source_location_id,
       referenceType: 'stock_issue',
-      referenceId: issueId,
+      referenceId: `${issueId}:${lineIndex + 1}:out`,
       createdBy: s.userId,
       notes: `Issue ${issueId}: ${it.purpose || ''}`
-    }).catch((e) => console.error('[stock_issue] ledger post failed:', e));
+    });
+    postedMovements.push(`${issueId}:${lineIndex + 1}:out`);
 
     // If destination is a stock location, also post TRANSFER_IN
     if (body.destination_location_id) {
@@ -139,10 +165,11 @@ export const POST = handler(async (req: NextRequest) => {
         outletId: body.outlet_id ?? '',
         locationId: body.destination_location_id,
         referenceType: 'stock_issue',
-        referenceId: issueId,
+        referenceId: `${issueId}:${lineIndex + 1}:in`,
         createdBy: s.userId,
         notes: `Issue ${issueId} destination: ${it.purpose || ''}`
-      }).catch((e) => console.error('[stock_issue] dest ledger post failed:', e));
+      });
+      postedMovements.push(`${issueId}:${lineIndex + 1}:in`);
     }
   }
 

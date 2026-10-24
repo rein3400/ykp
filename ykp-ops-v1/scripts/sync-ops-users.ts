@@ -61,23 +61,24 @@ async function main(): Promise<void> {
   const backupPath = `/tmp/ops-user-backup/ops-users-${Date.now()}.json`;
   writeFileSync(backupPath, JSON.stringify({ users: target }, null, 2), { mode: 0o600 });
 
+  const newRows = actionable.filter((item) => item.action === 'CREATE').map((item) => ({
+    user_id: item.user.user_id,
+    username: item.user.username,
+    password_hash: item.user.password_hash || '',
+    role: item.role ?? 'staff',
+    brand_id: item.user.brand_id || '',
+    outlet_id: item.user.outlet_id || '',
+    active_status: 'active',
+    created_at: now,
+    last_login_at: '',
+    telegram_id: ''
+  }));
+  if (newRows.length) {
+    await appendRows(TABS.users, newRows);
+    for (const row of newRows) await audit('create', row.user_id, Object.keys(row));
+  }
   for (const item of actionable) {
-    if (item.action === 'CREATE') {
-      const row: Record<string, string> = {
-        user_id: item.user.user_id,
-        username: item.user.username,
-        password_hash: item.user.password_hash || '',
-        role: item.role ?? 'staff',
-        brand_id: item.user.brand_id || '',
-        outlet_id: item.user.outlet_id || '',
-        active_status: 'active',
-        created_at: now,
-        last_login_at: '',
-        telegram_id: ''
-      };
-      await appendRows(TABS.users, [row]);
-      await audit('create', row.user_id, Object.keys(row));
-    }
+    if (item.action === 'CREATE') continue;
     if (item.action === 'UPDATE_EMPTY_FIELDS' && item.updates) {
       const found = await findRow(TABS.users, 'user_id', item.user.user_id);
       if (!found) throw new Error(`Target disappeared: ${item.user.user_id}`);
