@@ -45,8 +45,11 @@ export const POST = handler(async (req) => {
 
   const reported = parseGeoPoint(body.latitude, body.longitude);
   if (!reported) return badRequest('Kirim lokasi GPS Telegram sebelum absen pulang.');
-  const employee = await findRow(TABS.employees, 'employee_id', employeeId);
-  const outletId = employee?.row.outlet_id ?? found.row.outlet_id ?? '';
+  let outletId = found.row.outlet_id?.trim() ?? '';
+  if (!outletId) {
+    const employee = await findRow(TABS.employees, 'employee_id', employeeId);
+    outletId = employee?.row.outlet_id?.trim() ?? '';
+  }
   const outlet = outletId ? await findRow(TABS.outlets, 'outlet_id', outletId) : null;
   const verdict = classifyLocation(reported, outlet?.row ? {
     latitude: Number(outlet.row.latitude),
