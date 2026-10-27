@@ -4,13 +4,14 @@
  * On approved: auto posts ISSUE movement to stock ledger.
  */
 import { NextRequest } from 'next/server';
-import { readTab, appendRows, findRow, TABS } from '@/db/sheets';
+import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, notFound, handler } from '@/lib/http';
+import { ok, list, unauthorized, badRequest, notFound, forbidden, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
-import { can, type Role } from '@/lib/rbac';
+import { can, scopeFilter, type Role } from '@/lib/rbac';
+import { normalizeUnit } from '@/lib/unit-conversion';
 import { appendMovement, bookStock } from '@/lib/stock-ledger';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 
@@ -19,18 +20,22 @@ export const GET = handler(async (req: NextRequest) => {
   if (!s) return unauthorized();
   if (!can(s.role as Role, 'view', 'stock_issue')) return unauthorized('Forbidden');
 
+  const scope = scopeFilter(s.role as Role, s.brandId, s.outletId);
+  if (['outlet_manager', 'supervisor', 'kitchen_lead', 'staff'].includes(s.role) && !scope.outletId) return forbidden();
+  if (s.role === 'brand_manager' && !scope.brandId) return forbidden();
+  const visible = (row: Record<string, string>) => (!scope.brandId || row.brand_id === scope.brandId) && (!scope.outletId || row.outlet_id === scope.outletId);
   const url = new URL(req.url);
   const id = url.searchParams.get('id');
   if (id) {
     const header = await findRow(TABS.stockIssue, 'issue_id', id);
-    if (!header) return notFound('Stock issue not found');
+    if (!header || !visible(header.row)) return notFound('Stock issue not found');
     const items = await readTab<Record<string, string>>(TABS.stockIssueItem);
     const detail = items.filter((r) => r.issue_id === id);
     return ok({ header: header.row, items: detail });
   }
 
   const headers = await readTab<Record<string, string>>(TABS.stockIssue);
-  return list(headers);
+  return list(headers.filter(visible));
 });
 
 export const POST = handler(async (req: NextRequest) => {
@@ -50,17 +55,39 @@ export const POST = handler(async (req: NextRequest) => {
     }>;
   };
 
+  if (!body || typeof body !== 'object') return badRequest('Payload tidak valid');
   if (!Array.isArray(body.items) || body.items.length === 0) return badRequest('At least one item is required');
   if (!body.source_location_id) return badRequest('source_location_id is required');
   if (body.destination_location_id && body.destination_location_id === body.source_location_id) return badRequest('Lokasi asal dan tujuan tidak boleh sama');
   for (const [index, item] of body.items.entries()) {
+    if (!item || typeof item.item_id !== 'string' || !item.item_id.trim()) return badRequest(`Baris ${index + 1}: item wajib diisi`);
     const requested = Number(item.requested_qty);
     const issued = item.issued_qty === undefined || item.issued_qty === null ? requested : Number(item.issued_qty);
-    if (!item || typeof item.item_id !== 'string' || !item.item_id.trim()) return badRequest(`Baris ${index + 1}: item wajib diisi`);
     if (!Number.isFinite(requested) || requested < 0) return badRequest(`Baris ${index + 1}: qty diminta tidak valid`);
     if (!Number.isFinite(issued) || issued < 0) return badRequest(`Baris ${index + 1}: qty keluar tidak valid`);
     if (issued > requested) return badRequest(`Baris ${index + 1}: qty keluar melebihi qty diminta`);
     if (!item.unit || typeof item.unit !== 'string') return badRequest(`Baris ${index + 1}: satuan wajib diisi`);
+  }
+  const scope = scopeFilter(s.role as Role, s.brandId, s.outletId);
+  if (['outlet_manager', 'supervisor', 'kitchen_lead', 'staff'].includes(s.role) && !scope.outletId) return forbidden('Outlet akun belum ditentukan');
+  if (s.role === 'brand_manager' && !scope.brandId) return forbidden('Brand akun belum ditentukan');
+  const source = await findRow(TABS.locations, 'location_id', body.source_location_id);
+  if (!source || !['active', '1'].includes((source.row.active_status ?? '').toLowerCase())) return badRequest('Lokasi asal tidak aktif');
+  if ((scope.brandId && source.row.brand_id !== scope.brandId) || (scope.outletId && source.row.outlet_id !== scope.outletId)) return forbidden('Lokasi asal di luar cakupan akun');
+  if ((body.brand_id && body.brand_id !== source.row.brand_id) || (body.outlet_id && body.outlet_id !== source.row.outlet_id)) return badRequest('Brand/outlet tidak sesuai lokasi asal');
+  body.brand_id = source.row.brand_id;
+  body.outlet_id = source.row.outlet_id;
+  if (body.destination_location_id) {
+    const destination = await findRow(TABS.locations, 'location_id', body.destination_location_id);
+    if (!destination || !['active', '1'].includes((destination.row.active_status ?? '').toLowerCase())) return badRequest('Lokasi tujuan tidak aktif');
+    if (destination.row.brand_id !== source.row.brand_id || (scope.outletId && destination.row.outlet_id !== scope.outletId)) return forbidden('Lokasi tujuan di luar cakupan');
+  }
+  for (const line of body.items) {
+    const item = await findRow(TABS.items, 'item_id', line.item_id);
+    if (!item || !['active', '1'].includes((item.row.active_status ?? '').toLowerCase())) return badRequest('Item tidak aktif');
+    if (item.row.brand_id && item.row.brand_id !== source.row.brand_id) return badRequest('Brand item tidak sesuai lokasi');
+    if (!item.row.base_unit || normalizeUnit(line.unit) !== normalizeUnit(item.row.base_unit)) return badRequest('Stock Issue wajib memakai satuan dasar item');
+    line.unit = item.row.base_unit;
   }
   // Validate availability for every OUT leg BEFORE writing anything.
   const outByKey = new Map<string, number>();
@@ -100,12 +127,12 @@ export const POST = handler(async (req: NextRequest) => {
     destination_location_id: body.destination_location_id ?? '',
     issue_type: body.issue_type ?? 'SHIFT_ISSUE',
     requested_by: body.requested_by ?? s.userId,
-    issued_by: body.issued_by ?? s.userId,
+    issued_by: s.userId,
     received_by: body.received_by ?? '',
-    approval_status: 'APPROVED',
+    approval_status: 'POSTING',
     notes: body.notes ?? '',
     created_at: now,
-    approved_at: now
+    approved_at: ''
   };
   await appendRows(TABS.stockIssue, [header]);
 
@@ -117,7 +144,7 @@ export const POST = handler(async (req: NextRequest) => {
       issue_id: issueId,
       item_id: it.item_id,
       requested_qty: String(it.requested_qty || 0),
-      issued_qty: String(it.issued_qty || it.requested_qty || 0),
+      issued_qty: String(it.issued_qty ?? it.requested_qty ?? 0),
       unit: it.unit,
       batch_reference: it.batch_reference ?? '',
       purpose: it.purpose ?? '',
@@ -125,6 +152,7 @@ export const POST = handler(async (req: NextRequest) => {
     };
     detailRows.push(detail);
   }
+  try {
   await appendRows(TABS.stockIssueItem, detailRows);
 
   // Auto-post ledger. Each line/leg gets its own reference id: one business
@@ -171,6 +199,17 @@ export const POST = handler(async (req: NextRequest) => {
       });
       postedMovements.push(`${issueId}:${lineIndex + 1}:in`);
     }
+  }
+
+  const stored = await findRow(TABS.stockIssue, 'issue_id', issueId);
+  if (!stored) throw new Error('Stock issue header unavailable after posting');
+  header.approval_status = 'APPROVED';
+  header.approved_at = nowTimestampWib();
+  await updateRow(TABS.stockIssue, stored.rowNumber, header);
+  } catch (error) {
+    const stored = await findRow(TABS.stockIssue, 'issue_id', issueId);
+    if (stored) await updateRow(TABS.stockIssue, stored.rowNumber, { ...stored.row, approval_status: 'POSTING_FAILED', approved_at: '' });
+    throw error;
   }
 
   const evidenceFiles = parseEvidenceUrls(body.evidence_urls);
