@@ -15,7 +15,8 @@ const NAV = [
   { href: '/owner/investor', label: 'Investor' },
   { href: '/owner/activity', label: 'Aktivitas' },
   { href: '/owner/brief', label: 'Daily Brief' },
-  { href: '/owner/health', label: 'Health' }
+  { href: '/owner/health', label: 'Health' },
+  { href: '/owner/panduan', label: 'Panduan Pengguna' }
 ];
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {

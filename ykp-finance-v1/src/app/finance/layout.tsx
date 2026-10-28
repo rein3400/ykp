@@ -37,7 +37,8 @@ const NAV_GROUPS = [
       { href: '/finance/actions', label: 'Action Tracker' },
       { href: '/finance/audit', label: 'Audit Trail' },
       { href: '/finance/settings', label: 'Pengaturan' },
-      { href: '/finance/telegram', label: 'Telegram' }
+      { href: '/finance/telegram', label: 'Telegram' },
+      { href: '/finance/panduan', label: 'Panduan Pengguna' }
     ]
   }
 ];

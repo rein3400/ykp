@@ -43,7 +43,7 @@ const ROLE_LABELS: Record<string, string> = {
 export function Sidebar({ role, userName }: { role: string; userName?: string }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const visible = ITEMS.filter((i) => i.roles.includes(role));
+  const visible = [...ITEMS.filter((i) => i.roles.includes(role)), { label: 'Panduan Pengguna', href: '/hr/panduan', icon: 'M12 6v12m-8-9h5a3 3 0 013 3 3 3 0 013-3h5v12h-5a3 3 0 00-3 3 3 3 0 00-3-3H4V9z', roles: [role] }];
 
   // Close mobile drawer on route change
   React.useEffect(() => {

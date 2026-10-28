@@ -28,7 +28,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export function Sidebar({ role, userName }: { role: string; userName?: string }) {
-  const visible = ITEMS.filter((i) => i.roles.includes(role));
+  const visible = [...ITEMS.filter((i) => i.roles.includes(role)), { label: 'Panduan Pengguna', href: '/ops/panduan', roles: [role] }];
   return (
     <div className='flex h-full flex-col p-4'>
       <div className='mb-6 font-bold'>YKP Ops V1</div>

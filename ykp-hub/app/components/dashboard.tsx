@@ -9,6 +9,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { StatusBanner } from "./status-banner";
 import { StatusList } from "./status-list";
 import { ModuleCard } from "./module-card";
+import { HubGuide } from "./hub-guide";
 
 interface Props {
   apps: AppDef[];
@@ -32,11 +33,21 @@ const ROLE_LABELS: Record<string, string> = {
   OUTLET_MANAGER: "Outlet Manager",
   SUPERVISOR: "Supervisor",
   EMPLOYEE: "Karyawan",
-  VIEWER: "Viewer"
+  VIEWER: "Viewer",
 };
 
 export function Dashboard(props: Props) {
-  const { session, health, history, loading, onPreview, onOpen, onOpenPalette, onRefresh, onLogout } = props;
+  const {
+    session,
+    health,
+    history,
+    loading,
+    onPreview,
+    onOpen,
+    onOpenPalette,
+    onRefresh,
+    onLogout,
+  } = props;
 
   // greeting
   const greeting = useMemo(() => {
@@ -66,8 +77,12 @@ export function Dashboard(props: Props) {
               <HubLogo className="h-5 w-5" />
             </span>
             <div className="min-w-0 hidden sm:block">
-              <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100">YKP ERP</h1>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 -mt-0.5">Unified Dashboard</p>
+              <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                YKP ERP
+              </h1>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 -mt-0.5">
+                Unified Dashboard
+              </p>
             </div>
           </div>
 
@@ -78,16 +93,28 @@ export function Dashboard(props: Props) {
           >
             <SearchIcon className="h-3.5 w-3.5" />
             Cari module…
-            <kbd className="ml-2 rounded border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
+            <kbd className="ml-2 rounded border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 font-mono text-[10px]">
+              ⌘K
+            </kbd>
           </button>
 
           <div className="flex items-center gap-2">
+            <a
+              href="#panduan-pengguna"
+              className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 focus-ring dark:border-slate-700 dark:text-slate-200"
+            >
+              Panduan Pengguna
+            </a>
             <ThemeToggle compact />
             <div className="hidden sm:flex items-center gap-2 pl-2 ml-1 border-l border-slate-200 dark:border-slate-700">
               <Avatar name={session.username} size="sm" />
               <div className="text-right">
-                <div className="text-xs font-semibold text-slate-800 dark:text-slate-100">{session.username}</div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 -mt-0.5">{ROLE_LABELS[session.role] ?? session.role}</div>
+                <div className="text-xs font-semibold text-slate-800 dark:text-slate-100">
+                  {session.username}
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 -mt-0.5">
+                  {ROLE_LABELS[session.role] ?? session.role}
+                </div>
               </div>
             </div>
             <button
@@ -110,7 +137,11 @@ export function Dashboard(props: Props) {
               {greeting}, {session.username} 👋
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Pilih module di bawah atau tekan <kbd className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd> untuk cari.
+              Pilih module di bawah atau tekan{" "}
+              <kbd className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[10px]">
+                ⌘K
+              </kbd>{" "}
+              untuk cari.
             </p>
           </div>
         </div>
@@ -119,7 +150,9 @@ export function Dashboard(props: Props) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {props.apps.map((app) => {
-            const r = health?.results.find((x: HealthResult) => x.id === app.id);
+            const r = health?.results.find(
+              (x: HealthResult) => x.id === app.id,
+            );
             return (
               <ModuleCard
                 key={app.id}
@@ -133,6 +166,8 @@ export function Dashboard(props: Props) {
             );
           })}
         </div>
+
+        <HubGuide />
 
         <StatusList
           apps={props.apps}
@@ -155,11 +190,18 @@ function Footer({ apps, role }: { apps: AppDef[]; role: string }) {
     <footer className="mt-4 pt-6 border-t border-slate-200/60 dark:border-slate-800/60">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
         <div>
-          <div className="font-semibold text-slate-700 dark:text-slate-200">YKP ERP</div>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Unified dashboard for the local YKP family: Owner, HR, Finance, Warehouse, Investor, Ops.</p>
+          <div className="font-semibold text-slate-700 dark:text-slate-200">
+            YKP ERP
+          </div>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            Unified dashboard for the local YKP family: Owner, HR, Finance,
+            Warehouse, Investor, Ops.
+          </p>
         </div>
         <div>
-          <div className="font-semibold text-slate-700 dark:text-slate-200">Modules</div>
+          <div className="font-semibold text-slate-700 dark:text-slate-200">
+            Modules
+          </div>
           <ul className="mt-1 space-y-0.5 text-slate-500 dark:text-slate-400">
             {apps.map((app) => (
               <li key={app.id}>
@@ -176,11 +218,20 @@ function Footer({ apps, role }: { apps: AppDef[]; role: string }) {
           </ul>
         </div>
         <div className="text-right">
-          <div className="font-semibold text-slate-700 dark:text-slate-200">Build</div>
+          <div className="font-semibold text-slate-700 dark:text-slate-200">
+            Build
+          </div>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
             v0.1.0 · {buildDate}
             <br />
-            <a className="hover:text-blue-600 dark:hover:text-blue-400" href="https://github.com/rein3400/ykp" target="_blank" rel="noreferrer">Repository ↗</a>
+            <a
+              className="hover:text-blue-600 dark:hover:text-blue-400"
+              href="https://github.com/rein3400/ykp"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Repository ↗
+            </a>
           </p>
         </div>
       </div>
