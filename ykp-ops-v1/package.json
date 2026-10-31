@@ -14,7 +14,8 @@
     "sheets:clone-closing-templates": "tsx scripts/clone-closing-templates.ts",
     "sheets:import-suburbun-opening": "tsx --env-file-if-exists=.env scripts/import-suburbun-opening.ts",
     "sheets:import-opening-pdfs": "tsx --env-file-if-exists=.env scripts/import-opening-pdfs.ts",
-    "sheets:import-closing-pdfs": "tsx --env-file-if-exists=.env scripts/import-closing-pdfs.ts"
+    "sheets:import-closing-pdfs": "tsx --env-file-if-exists=.env scripts/import-closing-pdfs.ts",
+    "ops:provision-telegram": "tsx scripts/provision-telegram.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

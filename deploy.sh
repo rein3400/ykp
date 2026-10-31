@@ -29,9 +29,13 @@ IPDOTS="$(printf '%s' "$VPS_IP" | tr '-' '.')"
 MIGRATION_MODE="${MIGRATION_MODE:-1}"
 [[ "$MIGRATION_MODE" == 0 || "$MIGRATION_MODE" == 1 ]] || { printf 'MIGRATION_MODE must be 0 or 1\n' >&2; exit 1; }
 
-for dependency in curl jq openssl; do
+for dependency in curl jq openssl docker; do
   command -v "$dependency" >/dev/null || { printf 'Missing dependency: %s\n' "$dependency" >&2; exit 1; }
 done
+if [[ "${TARGET_DOCKER_LOCAL:-}" != 1 ]]; then
+  printf 'Run on the target VPS and explicitly set TARGET_DOCKER_LOCAL=1 after verifying its Docker daemon; remote Docker execution is not supported\n' >&2
+  exit 1
+fi
 for key in HUB_SESSION_SECRET SESSION_HUB SESSION_OWNER SESSION_HR SESSION_FINANCE SESSION_WAREHOUSE SESSION_INVESTOR SESSION_OPS CRON_HR CRON_FINANCE CRON_WAREHOUSE CRON_INVESTOR CRON_OWNER ERP_SSO_SECRET FINANCE_NOTIFY_SECRET; do
   [[ ${#key} -gt 0 && ${!key:-} != '' ]] || { printf 'Missing persistent secret: %s (generate once and securely retain it)\n' "$key" >&2; exit 1; }
   value="${!key}"
@@ -236,7 +240,7 @@ set_env "${UUID[ykp-ops-v1]}" "$(jq -n \
   --arg hub "$URL_HUB,$HUB_IP_ORIGIN" --arg tg "$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" --arg s "$SESSION_OPS" \
   --arg t "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" --arg ts "$TELEGRAM_BOT_SECRET" \
   --arg gsa "$GOOGLE_SERVICE_ACCOUNT_EMAIL" --arg gsk "$GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY" --arg sid "$YKP_OPS_SPREADSHEET_ID" \
-  --arg obot "${TELEGRAM_OPS_BOT_TOKEN:-}" --arg owh "${TELEGRAM_OPS_WEBHOOK_SECRET:-}" --arg opub "$URL_OPS" \
+  --arg obot "${TELEGRAM_OPS_BOT_TOKEN:-}" --arg owh "${TELEGRAM_OPS_WEBHOOK_SECRET:-}" --arg oname "${TELEGRAM_OPS_BOT_USERNAME:-ykp_operasional_bot}" --arg opub "$URL_OPS" \
   --arg oai "${OPENAI_API_KEY:-}" --arg model "${AI_MODEL:-openai/gpt-4o-mini}" \
   --arg base "${OPENAI_BASE_URL:-https://openrouter.ai/api/v1}" \
   --arg ref "${OPENAI_HTTP_REFERER:-}" --arg title "${OPENAI_APP_TITLE:-}" \
@@ -244,6 +248,7 @@ set_env "${UUID[ykp-ops-v1]}" "$(jq -n \
     {key:"SESSION_SECRET",value:$s},{key:"HUB_ORIGINS",value:$hub,is_literal:true},
     {key:"TELEGRAM_BOT_TOKEN",value:$t},{key:"TELEGRAM_CHAT_ID",value:$chat},{key:"TELEGRAM_BOT_SECRET",value:$ts},
     {key:"TELEGRAM_OPS_BOT_TOKEN",value:$obot},{key:"TELEGRAM_OPS_WEBHOOK_SECRET",value:$owh},
+    {key:"TELEGRAM_OPS_BOT_USERNAME",value:$oname},
     {key:"OPS_PUBLIC_URL",value:$opub},{key:"NEXT_PUBLIC_OPS_URL",value:$opub,is_runtime:true,is_buildtime:true,is_literal:true},
     {key:"AI_MODEL",value:$model},{key:"OPENAI_API_KEY",value:$oai},
     {key:"OPENAI_BASE_URL",value:$base},{key:"OPENAI_HTTP_REFERER",value:$ref},
@@ -286,7 +291,7 @@ fi
 # ---------------------------------------------------------------------------
 if [[ "$MIGRATION_MODE" == 1 ]]; then
   say "Migration staging: scheduled tasks not provisioned"
-  printf '%s\n' 'Old server remains scheduler owner. No webhook registration or data migration is performed.'
+  printf '%s\n' 'Old server remains scheduler owner. Webhook registration is skipped; only additive Ops session-storage provisioning runs later. No business-data migration or seed reset runs.'
 else
 say "Scheduled tasks (cron)"
 # command kept short: Coolify stores it in a ~255-char column, so read the secret
@@ -357,6 +362,23 @@ curl -fsS -m 30 --resolve "$HUBHOST:443:$VPS_IP" "$URL_HUB/api/health" \
   | jq -e '.data.overall == "ok" and (.data.results | length > 0) and all(.data.results[]; .httpStatus >= 200 and .httpStatus < 300)' >/dev/null
 printf '%s\n' 'All module health probes returned successful HTTP responses.'
 
+say "Ops Telegram readiness"
+DOCKER=(docker)
+if ! docker info >/dev/null 2>&1; then
+  sudo -n docker info >/dev/null 2>&1 || { printf 'Target VPS Docker access required for session provisioning\n' >&2; exit 1; }
+  DOCKER=(sudo -n docker)
+fi
+if [[ -n "${TELEGRAM_OPS_BOT_TOKEN:-}" ]]; then
+  if [[ "$MIGRATION_MODE" == 1 ]]; then
+    "${DOCKER[@]}" exec ykp-ops-v1 npm run ops:provision-telegram
+  else
+    "${DOCKER[@]}" exec ykp-ops-v1 npm run ops:provision-telegram -- --activate-webhook
+  fi
+else
+  "${DOCKER[@]}" exec ykp-ops-v1 npm run ops:provision-telegram
+  printf '%s\n' 'Ops bot token absent: session storage ready, bot activation pending.'
+fi
+
 cat <<EOF
 
 Done. YKP V1 family on $COOLIFY_URL
@@ -375,9 +397,11 @@ Manual follow-ups (once per target server):
   1. Sheets tabs — in each container run:  npm run sheets:bootstrap
      (idempotent: creates/syncs master + operational tabs, incl. hr_telegram_link_codes,
       master_checklist_template, ops_checklist_submission. Re-run if the check above shows a failed tab.)
-  2. Ops bot — register the webhook once with the dedicated token from .deploy.env:
-       curl "https://api.telegram.org/bot\$TELEGRAM_OPS_BOT_TOKEN/setWebhook?url=$URL_OPS/api/ops/telegram/webhook&secret_token=\$TELEGRAM_OPS_WEBHOOK_SECRET"
-     HR webhook likewise: /api/hr/attendance/telegram with TELEGRAM_WEBHOOK_SECRET.
+  2. Ops bot — session schema is provisioned above (no master-header rewrite).
+     MIGRATION_MODE=1 preserves old webhook/commands; after old jobs are disabled,
+     set MIGRATION_MODE=0 and rerun for 14 commands + dedicated Ops webhook (max_connections=1).
+     Requires one Ops application instance; do not scale replicas without a durable queue/lock.
+     HR webhook remains a separate reviewed cutover: /api/hr/attendance/telegram with TELEGRAM_WEBHOOK_SECRET.
   3. Email sender — set the SMTP account + App Password in HR > Pengaturan Email, then Send Test.
   4. Moka outlet map — add the 3 outlet rows to master_outlet if missing (MOKA_OUTLET_MAP seeds app_settings on first sync).
   5. VPS resources — with <=2 vCPU / <8 GB RAM: add swap + enable Coolify's docker cleanup
