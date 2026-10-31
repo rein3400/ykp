@@ -54,6 +54,7 @@ export const TABS = {
   hermezAlerts: 'ops_hermes_alert_log',
   telegramDeliveryLog: 'ops_telegram_delivery_log',
   telegramLinkCodes: 'ops_telegram_link_code',
+  telegramSessions: 'ops_telegram_session',
 } as const;
 
 export type TabName = (typeof TABS)[keyof typeof TABS];
@@ -154,6 +155,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
     'delivery_id', 'source_module', 'source_reference_id',
     'chat_id', 'status', 'message_id', 'error_message', 'sent_at',
   ],
+  [TABS.telegramSessions]: ['chat_id', 'state_json', 'last_update_id', 'last_reply', 'updated_at', 'user_id'],
   [TABS.telegramLinkCodes]: [
     'code', 'chat_id', 'employee_id', 'consumed_at', 'created_at',
   ],

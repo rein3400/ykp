@@ -1,82 +1,104 @@
-/**
- * POST /api/ops/telegram/webhook
- * Dedicated OPS bot webhook (separate bot token from HR). Outlet staff report
- * operational events here. Verified by Telegram's secret header, replies through
- * the Ops bot. Reuses the in-app `/api/ops/telegram/report` capability.
- */
-import { NextRequest } from 'next/server';
-import { handler, ok, unauthorized } from '@/lib/http';
-import { POST as reportPOST } from '@/app/api/ops/telegram/report/route';
-import { POST as linkConsumePOST } from '@/app/api/ops/telegram/link/consume/route';
-import { routeOpsUpdate } from '@/lib/ops-telegram';
-import { sendTelegram } from '@/lib/telegram';
-import { timingSafeEqual } from 'node:crypto';
+import { NextRequest } from "next/server";
+import { timingSafeEqual } from "node:crypto";
+import { mkdir, rmdir } from "node:fs/promises";
+import { handler, ok, unauthorized, badRequest } from "@/lib/http";
+import { consumeLinkCode } from "@/lib/telegram";
+import { telegramBotToken } from "@/lib/bot-token";
+import { routeOpsUpdate } from "@/lib/ops-telegram";
+import { menuKeyboard } from "@/lib/telegram-forms";
+import { nativeOpsMessage } from "@/lib/telegram-native";
 
-function webhookSecretOk(req: Request): boolean {
-  const secret = (process.env.TELEGRAM_OPS_WEBHOOK_SECRET ?? '').trim();
-  if (!secret) return false;
-  const header = (req.headers.get('x-telegram-bot-api-secret-token') ?? '').trim();
-  const a = Buffer.from(header);
-  const b = Buffer.from(secret);
-  return a.length === b.length && timingSafeEqual(a, b);
+function authorized(req: Request) {
+  const secret = (process.env.TELEGRAM_OPS_WEBHOOK_SECRET ?? "").trim();
+  const header = (
+    req.headers.get("x-telegram-bot-api-secret-token") ?? ""
+  ).trim();
+  return (
+    Boolean(secret) &&
+    Buffer.byteLength(secret) === Buffer.byteLength(header) &&
+    timingSafeEqual(Buffer.from(secret), Buffer.from(header))
+  );
 }
-
-const CTX = { params: Promise.resolve({} as Record<string, string>) };
-
-async function callInternal(path: string, fn: (req: NextRequest, ctx: typeof CTX) => Promise<Response>, body: unknown): Promise<{ status: number; data?: Record<string, unknown> }> {
-  const req = new NextRequest(`http://127.0.0.1${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-bot-secret': process.env.TELEGRAM_BOT_SECRET ?? '' },
-    body: JSON.stringify(body)
-  });
-  const res = await fn(req, CTX).catch(() => null);
-  if (!res) return { status: 500 };
-  const json = (await res.json().catch(() => ({}))) as { data?: Record<string, unknown> };
-  return { status: res.status, data: json.data };
+async function reply(
+  chatId: string,
+  text: string,
+  keyboard?: ReturnType<typeof menuKeyboard>,
+) {
+  const token = telegramBotToken();
+  if (!token) throw new Error("Ops bot token unavailable");
+  const response = await fetch(
+    `https://api.telegram.org/bot${token}/sendMessage`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text.slice(0, 4000),
+        parse_mode: "HTML",
+        reply_markup: keyboard,
+      }),
+      signal: AbortSignal.timeout(12000),
+    },
+  );
+  const result = await response.json();
+  if (!response.ok || !result.ok)
+    throw new Error("Telegram reply delivery failed");
 }
-
-async function reply(chatId: string, text: string): Promise<void> {
-  await sendTelegram({ sourceModule: 'ops_bot', sourceReferenceId: `chat-${chatId}`, messageType: 'REPLY', recipient: chatId, text }).catch(() => null);
-}
-
-/** Telegram retries updates; ignore ids we've already handled in this process. */
-const seenUpdateIds = new Set<number>();
-
 export const POST = handler(async (req: NextRequest) => {
-  if (!webhookSecretOk(req)) return unauthorized('Invalid or missing webhook secret');
-  const update = (await req.json().catch(() => ({}))) as {
-    update_id?: number;
-    message?: { chat?: { id?: number }; text?: string };
-  };
-  const updateId = update.update_id;
-  if (typeof updateId === 'number') {
-    if (seenUpdateIds.has(updateId)) return ok({ skipped: true });
-    if (seenUpdateIds.size > 500) seenUpdateIds.clear();
-    seenUpdateIds.add(updateId);
+  if (!authorized(req)) return unauthorized("Invalid webhook secret");
+  const update = await req.json().catch(() => null);
+  const message = update?.message;
+  if (!message) return ok({ ignored: true });
+  if (
+    !Number.isSafeInteger(update.update_id) ||
+    !Number.isSafeInteger(message.chat?.id) ||
+    !Number.isSafeInteger(message.from?.id)
+  )
+    return badRequest("Invalid update identity");
+  const chatId = String(message.chat.id),
+    senderId = String(message.from.id);
+  if (message.chat.type !== "private" || chatId !== senderId) {
+    return ok({ ignored: true, reason: "private_chat_required" });
   }
-  const chatId = update.message?.chat?.id;
-  if (chatId === undefined) return ok({ ignored: true });
-  const chat = String(chatId);
-  const route = routeOpsUpdate(update.message?.text);
-  switch (route.kind) {
-    case 'menu':
-      await reply(chat, (await callInternal('/api/ops/telegram/report', reportPOST, { telegram_chat_id: chat, action: 'menu' })).data?.text as string ?? 'Menu tidak tersedia.');
-      break;
-    case 'briefing':
-      await reply(chat, (await callInternal('/api/ops/telegram/report', reportPOST, { telegram_chat_id: chat, action: 'briefing' })).data?.text as string ?? 'Briefing tidak tersedia.');
-      break;
-    case 'incident': {
-      const result = await callInternal('/api/ops/telegram/report', reportPOST, { telegram_chat_id: chat, action: 'incident', text: route.text });
-      await reply(chat, (result.data?.text as string) ?? 'Gagal mencatat insiden. Sertakan judul: /insiden TEKS');
-      break;
-    }
-    case 'link': {
-      const result = await callInternal('/api/ops/telegram/link/consume', linkConsumePOST, { code: route.code, telegram_chat_id: chat });
-      await reply(chat, result.status === 200 ? '✅ Akun Telegram kamu berhasil dihubungkan ke Operasional.' : '❌ Kode tidak valid atau kedaluwarsa. Ambil kode baru dari aplikasi web YKP.');
-      break;
-    }
-    default:
-      await reply(chat, 'Perintah tidak dikenal. Ketik /menu untuk daftar menu Operasional.');
+  const text = typeof message.text === "string" ? message.text : "";
+  const route = routeOpsUpdate(text);
+  if (route.kind === "link") {
+    const user = await consumeLinkCode(route.code, senderId);
+    await reply(
+      chatId,
+      user
+        ? "Akun Operasional berhasil terhubung. Pilih menu di bawah."
+        : "Kode tidak valid/kedaluwarsa. Buat kode baru di Ops → Telegram.",
+      menuKeyboard(),
+    );
+    return ok({ handled: true });
+  }
+  if (!text) {
+    await reply(
+      chatId,
+      "Kirim jawaban teks atau URL foto HTTPS sesuai pertanyaan. Upload foto langsung belum didukung; jangan kirim token bot.",
+      menuKeyboard(),
+    );
+    return ok({ handled: true });
+  }
+  const lock = "/tmp/ykp-ops-telegram-processor.lock";
+  try {
+    await mkdir(lock);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST")
+      throw new Error("Telegram processor busy; retry required");
+    throw error;
+  }
+  try {
+    const result = await nativeOpsMessage({
+      chatId,
+      senderId,
+      updateId: update.update_id,
+      text,
+    });
+    await reply(chatId, result.text, result.keyboard);
+  } finally {
+    await rmdir(lock);
   }
   return ok({ handled: true });
 });
