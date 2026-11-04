@@ -14,7 +14,7 @@ function clean(v: string | undefined): string {
 }
 
 const TOKEN = () => clean(process.env.TELEGRAM_BOT_TOKEN);
-const CHAT_ID = () => clean(process.env.TELEGRAM_BOT_CHAT_ID);
+const CHAT_ID = () => clean(process.env.TELEGRAM_BOT_CHAT_ID) || clean(process.env.TELEGRAM_CHAT_ID);
 
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
   const ctrl = new AbortController();
@@ -47,12 +47,16 @@ export async function sendOwnerDailyBrief(payload: OwnerDailyBriefPayload): Prom
     return { status: 'FAILED', chatId: '', error: 'TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_CHAT_ID not configured' };
   }
   try {
+    let messageId = '';
+    const characters = Array.from(payload.text);
+    for (let offset = 0; offset < characters.length; offset += 3000) {
+    const chunk = characters.slice(offset, offset + 3000).join('');
     const res = await fetchWithTimeout(
       `https://api.telegram.org/bot${token}/sendMessage`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: payload.text, parse_mode: 'HTML', disable_web_page_preview: true })
+        body: JSON.stringify({ chat_id: chatId, text: chunk, disable_web_page_preview: true })
       },
       12_000
     );
@@ -64,7 +68,9 @@ export async function sendOwnerDailyBrief(payload: OwnerDailyBriefPayload): Prom
     if (!json.ok) {
       return { status: 'FAILED', chatId, error: json.description ?? 'Telegram API rejected the message' };
     }
-    return { status: 'SENT', chatId, messageId: String(json.result?.message_id ?? '') };
+    messageId = String(json.result?.message_id ?? '');
+    }
+    return { status: payload.text ? 'SENT' : 'SKIPPED', chatId, messageId };
   } catch (e) {
     return { status: 'FAILED', chatId, error: e instanceof Error ? e.message : 'Unknown send error' };
   }

@@ -8,6 +8,7 @@ import {
   type TabName,
 } from "@/db/sheets";
 import { can, type Role } from "./rbac";
+import { activeShift } from './shift-status';
 import { todayWib, nowTimestampWib } from "./format";
 import { selectChecklistTemplates } from "./checklist";
 import {
@@ -89,7 +90,7 @@ async function persist(d: Draft, user: Record<string, string>): Promise<void> {
     !shifts.some(
       (s) =>
         s.shift_id === d.shiftId &&
-        ["active", "1"].includes((s.status ?? "").toLowerCase()),
+        activeShift(s),
     )
   )
     throw new InputError("Shift tidak aktif");
@@ -425,7 +426,7 @@ export async function nativeOpsMessage(input: {
       }
       draft.stage = "shift";
       const shifts = (await readTab(TABS.shifts)).filter((s) =>
-        ["active", "1"].includes((s.status ?? "").toLowerCase()),
+        activeShift(s),
       );
       reply = `Pilih kode shift:\n${shifts.map((s) => `${s.shift_id} — ${s.shift_name}`).join("\n")}`;
     } else if (draft.stage === "shift") {
@@ -433,7 +434,7 @@ export async function nativeOpsMessage(input: {
         !(await readTab(TABS.shifts)).some(
           (s) =>
             s.shift_id === text &&
-            ["active", "1"].includes((s.status ?? "").toLowerCase()),
+            activeShift(s),
         )
       )
         throw new InputError("Kode shift tidak valid");

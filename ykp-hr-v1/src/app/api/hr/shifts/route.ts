@@ -14,6 +14,7 @@ import { handler, list, ok, badRequest, unauthorized, forbidden, conflict } from
 import { can, Role } from '@/lib/rbac';
 import { nowTimestampWib } from '@/lib/format';
 import { z } from 'zod';
+import { normalizeShiftTime } from '@/lib/shift-time';
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -41,7 +42,11 @@ export const GET = handler(async () => {
   const s = await getSession();
   if (!s) return unauthorized();
   if (!can(s.role as Role, 'view', 'master')) return forbidden();
-  return list(await readTab(TABS.shifts));
+  const rows = await readTab<Record<string, string>>(TABS.shifts);
+  return list(rows.map((row) => {
+    try { return { ...row, start_time: normalizeShiftTime(row.start_time), end_time: normalizeShiftTime(row.end_time) }; }
+    catch { return row; }
+  }));
 });
 
 export const POST = handler(async (req) => {
@@ -117,8 +122,12 @@ export const PUT = handler(async (req) => {
   const found = await findRow(TABS.shifts, 'shift_id', parsed.data.shift_id);
   if (!found) return badRequest(`Shift tidak ditemukan: ${parsed.data.shift_id}`);
 
-  const start = parsed.data.start_time ?? found.row.start_time;
-  const end = parsed.data.end_time ?? found.row.end_time;
+  let start: string;
+  let end: string;
+  try {
+    start = normalizeShiftTime(parsed.data.start_time ?? found.row.start_time);
+    end = normalizeShiftTime(parsed.data.end_time ?? found.row.end_time);
+  } catch { return badRequest('Jam shift tersimpan tidak valid; isi ulang jam mulai dan selesai.'); }
   if (start > end) {
     return badRequest('Jam selesai harus setelah jam mulai (shift lintas tengah malam tidak didukung).');
   }

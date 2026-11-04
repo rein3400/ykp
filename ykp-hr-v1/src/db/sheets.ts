@@ -601,8 +601,8 @@ export async function deleteRow(tab: TabName, rowNumber: number): Promise<void> 
   if (rowNumber === lastDataRow) {
     await sheets.spreadsheets.values.update({
       spreadsheetId: sid,
-      range: `${quoteTab(tab)}!A${rowNumber}:${lastCol}${rowNumber}`,
-      valueInputOption: 'USER_ENTERED',
+range: `${quoteTab(tab)}!A${rowNumber}:${lastCol}${rowNumber}`,
+    valueInputOption: tab === TABS.shifts ? 'RAW' : 'USER_ENTERED',
       requestBody: { values: [blank] }
     });
     return;

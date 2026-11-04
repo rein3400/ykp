@@ -160,9 +160,11 @@ say "Env: ykp-owner-v1"
 set_env "${UUID[ykp-owner-v1]}" "$(jq -n \
   --arg h "$URL_HR" --arg f "$URL_FINANCE" --arg w "$URL_WAREHOUSE" --arg o "$URL_OPS" --arg i "$URL_INVESTOR" \
   --arg s "$SESSION_OWNER" --arg t "$TELEGRAM_BOT_SECRET" --arg c "$CRON_OWNER" \
+  --arg bot "$TELEGRAM_BOT_TOKEN" --arg chat "$TELEGRAM_CHAT_ID" \
   '[{key:"YKP_HR_URL",value:$h},{key:"YKP_FINANCE_URL",value:$f},{key:"YKP_WAREHOUSE_URL",value:$w},
     {key:"YKP_OPS_URL",value:$o},{key:"YKP_INVESTOR_URL",value:$i},{key:"SESSION_SECRET",value:$s},
-    {key:"TELEGRAM_BOT_SECRET",value:$t},{key:"CRON_SECRET",value:$c},{key:"YKP_OWNER_MOCK",value:"false"},{key:"PORT",value:"3010"}]' \
+    {key:"TELEGRAM_BOT_TOKEN",value:$bot},{key:"TELEGRAM_BOT_CHAT_ID",value:$chat},
+     {key:"TELEGRAM_BOT_SECRET",value:$t},{key:"CRON_SECRET",value:$c},{key:"YKP_OWNER_MOCK",value:"false"},{key:"PORT",value:"3010"}]' \
   | jq 'map(.is_runtime=true)')"
 
 say "Env: ykp-hr-v1"
