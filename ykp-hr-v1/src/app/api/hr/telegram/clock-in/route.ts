@@ -12,7 +12,8 @@ import { assertEmployee, nextSequentialId } from '@/lib/repo';
 import { handler, badRequest, unauthorized, ok, notFound } from '@/lib/http';
 import { formatTimeWib, nowTimestampWib, todayWib } from '@/lib/format';
 import { classifyLocation, parseGeoPoint } from '@/lib/attendance-geo';
-import { resolveAttendanceOutlet } from '@/lib/multi-location';
+import { canAttendAnyOutlet, resolveAttendanceOutlet } from '@/lib/multi-location';
+import { resolveNearestOutlet } from '@/lib/nearest-outlet';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -68,36 +69,47 @@ export const POST = handler(async (req) => {
   const emp = await findRow(TABS.employees, 'employee_id', employeeId);
   const employee = emp?.row;
 
-  // Multi-location: roaming roles may choose any active outlet; others are tied
-  // to their home outlet. GPS radius is ALWAYS enforced against the chosen outlet.
+    // Multi-location: roaming roles may attend at any active outlet. Without an
+  // explicit outlet selection the bot has no picker, so choose the NEAREST
+  // active outlet whose own radius contains the GPS point. Non-roaming staff
+  // stay tied to their home outlet. GPS radius is always enforced.
+  const outletsTab = await readTab<Record<string, string>>(TABS.outlets);
+  const asGeo = outletsTab
+    .map((row) => ({ outlet_id: row.outlet_id ?? '', outlet_name: row.outlet_name ?? '', status: row.status ?? '', brand_id: row.brand_id ?? '', latitude: row.latitude ?? '', longitude: row.longitude ?? '', attendance_radius_m: row.attendance_radius_m ?? '' }));
   let outletRow: Record<string, string> = {};
+  let checkInLocation = '';
+  let radiusStr = '';
   try {
-    const outletsTab = await readTab<Record<string, string>>(TABS.outlets);
-    const resolved = resolveAttendanceOutlet({
-      role: user.role, homeOutletId: employee?.outlet_id, requestedOutletId: parsed.data.outlet_id, outlets: outletsTab.map((o) => ({ outlet_id: o.outlet_id ?? '', outlet_name: o.outlet_name, status: o.status }))
-    });
-    outletRow = outletsTab.find((o) => o.outlet_id === resolved.outlet_id) ?? {};
+    const reported = parseGeoPoint(parsed.data.latitude, parsed.data.longitude);
+    if (!reported) return badRequest('Kirim lokasi GPS Telegram sebelum absen masuk.');
+    if (parsed.data.outlet_id) {
+      const resolved = resolveAttendanceOutlet({ role: user.role, homeOutletId: employee?.outlet_id, requestedOutletId: parsed.data.outlet_id, outlets: asGeo });
+      outletRow = outletsTab.find((o) => o.outlet_id === resolved.outlet_id) ?? {};
+      const verdict = classifyLocation(reported, { latitude: Number(outletRow.latitude), longitude: Number(outletRow.longitude), attendanceRadiusM: Number(outletRow.attendance_radius_m) });
+      if (verdict.classification === 'NO_OUTLET_GEO') return badRequest('Koordinat/radius outlet belum valid; hubungi HR.');
+      if (verdict.outsideRadius) return badRequest(`Clock-in di luar radius outlet (${verdict.distanceMeters}m > ${verdict.radiusMeters}m).`);
+      checkInLocation = verdict.classification;
+      radiusStr = String(verdict.radiusMeters);
+    } else if (canAttendAnyOutlet(user.role)) {
+      const nearest = resolveNearestOutlet({ role: user.role, homeOutletId: employee?.outlet_id, reported, outlets: asGeo });
+      outletRow = outletsTab.find((o) => o.outlet_id === nearest.outlet.outlet_id) ?? {};
+      checkInLocation = 'INSIDE_RADIUS';
+      radiusStr = String(nearest.radiusMeters);
+    } else {
+      const resolved = resolveAttendanceOutlet({ role: user.role, homeOutletId: employee?.outlet_id, outlets: asGeo });
+      outletRow = outletsTab.find((o) => o.outlet_id === resolved.outlet_id) ?? {};
+      const verdict = classifyLocation(reported, { latitude: Number(outletRow.latitude), longitude: Number(outletRow.longitude), attendanceRadiusM: Number(outletRow.attendance_radius_m) });
+      if (verdict.classification === 'NO_OUTLET_GEO') return badRequest('Koordinat/radius outlet belum valid; hubungi HR.');
+      if (verdict.outsideRadius) return badRequest(`Clock-in di luar radius outlet (${verdict.distanceMeters}m > ${verdict.radiusMeters}m).`);
+      checkInLocation = verdict.classification;
+      radiusStr = String(verdict.radiusMeters);
+    }
   } catch (e) {
     return badRequest(e instanceof Error ? e.message : 'Outlet tidak valid');
   }
-  const outletId = outletRow.outlet_id ?? '';
-
-  // Bot punches require a valid GPS point and a configured outlet geofence.
-  const reported = parseGeoPoint(parsed.data.latitude, parsed.data.longitude);
-  if (!reported) return badRequest('Kirim lokasi GPS Telegram sebelum absen masuk.');
-  const outlet = { row: outletRow };
-  const verdict = classifyLocation(reported, outlet?.row ? {
-    latitude: Number(outlet.row.latitude),
-    longitude: Number(outlet.row.longitude),
-    attendanceRadiusM: Number(outlet.row.attendance_radius_m)
-  } : null);
-  if (verdict.classification === 'NO_OUTLET_GEO') return badRequest('Koordinat/radius outlet belum valid; hubungi HR.');
-  if (verdict.outsideRadius) return badRequest(`Clock-in di luar radius outlet (${verdict.distanceMeters}m > ${verdict.radiusMeters}m).`);
-  const checkInLocation = verdict.classification;
-  const latStr = String(reported.latitude);
-  const lonStr = String(reported.longitude);
-  const radiusStr = String(verdict.radiusMeters);
-
+const outletId = outletRow.outlet_id ?? '';
+  const latStr = String(parsed.data.latitude ?? '');
+  const lonStr = String(parsed.data.longitude ?? '');
   // Resolve today's shift from roster.
   const rosters = await readTab<{ date: string; employee_id: string; shift_id: string }>(TABS.roster);
   const todayRoster = rosters.find((r) => r.date === today && r.employee_id === employeeId);
