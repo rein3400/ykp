@@ -2,6 +2,8 @@ import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import UnitConversionClient from './unit-conversion-client';
+import { MasterActions } from '@/components/master-actions';
+import { can, type Role } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +21,8 @@ export default async function UnitConversionPage() {
         <h1 className='text-2xl font-bold'>Unit Conversion</h1>
         <p className='text-sm text-muted-foreground'>Konversi antar satuan: 1 carton = 10 kg, 1 kg = 1000 gram, dll.</p>
       </div>
+      <MasterActions kind='unit-conversion' rows={conversions} canEdit={false} canArchive={can(session.role as Role, 'delete', 'unit_conversion')} />
+      <p className='text-xs text-muted-foreground'>Faktor konversi lama tidak diedit agar riwayat aman. Arsipkan aturan lama lalu buat pengganti.</p>
       <UnitConversionClient conversions={conversions} items={items} canWrite={canWrite} />
     </div>
   );

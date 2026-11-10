@@ -2,6 +2,8 @@ import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import LocationsClient from './locations-client';
+import { MasterActions } from '@/components/master-actions';
+import { can, type Role } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +22,7 @@ export default async function LocationsPage() {
         <h1 className='text-2xl font-bold'>Master Location</h1>
         <p className='text-sm text-muted-foreground'>Lokasi penyimpanan: gudang pusat, outlet, kitchen, chiller, freezer, dry storage.</p>
       </div>
+      <MasterActions kind='locations' rows={locations} canEdit={can(session.role as Role, 'update', 'location')} canArchive={can(session.role as Role, 'delete', 'location')} />
       <LocationsClient locations={locations} brands={brands} outlets={outlets} canWrite={canWrite} />
     </div>
   );

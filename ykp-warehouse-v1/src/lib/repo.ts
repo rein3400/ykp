@@ -39,24 +39,28 @@ export async function assertItem(itemId: string): Promise<void> {
   if (!itemId) throw new MissingRefError('item_id is required');
   const r = await findRow(TABS.items, 'item_id', itemId);
   if (!r) throw new MissingRefError(`item_id not found: ${itemId}`);
+  if (r.row.active_status === 'inactive') throw new MissingRefError(`Item diarsipkan: ${itemId}`);
 }
 
 export async function assertLocation(locationId: string): Promise<void> {
   if (!locationId) throw new MissingRefError('location_id is required');
   const r = await findRow(TABS.locations, 'location_id', locationId);
   if (!r) throw new MissingRefError(`location_id not found: ${locationId}`);
+  if (r.row.active_status === 'inactive') throw new MissingRefError(`Lokasi diarsipkan: ${locationId}`);
 }
 
 export async function assertSupplier(supplierId: string): Promise<void> {
   if (!supplierId) throw new MissingRefError('supplier_id is required');
   const r = await findRow(TABS.suppliers, 'supplier_id', supplierId);
   if (!r) throw new MissingRefError(`supplier_id not found: ${supplierId}`);
+  if (r.row.active_status === 'inactive') throw new MissingRefError(`Supplier diarsipkan: ${supplierId}`);
 }
 
 export async function assertCategory(categoryId: string): Promise<void> {
   if (!categoryId) throw new MissingRefError('category_id is required');
   const r = await findRow(TABS.itemCategory, 'category_id', categoryId);
   if (!r) throw new MissingRefError(`category_id not found: ${categoryId}`);
+  if (r.row.active_status === 'inactive') throw new MissingRefError(`Kategori diarsipkan: ${categoryId}`);
 }
 
 /** Race-free unique ID: PREFIX-{ts36}{rand6}. */

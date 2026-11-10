@@ -376,7 +376,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
  */
 const READ_CACHE_TTL_MS = 20_000;
 const readCache = new Map<string, { at: number; value: unknown }>();
-function invalidateReadCache(): void { readCache.clear(); }
+export function invalidateReadCache(): void { readCache.clear(); }
 
 const sheetSleep = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve, ms); });
 
@@ -407,7 +407,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
   if (readHit && Date.now() - readHit.at < READ_CACHE_TTL_MS) return readHit.value as T[];
   const res = await valuesGetWithRetry(sheets, {
     spreadsheetId: sid,
-    range: `${quoteTab(tab)}!A1:${lastCol}1000`
+    range: `${quoteTab(tab)}!A:${lastCol}`
   });
   const rows = res.data.values ?? [];
   if (rows.length < 2) { readCache.set(tab, { at: Date.now(), value: [] }); return []; }

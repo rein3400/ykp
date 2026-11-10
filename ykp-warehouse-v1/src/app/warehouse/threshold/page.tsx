@@ -2,6 +2,8 @@ import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import ThresholdClient from './threshold-client';
+import { MasterActions } from '@/components/master-actions';
+import { can, type Role } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +22,7 @@ export default async function ThresholdPage() {
         <h1 className='text-2xl font-bold'>Inventory Threshold</h1>
         <p className='text-sm text-muted-foreground'>Batas warning/high/critical per item/lokasi untuk alert engine.</p>
       </div>
+      <MasterActions kind='threshold' rows={thresholds} canEdit={can(session.role as Role, 'update', 'threshold')} canArchive={can(session.role as Role, 'delete', 'threshold')} />
       <ThresholdClient thresholds={thresholds} items={items} locations={locations} canWrite={canWrite} />
     </div>
   );

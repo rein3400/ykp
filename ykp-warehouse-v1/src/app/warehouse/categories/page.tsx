@@ -2,6 +2,8 @@ import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import CategoriesClient from './categories-client';
+import { MasterActions } from '@/components/master-actions';
+import { can, type Role } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +18,7 @@ export default async function CategoriesPage() {
         <h1 className='text-2xl font-bold'>Master Item Category</h1>
         <p className='text-sm text-muted-foreground'>Kategori item: Protein, Dairy, Dry Goods, dll.</p>
       </div>
+      <MasterActions kind='categories' rows={categories} canEdit={can(session.role as Role, 'update', 'category')} canArchive={can(session.role as Role, 'delete', 'category')} />
       <CategoriesClient categories={categories} canWrite={canWrite} />
     </div>
   );
