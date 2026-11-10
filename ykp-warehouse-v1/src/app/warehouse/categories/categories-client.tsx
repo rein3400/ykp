@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 
 export default function CategoriesClient({
   categories, canWrite
@@ -33,10 +34,10 @@ export default function CategoriesClient({
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='flex gap-2'>
             <input placeholder='Nama Kategori *' value={form.category_name} onChange={(e) => setForm({ ...form, category_name: e.target.value })} className='rounded border border-border px-2 py-1 text-xs flex-1' />
-            <select value={form.parent_category_id} onChange={(e) => setForm({ ...form, parent_category_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='kategori induk' value={form.parent_category_id} onChange={(e) => setForm({ ...form, parent_category_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>No Parent</option>
               {list.map((c) => <option key={c.category_id} value={c.category_id}>{c.category_name}</option>)}
-            </select>
+            </SearchableSelect>
           </div>
           {err && <p className='text-xs text-destructive'>{err}</p>}
           <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>

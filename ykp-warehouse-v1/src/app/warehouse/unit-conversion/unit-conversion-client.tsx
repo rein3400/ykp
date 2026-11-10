@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 import { fixedConversionFactor } from '@/lib/unit-conversion';
 
 export default function UnitConversionClient({
@@ -43,10 +44,10 @@ export default function UnitConversionClient({
       {showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
-            <select value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='item bahan' value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Pilih Item *</option>
               {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
-            </select>
+            </SearchableSelect>
             <input placeholder='Dari Unit *' value={form.from_unit} onChange={(e) => changeUnit('from_unit', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Ke Unit *' value={form.to_unit} onChange={(e) => changeUnit('to_unit', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Faktor *' readOnly={fixedFactor !== null} value={form.conversion_factor} onChange={(e) => setForm({ ...form, conversion_factor: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />

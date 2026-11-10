@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 
 const MOVEMENT_TYPES = [
   'OPENING_BALANCE','RECEIPT','ISSUE','TRANSFER_IN','TRANSFER_OUT',
@@ -30,14 +31,14 @@ export default function LedgerClient({
   return (
     <div className='space-y-3'>
       <div className='flex flex-wrap gap-2 text-xs'>
-        <select value={filters.item_id} onChange={(e) => setFilters({ ...filters, item_id: e.target.value })} className='rounded border border-border px-2 py-1'>
+        <SearchableSelect searchLabel='item' value={filters.item_id} onChange={(e) => setFilters({ ...filters, item_id: e.target.value })} className='rounded border border-border px-2 py-1'>
           <option value=''>Semua Item</option>
           {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
-        </select>
-        <select value={filters.location_id} onChange={(e) => setFilters({ ...filters, location_id: e.target.value })} className='rounded border border-border px-2 py-1'>
+        </SearchableSelect>
+        <SearchableSelect searchLabel='lokasi' value={filters.location_id} onChange={(e) => setFilters({ ...filters, location_id: e.target.value })} className='rounded border border-border px-2 py-1'>
           <option value=''>Semua Lokasi</option>
           {locations.map((l) => <option key={l.location_id} value={l.location_id}>{l.location_name}</option>)}
-        </select>
+        </SearchableSelect>
         <select value={filters.movement_type} onChange={(e) => setFilters({ ...filters, movement_type: e.target.value })} className='rounded border border-border px-2 py-1'>
           <option value=''>Semua Tipe</option>
           {MOVEMENT_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}

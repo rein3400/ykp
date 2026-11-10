@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 
 const LOCATION_TYPES = ['CENTRAL_WAREHOUSE','OUTLET_WAREHOUSE','KITCHEN','BAR','CHILLER','FREEZER','DRY_STORAGE','OTHER'];
 
@@ -40,14 +41,14 @@ export default function LocationsClient({
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             <input placeholder='Kode' value={form.location_code} onChange={(e) => update('location_code', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Nama Lokasi *' value={form.location_name} onChange={(e) => update('location_name', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
-            <select value={form.brand_id} onChange={(e) => update('brand_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='brand' value={form.brand_id} onChange={(e) => update('brand_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Pilih Brand</option>
               {brands.map((b) => <option key={b.brand_id} value={b.brand_id}>{b.brand_name}</option>)}
-            </select>
-            <select value={form.outlet_id} onChange={(e) => update('outlet_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
+            </SearchableSelect>
+            <SearchableSelect searchLabel='outlet' value={form.outlet_id} onChange={(e) => update('outlet_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Pilih Outlet</option>
               {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
-            </select>
+            </SearchableSelect>
             <select value={form.location_type} onChange={(e) => update('location_type', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
               {LOCATION_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
             </select>

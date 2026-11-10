@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
 
 export default function TransferClient({
@@ -50,22 +51,22 @@ export default function TransferClient({
       {showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-3'>
-            <select value={form.source_location_id} onChange={(e) => setForm({ ...form, source_location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='lokasi sumber' value={form.source_location_id} onChange={(e) => setForm({ ...form, source_location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Lokasi Sumber</option>
               {locations.map((l) => <option key={l.location_id} value={l.location_id}>{l.location_name}</option>)}
-            </select>
-            <select value={form.destination_location_id} onChange={(e) => setForm({ ...form, destination_location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            </SearchableSelect>
+            <SearchableSelect searchLabel='lokasi tujuan' value={form.destination_location_id} onChange={(e) => setForm({ ...form, destination_location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Lokasi Tujuan</option>
               {locations.map((l) => <option key={l.location_id} value={l.location_id}>{l.location_name}</option>)}
-            </select>
+            </SearchableSelect>
             <input placeholder='Notes' value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
           </div>
           {lineItems.map((it, idx) => (
             <div key={idx} className='grid grid-cols-3 gap-1'>
-              <select value={it.item_id} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], item_id: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]'>
+              <SearchableSelect searchLabel={`item baris ${idx + 1}`} value={it.item_id} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], item_id: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]'>
                 <option value=''>Item</option>
                 {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
-              </select>
+              </SearchableSelect>
               <input placeholder='Qty' value={it.requested_qty} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], requested_qty: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Unit' value={it.unit} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], unit: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]' />
             </div>

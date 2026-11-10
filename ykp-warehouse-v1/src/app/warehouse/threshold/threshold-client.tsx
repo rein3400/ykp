@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 
 export default function ThresholdClient({
   thresholds, items, locations, canWrite
@@ -35,14 +36,14 @@ export default function ThresholdClient({
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             <input placeholder='Tipe *' value={form.threshold_type} onChange={(e) => setForm({ ...form, threshold_type: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
-            <select value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='item' value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Pilih Item</option>
               {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
-            </select>
-            <select value={form.location_id} onChange={(e) => setForm({ ...form, location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            </SearchableSelect>
+            <SearchableSelect searchLabel='lokasi' value={form.location_id} onChange={(e) => setForm({ ...form, location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Pilih Lokasi</option>
               {locations.map((l) => <option key={l.location_id} value={l.location_id}>{l.location_name}</option>)}
-            </select>
+            </SearchableSelect>
             <input placeholder='Unit' value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Warning Value' value={form.warning_value} onChange={(e) => setForm({ ...form, warning_value: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='High Value' value={form.high_value} onChange={(e) => setForm({ ...form, high_value: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />

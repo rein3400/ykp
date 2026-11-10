@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { SearchableSelect } from './searchable-select';
 import { MASTER_ACTIONS, type MasterKind } from "@/lib/master-actions";
 export function MasterActions({
   kind,
@@ -63,9 +64,9 @@ export function MasterActions({
         ID, satuan/konversi dan cakupan master dikunci agar riwayat tidak
         berubah. Pengarsipan bukan penghapusan permanen.
       </p>
-      <label className="block text-sm">
-        Pilih master
-        <select
+      <div className="block text-sm">
+        <label htmlFor={`master-${kind}`}>Pilih master</label>
+        <SearchableSelect id={`master-${kind}`} searchLabel='master nama atau kode'
           disabled={busy}
           value={selected}
           onChange={(e) => {
@@ -91,8 +92,8 @@ export function MasterActions({
               {r.active_status === "inactive" ? " (diarsipkan)" : ""}
             </option>
           ))}
-        </select>
-      </label>
+        </SearchableSelect>
+      </div>
       {row && (
         <>
           <p className="text-xs">Status: {row.active_status || "—"}</p>

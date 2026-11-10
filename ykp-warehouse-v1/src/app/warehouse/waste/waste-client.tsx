@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
 import { EvidenceGallery } from '@/components/evidence-gallery';
 
@@ -49,18 +50,18 @@ export default function WasteClient({
       {showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
-            <select value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='outlet' value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Outlet</option>
               {outlets.filter((o) => ['active', '1'].includes((o.status ?? '').trim().toLowerCase())).map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
-            </select>
-            <select value={form.location_id} onChange={(e) => setForm({ ...form, location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            </SearchableSelect>
+            <SearchableSelect searchLabel='lokasi' value={form.location_id} onChange={(e) => setForm({ ...form, location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Lokasi *</option>
               {locations.map((l) => <option key={l.location_id} value={l.location_id}>{l.location_name}</option>)}
-            </select>
-            <select value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value, unit: items.find((i) => i.item_id === e.target.value)?.unit ?? 'kg' })} className='rounded border border-border px-2 py-1 text-xs'>
+            </SearchableSelect>
+            <SearchableSelect searchLabel='item' value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value, unit: items.find((i) => i.item_id === e.target.value)?.unit ?? 'kg' })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Item</option>
               {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
-            </select>
+            </SearchableSelect>
             <input placeholder='Qty' value={form.qty} onChange={(e) => setForm({ ...form, qty: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Satuan' value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Alasan' value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />

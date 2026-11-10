@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 
 const ITEM_TYPES = ['RAW_MATERIAL','PACKAGING','FINISHED_GOOD','SEMI_FINISHED','CLEANING_SUPPLY','EQUIPMENT_CONSUMABLE','OTHER'];
 const CRITICALITY = ['LOW','MEDIUM','HIGH','CRITICAL'];
@@ -65,10 +66,10 @@ export default function ItemsClient({
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             <input placeholder='Kode' value={form.item_code} onChange={(e) => update('item_code', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Nama Item *' value={form.item_name} onChange={(e) => update('item_name', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
-            <select value={form.category_id} onChange={(e) => update('category_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='kategori' value={form.category_id} onChange={(e) => update('category_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Pilih Kategori</option>
               {categories.map((c) => <option key={c.category_id} value={c.category_id}>{c.category_name}</option>)}
-            </select>
+            </SearchableSelect>
             <select value={form.item_type} onChange={(e) => update('item_type', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
               {ITEM_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
             </select>
@@ -77,10 +78,10 @@ export default function ItemsClient({
             <input placeholder='Conversion Factor' value={form.conversion_factor} onChange={(e) => update('conversion_factor', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Pack Size' value={form.pack_size} onChange={(e) => update('pack_size', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='MOQ' value={form.minimum_order_quantity} onChange={(e) => update('minimum_order_quantity', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
-            <select value={form.preferred_supplier_id} onChange={(e) => update('preferred_supplier_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='supplier utama' value={form.preferred_supplier_id} onChange={(e) => update('preferred_supplier_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Supplier Utama</option>
               {suppliers.map((s) => <option key={s.supplier_id} value={s.supplier_id}>{s.supplier_name}</option>)}
-            </select>
+            </SearchableSelect>
           </div>
           <p className='text-xs font-medium'>Stok &amp; Pembelian</p>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-5'>

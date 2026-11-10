@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
 
 export default function OpnameClient({
@@ -48,18 +49,18 @@ export default function OpnameClient({
             <select value={form.count_type} onChange={(e) => setForm({ ...form, count_type: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               {['DAILY_CRITICAL','WEEKLY','MONTHLY','SPOT_CHECK','RECOUNT'].map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
             </select>
-            <select value={form.location_id} onChange={(e) => setForm({ ...form, location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='lokasi opname' value={form.location_id} onChange={(e) => setForm({ ...form, location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Lokasi *</option>
               {locations.map((l) => <option key={l.location_id} value={l.location_id}>{l.location_name}</option>)}
-            </select>
+            </SearchableSelect>
           </div>
           <p className='text-xs font-medium'>Items (physical stock)</p>
           {lineItems.map((it, idx) => (
             <div key={idx} className='grid grid-cols-3 gap-1'>
-              <select value={it.item_id} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], item_id: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]'>
+              <SearchableSelect searchLabel={`item baris ${idx + 1}`} value={it.item_id} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], item_id: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]'>
                 <option value=''>Item</option>
                 {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
-              </select>
+              </SearchableSelect>
               <input placeholder='Physical Stock' value={it.physical_stock} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], physical_stock: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Notes' value={it.notes} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], notes: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]' />
             </div>

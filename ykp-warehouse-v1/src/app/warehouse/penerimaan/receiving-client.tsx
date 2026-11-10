@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { SearchableSelect } from '@/components/searchable-select';
 import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
 import { EvidenceGallery } from '@/components/evidence-gallery';
 
@@ -79,14 +80,14 @@ export default function ReceivingClient({
               <option value='SUPPLIER'>Supplier</option><option value='CENTRAL_WAREHOUSE'>Gudang Pusat</option>
               <option value='OTHER_OUTLET'>Outlet Lain</option><option value='RETURN'>Return</option>
             </select>
-            <select value={form.supplier_id} onChange={(e) => update('supplier_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
+            <SearchableSelect searchLabel='supplier' value={form.supplier_id} onChange={(e) => update('supplier_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Supplier</option>
               {suppliers.map((s) => <option key={s.supplier_id} value={s.supplier_id}>{s.supplier_name}</option>)}
-            </select>
-            <select value={form.destination_location_id} onChange={(e) => update('destination_location_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
+            </SearchableSelect>
+            <SearchableSelect searchLabel='lokasi tujuan' value={form.destination_location_id} onChange={(e) => update('destination_location_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs'>
               <option value=''>Lokasi Tujuan</option>
               {locations.map((l) => <option key={l.location_id} value={l.location_id}>{l.location_name}</option>)}
-            </select>
+            </SearchableSelect>
             <input placeholder='PO Number' value={form.purchase_order_id} onChange={(e) => update('purchase_order_id', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Invoice #' value={form.invoice_number} onChange={(e) => update('invoice_number', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
             <input placeholder='Delivery Note #' value={form.delivery_note_number} onChange={(e) => update('delivery_note_number', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
@@ -96,10 +97,10 @@ export default function ReceivingClient({
           <p className='text-xs font-medium'>Line Items</p>
           {lineItems.map((it, idx) => (
             <div key={idx} className='grid grid-cols-2 gap-1 md:grid-cols-6 border-t border-border pt-1'>
-              <select value={it.item_id} onChange={(e) => updateLine(idx, 'item_id', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]'>
+              <SearchableSelect searchLabel={`item baris ${idx + 1}`} value={it.item_id} onChange={(e) => updateLine(idx, 'item_id', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]'>
                 <option value=''>Item</option>
                 {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
-              </select>
+              </SearchableSelect>
               <input placeholder='Batch' value={it.batch_number} onChange={(e) => updateLine(idx, 'batch_number', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Expiry' type='date' value={it.expiry_date} onChange={(e) => updateLine(idx, 'expiry_date', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Qty Order' value={it.qty_ordered} onChange={(e) => updateLine(idx, 'qty_ordered', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
