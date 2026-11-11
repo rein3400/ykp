@@ -7,13 +7,14 @@
  *
  * Returns the created attendance row, or 400 if outside radius / already in.
  */
-import { readTab, appendRows, findRow, TABS } from '@/db/sheets';
+import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { assertEmployee, nextSequentialId } from '@/lib/repo';
 import { handler, badRequest, unauthorized, ok, notFound } from '@/lib/http';
 import { formatTimeWib, nowTimestampWib, todayWib } from '@/lib/format';
 import { classifyLocation, parseGeoPoint } from '@/lib/attendance-geo';
 import { canAttendAnyOutlet, resolveAttendanceOutlet } from '@/lib/multi-location';
 import { resolveNearestOutlet } from '@/lib/nearest-outlet';
+import { telegramAttendanceMarker, hasTelegramAttendanceUpdate } from '@/lib/telegram-attendance-replay';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -21,6 +22,7 @@ const schema = z.object({
   latitude: z.union([z.number(), z.string()]).optional(),
   longitude: z.union([z.number(), z.string()]).optional(),
   outlet_id: z.string().optional(),
+  telegram_update_id: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).optional(),
 });
 
 function botAuthorized(req: Request): boolean {
@@ -46,7 +48,7 @@ export const POST = handler(async (req) => {
   if (!parsed.success) return badRequest(parsed.error.message);
 
   // Resolve the user bound to this Telegram chat id.
-  const users = await readTab<Record<string, string>>(TABS.users).catch(() => []);
+  const users = await readTab<Record<string, string>>(TABS.users);
   const user = users.find((u) => u.telegram_id === parsed.data.telegram_chat_id && (u.active_status || 'active') === 'active');
   if (!user) return notFound('Telegram belum dihubungkan ke akun. Ketik /link KODE untuk menghubungkan.');
 
@@ -60,10 +62,27 @@ export const POST = handler(async (req) => {
   }
 
   const today = todayWib();
-  const existing = await readTab<{ date: string; employee_id: string; actual_check_in: string }>(TABS.attendance);
+  const existing = await readTab<Record<string,string>>(TABS.attendance);
+  let marker = '';
+  if (parsed.data.telegram_update_id !== undefined) {
+    const chatId = Number(parsed.data.telegram_chat_id);
+    if (!Number.isSafeInteger(chatId)) return badRequest('Invalid Telegram identity');
+    marker = telegramAttendanceMarker(chatId, parsed.data.telegram_update_id);
+    if (hasTelegramAttendanceUpdate(existing, employeeId, chatId, parsed.data.telegram_update_id)) {
+      const found = existing.find(row => row.employee_id === employeeId && row.notes?.includes(marker));
+      return ok({ ...found, already: true });
+    }
+  }
   const dup = existing.find((a) => a.date === today && a.employee_id === employeeId);
   if (dup && dup.actual_check_in) {
-    return ok({ ...(dup as Record<string, string>), already: true }, 200);
+    if (marker && !(dup.notes ?? '').includes(marker)) {
+      const found = await findRow(TABS.attendance, 'attendance_id', dup.attendance_id);
+      if (!found) return notFound('Attendance record not found');
+      const updated = { ...found.row, notes: [found.row.notes, marker].filter(Boolean).join(' | ') };
+      await updateRow(TABS.attendance, found.rowNumber, updated);
+      return ok({ ...updated, already: true });
+    }
+    return ok({ ...dup, already: true }, 200);
   }
 
   const emp = await findRow(TABS.employees, 'employee_id', employeeId);
@@ -163,7 +182,7 @@ const outletId = outletRow.outlet_id ?? '';
     correction_status: '',
     correction_reason: '',
     approved_by: '',
-    notes: 'clock-in via telegram',
+    notes: ['clock-in via telegram', marker].filter(Boolean).join(' | '),
     created_at: now,
     updated_at: now
   };

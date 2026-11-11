@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
-import { mkdir, rmdir } from "node:fs/promises";
+import { acquireProcessorLock } from '@/lib/processor-lock';
 import { handler, ok, unauthorized, badRequest } from "@/lib/http";
 import { consumeLinkCode } from "@/lib/telegram";
 import { telegramBotToken } from "@/lib/bot-token";
@@ -81,24 +81,13 @@ export const POST = handler(async (req: NextRequest) => {
     );
     return ok({ handled: true });
   }
-  const lock = "/tmp/ykp-ops-telegram-processor.lock";
+  const release = await acquireProcessorLock('/tmp/ykp-ops-telegram-processor.lock');
+  let result: Awaited<ReturnType<typeof nativeOpsMessage>>;
   try {
-    await mkdir(lock);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "EEXIST")
-      throw new Error("Telegram processor busy; retry required");
-    throw error;
-  }
-  try {
-    const result = await nativeOpsMessage({
-      chatId,
-      senderId,
-      updateId: update.update_id,
-      text,
-    });
-    await reply(chatId, result.text, result.keyboard);
+    result = await nativeOpsMessage({ chatId, senderId, updateId: update.update_id, text });
   } finally {
-    await rmdir(lock);
+    await release();
   }
+  await reply(chatId, result.text, result.keyboard);
   return ok({ handled: true });
 });

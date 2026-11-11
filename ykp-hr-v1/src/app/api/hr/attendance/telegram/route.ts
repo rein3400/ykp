@@ -295,6 +295,7 @@ export const POST = handler(async (req) => {
       }
       const r = await callInternal('/api/hr/telegram/clock-in', hrClockIn, {
         telegram_chat_id: String(fromId),
+        telegram_update_id: update.update_id,
         latitude: lat,
         longitude: lon
       });
