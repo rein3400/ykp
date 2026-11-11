@@ -23,7 +23,7 @@ let cached: sheets_v4.Sheets | null = null;
 // (60 reads/min/user). Any write clears the whole cache.
 const READ_CACHE_TTL_MS = 20_000;
 const readCache = new Map<string, { at: number; rows: Record<string, string>[] }>();
-function invalidateReadCache(): void { readCache.clear(); }
+function invalidateReadCache(tab: TabName): void { readCache.delete(tab); }
 
 const sleep = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve, ms); });
 
@@ -483,7 +483,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
   const lastCol = columnLetter(headers.length);
   const res = await valuesGetWithRetry(sheets, {
     spreadsheetId: sid,
-    range: `${quoteTab(tab)}!A1:${lastCol}1000`
+    range: `${quoteTab(tab)}!A:${lastCol}`
   });
   const rows = res.data.values ?? [];
   if (rows.length < 2) { readCache.set(tab, { at: Date.now(), rows: [] }); return []; }
@@ -501,7 +501,7 @@ export async function readTab<T = Record<string, string>>(tab: TabName): Promise
 
 /** Append rows to a tab. Returns the 1-based starting row of the inserted block. */
 export async function appendRows(tab: TabName, rows: Record<string, string>[]): Promise<number> {
-  invalidateReadCache();
+  invalidateReadCache(tab);
   if (rows.length === 0) return -1;
   if (isMockMode()) return mockAppendRows(tab, rows);
   if (isPostgresMode()) return pgAppendRows(tab, TAB_HEADERS[tab], rows);
@@ -516,6 +516,7 @@ export async function appendRows(tab: TabName, rows: Record<string, string>[]): 
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values }
   });
+  invalidateReadCache(tab);
   // updatedRange like "'tab'!A2:Z5" — extract start row
   const updatedRange = res.data.updates?.updatedRange ?? '';
   const m = updatedRange.match(/![A-Z]+(\d+):/);
@@ -555,7 +556,7 @@ export async function updateRow(
   rowNumber: number,
   values: Record<string, string>
 ): Promise<void> {
-  invalidateReadCache();
+  invalidateReadCache(tab);
   if (isMockMode()) { mockUpdateRow(tab, rowNumber, values); return; }
   if (isPostgresMode()) { await pgUpdateRow(tab, TAB_HEADERS[tab], rowNumber, values); return; }
   const sheets = getSheetsClient();
@@ -569,6 +570,7 @@ export async function updateRow(
     valueInputOption: 'USER_ENTERED',
     requestBody: { values: [arr] }
   });
+  invalidateReadCache(tab);
 }
 
 /**
@@ -578,7 +580,7 @@ export async function updateRow(
  * row numbers via findRow, so the swapped row's new position is safe.
  */
 export async function deleteRow(tab: TabName, rowNumber: number): Promise<void> {
-  invalidateReadCache();
+  invalidateReadCache(tab);
   if (isMockMode()) { mockDeleteRow(tab, rowNumber); return; }
   if (isPostgresMode()) { await pgDeleteRow(tab, rowNumber); return; }
   const sheets = getSheetsClient();
@@ -630,27 +632,8 @@ export async function findRow(
 ): Promise<{ rowNumber: number; row: Record<string, string> } | null> {
   if (isMockMode()) return mockFindRow(tab, keyCol, value);
   if (isPostgresMode()) return pgFindRow(tab, TAB_HEADERS[tab], keyCol, value);
-  const sheets = getSheetsClient();
-  const sid = getSpreadsheetId();
-  const headers = TAB_HEADERS[tab];
-  const colIdx = headers.indexOf(keyCol);
-  if (colIdx < 0) throw new Error(`Column ${keyCol} not in ${tab}`);
-  // Fetch the full tab (up to header count) so we can compare by keyCol AND return the whole row.
-  const lastCol = columnLetter(headers.length);
-  const res = await valuesGetWithRetry(sheets, {
-    spreadsheetId: sid,
-    range: `${quoteTab(tab)}!A1:${lastCol}`
-  });
-  const rows = res.data.values ?? [];
-  for (let i = 1; i < rows.length; i++) {
-    const cell = rows[i]?.[colIdx];
-    if (cell === value) {
-      const obj: Record<string, string> = {};
-      headers.forEach((h, idx) => {
-        obj[h] = (rows[i]?.[idx] !== undefined ? rows[i]![idx] : '') as string;
-      });
-      return { rowNumber: i + 1, row: obj };
-    }
-  }
-  return null;
+  if (!TAB_HEADERS[tab].includes(keyCol)) throw new Error(`Column ${keyCol} not in ${tab}`);
+  const rows = await readTab<Record<string, string>>(tab);
+  const index = rows.findIndex(row => row[keyCol] === value);
+  return index < 0 ? null : { rowNumber: index + 2, row: rows[index] };
 }

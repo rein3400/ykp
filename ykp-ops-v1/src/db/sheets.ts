@@ -192,11 +192,11 @@ export function mapRowsByHeader<T extends Record<string, string> = Record<string
 /**
  * Read-through cache + 429 tolerance (kuota read Sheets dibagi satu service
  * account di seluruh app V1 — tanpa ini halaman bisa 500 saat kuota tersentuh).
- * Setiap write (append/update) mengosongkan cache supaya tidak tampil data basi.
+ * Writes invalidate only their target tab; session writes preserve master caches.
  */
 const READ_CACHE_TTL_MS = 20_000;
 const readCache = new Map<string, { at: number; value: unknown }>();
-function invalidateReadCache(): void { readCache.clear(); }
+function invalidateReadCache(tab: TabName): void { readCache.delete(tab); }
 
 const sheetSleep = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve, ms); });
 
@@ -271,7 +271,7 @@ export async function appendRows(
   tab: TabName,
   rows: Record<string, string>[]
 ): Promise<{ startRow: number }> {
-  invalidateReadCache();
+  invalidateReadCache(tab);
   if (isMockMode()) return mockAppendRows(tab, rows);
   if (isPostgresMode()) {
     await pgAppendRows(tab, TAB_HEADERS[tab], rows);
@@ -280,19 +280,16 @@ export async function appendRows(
   const sheets = getSheetsClient();
   const headers = TAB_HEADERS[tab];
   const values = rows.map((row) => headers.map((h) => row[h] ?? ''));
-  const existing = await sheets.spreadsheets.values.get({
+  const response = await sheets.spreadsheets.values.append({
     spreadsheetId: getSpreadsheetId(),
-    range: `${quoteTab(tab)}!A:A`,
-  });
-  const startRow = (existing.data.values?.length ?? 1) + 1;
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: getSpreadsheetId(),
-    range: `${quoteTab(tab)}!A${startRow}`,
+    range: `${quoteTab(tab)}!A1`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values },
   });
-  return { startRow };
+  invalidateReadCache(tab);
+  const match = response.data.updates?.updatedRange?.match(/![A-Z]+(\d+):/);
+  return { startRow: match ? Number(match[1]) : -1 };
 }
 
 export async function updateRow(
@@ -300,7 +297,7 @@ export async function updateRow(
   rowIndex: number,
   row: Record<string, string>
 ): Promise<void> {
-  invalidateReadCache();
+  invalidateReadCache(tab);
   if (isMockMode()) return mockUpdateRow(tab, rowIndex, row);
   // In Postgres mode rowIndex IS the stable __rownum (see findRow below):
   // __rownum survives deletes/gaps, unlike a dense position. Pass through.
@@ -315,6 +312,7 @@ export async function updateRow(
     valueInputOption: 'RAW',
     requestBody: { values },
   });
+  invalidateReadCache(tab);
 }
 
 export async function findRow(
