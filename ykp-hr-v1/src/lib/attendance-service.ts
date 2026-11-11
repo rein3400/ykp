@@ -97,6 +97,7 @@ export async function performClockIn(input: {
   longitude?: number | string;
   actor: AttendanceActor;
   source: 'web' | 'telegram';
+  telegramUpdateMarker?: string;
 }): Promise<ClockInOutcome> {
   try {
     await assertEmployee(input.employeeId);
@@ -205,7 +206,7 @@ export async function performClockIn(input: {
     correction_status: '',
     correction_reason: '',
     approved_by: '',
-    notes: `clock-in via ${input.source}`,
+    notes: [`clock-in via ${input.source}`, input.source === 'telegram' ? input.telegramUpdateMarker : ''].filter(Boolean).join(' | '),
     created_at: now,
     updated_at: now
   };
@@ -232,6 +233,7 @@ export async function performClockOut(input: {
   longitude?: number | string;
   actor: AttendanceActor;
   source: 'web' | 'telegram';
+  telegramUpdateMarker?: string;
 }): Promise<ClockOutOutcome> {
   const found = await findRow(TABS.attendance, 'attendance_id', input.attendanceId);
   if (!found) return { ok: false, error: { status: 404, code: 'not_found', message: 'Attendance not found' } };
@@ -255,7 +257,7 @@ export async function performClockOut(input: {
     checkOutGeoNote = `clock-out GPS=${String(input.latitude)},${String(input.longitude)} radius=${verdict.radiusMeters}m`;
   }
   const overtimeMinutes = computeOvertimeMinutes(found.row.scheduled_check_in, found.row.scheduled_check_out, timeNow);
-  const notes = [found.row.notes, `clock-out source=${input.source}`, checkOutGeoNote].filter(Boolean).join(' | ');
+  const notes = [found.row.notes, `clock-out source=${input.source}`, checkOutGeoNote, input.source === 'telegram' ? input.telegramUpdateMarker : ''].filter(Boolean).join(' | ');
   const updated = {
     ...found.row,
     actual_check_out: timeNow,

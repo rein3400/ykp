@@ -26,6 +26,9 @@
  */
 import { handler, ok } from '@/lib/http';
 import { performClockIn, performClockOut } from '@/lib/attendance-service';
+import { readTab, TABS } from '@/db/sheets';
+
+import { telegramAttendanceMarker, hasTelegramAttendanceUpdate } from '@/lib/telegram-attendance-replay';
 import {
   findEmployeeByTelegramId,
   findOpenAttendance,
@@ -327,6 +330,13 @@ export const POST = handler(async (req) => {
       await reply('Lokasi GPS tidak valid. Coba kirim ulang lokasi Anda.');
       return ok({ ok: true });
     }
+    if (!Number.isSafeInteger(update.update_id)) return ok({ ok: false, error: 'Invalid Telegram update identity' }, 400);
+    const marker = telegramAttendanceMarker(Number(chatId), update.update_id!);
+    const attendance = await readTab<Record<string, string>>(TABS.attendance);
+    if (hasTelegramAttendanceUpdate(attendance, employee.employee_id, Number(chatId), update.update_id!)) {
+      await reply('ℹ️ Pesan lokasi ini sudah diproses. Gunakan /me untuk memeriksa absensi; kirim lokasi baru hanya untuk tindakan berikutnya.');
+      return ok({ ok: true, already: true });
+    }
     const open = await findOpenAttendance(employee.employee_id);
     if (open) {
       const out = await performClockOut({
@@ -334,7 +344,8 @@ export const POST = handler(async (req) => {
         latitude,
         longitude,
         actor: { userId: actorUserId, role: actorRole, employeeId: employee.employee_id },
-        source: 'telegram'
+        source: 'telegram',
+        telegramUpdateMarker: marker
       });
       if (!out.ok) {
         await reply(`❌ Gagal absen pulang: ${escapeHtml(out.error.message)}`);
@@ -348,7 +359,8 @@ export const POST = handler(async (req) => {
       latitude,
       longitude,
       actor: { userId: actorUserId, role: actorRole, employeeId: employee.employee_id },
-      source: 'telegram'
+      source: 'telegram',
+      telegramUpdateMarker: marker
     });
     if (!clockIn.ok) {
       await reply(`❌ Gagal absen masuk: ${escapeHtml(clockIn.error.message)}`);

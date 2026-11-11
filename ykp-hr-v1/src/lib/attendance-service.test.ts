@@ -65,6 +65,21 @@ describe('performClockIn / performClockOut (mock store)', () => {
     expect(['PRESENT', 'LATE']).toContain(r.row.attendance_status);
   });
 
+  it('stores update markers in the same attendance write for Telegram replay detection', async () => {
+    const { appendRows, TABS } = await import('@/db/sheets');
+    await appendRows(TABS.employees, [{ employee_id: 'EMP-REPLAY', full_name: 'Replay test', active_status: 'active', outlet_id: 'OL-001', brand_id: 'BR-001' }]);
+    const first = await performClockIn({ employeeId: 'EMP-REPLAY', actor: { userId: 'TEST', role: 'owner' }, source: 'telegram', telegramUpdateMarker: '[tg-update:123456:10]' });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    expect(first.row.notes).toContain('[tg-update:123456:10]');
+    const last = await performClockOut({ attendanceId: first.row.attendance_id, actor: { userId: 'TEST', role: 'owner' }, source: 'telegram', telegramUpdateMarker: '[tg-update:123456:11]' });
+    expect(last.ok).toBe(true);
+    if (last.ok) {
+      expect(last.row.notes).toContain('[tg-update:123456:10]');
+      expect(last.row.notes).toContain('[tg-update:123456:11]');
+    }
+  });
+
   it('rejects a second clock-in as idempotent (already:true), not an error', async () => {
     const first = await performClockIn({
       employeeId,
