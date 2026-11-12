@@ -368,7 +368,7 @@ export const POST = handler(async (req) => {
       return ok({ ok: true, error: clockIn.error });
     }
     if (clockIn.already) {
-      await reply('ℹ️ Sudah absen masuk hari ini. Jika ingin absen pulang, pastikan absensi masih terbuka lalu kirim lokasi.');
+      await reply(alreadyClockedInText(clockIn.row));
       return ok({ ok: true, already: true });
     }
     await reply(`✅ Absen masuk tercatat.\nJam: ${escapeHtml(clockIn.row.actual_check_in)}\nStatus: ${escapeHtml(clockIn.row.attendance_status)}\nLokasi: ${escapeHtml(clockIn.row.check_in_location)}`);
@@ -403,11 +403,19 @@ function notLinkedText(errorMessage?: string): string {
   return `⚠️ ${errorMessage ?? 'Gagal mengambil data. Coba lagi sebentar lagi.'}`;
 }
 
+function alreadyClockedInText(row: Record<string, string>): string {
+  const time = row.actual_check_in ? `${escapeHtml(row.actual_check_in)} WIB` : 'belum tersedia; periksa rekap HR';
+  const checkout = row.actual_check_out
+    ? `Absen pulang: ${escapeHtml(row.actual_check_out)} WIB. Absensi ini sudah ditutup.`
+    : 'Gunakan /me untuk memeriksa status absensi. Kirim lokasi baru hanya saat benar-benar akan absen pulang.';
+  return `ℹ️ Sudah absen masuk hari ini.\nJam masuk tercatat: ${time}\n${checkout}\nJam masuk tidak diubah.`;
+}
+
 function clockInText(r: InternalResult): string {
   if (r.status === 404) return notLinkedText(r.errorMessage);
   if (!r.data) return `⚠️ Clock-in gagal: ${r.errorMessage ?? r.status}.`;
   const d = r.data as Record<string, string>;
-  if (d.already) return `✅ Kamu sudah clock-in hari ini pukul ${d.actual_check_in ?? '-'}.`;
+  if (d.already) return alreadyClockedInText(d);
   const status = d.attendance_status === 'LATE' ? 'TERLAMBAT' : 'HADIR';
   const late = Number(d.late_minutes || 0) > 0 ? ` (telat ${d.late_minutes} menit)` : '';
   return `✅ Clock-in berhasil pukul ${d.actual_check_in ?? '-'} — ${status}${late}.`;
