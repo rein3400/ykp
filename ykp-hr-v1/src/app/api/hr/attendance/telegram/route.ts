@@ -47,6 +47,7 @@ import {
 } from '@/lib/telegram-attendance';
 import { safeEqual } from '@/lib/cron';
 import { formatTelegramLeave } from '@/lib/leave-decision';
+import { attendanceSummaryLines } from '@/lib/attendance-summary';
 import { POST as hrLinkConsume } from '@/app/api/hr/telegram/link/consume/route';
 import { POST as hrClockIn } from '@/app/api/hr/telegram/clock-in/route';
 import { POST as hrMe } from '@/app/api/hr/telegram/me/route';
@@ -433,9 +434,7 @@ function meText(data: Record<string, unknown>): string {
   if (att.length > 0) {
     const a = att[0];
     lines.push('', '<b>Kehadiran hari ini:</b>');
-    lines.push(`• Check-in: ${escapeHtml(a.actual_check_in || 'belum')} (jadwal ${escapeHtml(a.scheduled_check_in || '-')})`);
-    lines.push(`• Check-out: ${escapeHtml(a.actual_check_out || 'belum')} (jadwal ${escapeHtml(a.scheduled_check_out || '-')})`);
-    lines.push(`• Status: ${escapeHtml(a.status || '-')}`);
+    lines.push(...attendanceSummaryLines(a));
   } else {
     lines.push('', 'Kehadiran hari ini: belum tercatat.');
   }
