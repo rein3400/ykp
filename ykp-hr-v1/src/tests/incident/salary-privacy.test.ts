@@ -12,12 +12,13 @@ function request(path:string,role:string,exp=4102444800){
 beforeEach(()=>vi.stubEnv('SESSION_SECRET',secret));afterEach(()=>vi.unstubAllEnvs());
 describe('salary privacy boundary',()=>{
  it.each(['employee','supervisor','outlet_manager','brand_manager','hr_admin','super_admin','viewer'])('denies %s direct payroll/payslip pages and APIs',async role=>{
-  for(const path of ['/hr/payroll','/hr/payroll/generate','/api/hr/payroll/unlock','/api/hr/payslip/PR1','/hr/audit']){
+  for(const path of ['/hr/payroll','/hr/payroll/generate','/api/hr/payroll/unlock','/api/hr/payslip/PR1','/hr/audit','/hr/adjustments','/api/hr/adjustments','/api/hr/adjustments/approve']){
    const response=await middleware(request(path,role));expect(response.headers.get('x-middleware-next'),path).not.toBe('1');expect(response.status,path).toBe(403);
   }
  });
  it.each(['owner','finance_admin'])('permits %s payroll reads',async role=>{
   expect((await middleware(request('/hr/payroll',role))).headers.get('x-middleware-next')).toBe('1');
+  expect((await middleware(request('/hr/adjustments',role))).headers.get('x-middleware-next')).toBe('1');
  });
  it('rejects expired signed sessions',async()=>{
   expect((await middleware(request('/api/hr/payroll/generate','owner',1))).status).toBe(401);

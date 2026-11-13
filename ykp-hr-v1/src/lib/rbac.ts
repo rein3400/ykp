@@ -50,6 +50,7 @@ export type Action =
 /** Returns true if role can do action on resource. Scope filtering handled by caller. */
 export function can(role: Role, action: Action, resource: Resource): boolean {
   if (resource === 'payroll' && role !== 'owner' && role !== 'finance_admin') return false;
+  if (resource === 'adjustment' && role !== 'owner' && role !== 'finance_admin') return false;
   // Owner has full access to everything (wildcard).
   if (role === 'owner') return true;
   const m = MATRIX[role];
@@ -117,6 +118,7 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
   },
   finance_admin: {
     payroll: ['view', 'export', 'mark_paid', 'request_revision'],
+    adjustment: ['view', 'approve', 'export'],
     summary: ['view', 'export'],
     audit: ['view']
   },

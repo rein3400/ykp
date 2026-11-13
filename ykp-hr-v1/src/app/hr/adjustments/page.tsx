@@ -1,6 +1,9 @@
 import { readTab, TABS } from '@/db/sheets';
 import { AdjustmentForm } from '@/features/hr/components/adjustment-form';
 import { AdjustmentsTable } from '@/features/hr/components/adjustments-table';
+import { canViewPayroll } from '@/lib/payroll-access';
+import { getSession } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +22,10 @@ interface Adj {
 }
 
 export default async function AdjustmentsPage() {
+  const session = await getSession();
+  if (!session) redirect('/login');
+  if (!canViewPayroll(session.role)) redirect('/hr');
+
   const [employees, adj] = await Promise.all([
     readTab<{ employee_id: string; full_name: string; active_status: string }>(TABS.employees),
     readTab<Adj>(TABS.adjustments)

@@ -116,7 +116,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(cookie.split('.')[1])));
     if (payload.role !== 'owner') return NextResponse.json({error:{code:'forbidden',message:'Pengelolaan akun hanya Owner selama pengamanan payroll'}},{status:403});
   }
-  const salaryPaths = ['/hr/payroll', '/api/hr/payroll', '/api/hr/payslip', '/hr/audit', '/hr/employees', '/api/hr/employees'];
+  const salaryPaths = ['/hr/payroll', '/api/hr/payroll', '/api/hr/payslip', '/hr/audit', '/hr/employees', '/api/hr/employees', '/hr/adjustments', '/api/hr/adjustments'];
   if (salaryPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
     const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(cookie.split('.')[1])));
     if (!canViewPayroll(payload.role)) return NextResponse.json({ error: { code: 'forbidden', message: 'Data gaji dan master karyawan dibatasi untuk Owner/Finance selama pengamanan privasi.' } }, { status: 403 });

@@ -21,6 +21,9 @@ const insertSchema = z.object({
 });
 
 export const GET = handler(async () => {
+  const session = await getSession();
+  if (!session) return unauthorized();
+  if (!can(session.role as Role, 'view', 'adjustment')) return forbidden();
   const rows = await readTab<Record<string, string>>(TABS.adjustments);
   return list(rows);
 });
