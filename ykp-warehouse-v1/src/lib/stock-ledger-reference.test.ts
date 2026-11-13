@@ -17,6 +17,10 @@ async function seedBalance(itemId: string) {
 }
 
 describe('stock ledger reference uniqueness', () => {
+  it('rejects mixing units into a previously recorded location balance', async () => {
+    await seedBalance('ITM-UNIT-GUARD');
+    await expect(appendMovement({movementType:'RECEIPT',direction:'IN',quantity:1000,baseUnit:'g',unitCost:50,itemId:'ITM-UNIT-GUARD',brandId:'BR-1',outletId:'OL-1',locationId:'LOC-1',referenceType:'receiving',referenceId:'NEW-UNIT-GUARD',createdBy:'U-1'})).rejects.toThrow(/satuan/i);
+  });
   it('allows multiple legs that share a business reference (issue per line/leg)', async () => {
     const base = {
       movementType: 'ISSUE' as const, direction: 'OUT' as const, quantity: 1, baseUnit: 'kg', unitCost: 0,

@@ -64,6 +64,7 @@ export default function ReceivingClient({
   const updateLine = (idx: number, k: string, v: string) => {
     const copy = [...lineItems];
     copy[idx] = { ...copy[idx], [k]: v };
+    if (k === 'item_id') copy[idx].unit = items.find(item => item.item_id === v)?.base_unit || '';
     setLineItems(copy);
   };
   const addLine = () => setLineItems([...lineItems, { item_id: '', batch_number: '', expiry_date: '', qty_ordered: '', qty_delivered: '', qty_accepted: '', scale_weight: '', unit: 'kg', unit_price: '', condition_status: 'GOOD', temperature_value: '', notes: '' }]);
@@ -106,9 +107,9 @@ export default function ReceivingClient({
               <input placeholder='Qty Order' value={it.qty_ordered} onChange={(e) => updateLine(idx, 'qty_ordered', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Qty Delivered' value={it.qty_delivered} onChange={(e) => updateLine(idx, 'qty_delivered', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Qty Accepted' value={it.qty_accepted} onChange={(e) => updateLine(idx, 'qty_accepted', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
-              <input placeholder='Berat Timbangan (kg)' type='number' step='any' min='0' value={it.scale_weight} onChange={(e) => updateLine(idx, 'scale_weight', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
+              <input placeholder={`Timbangan (${it.unit || 'satuan baris'})`} type='number' step='any' min='0' value={it.scale_weight} onChange={(e) => updateLine(idx, 'scale_weight', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <input placeholder='Unit' value={it.unit} onChange={(e) => updateLine(idx, 'unit', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
-              <input placeholder='Unit Price' value={it.unit_price} onChange={(e) => updateLine(idx, 'unit_price', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
+              <input placeholder='Harga per satuan baris (boleh desimal)' type='number' step='any' min='0' value={it.unit_price} onChange={(e) => updateLine(idx, 'unit_price', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]' />
               <select value={it.condition_status} onChange={(e) => updateLine(idx, 'condition_status', e.target.value)} className='rounded border border-border px-1 py-0.5 text-[10px]'>
                 {['GOOD','DAMAGED','EXPIRED','TEMPERATURE_ISSUE','WRONG_ITEM','WRONG_QTY','OTHER'].map((c) => <option key={c} value={c}>{c}</option>)}
               </select>

@@ -34,7 +34,9 @@ vi.mock('@/db/sheets', async () => {
     actionTracker: 'warehouse_action_tracker',
     auditLog: 'system_audit_log',
     attachments: 'warehouse_attachments',
-    telegramDeliveryLog: 'telegram_delivery_log'
+    telegramDeliveryLog: 'telegram_delivery_log',
+    unitConversion: 'master_unit_conversion',
+    batchStock: 'warehouse_batch_stock'
   } as const;
   return {
     TABS,
@@ -122,6 +124,7 @@ const rcvBody = {
 
 beforeEach(() => {
   for (const k of Object.keys(db)) delete db[k];
+  tabRows('master_item').push({item_id:'ITM-1',base_unit:'kg'}, {item_id:'ITM-2',base_unit:'kg'});
   tabRows('warehouse_attachments').push({ attachment_id: 'ATT-1', entity_type: 'receiving', entity_id: '', file_id: 'F1', file_name: 'scale.jpg', mime_type: 'image/jpeg', size_bytes: '1000', uploaded_by: 'USR-001', created_at: '' });
 });
 
@@ -252,6 +255,17 @@ describe('receiving route 3-way gate', () => {
     const details = tabRows('warehouse_receiving_item');
     expect(refs).toEqual(details.map(detail => `${detail.receiving_id}-${detail.receiving_item_id}`));
     expect(details.map(detail => detail.unit_price)).toEqual(['12.5', '12.5']);
+    spy.mockRestore();
+  });
+
+  it('posts base-unit qty and reciprocal HPP while retaining invoice units', async () => {
+    tabRows('master_item')[0].base_unit = 'g';
+    const spy = vi.spyOn(await import('@/lib/stock-ledger'), 'appendMovement');
+    const response = await rcvPOST(req({ ...rcvBody, items: [{ item_id: 'ITM-1', qty_ordered: 2, qty_delivered: 2, qty_accepted: 2, unit: 'kg', unit_price: 50000 }] }), ctx);
+    expect(response.status).toBe(201);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({ quantity: 2000, baseUnit: 'g', unitCost: 50 }));
+    expect(tabRows('warehouse_receiving_item')[0]).toMatchObject({ qty_accepted: '2', unit: 'kg', total_value: '100000' });
+    expect(tabRows('warehouse_batch_stock')[0]).toMatchObject({ current_qty: '2000', unit: 'g', unit_cost: '50' });
     spy.mockRestore();
   });
 

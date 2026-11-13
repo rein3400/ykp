@@ -13,6 +13,7 @@ import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertSupplier, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
+import { receiptToBase, mergeReceiptBatch } from '@/lib/receipt-units';
 import { evalReceivingDiscrepancy, shouldCreateAction, evalNearExpiry } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
@@ -58,7 +59,14 @@ export const POST = handler(async (req: NextRequest) => {
     }>;
   };
 
-  if (!body.items || body.items.length === 0) return badRequest('At least one item is required');
+  if (!body || !Array.isArray(body.items) || body.items.length === 0) return badRequest('At least one item is required');
+  if (!body.destination_location_id) return badRequest('Lokasi tujuan wajib diisi agar penerimaan masuk ledger');
+  if (body.items.some(it => !it || typeof it.item_id !== 'string' || typeof it.unit !== 'string' || !Number.isFinite(it.qty_ordered) || it.qty_ordered < 0 || !Number.isFinite(it.qty_delivered) || it.qty_delivered < 0 || !Number.isFinite(it.qty_accepted ?? it.qty_delivered) || (it.qty_accepted ?? it.qty_delivered) < 0 || (it.qty_accepted ?? it.qty_delivered) > it.qty_delivered || !Number.isFinite(it.unit_price) || it.unit_price < 0)) return badRequest('Item, satuan, qty dan harga penerimaan tidak valid');
+
+  for (const line of body.items) {
+    if (line.scale_weight !== undefined && (typeof line.scale_weight !== 'number' || !Number.isFinite(line.scale_weight) || line.scale_weight <= 0)) return badRequest('Berat timbangan wajib positif bila diisi');
+    if (line.qty_rejected !== undefined && (!Number.isFinite(line.qty_rejected) || line.qty_rejected < 0 || Math.abs(line.qty_delivered - (line.qty_accepted ?? line.qty_delivered) - line.qty_rejected) > 0.000001)) return badRequest('Qty ditolak tidak sesuai delivered dikurangi accepted');
+  }
 
   // Hard gate: photo proof (weight/measurement) is mandatory per owner directive.
   // Accept EITHER an attachments-tab photo (photo_attachment_id) OR evidence
@@ -102,6 +110,36 @@ export const POST = handler(async (req: NextRequest) => {
     if (e instanceof FraudControlError) return badRequest(e.message);
     throw e;
   }
+
+  const [masters, conversions] = await Promise.all([
+    readTab<Record<string,string>>(TABS.items),
+    readTab<Record<string,string>>(TABS.unitConversion)
+  ]);
+  const normalized: ReturnType<typeof receiptToBase>[] = [];
+  try {
+    for (const line of body.items) {
+      const master = masters.find(item => item.item_id === line.item_id);
+      if (!master) return badRequest('Master item tidak ditemukan');
+      normalized.push(receiptToBase(master, line.unit, line.qty_accepted ?? line.qty_delivered, line.unit_price, conversions));
+    }
+  } catch(error) { return badRequest(error instanceof Error ? error.message : 'Konversi satuan tidak valid'); }
+
+  const [ledgerBefore, batchBefore] = await Promise.all([
+    readTab<Record<string,string>>(TABS.stockMovement),
+    readTab<Record<string,string>>(TABS.batchStock)
+  ]);
+  try {
+    for (const [index, line] of body.items.entries()) {
+      const incoming = normalized[index];
+      for (const movement of ledgerBefore.filter(row => row.item_id === line.item_id && row.location_id === body.destination_location_id)) {
+        const check = receiptToBase(masters.find(item => item.item_id === line.item_id)!, movement.base_unit, 1, 0, conversions);
+        if (check.quantity !== 1) return badRequest('Ledger lama belum memakai satuan dasar; hubungi admin untuk rekonsiliasi sebelum menerima barang');
+      }
+      for (const batch of batchBefore.filter(row => row.item_id === line.item_id && row.location_id === body.destination_location_id && (row.batch_number || '') === (line.batch_number || '') && (row.status || 'ACTIVE') === 'ACTIVE')) {
+        mergeReceiptBatch(masters.find(item => item.item_id === line.item_id)!, batch, incoming, conversions);
+      }
+    }
+  } catch(error) { return badRequest(error instanceof Error ? error.message : 'Satuan stok lama tidak valid'); }
 
   const now = nowTimestampWib();
   const receivingId = nextSequentialIdSync('RCV');
@@ -205,9 +243,9 @@ export const POST = handler(async (req: NextRequest) => {
         await appendMovement({
           movementType: 'RECEIPT',
           direction: 'IN',
-          quantity: qtyAccepted,
-          baseUnit: it.unit,
-          unitCost: it.unit_price || 0,
+          quantity: normalized[lineIndex].quantity,
+          baseUnit: normalized[lineIndex].unit,
+          unitCost: normalized[lineIndex].unitCost,
           itemId: it.item_id,
           brandId: '',
           outletId: '',
@@ -356,12 +394,14 @@ export const POST = handler(async (req: NextRequest) => {
     }
   }
 
+  // Never add batch quantities for a line whose ledger posting failed.
+  const batchFailures: string[] = [];
   // Upsert batch_stock: FEFO/expiry tracking must reflect every receipt.
   if (body.destination_location_id) {
-    for (const t of threeWay) {
+    for (const [lineIndex, t] of threeWay.entries()) {
       const it = t.item;
-      const qtyAccepted = it.qty_accepted ?? it.qty_delivered;
-      if (qtyAccepted <= 0) continue;
+      const qtyAccepted = normalized[lineIndex].quantity;
+      if (qtyAccepted <= 0 || ledgerFailures.includes(it.item_id)) continue;
       try {
         const batchRows = await readTab<Record<string, string>>(TABS.batchStock);
         const existing = batchRows.find(
@@ -373,13 +413,15 @@ export const POST = handler(async (req: NextRequest) => {
         if (existing) {
           const found = await findRow(TABS.batchStock, 'batch_stock_id', existing.batch_stock_id);
           if (found) {
-            const newQty = (Number(existing.current_qty) || 0) + qtyAccepted;
+            const master = masters.find(item => item.item_id === it.item_id)!;
+            const merged = mergeReceiptBatch(master, existing, normalized[lineIndex], conversions);
             await updateRow(TABS.batchStock, found.rowNumber, {
               ...found.row,
-              current_qty: String(newQty),
-              unit: it.unit,
+              current_qty: String(merged.quantity),
+              unit: merged.unit,
+              unit_cost: String(merged.unitCost),
               updated_at: now
-            }).catch(() => null);
+            });
           }
         } else {
           const expiry = it.expiry_date ?? '';
@@ -403,23 +445,26 @@ export const POST = handler(async (req: NextRequest) => {
             expiry_date: expiry,
             received_date: today,
             current_qty: String(qtyAccepted),
-            unit: it.unit,
-            unit_cost: String(it.unit_price || 0),
+            unit: normalized[lineIndex].unit,
+            unit_cost: String(normalized[lineIndex].unitCost),
             status: batchStatus,
             created_at: now,
             updated_at: now
-          }]).catch((e) => console.error('[receiving] batch_stock create failed:', e));
+          }]);
         }
       } catch (e) {
         console.error('[receiving] batch_stock upsert failed:', e);
+        batchFailures.push(it.item_id);
       }
     }
   }
 
-  if (ledgerFailures.length > 0) {
+  if (ledgerFailures.length > 0 || batchFailures.length > 0) {
+    const found = await findRow(TABS.receiving, 'receiving_id', receivingId);
+    if (found) await updateRow(TABS.receiving, found.rowNumber, { ...found.row, receiving_status: 'RECONCILIATION_REQUIRED' });
     return fail(
       'ledger_post_failed',
-      `Buku stok gagal dicatat untuk: ${ledgerFailures.join(', ')}. Terimaan TIDAK valid — hubungi admin, jangan input ulang.`,
+      `Buku stok gagal dicatat untuk: ${[...ledgerFailures, ...batchFailures].join(', ')}. Terimaan perlu rekonsiliasi — hubungi admin, jangan input ulang.`,
       500
     );
   }

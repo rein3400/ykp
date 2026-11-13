@@ -11,6 +11,7 @@
 import { readTab, appendRows, findRow, TABS } from '@/db/sheets';
 import { nowTimestampWib } from './format';
 import { nextSequentialIdSync } from './repo';
+import { normalizeUnit } from './unit-conversion';
 
 export type MovementType =
   | 'OPENING_BALANCE' | 'RECEIPT' | 'ISSUE'
@@ -84,6 +85,8 @@ export async function appendMovement(p: MovementParams): Promise<MovementRow> {
   // Compute stock_before from last movement for this (item, location)
   const all = await readTab<Record<string, string>>(TABS.stockMovement);
   const sameItem = all.filter((m) => m.item_id === p.itemId && m.location_id === p.locationId);
+  const canonical = (unit: string) => ['pcs','piece','pieces'].includes(unit.trim().toLowerCase()) ? 'pc' : normalizeUnit(unit);
+  if (sameItem.some(m => canonical(m.base_unit || '') !== canonical(p.baseUnit))) throw new Error('Satuan ledger berbeda; rekonsiliasi saldo lama sebelum posting');
   const last = sameItem.length > 0
     ? sameItem.reduce((a, b) => (a.movement_datetime > b.movement_datetime ? a : b))
     : null;
