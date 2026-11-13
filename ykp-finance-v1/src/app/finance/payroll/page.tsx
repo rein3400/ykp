@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function PayrollPage() {
   const session = await getSession();
   if (!session) redirect('/login');
+  if (!['owner','finance_admin'].includes(session.role)) redirect('/finance');
   const scope = scopeFor(session.role, session.brandId, session.outletId);
 
   const [rows, brands] = await Promise.all([

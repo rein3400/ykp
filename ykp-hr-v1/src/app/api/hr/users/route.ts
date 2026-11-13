@@ -54,7 +54,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
-  if (!can(session.role as Role, 'create', 'user')) return forbidden();
+  if (session.role !== 'owner') return forbidden('Hanya Owner dapat mengelola akun');
 
   const body = await req.json();
   const parsed = insertSchema.safeParse(body);
@@ -112,7 +112,7 @@ export const POST = handler(async (req) => {
 export const PUT = handler(async (req) => {
   const session = await getSession();
   if (!session) return unauthorized();
-  if (!can(session.role as Role, 'update', 'user')) return forbidden();
+  if (session.role !== 'owner') return forbidden('Hanya Owner dapat mengelola akun');
 
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);

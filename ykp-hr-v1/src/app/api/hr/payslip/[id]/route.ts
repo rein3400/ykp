@@ -12,6 +12,7 @@ import { NextResponse } from 'next/server';
 export const GET = handler(async (req, { params }) => {
   const session = await getSession();
   if (!session) return unauthorized();
+  if (!['owner','finance_admin'].includes(session.role)) return forbidden();
   const { id } = params;
   const payroll = await findRow(TABS.payroll, 'payroll_id', id);
   if (!payroll) return notFound('Payroll not found');
@@ -20,9 +21,7 @@ export const GET = handler(async (req, { params }) => {
   // Role-based access: self can only view own. session.employeeId is the
   // linked EMP- id (set at login from users.employee_id); session.userId is
   // USR- and never equals row.employee_id (EMP-), so the old check always 403'd.
-  const isSelf = session.role === 'employee' && session.employeeId === row.employee_id;
-  const isPrivileged = ['owner', 'super_admin', 'hr_admin', 'finance_admin'].includes(session.role);
-  if (!isSelf && !isPrivileged) return forbidden();
+
 
   const body = buildPayslipHtml(id, row);
   return new NextResponse(body, {

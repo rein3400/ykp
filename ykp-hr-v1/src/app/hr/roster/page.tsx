@@ -1,3 +1,4 @@
+import { employeeWithoutSalary } from '@/lib/payroll-access';
 import { readTab, TABS } from '@/db/sheets';
 import { todayWib } from '@/lib/format';
 import { shiftLabel, type ShiftLike } from '@/lib/shift-label';
@@ -48,7 +49,7 @@ export default async function RosterPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="card">
           <h2 className="mb-2 font-semibold">Buat Roster</h2>
-          <RosterForm employees={active} shifts={activeShifts} />
+          <RosterForm employees={active.map(employeeWithoutSalary)} shifts={activeShifts} />
         </div>
         <div className="card lg:col-span-2">
           <h2 className="mb-3 font-semibold">Roster Hari Ini ({today})</h2>

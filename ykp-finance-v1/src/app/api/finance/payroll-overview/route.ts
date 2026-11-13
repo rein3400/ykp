@@ -13,7 +13,7 @@ import { readTab, TABS } from '@/db/sheets';
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'summary')) return forbidden('Forbidden');
+  if (!['owner','finance_admin'].includes(s.role)) return forbidden('Payroll hanya Owner/Finance');
 
   const q = req.nextUrl.searchParams;
   const scope = scopeFilter(s.role as Role, s.brandId, s.outletId);

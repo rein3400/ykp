@@ -1,6 +1,8 @@
 import { readTab, TABS } from '@/db/sheets';
 import { formatIdr } from '@/lib/format';
 import { getSession } from '@/lib/session';
+import { canViewPayroll } from '@/lib/payroll-access';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { PayrollTable } from '@/features/hr/components/payroll-table';
 
@@ -27,7 +29,9 @@ interface Payroll {
 
 export default async function PayrollPage() {
   const session = await getSession();
-  const userRole = session?.role ?? '';
+  if (!session) redirect('/login');
+  if (!canViewPayroll(session.role)) redirect('/hr');
+  const userRole = session.role;
   const payrolls = await readTab<Payroll>(TABS.payroll);
   const byPeriod = new Map<string, Payroll[]>();
   for (const p of payrolls) {

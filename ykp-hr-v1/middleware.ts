@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { canViewPayroll } from './src/lib/payroll-access';
 
 const PUBLIC = [
   '/login',
@@ -43,7 +44,11 @@ async function verify(token: string, secret: string): Promise<boolean> {
   // Constant-time compare
   let diff = 0;
   for (let i = 0; i < expected.length; i++) diff |= expected[i] ^ provided[i];
-  return diff === 0;
+  if (diff !== 0) return false;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(parts[1])));
+    return typeof payload.exp === 'number' && payload.exp > Date.now() / 1000;
+  } catch { return false; }
 }
 
 function base64UrlDecode(s: string): Uint8Array {
@@ -106,6 +111,15 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
+  }
+  if ((pathname === '/hr/users' || pathname.startsWith('/hr/users/') || pathname === '/api/hr/users' || pathname.startsWith('/api/hr/users/')) && !['GET','HEAD'].includes(req.method)) {
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(cookie.split('.')[1])));
+    if (payload.role !== 'owner') return NextResponse.json({error:{code:'forbidden',message:'Pengelolaan akun hanya Owner selama pengamanan payroll'}},{status:403});
+  }
+  const salaryPaths = ['/hr/payroll', '/api/hr/payroll', '/api/hr/payslip', '/hr/audit', '/hr/employees', '/api/hr/employees'];
+  if (salaryPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(cookie.split('.')[1])));
+    if (!canViewPayroll(payload.role)) return NextResponse.json({ error: { code: 'forbidden', message: 'Data gaji dan master karyawan dibatasi untuk Owner/Finance selama pengamanan privasi.' } }, { status: 403 });
   }
   return NextResponse.next();
 }

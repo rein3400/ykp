@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { todayWib, nowTimestampWib } from '@/lib/format';
 import { getSession } from '@/lib/session';
+import { canViewPayroll, employeeWithoutSalary } from '@/lib/payroll-access';
 import { isActiveOutletStatus } from '@/lib/master-data';
 import { redirect } from 'next/navigation';
 import { HrOverviewClient } from '@/features/hr/components/hr-overview-client';
@@ -116,7 +117,7 @@ export default async function HrOverview() {
       )}
 
       <HrOverviewClient
-        employees={scopedEmployees}
+        employees={canViewPayroll(session.role) ? scopedEmployees : scopedEmployees.map(employeeWithoutSalary)}
         attendance={scopedAttendance}
         leaves={scopedLeaves}
         rosters={scopedRosters}

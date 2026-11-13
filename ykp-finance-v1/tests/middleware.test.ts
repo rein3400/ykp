@@ -3,9 +3,9 @@ import { createHmac } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { middleware } from '../src/middleware';
 const secret = 'release-test-session-secret-32-characters';
-function token(exp: unknown) {
+function token(exp: unknown, role = 'owner') {
  const h=Buffer.from(JSON.stringify({alg:'HS256'})).toString('base64url');
- const b=Buffer.from(JSON.stringify({userId:'test',exp})).toString('base64url');
+ const b=Buffer.from(JSON.stringify({userId:'test',exp,role})).toString('base64url');
  return h+'.'+b+'.'+createHmac('sha256',secret).update(h+'.'+b).digest('base64url');
 }
 function request(cookie?: string, headers: Record<string,string>={}) {
@@ -13,6 +13,12 @@ function request(cookie?: string, headers: Record<string,string>={}) {
 }
 afterEach(()=>vi.unstubAllEnvs());
 describe('Finance middleware credentials',()=>{
+ it.each(['employee','staff_input','viewer','super_admin','hr_admin'])('denies payroll to %s with valid cookie',async role=>{
+  vi.stubEnv('SESSION_SECRET',secret);
+  for(const path of ['/finance/payroll','/api/finance/payroll-overview','/api/finance/payroll/notify-hr']){
+   const response=await middleware(new NextRequest('http://localhost'+path,{headers:{cookie:'ykp_finance_session='+token(4102444800,role)}}));expect(response.status).toBe(403);
+  }
+ });
  it('denies anonymous financial reads',async()=>expect((await middleware(request())).status).toBe(401));
  it('allows only GET on the non-sensitive health count endpoint', async () => {
    expect((await middleware(new NextRequest('http://localhost/api/finance/summary/count'))).status).toBe(200);

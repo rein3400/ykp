@@ -47,12 +47,12 @@ describe('POST /api/hr/payroll/generate (payroll-auto-approve)', () => {
   });
 
   it('rejects invalid period with 400', async () => {
-    asRole('hr_admin');
+    asRole('owner');
     expect((await POST(req({ period: 'Juni 2025' }), ctx)).status).toBe(400);
   });
 
   it('locks + auto-approves every generated row (generator = approver)', async () => {
-    asRole('hr_admin', 'USR-HR');
+    asRole('owner', 'USR-HR');
     const res = await POST(req({ period: PERIOD }), ctx);
     expect(res.status).toBe(200);
     const j = await res.json();
@@ -85,7 +85,7 @@ describe('POST /api/hr/payroll/generate (payroll-auto-approve)', () => {
   });
 
   it('conflicts 409 when the period already holds locked rows (re-generate blocked)', async () => {
-    asRole('hr_admin');
+    asRole('owner');
     const res = await POST(req({ period: PERIOD }), ctx);
     expect(res.status).toBe(409);
     const j = await res.json();
@@ -93,7 +93,7 @@ describe('POST /api/hr/payroll/generate (payroll-auto-approve)', () => {
   });
 
   it('does not merge foreign-period rows into the generated set', async () => {
-    asRole('hr_admin');
+    asRole('owner');
     await appendRows(TABS.payroll, [{
       payroll_id: `PR-SEED-OTHER-${PERIOD.replace('-', '')}`,
       payroll_period: '2019-12',

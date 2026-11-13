@@ -60,6 +60,14 @@ export async function middleware(req: NextRequest) {
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
+  const payrollPath = ['/finance/payroll','/api/finance/payroll','/api/finance/payroll-overview'].some(path => pathname === path || pathname.startsWith(path + '/'));
+  if (payrollPath) {
+    const token = req.cookies.get(SESSION_COOKIE)?.value;
+    if (!token || !(await verify(token, process.env.SESSION_SECRET ?? ''))) return NextResponse.json({error:{code:'unauthorized',message:'Unauthorized'}},{status:401});
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(token.split('.')[1])));
+    if (!['owner','finance_admin'].includes(payload.role)) return NextResponse.json({error:{code:'forbidden',message:'Payroll hanya untuk Owner dan Finance'}},{status:403});
+    return NextResponse.next();
+  }
   // Public read endpoints for Hermez / owner hub layer (GET only;
   // mutations on these resources stay session-protected). These are
   // sensitive financial reads — require a valid x-bot-secret (Hermez) or a

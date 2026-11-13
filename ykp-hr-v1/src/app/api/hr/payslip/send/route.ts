@@ -24,7 +24,7 @@ import { buildPayslipHtml } from '@/lib/payslip-html';
 
 const schema = z.object({ payroll_id: z.string().min(1) });
 
-const PUBLISH_ROLES = ['owner', 'super_admin', 'hr_admin'];
+const PUBLISH_ROLES = ['owner', 'finance_admin'];
 
 export const POST = handler(async (req) => {
   const session = await getSession();

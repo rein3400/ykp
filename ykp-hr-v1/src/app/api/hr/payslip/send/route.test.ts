@@ -18,7 +18,7 @@ vi.mock('@/db/sheets', () => ({
     state.payroll = { ...row };
   }
 }));
-vi.mock('@/lib/session', () => ({ getSession: async () => ({ userId: 'USR-HR', role: 'hr_admin' }) }));
+vi.mock('@/lib/session', () => ({ getSession: async () => ({ userId: 'USR-HR', role: 'owner' }) }));
 vi.mock('@/lib/audit', () => ({ logAudit: async () => undefined }));
 vi.mock('@/lib/app-settings', () => ({ getSmtpConfig: async () => ({ host: 'localhost', port: '1025', secure: 'false', user: 'ykp.erp@gmail.com', pass: 'test-only', from_name: 'YKP ERP' }) }));
 vi.mock('@/lib/smtp', () => ({
