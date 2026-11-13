@@ -239,6 +239,22 @@ describe('receiving route 3-way gate', () => {
     spy.mockRestore();
   });
 
+  it('posts separate ledger references for repeated item batches on the same invoice', async () => {
+    const spy = vi.spyOn(await import('@/lib/stock-ledger'), 'appendMovement');
+    const res = await rcvPOST(req({ ...rcvBody, items: [
+      { item_id: 'ITM-1', batch_number: 'BATCH-A', qty_ordered: 10, qty_delivered: 10, qty_accepted: 10, unit: 'kg', unit_price: 12.5 },
+      { item_id: 'ITM-1', batch_number: 'BATCH-B', qty_ordered: 5, qty_delivered: 5, qty_accepted: 5, unit: 'kg', unit_price: 12.5 }
+    ] }), ctx);
+    expect(res.status).toBe(201);
+    const refs = spy.mock.calls.map(([movement]) => movement.referenceId);
+    expect(refs).toHaveLength(2);
+    expect(new Set(refs).size).toBe(2);
+    const details = tabRows('warehouse_receiving_item');
+    expect(refs).toEqual(details.map(detail => `${detail.receiving_id}-${detail.receiving_item_id}`));
+    expect(details.map(detail => detail.unit_price)).toEqual(['12.5', '12.5']);
+    spy.mockRestore();
+  });
+
   it('W3 regression: receiver is forced to the session user, body value ignored', async () => {
     const body = {
       ...rcvBody,

@@ -1,12 +1,17 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { ManualPurchaseRequest } from './manual-pr';
 
 export default function PurchaseReqClient({
   requests,
   recommendations,
+  items = [],
+  canCreate = false,
 }: {
   requests: Record<string, string>[];
   recommendations: Record<string, string>[];
+  items?: Record<string,string>[];
+  canCreate?: boolean;
 }) {
   const [list, setList] = useState(requests);
   const [recs, setRecs] = useState(recommendations);
@@ -98,10 +103,11 @@ export default function PurchaseReqClient({
 
   return (
     <div className="space-y-3">
+      {canCreate && <ManualPurchaseRequest items={items} onCreated={reloadRequests} />}
       <button
         type="button"
         onClick={createFromRecs}
-        disabled={busy || newRecs.length === 0}
+        disabled={!canCreate || busy || newRecs.length === 0}
         className="rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
       >
         {busy ? 'Memproses…' : `Buat PR dari ${newRecs.length} CRITICAL/HIGH Rec`}

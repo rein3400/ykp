@@ -5,6 +5,8 @@
 import { readTab, appendRows, updateRow, TABS } from '@/db/sheets';
 import { getBrandName, getOutletName } from '@/lib/repo';
 import { todayWib, formatIdr } from '@/lib/format';
+import { selectChecklistTemplates } from '@/lib/checklist';
+import { checklistCoverage } from '@/lib/checklist-coverage';
 
 async function findSummaryRow(
   outletId: string,
@@ -25,6 +27,8 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
   const qcRows = await readTab(TABS.qc);
   const incidentRows = await readTab(TABS.incidents);
   const closingRows = await readTab(TABS.closing);
+  const templates = await readTab(TABS.checklistTemplates);
+  const submissions = await readTab(TABS.checklistSubmissions);
   const wasteRows = await readTab(TABS.waste);
   const stockRows = await readTab(TABS.stockIssues);
   const briefingRows = await readTab(TABS.briefing);
@@ -46,8 +50,10 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
     const open = openingRows.filter((r) => r.date === date && r.outlet_id === outletId);
     const openTotal = open.length;
     const openDone = open.filter((r) => r.status === 'DONE').length;
-    const openCritical = open.filter((r) => r.critical_flag === 'true' && r.status !== 'DONE').length;
-    const openPct = openTotal > 0 ? Math.round((openDone / openTotal) * 100) : 100;
+    const openTemplates = selectChecklistTemplates(templates, 'OPENING', outletId, brandId);
+    const coverage = checklistCoverage(openTemplates, open);
+    const openCritical = openTemplates.length ? coverage.criticalMissing : open.filter((r) => r.critical_flag === 'true' && r.status !== 'DONE').length;
+    const openPct = openTemplates.length ? coverage.percent : openTotal > 0 ? Math.round((openDone / openTotal) * 100) : 0;
 
     const kds = kdsRows.filter((r) => r.date === date && r.outlet_id === outletId);
     const totalOrders = kds.length;
@@ -78,7 +84,9 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
       + stockRows.filter((r) => r.date === date && r.outlet_id === outletId && r.status !== 'RESOLVED').length;
 
     const closing = closingRows.filter((r) => r.date === date && r.outlet_id === outletId);
-    const closingStatus = closing.length > 0 ? closing[0].status : 'NOT_STARTED';
+    const closingDetails = submissions.filter(row => row.date === date && row.outlet_id === outletId && row.checklist_type === 'CLOSING' && row.status !== 'VOID');
+    const closingCoverage = checklistCoverage(selectChecklistTemplates(templates, 'CLOSING', outletId, brandId), closingDetails);
+    const closingStatus = closingDetails.length ? (closingCoverage.complete ? 'CLOSED' : 'NEEDS_REVIEW') : closing.length > 0 ? closing[closing.length - 1].status : 'NOT_STARTED';
     const cashDiff = closing.reduce((s, r) => s + Number(r.cash_difference || 0), 0);
 
     const waste = wasteRows.filter((r) => r.date === date && r.outlet_id === outletId);
@@ -111,7 +119,7 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
       brand_name: brandName,
       outlet_id: outletId,
       outlet_name: outletName,
-      opening_status: openTotal > 0 ? (openPct >= 95 ? 'READY' : 'NEEDS_REVIEW') : 'NOT_STARTED',
+      opening_status: openTotal > 0 ? ((openTemplates.length ? coverage.complete : openPct >= 95) && openCritical === 0 ? 'READY' : 'NEEDS_REVIEW') : 'NOT_STARTED',
       opening_completion_percentage: String(openPct),
       critical_opening_issue: String(openCritical),
       scheduled_staff: String(scheduledStaff),

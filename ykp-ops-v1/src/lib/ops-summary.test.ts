@@ -26,7 +26,8 @@ describe('ops-summary', () => {
     const items = await generateDailySummary({ date });
     expect(items.length).toBeGreaterThan(0);
     expect(items[0].outlet_id).toBe('OL-001');
-    expect(Number(items[0].opening_completion_percentage)).toBe(100);
+    expect(Number(items[0].opening_completion_percentage)).toBeLessThan(100);
+    expect(items[0].opening_status).toBe('NEEDS_REVIEW');
   });
 
   it('regenerate is idempotent — no duplicate rows (F1 regression)', async () => {

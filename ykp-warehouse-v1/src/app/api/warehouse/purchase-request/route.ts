@@ -64,7 +64,8 @@ export const POST = handler(async (req: NextRequest) => {
     }
   }
 
-  if (items.length === 0) return badRequest('At least one item or recommendation_id is required');
+  if (!Array.isArray(items) || items.length === 0) return badRequest('At least one item or recommendation_id is required');
+  if (items.some(item => !item || typeof item.item_id !== 'string' || !item.item_id.trim() || !Number.isFinite(item.requested_qty) || item.requested_qty <= 0 || !Number.isFinite(item.estimated_unit_price) || item.estimated_unit_price < 0 || typeof item.purchase_unit !== 'string' || !item.purchase_unit.trim())) return badRequest('Item, qty positif, satuan dan harga estimasi nonnegatif wajib valid');
 
   try {
     for (const it of items) await assertItem(it.item_id);
@@ -76,7 +77,9 @@ export const POST = handler(async (req: NextRequest) => {
   const now = nowTimestampWib();
   const prId = nextSequentialIdSync('PRQ');
   const today = formatDateWib(new Date());
-  const totalValue = items.reduce((sum, it) => sum + (it.requested_qty * it.estimated_unit_price), 0);
+  const lineTotals = items.map(item => Math.round(item.requested_qty * item.estimated_unit_price));
+  const totalValue = lineTotals.reduce((sum, value) => sum + value, 0);
+  if (lineTotals.some(value => !Number.isSafeInteger(value) || value < 0) || !Number.isSafeInteger(totalValue)) return badRequest('Estimasi total di luar batas aman');
 
   const header: Record<string, string> = {
     purchase_request_id: prId,
@@ -168,6 +171,7 @@ export const PUT = handler(async (req: NextRequest) => {
     if (found.row.status !== 'APPROVED') return badRequest('Must be APPROVED before ordering');
     newStatus = 'ORDERED';
   } else if (body.action === 'cancel') {
+    if (!can(s.role as Role, 'update', 'purchase_request')) return unauthorized('Forbidden');
     newStatus = 'CANCELLED';
   } else {
     return badRequest(`Unknown action: ${body.action}`);

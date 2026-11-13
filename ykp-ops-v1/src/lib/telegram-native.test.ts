@@ -72,6 +72,19 @@ describe("native reporting", () => {
     expect(db.rows.ops_opening_checklist).toHaveLength(1);
     expect(db.rows.ops_checklist_submission).toHaveLength(1);
   });
+  it('asks for jobdesk and saves only selected category without closing the whole outlet', async () => {
+    db.rows.master_checklist_template[0].checklist_type = 'CLOSING';
+    db.rows.master_checklist_template.push({ ...db.rows.master_checklist_template[0], checklist_template_id: 'T2', department: 'Kitchen', checklist_item: 'Matikan oven' });
+    await send(1, '/closing'); await send(2, 'O1');
+    expect((await send(3, 'S1')).text).toContain('Pilih kategori jobdesk');
+    expect((await send(4, 'Unknown')).text).toContain('tidak valid');
+    expect((await send(5, 'Kitchen')).text).toContain('Matikan oven');
+    await send(6, 'DONE'); await send(7, 'KIRIM');
+    expect(db.rows.ops_checklist_submission).toHaveLength(1);
+    expect(db.rows.ops_checklist_submission[0].department).toBe('Kitchen');
+    expect(db.rows.ops_closing[0].status).toBe('PARTIAL');
+    expect(db.rows.ops_closing[0].checklist_status).toBe('PARTIAL');
+  });
   it("enforces outlet scope and preserves draft for correction", async () => {
     await send(1, "/waste");
     expect((await send(2, "O2")).text).toContain("di luar cakupan");

@@ -190,13 +190,14 @@ export const POST = handler(async (req: NextRequest) => {
     }
   }
 
-  // Per-item referenceId (`RECV-…-ITM-…`) because appendMovement's
+  // Per-detail referenceId: the same item can appear in multiple invoice batches.
+  // appendMovement's
   // duplicate guard rejects a reused reference_id and would silently drop
   // items 2..n of the same receiving. Ledger posts are bookkeeping truth:
   // a failure must fail the request, not return 201 with understated stock.
   const ledgerFailures: string[] = [];
   const criticalWriteFailures: string[] = [];
-  for (const t of threeWay) {
+  for (const [lineIndex, t] of threeWay.entries()) {
     const it = t.item;
     const qtyAccepted = it.qty_accepted ?? it.qty_delivered;
     if (qtyAccepted > 0 && body.destination_location_id) {
@@ -212,7 +213,7 @@ export const POST = handler(async (req: NextRequest) => {
           outletId: '',
           locationId: body.destination_location_id,
           referenceType: 'receiving',
-          referenceId: `${receivingId}-${it.item_id}`,
+          referenceId: `${receivingId}-${detailRows[lineIndex].receiving_item_id}`,
           createdBy: s.userId,
           notes: `Receiving ${receivingId}`
         });

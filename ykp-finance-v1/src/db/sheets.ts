@@ -308,7 +308,7 @@ export const TAB_HEADERS: Record<TabName, string[]> = {
 
     'linked_supplier_invoice_id', 'linked_petty_cash_id',
 
-    'created_by', 'created_at', 'updated_at'
+    'created_by', 'created_at', 'updated_at', 'qty'
 
   ],
 

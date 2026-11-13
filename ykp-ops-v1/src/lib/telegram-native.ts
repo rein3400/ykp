@@ -23,7 +23,7 @@ import {
 interface Draft {
   kind: ReportKind;
   stage:
-    "outlet" | "shift" | "field" | "item" | "photo" | "confirm" | "completed";
+    "outlet" | "shift" | "category" | "field" | "item" | "photo" | "confirm" | "completed";
   id: string;
   date: string;
   userId: string;
@@ -31,6 +31,7 @@ interface Draft {
   outletId?: string;
   brandId?: string;
   shiftId?: string;
+  category?: string;
   fields: Record<string, string>;
   index: number;
   templates?: Record<string, string>[];
@@ -104,12 +105,11 @@ async function persist(d: Draft, user: Record<string, string>): Promise<void> {
   };
   if (d.kind === "opening" || d.kind === "closing" || d.kind === "checklist") {
     const type = d.kind === "checklist" ? "GENERAL" : d.kind.toUpperCase();
-    const templates = selectChecklistTemplates(
-      await readTab(TABS.checklistTemplates),
-      type,
-      outlet.outlet_id,
-      outlet.brand_id,
+    const allTemplates = selectChecklistTemplates(
+      await readTab(TABS.checklistTemplates), type, outlet.outlet_id, outlet.brand_id,
     );
+    const templates = d.category ? allTemplates.filter(t => (t.department || 'Umum') === d.category) : allTemplates;
+    const partial = templates.length < allTemplates.length;
     if (
       !d.templates ||
       templates.length !== d.items.length ||
@@ -171,14 +171,14 @@ async function persist(d: Draft, user: Record<string, string>): Promise<void> {
           ...common,
           closing_id: d.id,
           closed_by: user.user_id,
-          checklist_status: d.items.every((i) => i.status === "DONE")
+          checklist_status: partial ? 'PARTIAL' : d.items.every((i) => i.status === "DONE")
             ? "DONE"
             : "NOT_DONE",
           issues: d.items
             .filter((i) => i.status !== "DONE")
             .map((i) => i.checklist_item)
             .join("; "),
-          status: d.items.every((i) => i.status === "DONE")
+          status: partial ? 'PARTIAL' : d.items.every((i) => i.status === "DONE")
             ? "CLOSED"
             : "NEEDS_REVIEW",
         },
@@ -450,12 +450,26 @@ export async function nativeOpsMessage(input: {
           throw new InputError(
             "Template SOP belum tersedia. Hubungi supervisor; jangan memakai outlet lain.",
           );
-        draft.stage = "item";
-        reply = itemPrompt(draft);
+        const categories = [...new Set(draft.templates.map(t => t.department || 'Umum'))];
+        if (categories.length > 1) {
+          draft.stage = 'category';
+          reply = `Pilih kategori jobdesk (ketik nama persis):\n${categories.map(c => `• ${escape(c)}`).join('\n')}\nLaporan kategori hanya mencakup tugas yang dipilih, bukan seluruh outlet.`;
+        } else {
+          draft.category = categories[0];
+          draft.stage = 'item';
+          reply = itemPrompt(draft);
+        }
       } else {
         draft.stage = "field";
         reply = reportFields(draft.kind)[0].label;
       }
+    } else if (draft.stage === 'category') {
+      const categories = [...new Set(draft.templates!.map(t => t.department || 'Umum'))];
+      const selected = categories.find(category => category.toLowerCase() === text.toLowerCase());
+      if (!selected) throw new InputError('Kategori jobdesk tidak valid; pilih dari daftar');
+      draft.category = selected;
+      draft.templates = draft.templates!.filter(t => (t.department || 'Umum') === selected);
+      draft.index = 0; draft.items = []; draft.stage = 'item'; reply = itemPrompt(draft);
     } else if (draft.stage === "field") {
       const fields = reportFields(draft.kind),
         field = fields[draft.index];
