@@ -236,6 +236,7 @@ export default function ExpensesClient(props: {
                   <Th>Outlet</Th>
                   <Th>Kategori</Th>
                   <Th>Deskripsi</Th>
+                  <Th right>Qty</Th>
                   <Th right>Jumlah</Th>
                   <Th>Metode</Th>
                   <Th>Nota</Th>
@@ -254,12 +255,6 @@ export default function ExpensesClient(props: {
                     <Td>{r.expense_category}</Td>
                     <Td>
                       {r.description}
-                      {r.qty && (
-                        <span className="ml-1 text-xs text-muted-foreground">
-                          {" "}
-                          · Qty {r.qty}
-                        </span>
-                      )}
                       {(r.linked_petty_cash_id ||
                         r.linked_supplier_invoice_id) && (
                         <span className="ml-1 rounded bg-blue-100 px-1 text-[9px] text-blue-800">
@@ -267,6 +262,7 @@ export default function ExpensesClient(props: {
                         </span>
                       )}
                     </Td>
+                    <Td right>{r.qty || "—"}</Td>
                     <Td right bold>
                       {rp(r.amount)}
                     </Td>
