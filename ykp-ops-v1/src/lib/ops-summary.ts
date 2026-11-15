@@ -142,7 +142,9 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
       open_action_count: String(openActions),
       major_ops_issue: majorIssue,
       recommended_action: recommendedAction,
-      created_at: existing?.row.created_at ?? new Date().toISOString().replace('T', ' ').slice(0, 19),
+      // created_at doubles as "last generated": the dashboard regenerates a
+      // summary only when staff activity is newer than this stamp.
+      created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
     };
 
     if (existing) {
@@ -154,4 +156,53 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
   }
 
   return summaries;
+}
+
+function parseStamp(value: string): number {
+  const raw = String(value || '').trim();
+  if (!raw) return 0;
+  const iso = raw.replace(' ', 'T');
+  const parsed = Date.parse(/([zZ]|[+-]\d{2}:?\d{2})$/.test(iso) ? iso : `${iso}+07:00`);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/** A summary is stale when activity for the day happened after it was built. */
+export function summaryIsStale(lastGenerated: string, latestActivity: string, now = Date.now(), maxAgeMs = 0): boolean {
+  const built = parseStamp(lastGenerated);
+  if (!built) return true;
+  const activity = parseStamp(latestActivity);
+  if (activity > built) return true;
+  return maxAgeMs > 0 && now - built > maxAgeMs;
+}
+
+/**
+ * Rebuild today's summary when the dashboard would otherwise show stale or
+ * missing rows. Staff cannot run the regenerate endpoint, so the read path
+ * owns freshness for its own scope.
+ */
+export async function ensureDailySummary(opts?: { date?: string; brandId?: string; outletId?: string }): Promise<Record<string, string>[]> {
+  const date = opts?.date ?? todayWib();
+  const inScope = (row: Record<string, string>) =>
+    row.date === date &&
+    (!opts?.brandId || row.brand_id === opts.brandId) &&
+    (!opts?.outletId || row.outlet_id === opts.outletId);
+
+  const [summaries, opening, closing, submissions] = await Promise.all([
+    readTab<Record<string, string>>(TABS.summary),
+    readTab<Record<string, string>>(TABS.opening),
+    readTab<Record<string, string>>(TABS.closing),
+    readTab<Record<string, string>>(TABS.checklistSubmissions),
+  ]);
+
+  const scopedSummaries = summaries.filter(inScope);
+  const lastGenerated = scopedSummaries.map((r) => r.created_at || '').sort().pop() ?? '';
+  const activity = [
+    ...opening.filter(inScope).map((r) => r.completed_at || r.created_at || ''),
+    ...closing.filter(inScope).map((r) => r.created_at || ''),
+    ...submissions.filter(inScope).map((r) => r.submitted_at || ''),
+  ].sort().pop() ?? '';
+
+  if (!summaryIsStale(lastGenerated, activity)) return summaries;
+  await generateDailySummary({ date, brandId: opts?.brandId, outletId: opts?.outletId });
+  return readTab<Record<string, string>>(TABS.summary);
 }

@@ -81,8 +81,8 @@ export const POST = handler(async (req: NextRequest) => {
     department: item.department ?? '',
     status: item.status === 'DONE' ? 'DONE' : 'NOT_DONE',
     notes: item.notes ?? '',
-    verified_by: s.userId,
-    verified_at: now,
+    submitted_by: s.userId,
+    submitted_at: now,
     critical_flag: item.critical_flag === 'true' ? 'true' : 'false',
     created_at: now,
   }));
