@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { EditMasterButton } from '@/components/edit-master-button';
 
 export default function SuppliersClient({
   suppliers, canWrite
@@ -59,6 +60,7 @@ export default function SuppliersClient({
               <th className='px-2 py-1 text-left'>Kategori</th><th className='px-2 py-1 text-left'>Kontak</th>
               <th className='px-2 py-1 text-right'>Lead Time</th><th className='px-2 py-1 text-right'>Min Order</th>
               <th className='px-2 py-1 text-left'>Delivery Day</th>
+              <th className='px-2 py-1 text-left'>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -71,6 +73,7 @@ export default function SuppliersClient({
                 <td className='px-2 py-1 text-right'>{s.lead_time_days} h</td>
                 <td className='px-2 py-1 text-right'>{formatRp(s.minimum_order_value)}</td>
                 <td className='px-2 py-1'>{s.preferred_delivery_day || '-'}</td>
+                <td className='px-2 py-1'><EditMasterButton id={s.supplier_id} /></td>
               </tr>
             ))}
           </tbody>

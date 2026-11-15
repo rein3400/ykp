@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { EditMasterButton } from '@/components/edit-master-button';
 import { SearchableSelect } from '@/components/searchable-select';
 
 const ITEM_TYPES = ['RAW_MATERIAL','PACKAGING','FINISHED_GOOD','SEMI_FINISHED','CLEANING_SUPPLY','EQUIPMENT_CONSUMABLE','OTHER'];
@@ -123,12 +124,13 @@ export default function ItemsClient({
               <th className='px-2 py-1 text-right'>Reorder</th>
               <th className='px-2 py-1 text-right'>Lead Time</th>
               <th className='px-2 py-1 text-left'>Criticality</th>
+              <th className='px-2 py-1 text-left'>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {list.map((i) => (
               <tr key={i.item_id} className='border-t border-border'>
-                <td className='px-2 py-1 font-mono'>{i.item_id}</td>
+                <td className='px-2 py-1 font-mono'>{i.item_code || i.item_id}</td>
                 <td className='px-2 py-1'>{i.item_name}</td>
                 <td className='px-2 py-1'>{categoryName(categories, i.category_id)}</td>
                 <td className='px-2 py-1'>{i.base_unit}</td>
@@ -137,6 +139,7 @@ export default function ItemsClient({
                 <td className='px-2 py-1 text-right'>{i.reorder_point}</td>
                 <td className='px-2 py-1 text-right'>{i.supplier_lead_time_days} h</td>
                 <td className='px-2 py-1'>{i.criticality}</td>
+                <td className='px-2 py-1'><EditMasterButton id={i.item_id} /></td>
               </tr>
             ))}
           </tbody>

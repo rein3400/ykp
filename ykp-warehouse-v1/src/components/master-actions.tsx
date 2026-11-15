@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SearchableSelect } from './searchable-select';
 import { MASTER_ACTIONS, type MasterKind } from "@/lib/master-actions";
 export function MasterActions({
@@ -15,11 +15,24 @@ export function MasterActions({
 }) {
   const [selected, setSelected] = useState("");
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const rule = MASTER_ACTIONS[kind];
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const id = (event as CustomEvent<string>).detail;
+      const target = rows.find((r) => r[rule.key] === id);
+      if (!target) return;
+      setSelected(id);
+      setDraft(Object.fromEntries(rule.fields.map((f) => [f, target[f] ?? ""])));
+      setError("");
+      setNotice("");
+    };
+    window.addEventListener("master-edit", handler as EventListener);
+    return () => window.removeEventListener("master-edit", handler as EventListener);
+  }, [rows, rule]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   if (!canEdit && !canArchive) return null;
-  const rule = MASTER_ACTIONS[kind];
   const row = rows.find((r) => r[rule.key] === selected);
   async function submit(archive: boolean) {
     if (!row) return;
@@ -58,7 +71,7 @@ export function MasterActions({
     }
   }
   return (
-    <section className="space-y-3 rounded-xl border p-4">
+    <section id="master-edit" className="space-y-3 rounded-xl border p-4">
       <h2 className="text-sm font-semibold">Edit &amp; Arsipkan Master</h2>
       <p className="text-xs text-muted-foreground">
         ID, satuan/konversi dan cakupan master dikunci agar riwayat tidak

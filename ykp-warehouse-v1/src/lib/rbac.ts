@@ -69,7 +69,7 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     item: FULL, location: FULL, supplier: FULL, unit_conversion: FULL, category: FULL, threshold: FULL,
     receiving: FULL, stock_issue: FULL, transfer: FULL, waste: FULL, adjustment: ['view', 'create', 'update', 'export'],
     stock_count: FULL, stock_ledger: VE, batch_stock: FULL,
-    purchase_recommendation: VE, purchase_request: VE,
+    purchase_recommendation: VE, purchase_request: VCE,
     alert: VE, action: VE, summary: FULL, telegram: VE,
     dashboard: FULL, audit: VE, master: WRITE
   },

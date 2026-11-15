@@ -1,6 +1,8 @@
 const aliases: Record<string, string> = {
-  kg: 'kg', kilogram: 'kg', g: 'g', gr: 'g', gram: 'g',
-  l: 'l', liter: 'l', litre: 'l', ml: 'ml', milliliter: 'ml', mililiter: 'ml'
+  kg: 'kg', kilogram: 'kg', g: 'g', gr: 'g', gram: 'g', grams: 'g',
+  l: 'l', liter: 'l', litre: 'l', ml: 'ml', milliliter: 'ml', mililiter: 'ml',
+  pcs: 'pc', piece: 'pc', pieces: 'pc', pc: 'pc',
+  pax: 'pax', pack: 'pack', ikat: 'ikat', slice: 'slice'
 };
 
 export function normalizeUnit(unit: string): string {

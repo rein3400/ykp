@@ -66,6 +66,9 @@ export default function TransferClient({
             </SearchableSelect>
             <input placeholder='Notes' value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className='rounded border border-border px-2 py-1 text-xs' />
           </div>
+          <datalist id='transfer-unit-options'>
+            {['kg','g','ml','l','pc','pax','pack','ikat','slice'].map((u) => <option key={u} value={u} />)}
+          </datalist>
           {lineItems.map((it, idx) => (
             <div key={idx} className='grid grid-cols-3 gap-1'>
               <SearchableSelect searchLabel={`item baris ${idx + 1}`} value={it.item_id} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], item_id: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]'>
@@ -73,7 +76,7 @@ export default function TransferClient({
                 {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
               </SearchableSelect>
               <input placeholder='Qty' value={it.requested_qty} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], requested_qty: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]' />
-              <input placeholder='Unit' value={it.unit} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], unit: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]' />
+              <input placeholder='Unit' list='transfer-unit-options' value={it.unit} onChange={(e) => { const c = [...lineItems]; c[idx] = { ...c[idx], unit: e.target.value }; setLineItems(c); }} className='rounded border border-border px-1 py-0.5 text-[10px]' />
             </div>
           ))}
           <button onClick={() => setLineItems([...lineItems, { item_id: '', requested_qty: '', unit: 'kg' }])} className='text-[10px] text-primary underline'>+ Item</button>

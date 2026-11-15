@@ -12,6 +12,7 @@ import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
 import { appendMovement } from '@/lib/stock-ledger';
+import { normalizeUnit } from '@/lib/unit-conversion';
 import { evalTransferDiscrepancy, shouldCreateAction } from '@/lib/rules-engine';
 import { dispatchAlertTelegram } from '@/lib/telegram';
 import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
@@ -183,7 +184,7 @@ export const PUT = handler(async (req: NextRequest) => {
           movementType: 'TRANSFER_OUT',
           direction: 'OUT',
           quantity: qty,
-          baseUnit: it.unit,
+          baseUnit: normalizeUnit(it.unit),
           unitCost: 0,
           itemId: it.item_id,
           brandId: '',
@@ -257,7 +258,7 @@ export const PUT = handler(async (req: NextRequest) => {
           movementType: 'TRANSFER_IN',
           direction: 'IN',
           quantity: qty,
-          baseUnit: it.unit,
+          baseUnit: normalizeUnit(it.unit),
           unitCost: 0,
           itemId: it.item_id,
           brandId: '',
