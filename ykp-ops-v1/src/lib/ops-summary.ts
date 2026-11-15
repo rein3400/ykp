@@ -4,7 +4,7 @@
  */
 import { readTab, appendRows, updateRow, TABS } from '@/db/sheets';
 import { getBrandName, getOutletName } from '@/lib/repo';
-import { todayWib, formatIdr } from '@/lib/format';
+import { todayWib, formatIdr, nowTimestampWib } from '@/lib/format';
 import { selectChecklistTemplates } from '@/lib/checklist';
 import { checklistCoverage } from '@/lib/checklist-coverage';
 
@@ -143,8 +143,9 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
       major_ops_issue: majorIssue,
       recommended_action: recommendedAction,
       // created_at doubles as "last generated": the dashboard regenerates a
-      // summary only when staff activity is newer than this stamp.
-      created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      // summary only when staff activity is newer than this stamp. Stored in
+      // WIB like every other timestamp so the comparison stays apples to apples.
+      created_at: nowTimestampWib(),
     };
 
     if (existing) {

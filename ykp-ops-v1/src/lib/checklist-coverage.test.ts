@@ -16,4 +16,8 @@ describe('jobdesk coverage per shift',()=>{
  it('does not mix completions from different shifts',()=>{
   expect(checklistCoverage(templates,[{shift_id:'S1',checklist_item:'Kasir',department:'Kasir',status:'DONE'},{shift_id:'S2',checklist_item:'Oven',department:'Kitchen',status:'DONE'}]).complete).toBe(false);
  });
+ it('matches rows that have no department column by item text',()=>{
+  const result=checklistCoverage(templates,[{shift_id:'S1',checklist_item:'Kasir',status:'DONE'},{shift_id:'S1',checklist_item:'Oven',status:'DONE'}]);
+  expect(result.percent).toBe(100);expect(result.complete).toBe(true);
+ });
 });

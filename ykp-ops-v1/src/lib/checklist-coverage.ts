@@ -5,9 +5,15 @@ export function checklistCoverage(templates: Record<string,string>[], rows: Reco
  let done=0,criticalMissing=0;
  for(const shift of shifts){
   const latest=new Map<string,Record<string,string>>();
-  for(const row of valid.filter(row=>(row.shift_id||'')===shift))latest.set(JSON.stringify([row.department||'Umum',row.checklist_item]),row);
+  const latestByItem=new Map<string,Record<string,string>>();
+  for(const row of valid.filter(row=>(row.shift_id||'')===shift)){
+   latest.set(JSON.stringify([row.department||'Umum',row.checklist_item]),row);
+   latestByItem.set(row.checklist_item,row);
+  }
   for(const template of templates){
-   const row=latest.get(JSON.stringify([template.department||'Umum',template.checklist_item]));
+   // Legacy rows (ops_opening_checklist has no department column) are keyed by
+   // item text only; without this fallback every template looks missing.
+   const row=latest.get(JSON.stringify([template.department||'Umum',template.checklist_item])) ?? latestByItem.get(template.checklist_item);
    if(row?.status==='DONE')done++;
    else if(template.critical_flag==='true')criticalMissing++;
   }
