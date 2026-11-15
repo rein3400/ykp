@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, list, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem } from '@/lib/repo';
@@ -11,7 +11,7 @@ import { normalizeUnit, validateConversionFactor } from '@/lib/unit-conversion';
 export const GET = handler(async () => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'unit_conversion')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'unit_conversion')) return forbidden();
   const rows = await readTab<Record<string, string>>(TABS.unitConversion);
   return list(rows);
 });
@@ -19,7 +19,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'unit_conversion')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'unit_conversion')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   if (!body.item_id) return badRequest('item_id is required');

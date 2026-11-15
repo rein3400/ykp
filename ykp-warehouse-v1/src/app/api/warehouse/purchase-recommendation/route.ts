@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, handler } from '@/lib/http';
+import { forbidden, handler, list, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
@@ -26,7 +26,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'generate', 'purchase_recommendation')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'generate', 'purchase_recommendation')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as { location_id?: string };
   const today = formatDateWib(new Date());

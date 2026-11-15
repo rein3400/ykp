@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { can, type Role } from '@/lib/rbac';
 import PemakaianClient from './pemakaian-client';
 import LegacyBanner from '@/components/legacy-banner';
 
@@ -21,7 +22,7 @@ export default async function PemakaianPage() {
         <p className='text-sm text-muted-foreground'>Tiap kali bahan keluar dari gudang outlet wajib dicatat. Tidak ada bon = bahan tidak boleh keluar.</p>
       </div>
       <LegacyBanner newFlow='Stock Issue (header+detail) — menu Transaksi › Stock Issue' />
-      <PemakaianClient rows={rows} items={items} outlets={outlets} />
+      <PemakaianClient rows={rows} items={items} outlets={outlets} canCreate={can(session.role as Role, 'create', 'stock_issue')} />
     </div>
   );
 }

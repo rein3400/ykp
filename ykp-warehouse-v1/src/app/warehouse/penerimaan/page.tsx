@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { can, type Role } from '@/lib/rbac';
 import ReceivingClient from './receiving-client';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,13 @@ export default async function ReceivingPage() {
         <h1 className='text-2xl font-bold'>Receiving / Penerimaan Barang</h1>
         <p className='text-sm text-muted-foreground'>Header+detail per brief §12. Batch, expiry, condition, temperature. Discrepancy → auto alert.</p>
       </div>
-      <ReceivingClient headers={headers} items={items} suppliers={suppliers} locations={locations} />
+      <ReceivingClient
+        headers={headers}
+        items={items}
+        suppliers={suppliers}
+        locations={locations}
+        canCreate={can(session.role as Role, 'create', 'receiving')}
+      />
     </div>
   );
 }

@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, notFound, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, list, notFound, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
@@ -21,7 +21,7 @@ const COUNT_TYPES = ['DAILY_CRITICAL', 'WEEKLY', 'MONTHLY', 'SPOT_CHECK', 'RECOU
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'stock_count')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'stock_count')) return forbidden();
 
   const url = new URL(req.url);
   const id = url.searchParams.get('id');
@@ -38,7 +38,7 @@ export const GET = handler(async (req: NextRequest) => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'stock_count')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'stock_count')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as {
     count_type?: string; brand_id?: string; outlet_id?: string; location_id?: string;

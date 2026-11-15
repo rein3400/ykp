@@ -4,9 +4,11 @@ import { useState } from 'react';
 export default function ActionsClient({
   actions,
   items,
+  canUpdate,
 }: {
   actions: Record<string, string>[];
   items: Record<string, string>[];
+  canUpdate: boolean;
 }) {
   const [filter, setFilter] = useState({ status: '' });
   const [list, setList] = useState(actions);
@@ -117,7 +119,7 @@ export default function ActionsClient({
                   </span>
                 </td>
                 <td className="px-2 py-1">
-                  {a.status !== 'DONE' && a.status !== 'CANCELLED' && (
+                  {canUpdate && a.status !== 'DONE' && a.status !== 'CANCELLED' && (
                     <div className="flex gap-1">
                       <button
                         type="button"

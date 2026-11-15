@@ -5,7 +5,7 @@
  */
 import { NextRequest } from 'next/server';
 import { getSession } from '@/lib/session';
-import { ok, unauthorized, badRequest, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
 import { can, type Role } from '@/lib/rbac';
@@ -14,7 +14,7 @@ import { appendMovement, bookStock } from '@/lib/stock-ledger';
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'stock_ledger')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'stock_ledger')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as {
     items?: Array<{

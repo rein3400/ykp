@@ -2,9 +2,10 @@
 import { useState } from 'react';
 
 export default function PurchaseRecClient({
-  recommendations
+  recommendations, canGenerate
 }: {
   recommendations: Record<string, string>[];
+  canGenerate: boolean;
 }) {
   const [list, setList] = useState(recommendations);
   const [loading, setLoading] = useState(false);
@@ -26,9 +27,11 @@ export default function PurchaseRecClient({
 
   return (
     <div className='space-y-3'>
-      <button onClick={regenerate} disabled={loading} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50'>
-        {loading ? 'Generating…' : 'Generate Recommendations'}
-      </button>
+      {canGenerate && (
+        <button onClick={regenerate} disabled={loading} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50'>
+          {loading ? 'Generating…' : 'Generate Recommendations'}
+        </button>
+      )}
       {err && <p className='text-xs text-destructive'>{err}</p>}
       <div className='overflow-x-auto rounded border border-border'>
         <table className='w-full text-xs'>

@@ -5,7 +5,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, handler } from '@/lib/http';
+import { can, type Role } from '@/lib/rbac';
+import { ok, list, unauthorized, badRequest, forbidden, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
@@ -23,6 +24,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
+  if (!can(s.role as Role, 'create', 'waste')) return forbidden();
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const evidenceFiles = parseEvidenceUrls(body.evidence_urls);
   const photoUrl = String(body.photo_url ?? evidenceFiles[0]?.url ?? '');

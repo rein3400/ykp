@@ -5,14 +5,14 @@
  */
 import { NextRequest } from 'next/server';
 import { getSession } from '@/lib/session';
-import { ok, unauthorized, badRequest, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, ok, unauthorized } from '@/lib/http';
 import { can, type Role } from '@/lib/rbac';
 import { sendTelegram } from '@/lib/telegram';
 
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'telegram')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'telegram')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as { text?: string };
   const text =

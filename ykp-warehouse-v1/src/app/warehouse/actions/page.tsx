@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { can, type Role } from '@/lib/rbac';
 import ActionsClient from './actions-client';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,7 @@ export default async function ActionsPage() {
         <h1 className='text-2xl font-bold'>Action Tracker</h1>
         <p className='text-sm text-muted-foreground'>Auto-created dari HIGH/CRITICAL alerts. PIC + deadline + escalation.</p>
       </div>
-      <ActionsClient actions={actions} items={items} />
+      <ActionsClient actions={actions} items={items} canUpdate={can(session.role as Role, 'update', 'action')} />
     </div>
   );
 }

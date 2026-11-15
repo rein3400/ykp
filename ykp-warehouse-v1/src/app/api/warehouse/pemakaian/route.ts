@@ -7,7 +7,8 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, handler } from '@/lib/http';
+import { can, type Role } from '@/lib/rbac';
+import { ok, list, unauthorized, badRequest, forbidden, handler } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { legacyWritesEnabled, legacyWritesDisabledResponse } from '@/lib/legacy';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
@@ -23,6 +24,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
+  if (!can(s.role as Role, 'create', 'stock_issue')) return forbidden();
   if (!legacyWritesEnabled()) return legacyWritesDisabledResponse();
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   const qtyOut = Number(body.qty_out ?? body.qty ?? 0);

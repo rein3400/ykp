@@ -3,9 +3,10 @@ import { useState } from 'react';
 
 export default function AlertsClient({
   alerts,
+  canUpdate,
 }: {
   alerts: Record<string, string>[];
-  items: Record<string, string>[];
+  canUpdate: boolean;
 }) {
   const [filter, setFilter] = useState({ severity: '', status: '' });
   const [list, setList] = useState(alerts);
@@ -113,7 +114,7 @@ export default function AlertsClient({
                 <span className="ml-2 text-muted-foreground">{a.alert_datetime}</span>
               </div>
               <div className="flex gap-1">
-                {a.status === 'OPEN' && (
+                {canUpdate && a.status === 'OPEN' && (
                   <>
                     <button
                       type="button"

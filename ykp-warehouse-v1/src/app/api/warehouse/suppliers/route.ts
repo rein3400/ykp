@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, list, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
@@ -10,7 +10,7 @@ import { can, type Role } from '@/lib/rbac';
 export const GET = handler(async () => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'supplier')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'supplier')) return forbidden();
   const rows = await readTab<Record<string, string>>(TABS.suppliers);
   return list(rows);
 });
@@ -18,7 +18,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'supplier')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'supplier')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   if (!body.supplier_name) return badRequest('supplier_name is required');

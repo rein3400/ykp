@@ -18,7 +18,7 @@ import { appendEvidenceRows, parseEvidenceUrls } from '@/lib/evidence';
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'stock_issue')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'stock_issue')) return forbidden();
 
   const scope = scopeFilter(s.role as Role, s.brandId, s.outletId);
   if (['outlet_manager', 'supervisor', 'kitchen_lead', 'staff'].includes(s.role) && !scope.outletId) return forbidden();
@@ -41,7 +41,7 @@ export const GET = handler(async (req: NextRequest) => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'stock_issue')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'stock_issue')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as {
     shift_id?: string; brand_id?: string; outlet_id?: string;

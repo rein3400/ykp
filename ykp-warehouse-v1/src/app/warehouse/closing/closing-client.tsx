@@ -2,11 +2,12 @@
 import { useState } from 'react';
 
 export default function ClosingClient({
-  rows, items, outlets
+  rows, items, outlets, canCreate
 }: {
   rows: Record<string, string>[];
   items: Record<string, string>[];
   outlets: Record<string, string>[];
+  canCreate: boolean;
 }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ outlet_id: '', item_id: '', stock_open: '', received: '', used: '', waste: '', actual_stock: '', shift: '', pic_stock: '' });
@@ -26,10 +27,12 @@ export default function ClosingClient({
 
   return (
     <div className='space-y-3'>
-      <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
-        {showForm ? 'Tutup' : '+ Catat Closing'}
-      </button>
-      {showForm && (
+      {canCreate && (
+        <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
+          {showForm ? 'Tutup' : '+ Catat Closing'}
+        </button>
+      )}
+      {canCreate && showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             <select value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>

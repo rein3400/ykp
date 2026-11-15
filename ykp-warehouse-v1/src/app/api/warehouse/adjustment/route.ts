@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, notFound, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, list, notFound, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
@@ -19,7 +19,7 @@ const ADJUSTMENT_TYPES = ['COUNT_CORRECTION', 'UNIT_CONVERSION_FIX', 'OPENING_BA
 export const GET = handler(async () => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'adjustment')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'adjustment')) return forbidden();
   const rows = await readTab<Record<string, string>>(TABS.adjustment);
   return list(rows);
 });
@@ -27,7 +27,7 @@ export const GET = handler(async () => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'adjustment')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'adjustment')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   if (!body.item_id) return badRequest('item_id is required');
@@ -92,7 +92,7 @@ export const POST = handler(async (req: NextRequest) => {
 export const PUT = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'approve', 'adjustment')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'approve', 'adjustment')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as { adjustment_id: string; approved: boolean; reason?: string };
   if (!body.adjustment_id) return badRequest('adjustment_id is required');

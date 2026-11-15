@@ -4,11 +4,12 @@ import { SearchableSelect } from '@/components/searchable-select';
 import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
 
 export default function OpnameClient({
-  headers, items, locations
+  headers, items, locations, canCreate
 }: {
   headers: Record<string, string>[];
   items: Record<string, string>[];
   locations: Record<string, string>[];
+  canCreate: boolean;
 }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ count_type: 'DAILY_CRITICAL', location_id: '', brand_id: '', outlet_id: '' });
@@ -39,11 +40,13 @@ export default function OpnameClient({
 
   return (
     <div className='space-y-3'>
-      <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
-        {showForm ? 'Tutup' : '+ Stock Opname Baru'}
-      </button>
+      {canCreate && (
+        <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
+          {showForm ? 'Tutup' : '+ Stock Opname Baru'}
+        </button>
+      )}
       {err && <p className='text-xs text-destructive'>{err}</p>}
-      {showForm && (
+      {canCreate && showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-3'>
             <select value={form.count_type} onChange={(e) => setForm({ ...form, count_type: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>

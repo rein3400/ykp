@@ -5,12 +5,13 @@ import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload'
 import { EvidenceGallery } from '@/components/evidence-gallery';
 
 export default function WasteClient({
-  rows, items, outlets, locations
+  rows, items, outlets, locations, canCreate
 }: {
   rows: Record<string, string>[];
   items: Record<string, string>[];
   outlets: Record<string, string>[];
   locations: Record<string, string>[];
+  canCreate: boolean;
 }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ outlet_id: '', location_id: '', item_id: '', qty: '', unit: 'kg', reason: '', photo_url: '', pic: '', witness_signature: '' });
@@ -44,10 +45,12 @@ export default function WasteClient({
 
   return (
     <div className='space-y-3'>
-      <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
-        {showForm ? 'Tutup' : '+ Catat Waste'}
-      </button>
-      {showForm && (
+      {canCreate && (
+        <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
+          {showForm ? 'Tutup' : '+ Catat Waste'}
+        </button>
+      )}
+      {canCreate && showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             <SearchableSelect searchLabel='outlet' value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>

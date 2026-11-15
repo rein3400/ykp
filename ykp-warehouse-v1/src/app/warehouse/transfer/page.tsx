@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { can, type Role } from '@/lib/rbac';
 import TransferClient from './transfer-client';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +20,14 @@ export default async function TransferPage() {
         <h1 className='text-2xl font-bold'>Transfer Stock</h1>
         <p className='text-sm text-muted-foreground'>Dispatch -stock, receive +stock. Discrepancy → auto alert. Brief §14.</p>
       </div>
-      <TransferClient headers={headers} items={items} locations={locations} />
+      <TransferClient
+        headers={headers}
+        items={items}
+        locations={locations}
+        canCreate={can(session.role as Role, 'create', 'transfer')}
+        canApprove={can(session.role as Role, 'approve', 'transfer')}
+        canAction={can(session.role as Role, 'update', 'transfer')}
+      />
     </div>
   );
 }

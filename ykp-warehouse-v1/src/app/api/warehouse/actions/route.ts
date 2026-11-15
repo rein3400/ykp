@@ -5,7 +5,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, notFound, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, list, notFound, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync } from '@/lib/repo';
@@ -14,7 +14,7 @@ import { can, type Role } from '@/lib/rbac';
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'action')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'action')) return forbidden();
 
   const url = new URL(req.url);
   const status = url.searchParams.get('status');
@@ -43,7 +43,7 @@ export const GET = handler(async (req: NextRequest) => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'action')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'action')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   if (!body.title) return badRequest('title is required');
@@ -84,7 +84,7 @@ export const POST = handler(async (req: NextRequest) => {
 export const PUT = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'update', 'action')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'update', 'action')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as {
     action_id: string;

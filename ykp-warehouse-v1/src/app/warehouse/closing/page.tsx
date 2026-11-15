@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { can, type Role } from '@/lib/rbac';
 import ClosingClient from './closing-client';
 import LegacyBanner from '@/components/legacy-banner';
 
@@ -21,7 +22,7 @@ export default async function ClosingPage() {
         <p className='text-sm text-muted-foreground'>Diisi tiap malam jam 22:00. Selisih &gt; 5% = investigasi 24 jam.</p>
       </div>
       <LegacyBanner newFlow='Stock Opname (header+detail) — menu Transaksi › Stock Opname' />
-      <ClosingClient rows={rows} items={items} outlets={outlets} />
+      <ClosingClient rows={rows} items={items} outlets={outlets} canCreate={can(session.role as Role, 'create', 'stock_count')} />
     </div>
   );
 }

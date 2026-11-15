@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, notFound, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, list, notFound, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem } from '@/lib/repo';
@@ -15,7 +15,7 @@ import { can, type Role } from '@/lib/rbac';
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'purchase_request')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'purchase_request')) return forbidden();
 
   const url = new URL(req.url);
   const id = url.searchParams.get('id');
@@ -32,7 +32,7 @@ export const GET = handler(async (req: NextRequest) => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'purchase_request')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'purchase_request')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as {
     brand_id?: string; outlet_id?: string; location_id?: string;
@@ -158,20 +158,20 @@ export const PUT = handler(async (req: NextRequest) => {
   let newStatus = found.row.status;
 
   if (body.action === 'approve') {
-    if (!can(s.role as Role, 'approve', 'purchase_request')) return unauthorized('Forbidden');
+    if (!can(s.role as Role, 'approve', 'purchase_request')) return forbidden();
     if (found.row.status !== 'SUBMITTED' && found.row.status !== 'DRAFT') {
       return badRequest(`Cannot approve from status ${found.row.status}`);
     }
     newStatus = 'APPROVED';
   } else if (body.action === 'reject') {
-    if (!can(s.role as Role, 'approve', 'purchase_request')) return unauthorized('Forbidden');
+    if (!can(s.role as Role, 'approve', 'purchase_request')) return forbidden();
     newStatus = 'REJECTED';
   } else if (body.action === 'order') {
-    if (!can(s.role as Role, 'update', 'purchase_request')) return unauthorized('Forbidden');
+    if (!can(s.role as Role, 'update', 'purchase_request')) return forbidden();
     if (found.row.status !== 'APPROVED') return badRequest('Must be APPROVED before ordering');
     newStatus = 'ORDERED';
   } else if (body.action === 'cancel') {
-    if (!can(s.role as Role, 'update', 'purchase_request')) return unauthorized('Forbidden');
+    if (!can(s.role as Role, 'update', 'purchase_request')) return forbidden();
     newStatus = 'CANCELLED';
   } else {
     return badRequest(`Unknown action: ${body.action}`);

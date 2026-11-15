@@ -4,11 +4,14 @@ import { SearchableSelect } from '@/components/searchable-select';
 import { EvidenceUpload, type EvidenceFile } from '@/components/evidence-upload';
 
 export default function TransferClient({
-  headers, items, locations
+  headers, items, locations, canCreate, canApprove, canAction
 }: {
   headers: Record<string, string>[];
   items: Record<string, string>[];
   locations: Record<string, string>[];
+  canCreate: boolean;
+  canApprove: boolean;
+  canAction: boolean;
 }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ source_location_id: '', destination_location_id: '', notes: '' });
@@ -44,11 +47,13 @@ export default function TransferClient({
 
   return (
     <div className='space-y-3'>
-      <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
-        {showForm ? 'Tutup' : '+ Transfer Baru'}
-      </button>
+      {canCreate && (
+        <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
+          {showForm ? 'Tutup' : '+ Transfer Baru'}
+        </button>
+      )}
       {err && <p className='text-xs text-destructive'>{err}</p>}
-      {showForm && (
+      {canCreate && showForm && (
         <div className='rounded border border-border bg-background p-3 space-y-2'>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-3'>
             <SearchableSelect searchLabel='lokasi sumber' value={form.source_location_id} onChange={(e) => setForm({ ...form, source_location_id: e.target.value })} className='rounded border border-border px-2 py-1 text-xs'>
@@ -105,9 +110,9 @@ export default function TransferClient({
                 }`}>{h.status}</span></td>
                 <td className='px-2 py-1'>
                   <div className='flex gap-1'>
-                    {h.status === 'REQUESTED' && <button onClick={() => doAction(h.transfer_id, 'approve')} className='rounded bg-green-500 px-1.5 py-0.5 text-[10px] text-white'>Approve</button>}
-                    {h.status === 'APPROVED' && <button onClick={() => doAction(h.transfer_id, 'dispatch')} className='rounded bg-blue-500 px-1.5 py-0.5 text-[10px] text-white'>Dispatch</button>}
-                    {h.status === 'DISPATCHED' && <button onClick={() => doAction(h.transfer_id, 'receive')} className='rounded bg-green-500 px-1.5 py-0.5 text-[10px] text-white'>Receive</button>}
+                    {canApprove && h.status === 'REQUESTED' && <button onClick={() => doAction(h.transfer_id, 'approve')} className='rounded bg-green-500 px-1.5 py-0.5 text-[10px] text-white'>Approve</button>}
+                    {canAction && h.status === 'APPROVED' && <button onClick={() => doAction(h.transfer_id, 'dispatch')} className='rounded bg-blue-500 px-1.5 py-0.5 text-[10px] text-white'>Dispatch</button>}
+                    {canAction && h.status === 'DISPATCHED' && <button onClick={() => doAction(h.transfer_id, 'receive')} className='rounded bg-green-500 px-1.5 py-0.5 text-[10px] text-white'>Receive</button>}
                   </div>
                 </td>
               </tr>

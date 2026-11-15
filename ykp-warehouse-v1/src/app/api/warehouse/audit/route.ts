@@ -52,7 +52,7 @@ export const GET = handler(async (req: NextRequest) => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'audit')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'audit')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as { action?: string };
   if (body.action !== 'verify_chain') return badRequest("action must be 'verify_chain'");

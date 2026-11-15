@@ -121,7 +121,7 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
   },
   staff: {
     item: V, location: V, supplier: V, unit_conversion: V, category: V, threshold: V,
-    receiving: V, stock_issue: VC, transfer: V, waste: VC,
+    receiving: V, stock_issue: V, transfer: V, waste: V,
     stock_count: V, stock_ledger: V, batch_stock: V,
     purchase_recommendation: V, purchase_request: V,
     alert: V, action: V, summary: V, telegram: V,

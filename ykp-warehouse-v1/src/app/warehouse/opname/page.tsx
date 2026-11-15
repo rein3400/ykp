@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { can, type Role } from '@/lib/rbac';
 import OpnameClient from './opname-client';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +20,7 @@ export default async function OpnamePage() {
         <h1 className='text-2xl font-bold'>Stock Opname</h1>
         <p className='text-sm text-muted-foreground'>Book vs Physical. Unexplained variance sebelum confirmed loss. Brief §17.</p>
       </div>
-      <OpnameClient headers={headers} items={items} locations={locations} />
+      <OpnameClient headers={headers} items={items} locations={locations} canCreate={can(session.role as Role, 'create', 'stock_count')} />
     </div>
   );
 }

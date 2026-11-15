@@ -7,7 +7,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, notFound, fail, handler } from '@/lib/http';
+import { badRequest, fail, forbidden, handler, list, notFound, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib, formatTimeWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertSupplier, assertLocation } from '@/lib/repo';
@@ -22,7 +22,7 @@ import { FraudControlError, assertReceivingVerification, checkReceivingThreeWay 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'receiving')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'receiving')) return forbidden();
 
   const url = new URL(req.url);
   const id = url.searchParams.get('id');
@@ -41,7 +41,7 @@ export const GET = handler(async (req: NextRequest) => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'receiving')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'receiving')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as {
     source_type?: string; supplier_id?: string; source_location_id?: string;

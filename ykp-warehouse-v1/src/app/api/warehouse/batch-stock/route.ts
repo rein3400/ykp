@@ -5,7 +5,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, list, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
@@ -16,7 +16,7 @@ import { dispatchAlertTelegram } from '@/lib/telegram';
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'batch_stock')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'batch_stock')) return forbidden();
 
   const url = new URL(req.url);
   const itemId = url.searchParams.get('item_id');
@@ -36,7 +36,7 @@ export const GET = handler(async (req: NextRequest) => {
 export const POST = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'create', 'batch_stock')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'create', 'batch_stock')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as Record<string, string>;
   if (!body.item_id) return badRequest('item_id is required');

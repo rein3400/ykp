@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server';
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { list, unauthorized, handler } from '@/lib/http';
+import { forbidden, handler, list, unauthorized } from '@/lib/http';
 import { can, type Role } from '@/lib/rbac';
 
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'stock_ledger')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'stock_ledger')) return forbidden();
 
   const url = new URL(req.url);
   const itemId = url.searchParams.get('item_id');

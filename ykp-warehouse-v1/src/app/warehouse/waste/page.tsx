@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { can, type Role } from '@/lib/rbac';
 import WasteClient from './waste-client';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export default async function WastePage() {
         <h1 className='text-2xl font-bold'>F4 — Waste / Kerusakan</h1>
         <p className='text-sm text-destructive'>WAJIB FOTO. Tanpa foto = tidak diakui sebagai waste (jadi tanggung jawab PIC).</p>
       </div>
-      <WasteClient rows={rows} items={items} outlets={outlets} locations={locations} />
+      <WasteClient rows={rows} items={items} outlets={outlets} locations={locations} canCreate={can(session.role as Role, 'create', 'waste')} />
     </div>
   );
 }

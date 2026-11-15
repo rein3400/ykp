@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { can, type Role } from '@/lib/rbac';
 import PurchaseRecClient from './purchase-rec-client';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,7 @@ export default async function PurchaseRecPage() {
         <h1 className='text-2xl font-bold'>Purchase Recommendation</h1>
         <p className='text-sm text-muted-foreground'>Reorder point, days of cover, suggested purchase. Brief §10.</p>
       </div>
-      <PurchaseRecClient recommendations={recommendations} />
+      <PurchaseRecClient recommendations={recommendations} canGenerate={can(session.role as Role, 'generate', 'purchase_recommendation')} />
     </div>
   );
 }

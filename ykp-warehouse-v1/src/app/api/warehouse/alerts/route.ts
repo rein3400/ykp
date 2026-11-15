@@ -5,7 +5,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { ok, list, unauthorized, badRequest, notFound, handler } from '@/lib/http';
+import { badRequest, forbidden, handler, list, notFound, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib } from '@/lib/format';
 import { can, type Role } from '@/lib/rbac';
@@ -13,7 +13,7 @@ import { can, type Role } from '@/lib/rbac';
 export const GET = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'view', 'alert')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'view', 'alert')) return forbidden();
 
   const url = new URL(req.url);
   const status = url.searchParams.get('status');
@@ -32,7 +32,7 @@ export const GET = handler(async (req: NextRequest) => {
 export const PUT = handler(async (req: NextRequest) => {
   const s = await getSession();
   if (!s) return unauthorized();
-  if (!can(s.role as Role, 'update', 'alert')) return unauthorized('Forbidden');
+  if (!can(s.role as Role, 'update', 'alert')) return forbidden();
 
   const body = (await req.json().catch(() => ({}))) as {
     alert_id: string;
