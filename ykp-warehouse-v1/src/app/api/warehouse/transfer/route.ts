@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server';
 import { readTab, appendRows, findRow, updateRow, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
-import { badRequest, forbidden, handler, list, notFound, ok, unauthorized } from '@/lib/http';
+import { badRequest, fail, forbidden, handler, list, notFound, ok, unauthorized } from '@/lib/http';
 import { logAudit } from '@/lib/audit';
 import { nowTimestampWib, formatDateWib } from '@/lib/format';
 import { nextSequentialIdSync, MissingRefError, assertItem, assertLocation } from '@/lib/repo';
@@ -159,16 +159,26 @@ export const PUT = handler(async (req: NextRequest) => {
     if (!can(s.role as Role, 'update', 'transfer')) return forbidden();
     if (header.status !== 'APPROVED') return badRequest(`Cannot dispatch from status ${header.status}`);
 
-    // Update item dispatched_qty + post TRANSFER_OUT
+    // Ledger is the source of truth: post one TRANSFER_OUT per line before the
+    // status advances, so a failed post can never look like a successful move.
+    // Reference ids are per line and per leg; OUT and IN used to share the
+    // transfer id, which made the second leg fail the duplicate guard.
+    const movements = await readTab<Record<string, string>>(TABS.stockMovement);
+    const alreadyPosted = (movementType: string, itemId: string, referenceId: string) =>
+      movements.some(
+        (m) =>
+          m.reference_type === 'transfer' &&
+          m.movement_type === movementType &&
+          m.item_id === itemId &&
+          (m.reference_id === referenceId || m.reference_id === body.transfer_id),
+      );
+
     for (const it of items) {
       const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.requested_qty);
-      const itemFound = await findRow(TABS.transferItem, 'transfer_item_id', it.transfer_item_id);
-      if (itemFound) {
-        await updateRow(TABS.transferItem, itemFound.rowNumber, {
-          ...itemFound.row, dispatched_qty: String(qty)
-        });
-      }
-      if (qty > 0) {
+      if (qty <= 0) continue;
+      const referenceId = `${body.transfer_id}-OUT-${it.transfer_item_id}`;
+      if (alreadyPosted('TRANSFER_OUT', it.item_id, referenceId)) continue;
+      try {
         await appendMovement({
           movementType: 'TRANSFER_OUT',
           direction: 'OUT',
@@ -180,12 +190,31 @@ export const PUT = handler(async (req: NextRequest) => {
           outletId: '',
           locationId: header.source_location_id,
           referenceType: 'transfer',
-          referenceId: body.transfer_id,
+          referenceId,
           sourceLocationId: header.source_location_id,
           destinationLocationId: header.destination_location_id,
           createdBy: s.userId,
           notes: `Transfer dispatch ${body.transfer_id}`
-        }).catch((e) => console.error('[transfer] dispatch ledger failed:', e));
+        });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Ledger post failed';
+        console.error('[transfer] dispatch ledger failed:', message);
+        const status = /Insufficient stock/i.test(message) ? 409 : 500;
+        return fail(
+          'ledger_reconciliation_required',
+          `Posting stok keluar gagal untuk ${it.item_id}: ${message}. Status transfer tidak diubah; perbaiki saldo lalu ulangi.`,
+          status
+        );
+      }
+    }
+
+    for (const it of items) {
+      const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.requested_qty);
+      const itemFound = await findRow(TABS.transferItem, 'transfer_item_id', it.transfer_item_id);
+      if (itemFound) {
+        await updateRow(TABS.transferItem, itemFound.rowNumber, {
+          ...itemFound.row, dispatched_qty: String(qty)
+        });
       }
     }
 
@@ -207,6 +236,51 @@ export const PUT = handler(async (req: NextRequest) => {
       return badRequest(`Cannot receive from status ${header.status}`);
     }
 
+    // Post TRANSFER_IN per line (own reference id) before touching item rows or
+    // status, so a rejected post never reads as a completed receipt.
+    const movements = await readTab<Record<string, string>>(TABS.stockMovement);
+    const alreadyPosted = (itemId: string, referenceId: string) =>
+      movements.some(
+        (m) =>
+          m.reference_type === 'transfer' &&
+          m.movement_type === 'TRANSFER_IN' &&
+          m.item_id === itemId &&
+          (m.reference_id === referenceId || m.reference_id === body.transfer_id),
+      );
+    for (const it of items) {
+      const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.dispatched_qty);
+      if (qty <= 0) continue;
+      const referenceId = `${body.transfer_id}-IN-${it.transfer_item_id}`;
+      if (alreadyPosted(it.item_id, referenceId)) continue;
+      try {
+        await appendMovement({
+          movementType: 'TRANSFER_IN',
+          direction: 'IN',
+          quantity: qty,
+          baseUnit: it.unit,
+          unitCost: 0,
+          itemId: it.item_id,
+          brandId: '',
+          outletId: '',
+          locationId: header.destination_location_id,
+          referenceType: 'transfer',
+          referenceId,
+          sourceLocationId: header.source_location_id,
+          destinationLocationId: header.destination_location_id,
+          createdBy: s.userId,
+          notes: `Transfer receive ${body.transfer_id}`
+        });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Ledger post failed';
+        console.error('[transfer] receive ledger failed:', message);
+        return fail(
+          'ledger_reconciliation_required',
+          `Posting stok masuk gagal untuk ${it.item_id}: ${message}. Status transfer tidak diubah; ulangi setelah diperbaiki.`,
+          500
+        );
+      }
+    }
+
     let hasDiscrepancy = false;
     for (const it of items) {
       const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.dispatched_qty);
@@ -222,27 +296,6 @@ export const PUT = handler(async (req: NextRequest) => {
           discrepancy_qty: String(discrepancy),
           discrepancy_reason: body.items?.find((b) => b.item_id === it.item_id)?.discrepancy_reason ?? ''
         });
-      }
-
-      // TRANSFER_IN to destination
-      if (qty > 0) {
-        await appendMovement({
-          movementType: 'TRANSFER_IN',
-          direction: 'IN',
-          quantity: qty,
-          baseUnit: it.unit,
-          unitCost: 0,
-          itemId: it.item_id,
-          brandId: '',
-          outletId: '',
-          locationId: header.destination_location_id,
-          referenceType: 'transfer',
-          referenceId: body.transfer_id,
-          sourceLocationId: header.source_location_id,
-          destinationLocationId: header.destination_location_id,
-          createdBy: s.userId,
-          notes: `Transfer receive ${body.transfer_id}`
-        }).catch((e) => console.error('[transfer] receive ledger failed:', e));
       }
 
       // Alert on discrepancy
