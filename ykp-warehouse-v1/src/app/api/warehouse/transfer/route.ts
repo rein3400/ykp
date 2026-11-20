@@ -130,7 +130,7 @@ export const PUT = handler(async (req: NextRequest) => {
   const body = (await req.json().catch(() => ({}))) as {
     transfer_id: string;
     action: 'approve' | 'dispatch' | 'receive' | 'cancel';
-    items?: Array<{ item_id: string; qty: number; discrepancy_reason?: string }>;
+    items?: Array<{ transfer_item_id?: string; item_id: string; qty: number; discrepancy_reason?: string }>;
   };
   if (!body.transfer_id || !body.action) return badRequest('transfer_id and action required');
 
@@ -140,6 +140,33 @@ export const PUT = handler(async (req: NextRequest) => {
   const now = nowTimestampWib();
   const allItems = await readTab<Record<string, string>>(TABS.transferItem);
   const items = allItems.filter((r) => r.transfer_id === body.transfer_id);
+  const submittedLine = (item: Record<string, string>) => body.items?.find(row =>
+    row.transfer_item_id ? row.transfer_item_id === item.transfer_item_id : row.item_id === item.item_id
+  );
+  if (body.items?.some(row => !row.transfer_item_id && items.filter(item => item.item_id === row.item_id).length > 1)) {
+    return badRequest('transfer_item_id wajib untuk item yang muncul di beberapa baris');
+  }
+
+  if (body.action === 'dispatch' || body.action === 'receive') {
+    if (!can(s.role as Role, 'update', 'transfer')) return forbidden();
+    const dispatch = body.action === 'dispatch';
+    const type = dispatch ? 'TRANSFER_OUT' : 'TRANSFER_IN';
+    const leg = dispatch ? 'OUT' : 'IN';
+    const location = dispatch ? header.source_location_id : header.destination_location_id;
+    const movements = await readTab<Record<string, string>>(TABS.stockMovement);
+    for (const item of items) {
+      const qty = submittedLine(item)?.qty ?? Number(dispatch ? item.requested_qty : item.dispatched_qty);
+      if (!Number.isFinite(qty) || qty < 0) return badRequest('Qty wajib finite dan nonnegatif');
+      const existing = movements.filter(row => row.reference_type === 'transfer' && row.movement_type === type && row.item_id === item.item_id &&
+        [body.transfer_id, `${body.transfer_id}-${leg}-${item.transfer_item_id}`].includes(row.reference_id));
+      if (existing.length === 0) continue;
+      const ambiguous = existing.some(row => row.reference_id === body.transfer_id) && items.filter(row => row.item_id === item.item_id).length > 1;
+      if (ambiguous || existing.length !== 1 || Number(existing[0].quantity) !== qty ||
+        normalizeUnit(existing[0].base_unit ?? '') !== normalizeUnit(item.unit) || existing[0].location_id !== location) {
+        return fail('ledger_conflict', 'Posting ledger lama tidak cocok atau ambigu; rekonsiliasi diperlukan sebelum melanjutkan transfer.', 409);
+      }
+    }
+  }
 
   if (body.action === 'approve') {
     if (!can(s.role as Role, 'approve', 'transfer')) return forbidden();
@@ -175,7 +202,7 @@ export const PUT = handler(async (req: NextRequest) => {
       );
 
     for (const it of items) {
-      const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.requested_qty);
+      const qty = submittedLine(it)?.qty ?? Number(it.requested_qty);
       if (qty <= 0) continue;
       const referenceId = `${body.transfer_id}-OUT-${it.transfer_item_id}`;
       if (alreadyPosted('TRANSFER_OUT', it.item_id, referenceId)) continue;
@@ -210,7 +237,7 @@ export const PUT = handler(async (req: NextRequest) => {
     }
 
     for (const it of items) {
-      const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.requested_qty);
+      const qty = submittedLine(it)?.qty ?? Number(it.requested_qty);
       const itemFound = await findRow(TABS.transferItem, 'transfer_item_id', it.transfer_item_id);
       if (itemFound) {
         await updateRow(TABS.transferItem, itemFound.rowNumber, {
@@ -249,7 +276,7 @@ export const PUT = handler(async (req: NextRequest) => {
           (m.reference_id === referenceId || m.reference_id === body.transfer_id),
       );
     for (const it of items) {
-      const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.dispatched_qty);
+      const qty = submittedLine(it)?.qty ?? Number(it.dispatched_qty);
       if (qty <= 0) continue;
       const referenceId = `${body.transfer_id}-IN-${it.transfer_item_id}`;
       if (alreadyPosted(it.item_id, referenceId)) continue;
@@ -284,7 +311,7 @@ export const PUT = handler(async (req: NextRequest) => {
 
     let hasDiscrepancy = false;
     for (const it of items) {
-      const qty = body.items?.find((b) => b.item_id === it.item_id)?.qty ?? Number(it.dispatched_qty);
+      const qty = submittedLine(it)?.qty ?? Number(it.dispatched_qty);
       const dispatched = Number(it.dispatched_qty);
       const discrepancy = qty - dispatched;
       if (discrepancy !== 0) hasDiscrepancy = true;
@@ -295,7 +322,7 @@ export const PUT = handler(async (req: NextRequest) => {
           ...itemFound.row,
           received_qty: String(qty),
           discrepancy_qty: String(discrepancy),
-          discrepancy_reason: body.items?.find((b) => b.item_id === it.item_id)?.discrepancy_reason ?? ''
+          discrepancy_reason: submittedLine(it)?.discrepancy_reason ?? ''
         });
       }
 

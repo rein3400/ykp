@@ -25,7 +25,7 @@ export default async function ItemsPage() {
         </div>
       </div>
       <MasterActions kind='items' rows={items} canEdit={can(session.role as Role, 'update', 'item')} canArchive={can(session.role as Role, 'delete', 'item')} />
-      <ItemsClient items={items} categories={categories} suppliers={suppliers} canWrite={canWrite} />
+      <ItemsClient items={items} categories={categories} suppliers={suppliers} canWrite={canWrite} canEdit={can(session.role as Role, 'update', 'item')} />
     </div>
   );
 }

@@ -4,7 +4,8 @@
  */
 export type Role =
   | 'owner' | 'super_admin' | 'finance_admin' | 'brand_manager'
-  | 'outlet_manager' | 'staff_input' | 'viewer';
+  | 'outlet_manager' | 'staff_input' | 'viewer'
+  | 'employee' | 'supervisor';
 
 export type Resource =
   | 'pos' | 'supplier_cost' | 'petty_cash' | 'expense' | 'closing_cash'
@@ -15,7 +16,10 @@ export type Action = 'view' | 'create' | 'update' | 'delete' | 'approve' | 'expo
 
 export function can(role: Role, action: Action, resource: Resource): boolean {
   if (role === 'owner') return true;
-  const m = MATRIX[role];
+  // HR-synced accounts carry employee/supervisor; keep them read-only here
+  // instead of falling through the matrix and seeing nothing at all.
+  const effective = role === 'employee' || role === 'supervisor' ? 'viewer' : role;
+  const m = MATRIX[effective];
   if (!m) return false;
   const a = m[resource];
   if (!a) return false;
@@ -32,7 +36,7 @@ export function scopeFilter(
   userBrandId?: string,
   userOutletId?: string
 ): { brandId?: string; outletId?: string } {
-  if (role === 'owner' || role === 'super_admin' || role === 'finance_admin' || role === 'viewer') return {};
+  if (role === 'owner' || role === 'super_admin' || role === 'finance_admin' || role === 'viewer' || role === 'employee' || role === 'supervisor') return {};
   if (role === 'brand_manager') return { brandId: userBrandId };
   if (role === 'outlet_manager' || role === 'staff_input') {
     return { brandId: userBrandId, outletId: userOutletId };

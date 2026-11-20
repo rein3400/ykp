@@ -3,6 +3,7 @@
  */
 import { cookies } from 'next/headers';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { readTab, TABS } from '@/db/sheets';
 
 const ALG = 'HS256';
 const HEADER = Buffer.from(JSON.stringify({ alg: ALG, typ: 'JWT' })).toString('base64url');
@@ -67,6 +68,30 @@ export async function setSession(user: SessionUser): Promise<void> {
   });
 }
 
+/** super_admin is a superuser alias; unknown roles stay as-is and are denied by RBAC. */
+export function normalizeRole(role?: string): string {
+  const value = (role ?? '').toLowerCase();
+  return value === 'super_admin' ? 'owner' : value;
+}
+
+/**
+ * The user record wins over cookie claims so outlet/brand changes and
+ * deactivations apply without waiting for the 24h cookie to expire.
+ */
+export function mergeSession(
+  payload: Record<string, unknown>,
+  user: Record<string, string> | null
+): SessionUser | null {
+  if (user && (user.active_status || 'active') !== 'active') return null;
+  return {
+    userId: (user?.user_id || payload.userId) as string,
+    username: (user?.username || payload.username) as string,
+    role: normalizeRole((user?.role || payload.role) as string),
+    brandId: user ? user.brand_id || undefined : (payload.brandId as string | undefined),
+    outletId: user ? user.outlet_id || undefined : (payload.outletId as string | undefined),
+  };
+}
+
 export async function getSession(): Promise<SessionUser | null> {
   const store = await cookies();
   const token = store.get('ykp_ops_session')?.value;
@@ -75,13 +100,10 @@ export async function getSession(): Promise<SessionUser | null> {
   if (!payload) return null;
   const exp = payload.exp as number | undefined;
   if (exp && exp < Math.floor(Date.now() / 1000)) return null;
-  return {
-    userId: payload.userId as string,
-    username: payload.username as string,
-    role: (payload.role as string)?.toLowerCase() as string,
-    brandId: payload.brandId as string | undefined,
-    outletId: payload.outletId as string | undefined,
-  };
+  const userId = payload.userId as string;
+  const users = userId ? await readTab<Record<string, string>>(TABS.users).catch(() => []) : [];
+  const record = users.find((row) => row.user_id === userId) ?? null;
+  return mergeSession(payload, record);
 }
 
 export async function clearSession(): Promise<void> {

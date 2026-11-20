@@ -82,21 +82,38 @@ const legOf = (transferId, movementType, itemId, lineId) =>
 
 const safe = [];
 const blocked = [];
+const plannedBalances = new Map();
 
 for (const transfer of transfers.rows) {
   if (!['RECEIVED', 'DISCREPANCY', 'PARTIAL_RECEIVED', 'DISPATCHED'].includes(transfer.status)) continue;
   for (const line of lines.rows.filter((r) => r.transfer_id === transfer.transfer_id)) {
+    const ambiguousLegacy = lines.rows.filter(row => row.transfer_id === transfer.transfer_id && row.item_id === line.item_id).length > 1 &&
+      movement.rows.some(row => row.reference_type === 'transfer' && row.reference_id === transfer.transfer_id && row.item_id === line.item_id);
+    if (ambiguousLegacy) {
+      blocked.push({ transfer, line, type: 'TRANSFER_OUT', qty: Number(line.dispatched_qty || 0), location: transfer.source_location_id, book: bookOf(line.item_id, transfer.source_location_id), reason: 'ambiguous legacy movement for repeated item' });
+      continue;
+    }
     const out = legOf(transfer.transfer_id, 'TRANSFER_OUT', line.item_id, line.transfer_item_id);
     const inn = legOf(transfer.transfer_id, 'TRANSFER_IN', line.item_id, line.transfer_item_id);
     const outQty = Number(line.dispatched_qty || line.requested_qty || 0);
     const inQty = Number(line.received_qty || line.dispatched_qty || 0);
+    const invalidOut = out && (Number(out.quantity) !== outQty || canonical(out.base_unit) !== canonical(line.unit) || out.location_id !== transfer.source_location_id);
+    const invalidIn = inn && (Number(inn.quantity) !== inQty || canonical(inn.base_unit) !== canonical(line.unit) || inn.location_id !== transfer.destination_location_id);
+    if (!Number.isFinite(outQty) || !Number.isFinite(inQty) || outQty < 0 || inQty < 0 || invalidOut || invalidIn) {
+      blocked.push({ transfer, line, type: 'TRANSFER_OUT', qty: outQty, location: transfer.source_location_id, book: bookOf(line.item_id, transfer.source_location_id), reason: 'invalid quantity or existing ledger mismatch' });
+      continue;
+    }
 
     if (!out && outQty > 0 && ['RECEIVED', 'DISCREPANCY', 'DISPATCHED'].includes(transfer.status)) {
       const book = bookOf(line.item_id, transfer.source_location_id);
       const mismatch = book.unit && canonical(book.unit) !== canonical(line.unit);
       const entry = { transfer, line, type: 'TRANSFER_OUT', direction: 'OUT', qty: outQty, location: transfer.source_location_id, book, mismatch };
-      if (!mismatch && book.qty >= outQty) safe.push(entry);
-      else blocked.push({ ...entry, reason: mismatch ? 'unit mismatch' : `source stock ${book.qty} < ${outQty}` });
+      const balanceKey = `${line.item_id}@${transfer.source_location_id}`;
+      const available = plannedBalances.has(balanceKey) ? plannedBalances.get(balanceKey) : book.qty;
+      if (!mismatch && Number.isFinite(available) && available >= outQty) {
+        safe.push(entry);
+        plannedBalances.set(balanceKey, available - outQty);
+      } else blocked.push({ ...entry, reason: mismatch ? 'unit mismatch' : `source stock ${available} < ${outQty}` });
     }
 
     if (!inn && inQty > 0 && ['RECEIVED', 'DISCREPANCY', 'PARTIAL_RECEIVED'].includes(transfer.status)) {

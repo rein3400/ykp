@@ -47,7 +47,12 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
     const brandName = await getBrandName(brandId);
     const outletName = await getOutletName(outletId);
 
-    const open = openingRows.filter((r) => r.date === date && r.outlet_id === outletId);
+    const openingDetails = submissions.filter(row => row.date === date && row.outlet_id === outletId && row.checklist_type === 'OPENING' && row.status !== 'VOID');
+    const detailedShifts = new Set(openingDetails.map(row => row.shift_id || ''));
+    const open = [
+      ...openingRows.filter(row => row.date === date && row.outlet_id === outletId && !detailedShifts.has(row.shift_id || '')),
+      ...openingDetails,
+    ];
     const openTotal = open.length;
     const openDone = open.filter((r) => r.status === 'DONE').length;
     const openTemplates = selectChecklistTemplates(templates, 'OPENING', outletId, brandId);
@@ -113,6 +118,7 @@ export async function generateDailySummary(opts?: { date?: string; brandId?: str
 
     const existing = await findSummaryRow(outletId, date);
     const row = {
+      ...existing?.row,
       summary_id: existing?.row.summary_id ?? `${outletId}-${date}`,
       date,
       brand_id: brandId,
@@ -195,15 +201,25 @@ export async function ensureDailySummary(opts?: { date?: string; brandId?: strin
     readTab<Record<string, string>>(TABS.checklistSubmissions),
   ]);
 
-  const scopedSummaries = summaries.filter(inScope);
-  const lastGenerated = scopedSummaries.map((r) => r.created_at || '').sort().pop() ?? '';
-  const activity = [
-    ...opening.filter(inScope).map((r) => r.completed_at || r.created_at || ''),
-    ...closing.filter(inScope).map((r) => r.created_at || ''),
-    ...submissions.filter(inScope).map((r) => r.submitted_at || ''),
-  ].sort().pop() ?? '';
-
-  if (!summaryIsStale(lastGenerated, activity)) return summaries;
-  await generateDailySummary({ date, brandId: opts?.brandId, outletId: opts?.outletId });
-  return readTab<Record<string, string>>(TABS.summary);
+  const outlets = (await readTab<Record<string, string>>(TABS.outlets)).filter(row =>
+    ['active', '1'].includes((row.status ?? '').trim().toLowerCase()) &&
+    (!opts?.brandId || row.brand_id === opts.brandId) &&
+    (!opts?.outletId || row.outlet_id === opts.outletId)
+  );
+  const latestStamp = (values: string[]) => values.reduce((latest, value) =>
+    parseStamp(value) > parseStamp(latest) ? value : latest, '');
+  let refreshed = false;
+  for (const outlet of outlets) {
+    const matches = (row: Record<string, string>) => inScope(row) && row.outlet_id === outlet.outlet_id;
+    const lastGenerated = latestStamp(summaries.filter(matches).map(row => row.created_at || ''));
+    const activity = latestStamp([
+      ...opening.filter(matches).map(row => row.completed_at || row.created_at || ''),
+      ...closing.filter(matches).map(row => row.created_at || ''),
+      ...submissions.filter(matches).map(row => row.submitted_at || ''),
+    ]);
+    if (!summaryIsStale(lastGenerated, activity)) continue;
+    await generateDailySummary({ date, brandId: outlet.brand_id, outletId: outlet.outlet_id });
+    refreshed = true;
+  }
+  return refreshed ? readTab<Record<string, string>>(TABS.summary) : summaries;
 }

@@ -5,7 +5,7 @@
 export type Role =
   | 'owner' | 'super_admin' | 'warehouse_admin' | 'purchasing'
   | 'finance_admin' | 'brand_manager' | 'outlet_manager' | 'supervisor'
-  | 'kitchen_lead' | 'staff' | 'viewer';
+  | 'kitchen_lead' | 'staff' | 'employee' | 'viewer';
 
 export type Resource =
   | 'item' | 'location' | 'supplier' | 'unit_conversion' | 'category' | 'threshold'
@@ -19,7 +19,8 @@ export type Action = 'view' | 'create' | 'update' | 'delete' | 'approve' | 'expo
 
 export function can(role: Role, action: Action, resource: Resource): boolean {
   if (role === 'owner') return true;
-  const m = MATRIX[role];
+  // HR/finance-synced accounts carry role "employee"; they act as staff.
+  const m = MATRIX[role === 'employee' ? 'staff' : role];
   if (!m) return false;
   const a = m[resource];
   if (!a) return false;
@@ -34,7 +35,7 @@ export function scopeFilter(
   if (role === 'owner' || role === 'super_admin') return {};
   if (role === 'warehouse_admin' || role === 'purchasing' || role === 'finance_admin') return {};
   if (role === 'brand_manager') return { brandId: userBrandId };
-  if (role === 'outlet_manager' || role === 'supervisor' || role === 'kitchen_lead' || role === 'staff') {
+  if (role === 'outlet_manager' || role === 'supervisor' || role === 'kitchen_lead' || role === 'staff' || role === 'employee') {
     return { brandId: userBrandId, outletId: userOutletId };
   }
   return {};

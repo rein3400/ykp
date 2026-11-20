@@ -8,12 +8,11 @@ export function checklistCoverage(templates: Record<string,string>[], rows: Reco
   const latestByItem=new Map<string,Record<string,string>>();
   for(const row of valid.filter(row=>(row.shift_id||'')===shift)){
    latest.set(JSON.stringify([row.department||'Umum',row.checklist_item]),row);
-   latestByItem.set(row.checklist_item,row);
+    if(!row.department)latestByItem.set(row.checklist_item,row);
   }
   for(const template of templates){
-   // Legacy rows (ops_opening_checklist has no department column) are keyed by
-   // item text only; without this fallback every template looks missing.
-   const row=latest.get(JSON.stringify([template.department||'Umum',template.checklist_item])) ?? latestByItem.get(template.checklist_item);
+    const uniqueName=templates.filter(candidate=>candidate.checklist_item===template.checklist_item).length===1;
+    const row=latest.get(JSON.stringify([template.department||'Umum',template.checklist_item])) ?? (uniqueName?latestByItem.get(template.checklist_item):undefined);
    if(row?.status==='DONE')done++;
    else if(template.critical_flag==='true')criticalMissing++;
   }

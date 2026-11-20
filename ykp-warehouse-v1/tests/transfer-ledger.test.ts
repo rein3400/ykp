@@ -143,10 +143,39 @@ describe('transfer ledger legs', () => {
     expect(db['warehouse_transfer_item'][0].dispatched_qty).toBe('0');
   });
 
+  it('addresses repeated items by their transfer line IDs', async () => {
+    seed('APPROVED', ['TRI-1', 'TRI-2']);
+    db['warehouse_transfer_item'][1].item_id = 'ITM-1';
+    const res = await PUT(put({ transfer_id: 'TRF-1', action: 'dispatch', items: [
+      { transfer_item_id: 'TRI-1', item_id: 'ITM-1', qty: 3 },
+      { transfer_item_id: 'TRI-2', item_id: 'ITM-1', qty: 7 },
+    ] }), params);
+    expect(res.status).toBe(200);
+    expect(movements.map(row => row.quantity)).toEqual([3, 7]);
+  });
+
+  it('rejects changed quantities on an already posted leg', async () => {
+    seed('APPROVED');
+    db['warehouse_stock_movement'] = [{ reference_type: 'transfer', movement_type: 'TRANSFER_OUT', item_id: 'ITM-1', reference_id: 'TRF-1-OUT-TRI-1', quantity: '10', base_unit: 'kg', location_id: 'LOC-1' }];
+    const res = await PUT(put({ transfer_id: 'TRF-1', action: 'dispatch', items: [{ item_id: 'ITM-1', qty: 7 }] }), params);
+    expect(res.status).toBe(409);
+    expect(db['warehouse_transfer'][0].status).toBe('APPROVED');
+    expect(db['warehouse_transfer_item'][0].dispatched_qty).toBe('0');
+  });
+
+  it('does not reuse an ambiguous legacy movement across repeated item lines', async () => {
+    seed('APPROVED', ['TRI-1', 'TRI-2']);
+    db['warehouse_transfer_item'][1].item_id = 'ITM-1';
+    db['warehouse_stock_movement'] = [{ reference_type: 'transfer', movement_type: 'TRANSFER_OUT', item_id: 'ITM-1', reference_id: 'TRF-1', quantity: '10', base_unit: 'kg', location_id: 'LOC-1' }];
+    const res = await PUT(put({ transfer_id: 'TRF-1', action: 'dispatch' }), params);
+    expect(res.status).toBe(409);
+    expect(movements).toHaveLength(0);
+  });
+
   it('is idempotent when the same leg was already posted', async () => {
     seed('APPROVED');
     db['warehouse_stock_movement'] = [
-      { reference_type: 'transfer', movement_type: 'TRANSFER_OUT', item_id: 'ITM-1', reference_id: 'TRF-1-OUT-TRI-1' },
+      { reference_type: 'transfer', movement_type: 'TRANSFER_OUT', item_id: 'ITM-1', reference_id: 'TRF-1-OUT-TRI-1', quantity: '10', base_unit: 'kg', location_id: 'LOC-1' },
     ];
     const res = await PUT(put({ transfer_id: 'TRF-1', action: 'dispatch' }), params);
     expect(res.status).toBe(200);

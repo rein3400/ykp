@@ -10,12 +10,14 @@ export default function ItemsClient({
   items,
   categories,
   suppliers,
-  canWrite
+  canWrite,
+  canEdit
 }: {
   items: Record<string, string>[];
   categories: Record<string, string>[];
   suppliers: Record<string, string>[];
   canWrite: boolean;
+  canEdit: boolean;
 }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({
@@ -124,7 +126,7 @@ export default function ItemsClient({
               <th className='px-2 py-1 text-right'>Reorder</th>
               <th className='px-2 py-1 text-right'>Lead Time</th>
               <th className='px-2 py-1 text-left'>Criticality</th>
-              <th className='px-2 py-1 text-left'>Aksi</th>
+              {canEdit && <th className='px-2 py-1 text-left'>Aksi</th>}
             </tr>
           </thead>
           <tbody>
@@ -139,7 +141,7 @@ export default function ItemsClient({
                 <td className='px-2 py-1 text-right'>{i.reorder_point}</td>
                 <td className='px-2 py-1 text-right'>{i.supplier_lead_time_days} h</td>
                 <td className='px-2 py-1'>{i.criticality}</td>
-                <td className='px-2 py-1'><EditMasterButton id={i.item_id} /></td>
+                {canEdit && <td className='px-2 py-1'><EditMasterButton id={i.item_id} /></td>}
               </tr>
             ))}
           </tbody>

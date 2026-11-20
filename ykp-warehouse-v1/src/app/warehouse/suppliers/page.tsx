@@ -19,7 +19,7 @@ export default async function SuppliersPage() {
         <p className='text-sm text-muted-foreground'>Supplier dengan lead time, minimum order, dan info bank.</p>
       </div>
       <MasterActions kind='suppliers' rows={suppliers} canEdit={can(session.role as Role, 'update', 'supplier')} canArchive={can(session.role as Role, 'delete', 'supplier')} />
-      <SuppliersClient suppliers={suppliers} canWrite={canWrite} />
+      <SuppliersClient suppliers={suppliers} canWrite={canWrite} canEdit={can(session.role as Role, 'update', 'supplier')} />
     </div>
   );
 }

@@ -10,7 +10,7 @@ export default async function StockIssuePage() {
   if (!session) redirect('/login');
   if (!can(session.role as Role, 'view', 'stock_issue')) redirect('/warehouse');
   const scope = scopeFilter(session.role as Role, session.brandId, session.outletId);
-  if (['outlet_manager', 'supervisor', 'kitchen_lead', 'staff'].includes(session.role) && !scope.outletId) redirect('/warehouse');
+  if (['outlet_manager', 'supervisor', 'kitchen_lead', 'staff', 'employee'].includes(session.role) && !scope.outletId) redirect('/warehouse');
   if (session.role === 'brand_manager' && !scope.brandId) redirect('/warehouse');
   const [headers, details, items, locations] = await Promise.all([
     readTab(TABS.stockIssue), readTab(TABS.stockIssueItem), readTab(TABS.items), readTab(TABS.locations)

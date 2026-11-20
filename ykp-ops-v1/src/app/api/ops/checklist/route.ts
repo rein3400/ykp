@@ -46,6 +46,12 @@ export const POST = handler(async (req: NextRequest) => {
 
   const outlet = await findRow(TABS.outlets, 'outlet_id', body.outlet_id);
   if (!outlet) return badRequest('outlet not found');
+  if (!['owner', 'ops_admin'].includes(s.role)) {
+    if (s.brandId && outlet.row.brand_id !== s.brandId) return forbidden();
+    if (s.role === 'brand_manager' && !s.brandId) return forbidden();
+    if (['staff', 'supervisor', 'outlet_manager'].includes(s.role) && (!s.outletId || body.outlet_id !== s.outletId)) return forbidden();
+  }
+  const departments = new Set(body.items.map(item => item.department || ''));
 
   const date = todayWib();
   const now = nowTimestampWib();
@@ -59,6 +65,7 @@ export const POST = handler(async (req: NextRequest) => {
       r.outlet_id === body.outlet_id &&
       (r.shift_id || '') === (body.shift_id || '') &&
       (r.checklist_type || '').toUpperCase() === checklistType &&
+      departments.has(r.department || '') &&
       r.status !== 'VOID'
     ) {
       // Resolve the stable row identity via findRow (Sheets row / pg

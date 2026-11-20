@@ -16,6 +16,8 @@ import { NextRequest } from 'next/server';
 // ── In-memory Sheets fake ─────────────────────────────────────────
 interface FakeTab { rows: Record<string, string>[] }
 const db: Record<string, FakeTab> = {};
+let rejectSecondReceipt = false;
+let receiptPostCount = 0;
 
 function tabRows(tab: string): Record<string, string>[] {
   return (db[tab] ??= { rows: [] }).rows;
@@ -74,7 +76,11 @@ vi.mock('@/lib/repo', async () => {
 });
 
 vi.mock('@/lib/stock-ledger', () => ({
-  appendMovement: async () => ({ movement_id: 'MOV-1' })
+  appendMovement: async () => {
+    receiptPostCount++;
+    if (rejectSecondReceipt && receiptPostCount === 2) throw new Error('Second receipt write failed');
+    return { movement_id: 'MOV-1' };
+  }
 }));
 
 vi.mock('@/lib/evidence', () => ({
@@ -123,6 +129,8 @@ const rcvBody = {
 };
 
 beforeEach(() => {
+  rejectSecondReceipt = false;
+  receiptPostCount = 0;
   for (const k of Object.keys(db)) delete db[k];
   tabRows('master_item').push({item_id:'ITM-1',base_unit:'kg'}, {item_id:'ITM-2',base_unit:'kg'});
   tabRows('warehouse_attachments').push({ attachment_id: 'ATT-1', entity_type: 'receiving', entity_id: '', file_id: 'F1', file_name: 'scale.jpg', mime_type: 'image/jpeg', size_bytes: '1000', uploaded_by: 'USR-001', created_at: '' });
@@ -170,6 +178,15 @@ describe('adjustment route fraud controls', () => {
 });
 
 describe('receiving route 3-way gate', () => {
+  it('keeps batch stock for a successful line when another same-item line fails', async () => {
+    rejectSecondReceipt = true;
+    const res = await rcvPOST(req({ ...rcvBody, items: [
+      { item_id: 'ITM-1', batch_number: 'B1', qty_ordered: 10, qty_delivered: 10, qty_accepted: 10, unit: 'kg', unit_price: 1 },
+      { item_id: 'ITM-1', batch_number: 'B2', qty_ordered: 10, qty_delivered: 10, qty_accepted: 10, unit: 'kg', unit_price: 1 },
+    ] }), ctx);
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(tabRows('warehouse_batch_stock').map(row => row.batch_number)).toEqual(['B1']);
+  });
   it('blocks variance >2% without a second-person verifier', async () => {
     const res = await rcvPOST(req(rcvBody), ctx); // 90 vs 100 = -10%
     expect(res.status).toBe(400);

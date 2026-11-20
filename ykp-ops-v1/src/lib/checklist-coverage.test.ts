@@ -5,6 +5,21 @@ const templates = [
  { checklist_template_id:'T2',checklist_item:'Oven',department:'Kitchen',critical_flag:'true' }
 ];
 describe('jobdesk coverage per shift',()=>{
+ it('does not credit a same-named task to another department',()=>{
+  const repeated = [
+   { checklist_item:'Absen masuk',department:'Kasir',critical_flag:'false' },
+   { checklist_item:'Absen masuk',department:'Kitchen',critical_flag:'true' }
+  ];
+  const result=checklistCoverage(repeated,[{shift_id:'S1',checklist_item:'Absen masuk',department:'Kasir',status:'DONE'}]);
+  expect(result.percent).toBe(50);expect(result.criticalMissing).toBe(1);
+ });
+ it('does not guess a department for ambiguous legacy task names',()=>{
+  const repeated = [
+   { checklist_item:'Absen masuk',department:'Kasir' },
+   { checklist_item:'Absen masuk',department:'Kitchen' }
+  ];
+  expect(checklistCoverage(repeated,[{shift_id:'S1',checklist_item:'Absen masuk',status:'DONE'}]).percent).toBe(0);
+ });
  it('does not mark full completion when only one department submits',()=>{
   const result=checklistCoverage(templates,[{shift_id:'S1',checklist_item:'Kasir',department:'Kasir',status:'DONE'}]);
   expect(result.percent).toBe(50);expect(result.complete).toBe(false);expect(result.criticalMissing).toBe(1);

@@ -15,7 +15,11 @@ vi.mock('@/db/sheets', () => ({
   readTab: async (tab: string) =>
     tab === 'transfer'
       ? [{ transfer_id: 'TRF-1', date: '2026-11-15', source_location_id: 'LOC-1', destination_location_id: 'LOC-2', status: 'REQUESTED' }]
-      : [],
+      : tab === 'items'
+        ? [{ item_id: 'ITM-1', item_code: 'DOUGH', item_name: 'Dough' }]
+        : tab === 'suppliers'
+          ? [{ supplier_id: 'SUP-1', supplier_name: 'Supplier' }]
+          : [],
   findRow: async () => null,
   appendRows: async () => 2,
   updateRow: async () => undefined,
@@ -34,6 +38,14 @@ async function html(page: () => Promise<ReactElement>, role: string): Promise<st
   session.role = role;
   return renderToStaticMarkup(await page());
 }
+
+const ItemsPage = (await import('@/app/warehouse/items/page')).default;
+const SuppliersPage = (await import('@/app/warehouse/suppliers/page')).default;
+
+it.each([ItemsPage, SuppliersPage])('hides master row edit actions from staff', async (page) => {
+  expect(await html(page, 'staff')).not.toContain('>Edit</button>');
+  expect(await html(page, 'owner')).toContain('>Edit</button>');
+});
 
 const cases: Array<[string, () => Promise<ReactElement>, string]> = [
   ['receiving', ReceivingPage, '+ Receiving Baru'],

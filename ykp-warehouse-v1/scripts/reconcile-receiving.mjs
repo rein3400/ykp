@@ -99,7 +99,11 @@ for (const header of receiving.rows) {
     if (newRefs.has(newRef)) continue;
     const left = legacyAvailable.get(line.item_id) ?? 0;
     if (left > 0) {
-      legacyAvailable.set(line.item_id, left - 1);
+      const legacy = movement.rows.filter(row => row.reference_type === 'receiving' && row.reference_id === `${header.receiving_id}-${line.item_id}`);
+      if (receiptLines.filter(row => row.item_id === line.item_id).length > 1 || legacy.length !== 1 ||
+        legacy[0].movement_type !== 'RECEIPT' || legacy[0].direction !== 'IN' || legacy[0].location_id !== header.destination_location_id) {
+        blocked.push({ line, header, reason: 'posting legacy ambigu atau tidak sesuai' });
+      }
       continue;
     }
     const qty = Number(line.qty_accepted || 0);
@@ -108,6 +112,11 @@ for (const header of receiving.rows) {
     if (!item) { blocked.push({ line, header, reason: 'item tidak ada di master' }); continue; }
     try {
       const converted = convert(item, line.unit, qty, Number(line.unit_price || 0));
+      const book = movement.rows.filter(row => row.item_id === line.item_id && row.location_id === header.destination_location_id);
+      if (book.some(row => alias(row.base_unit) !== converted.unit || !Number.isFinite(Number(row.stock_after)))) {
+        blocked.push({ line, header, reason: 'satuan atau saldo ledger lama tidak cocok' });
+        continue;
+      }
       pending.push({ header, line, qty: converted.quantity, unit: converted.unit, unitCost: converted.unitCost, totalValue: Math.round(qty * Number(line.unit_price || 0)) });
     } catch (e) {
       blocked.push({ line, header, reason: e instanceof Error ? e.message : 'konversi gagal' });

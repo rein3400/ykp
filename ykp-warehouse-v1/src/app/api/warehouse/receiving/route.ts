@@ -257,7 +257,7 @@ export const POST = handler(async (req: NextRequest) => {
         });
       } catch (e) {
         console.error('[receiving] ledger post failed:', e);
-        ledgerFailures.push(String(it.item_id));
+        ledgerFailures.push(detailRows[lineIndex].receiving_item_id);
       }
     }
 
@@ -401,7 +401,7 @@ export const POST = handler(async (req: NextRequest) => {
     for (const [lineIndex, t] of threeWay.entries()) {
       const it = t.item;
       const qtyAccepted = normalized[lineIndex].quantity;
-      if (qtyAccepted <= 0 || ledgerFailures.includes(it.item_id)) continue;
+      if (qtyAccepted <= 0 || ledgerFailures.includes(detailRows[lineIndex].receiving_item_id)) continue;
       try {
         const batchRows = await readTab<Record<string, string>>(TABS.batchStock);
         const existing = batchRows.find(
