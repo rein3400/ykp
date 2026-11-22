@@ -3,6 +3,7 @@ import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { ensureDailySummary } from '@/lib/ops-summary';
 import OpsOverviewClient from './ops-overview-client';
+import { ScopeNotice } from '@/components/scope-notice';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,14 +39,17 @@ export default async function OpsOverviewPage() {
   const overSla = kds.filter((r) => r.sla_status === 'OVER_SLA' || r.sla_status === 'CRITICAL_DELAY').length;
 
   return (
-    <OpsOverviewClient
-      initialSummaries={latest as never}
-      initialKpi={{
-        summaryRows: summaries.length,
-        openIncidents,
-        overSla,
-        openingItems: opening.length,
-      }}
-    />
+    <>
+      <ScopeNotice role={session.role} outletId={session.outletId} />
+      <OpsOverviewClient
+        initialSummaries={latest as never}
+        initialKpi={{
+          summaryRows: summaries.length,
+          openIncidents,
+          overSla,
+          openingItems: opening.length,
+        }}
+      />
+    </>
   );
 }
