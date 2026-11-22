@@ -45,6 +45,7 @@ const V = ['view'] as Action[];
 const VE = ['view', 'export'] as Action[];
 const VC = ['view', 'create'] as Action[];
 const VCE = ['view', 'create', 'export'] as Action[];
+const VEU = ['view', 'export', 'update'] as Action[];
 const WRITE: Action[] = ['view', 'create', 'update', 'export'];
 const FULL: Action[] = ['view', 'create', 'update', 'delete', 'approve', 'export', 'generate'];
 const NO_DELETE: Action[] = ['view', 'create', 'update', 'approve', 'export', 'generate'];
@@ -97,7 +98,7 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     dashboard: VE, audit: V
   },
   outlet_manager: {
-    item: VE, location: VE, supplier: VE, unit_conversion: V, category: V, threshold: V,
+    item: VEU, location: VE, supplier: VEU, unit_conversion: V, category: V, threshold: V,
     receiving: WRITE, stock_issue: WRITE, transfer: WRITE, waste: WRITE,
     adjustment: VE, stock_count: WRITE, stock_ledger: VE, batch_stock: VE,
     purchase_recommendation: VE, purchase_request: VE,

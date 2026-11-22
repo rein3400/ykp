@@ -42,6 +42,10 @@ async function html(page: () => Promise<ReactElement>, role: string): Promise<st
 const ItemsPage = (await import('@/app/warehouse/items/page')).default;
 const SuppliersPage = (await import('@/app/warehouse/suppliers/page')).default;
 
+it.each([ItemsPage, SuppliersPage])('shows master row edit actions to outlet managers', async (page) => {
+  expect(await html(page, 'outlet_manager')).toContain('>Edit</button>');
+});
+
 it.each([ItemsPage, SuppliersPage])('hides master row edit actions from staff', async (page) => {
   expect(await html(page, 'staff')).not.toContain('>Edit</button>');
   expect(await html(page, 'owner')).toContain('>Edit</button>');

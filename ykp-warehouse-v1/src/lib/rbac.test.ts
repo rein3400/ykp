@@ -11,3 +11,12 @@ describe('employee alias', () => {
     expect(scopeFilter('employee', 'BR-1', 'OL-1')).toEqual({ brandId: 'BR-1', outletId: 'OL-1' });
   });
 });
+
+describe('outlet manager master edits', () => {
+  it('can edit items and suppliers but not archive them', () => {
+    expect(can('outlet_manager', 'update', 'item')).toBe(true);
+    expect(can('outlet_manager', 'update', 'supplier')).toBe(true);
+    expect(can('outlet_manager', 'delete', 'item')).toBe(false);
+    expect(can('outlet_manager', 'create', 'item')).toBe(false);
+  });
+});

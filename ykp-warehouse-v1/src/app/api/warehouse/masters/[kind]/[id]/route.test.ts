@@ -3,11 +3,13 @@ import { PUT, DELETE } from "./route";
 import { NextRequest } from "next/server";
 const state = vi.hoisted(() => ({
   role: "warehouse_admin",
+  brandId: "" as string,
+  itemBrand: "" as string,
   referenced: false,
 }));
 const save = vi.hoisted(() => vi.fn(async () => undefined));
 vi.mock("@/lib/session", () => ({
-  getSession: async () => ({ userId: "U1", role: state.role }),
+  getSession: async () => ({ userId: "U1", role: state.role, brandId: state.brandId || undefined }),
 }));
 vi.mock("@/lib/master-store", () => ({
   saveMasterRow: save,
@@ -28,6 +30,7 @@ vi.mock("@/db/sheets", async (original) => ({
             item_id: "I1",
             item_name: "Old",
             base_unit: "g",
+            brand_id: state.itemBrand,
             active_status: "active",
           },
         ]
@@ -43,6 +46,8 @@ const request = (body: unknown) =>
   });
 beforeEach(() => {
   state.role = "warehouse_admin";
+  state.brandId = "";
+  state.itemBrand = "";
   state.referenced = false;
   save.mockClear();
 });
@@ -82,5 +87,19 @@ describe("master mutation permissions and history", () => {
     state.referenced = true;
     expect((await DELETE(request({}), context)).status).toBe(409);
     expect(save).not.toHaveBeenCalled();
+  });
+  it("lets an outlet manager edit masters inside their brand only", async () => {
+    state.role = "outlet_manager";
+    state.brandId = "BR-2";
+    state.itemBrand = "BR-2";
+    expect((await PUT(request({ item_name: "Outlet edit" }), context)).status).toBe(200);
+    state.itemBrand = "BR-3";
+    expect((await PUT(request({ item_name: "Other brand" }), context)).status).toBe(403);
+  });
+  it("does not let an outlet manager archive masters", async () => {
+    state.role = "outlet_manager";
+    state.brandId = "BR-2";
+    state.itemBrand = "BR-2";
+    expect((await DELETE(request({}), context)).status).toBe(403);
   });
 });
