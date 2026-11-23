@@ -46,6 +46,16 @@ it.each([ItemsPage, SuppliersPage])('shows master row edit actions to outlet man
   expect(await html(page, 'outlet_manager')).toContain('>Edit</button>');
 });
 
+it.each([
+  ['items', ItemsPage, '+ Tambah Item'],
+  ['suppliers', SuppliersPage, '+ Tambah Supplier'],
+] as const)('outlet managers can edit %s but cannot create or archive', async (_name, page, createLabel) => {
+  const markup = await html(page, 'outlet_manager');
+  expect(markup).toContain('>Edit</button>');
+  expect(markup).not.toContain(createLabel);
+  expect(markup).not.toContain('>Arsipkan<');
+});
+
 it.each([ItemsPage, SuppliersPage])('hides master row edit actions from staff', async (page) => {
   expect(await html(page, 'staff')).not.toContain('>Edit</button>');
   expect(await html(page, 'owner')).toContain('>Edit</button>');
