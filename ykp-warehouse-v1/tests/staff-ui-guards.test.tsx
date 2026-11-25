@@ -40,7 +40,13 @@ async function html(page: () => Promise<ReactElement>, role: string): Promise<st
 }
 
 const ItemsPage = (await import('@/app/warehouse/items/page')).default;
+const LedgerPage = (await import('@/app/warehouse/ledger/page')).default;
 const SuppliersPage = (await import('@/app/warehouse/suppliers/page')).default;
+
+it('offers ledger correction only to roles that may update the ledger', async () => {
+  expect(await html(LedgerPage, 'outlet_manager')).toContain('>Aksi<');
+  expect(await html(LedgerPage, 'staff')).not.toContain('>Aksi<');
+});
 
 it.each([ItemsPage, SuppliersPage])('shows master row edit actions to outlet managers', async (page) => {
   expect(await html(page, 'outlet_manager')).toContain('>Edit</button>');
@@ -49,11 +55,12 @@ it.each([ItemsPage, SuppliersPage])('shows master row edit actions to outlet man
 it.each([
   ['items', ItemsPage, '+ Tambah Item'],
   ['suppliers', SuppliersPage, '+ Tambah Supplier'],
-] as const)('outlet managers can edit %s but cannot create or archive', async (_name, page, createLabel) => {
-  const markup = await html(page, 'outlet_manager');
-  expect(markup).toContain('>Edit</button>');
-  expect(markup).not.toContain(createLabel);
-  expect(markup).not.toContain('>Arsipkan<');
+] as const)('outlet managers get the same master actions as warehouse admin on %s', async (_name, page, createLabel) => {
+  const manager = await html(page, 'outlet_manager');
+  const admin = await html(page, 'warehouse_admin');
+  expect(manager).toContain('>Edit</button>');
+  expect(manager).toContain(createLabel);
+  expect(manager).toBe(admin);
 });
 
 it.each([ItemsPage, SuppliersPage])('hides master row edit actions from staff', async (page) => {

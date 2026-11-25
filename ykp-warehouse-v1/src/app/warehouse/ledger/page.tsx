@@ -2,6 +2,7 @@ import { readTab, TABS } from '@/db/sheets';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import LedgerClient from './ledger-client';
+import { can, type Role } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export default async function LedgerPage() {
         <h1 className='text-2xl font-bold'>Stock Movement Ledger</h1>
         <p className='text-sm text-muted-foreground'>Auto immutable. Semua transaksi stok tercatat otomatis. Tidak bisa dihapus — hanya reversal.</p>
       </div>
-      <LedgerClient movements={movements} items={items} locations={locations} />
+      <LedgerClient movements={movements} items={items} locations={locations} canEdit={can(session.role as Role, 'update', 'stock_ledger')} />
     </div>
   );
 }

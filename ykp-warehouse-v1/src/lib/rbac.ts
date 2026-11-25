@@ -45,10 +45,19 @@ const V = ['view'] as Action[];
 const VE = ['view', 'export'] as Action[];
 const VC = ['view', 'create'] as Action[];
 const VCE = ['view', 'create', 'export'] as Action[];
-const VEU = ['view', 'export', 'update'] as Action[];
+const LEDGER_EDIT: Action[] = ['view', 'export', 'update'];
 const WRITE: Action[] = ['view', 'create', 'update', 'export'];
 const FULL: Action[] = ['view', 'create', 'update', 'delete', 'approve', 'export', 'generate'];
 const NO_DELETE: Action[] = ['view', 'create', 'update', 'approve', 'export', 'generate'];
+
+const WAREHOUSE_ADMIN_GRANTS: Partial<Record<Resource, Action[]>> = {
+    item: FULL, location: FULL, supplier: FULL, unit_conversion: FULL, category: FULL, threshold: FULL,
+    receiving: FULL, stock_issue: FULL, transfer: FULL, waste: FULL, adjustment: ['view', 'create', 'update', 'export'],
+    stock_count: FULL, stock_ledger: LEDGER_EDIT, batch_stock: FULL,
+    purchase_recommendation: VE, purchase_request: VCE,
+    alert: VE, action: VE, summary: FULL, telegram: VE,
+    dashboard: FULL, audit: VE, master: WRITE
+};
 
 const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
   owner: {
@@ -67,14 +76,8 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     alert: FULL, action: FULL, summary: FULL, telegram: FULL,
     dashboard: FULL, audit: FULL, user: FULL, master: FULL
   },
-  warehouse_admin: {
-    item: FULL, location: FULL, supplier: FULL, unit_conversion: FULL, category: FULL, threshold: FULL,
-    receiving: FULL, stock_issue: FULL, transfer: FULL, waste: FULL, adjustment: ['view', 'create', 'update', 'export'],
-    stock_count: FULL, stock_ledger: VE, batch_stock: FULL,
-    purchase_recommendation: VE, purchase_request: VCE,
-    alert: VE, action: VE, summary: FULL, telegram: VE,
-    dashboard: FULL, audit: VE, master: WRITE
-  },
+  warehouse_admin: WAREHOUSE_ADMIN_GRANTS,
+  outlet_manager: WAREHOUSE_ADMIN_GRANTS,
   purchasing: {
     item: VE, location: V, supplier: WRITE, unit_conversion: V, category: V, threshold: V,
     receiving: VE, stock_issue: V, transfer: V, waste: V,
@@ -95,14 +98,6 @@ const MATRIX: Partial<Record<Role, Partial<Record<Resource, Action[]>>>> = {
     adjustment: VE, stock_count: NO_DELETE, stock_ledger: VE, batch_stock: VE,
     purchase_recommendation: VE, purchase_request: VE,
     alert: NO_DELETE, action: NO_DELETE, summary: VE, telegram: VE,
-    dashboard: VE, audit: V
-  },
-  outlet_manager: {
-    item: VEU, location: VE, supplier: VEU, unit_conversion: V, category: V, threshold: V,
-    receiving: WRITE, stock_issue: WRITE, transfer: WRITE, waste: WRITE,
-    adjustment: VE, stock_count: WRITE, stock_ledger: VE, batch_stock: VE,
-    purchase_recommendation: VE, purchase_request: VE,
-    alert: WRITE, action: WRITE, summary: VE, telegram: VE,
     dashboard: VE, audit: V
   },
   supervisor: {

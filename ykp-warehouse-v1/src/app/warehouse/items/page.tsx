@@ -15,7 +15,7 @@ export default async function ItemsPage() {
     readTab<Record<string, string>>(TABS.itemCategory),
     readTab<Record<string, string>>(TABS.suppliers)
   ]);
-  const canWrite = session.role === 'owner' || session.role === 'super_admin' || session.role === 'warehouse_admin';
+  const canWrite = can(session.role as Role, 'create', 'item');
   return (
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>

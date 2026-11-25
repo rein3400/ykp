@@ -96,10 +96,10 @@ describe("master mutation permissions and history", () => {
     state.itemBrand = "BR-3";
     expect((await PUT(request({ item_name: "Other brand" }), context)).status).toBe(403);
   });
-  it("does not let an outlet manager archive masters", async () => {
+  it("gives an outlet manager the same archive right as a warehouse admin", async () => {
     state.role = "outlet_manager";
     state.brandId = "BR-2";
     state.itemBrand = "BR-2";
-    expect((await DELETE(request({}), context)).status).toBe(403);
+    expect((await DELETE(request({}), context)).status).toBe(200);
   });
 });

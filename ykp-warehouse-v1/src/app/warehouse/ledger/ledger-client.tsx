@@ -9,15 +9,48 @@ const MOVEMENT_TYPES = [
 ];
 
 export default function LedgerClient({
-  movements, items, locations
+  movements, items, locations, canEdit
 }: {
   movements: Record<string, string>[];
   items: Record<string, string>[];
   locations: Record<string, string>[];
+  canEdit: boolean;
 }) {
   const [filters, setFilters] = useState({ item_id: '', location_id: '', movement_type: '' });
+  const [rows, setRows] = useState(movements);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ unit_cost: '', notes: '', reason: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const filtered = movements.filter((m) => {
+  function openCorrection(m: Record<string, string>) {
+    setEditing(m.movement_id);
+    setDraft({ unit_cost: m.unit_cost ?? '', notes: m.notes ?? '', reason: '' });
+    setError(null);
+  }
+
+  async function saveCorrection(id: string) {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/warehouse/ledger/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(draft)
+      });
+      const json = await res.json();
+      if (!res.ok) { setError(json.error?.message ?? 'Gagal menyimpan koreksi'); return; }
+      setRows((prev) => prev.map((row) => (row.movement_id === id ? { ...row, ...json.data } : row)));
+      setEditing(null);
+    } catch {
+      setError('Koneksi gagal');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const filtered = rows.filter((m) => {
     if (filters.item_id && m.item_id !== filters.item_id) return false;
     if (filters.location_id && m.location_id !== filters.location_id) return false;
     if (filters.movement_type && m.movement_type !== filters.movement_type) return false;
@@ -59,6 +92,7 @@ export default function LedgerClient({
               <th className='px-2 py-1 text-right'>Before</th>
               <th className='px-2 py-1 text-right'>After</th>
               <th className='px-2 py-1 text-left'>Ref</th>
+              {canEdit && <th className='px-2 py-1 text-left'>Aksi</th>}
             </tr>
           </thead>
           <tbody>
@@ -81,10 +115,42 @@ export default function LedgerClient({
                 <td className='px-2 py-1 text-right'>{m.stock_before}</td>
                 <td className='px-2 py-1 text-right font-medium'>{m.stock_after}</td>
                 <td className='px-2 py-1 font-mono text-[10px]'>{m.reference_type}/{m.reference_id}</td>
+                {canEdit && (
+                  <td className='px-2 py-1'>
+                    <button onClick={() => openCorrection(m)} className='rounded border border-border px-1.5 py-0.5 text-[10px] hover:bg-muted'>
+                      {editing === m.movement_id ? 'Tutup' : 'Koreksi'}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
+            {editing && canEdit && (
+              <tr className='border-t border-border bg-muted/30'>
+                <td colSpan={12} className='px-2 py-2'>
+                  <div className='flex flex-wrap items-end gap-2 text-[11px]'>
+                    <label className='flex flex-col gap-0.5'>
+                      Unit cost
+                      <input value={draft.unit_cost} onChange={(e) => setDraft({ ...draft, unit_cost: e.target.value })} inputMode='decimal' className='w-28 rounded border border-border px-1 py-0.5' />
+                    </label>
+                    <label className='flex flex-col gap-0.5'>
+                      Catatan
+                      <input value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className='w-56 rounded border border-border px-1 py-0.5' />
+                    </label>
+                    <label className='flex flex-col gap-0.5'>
+                      Alasan koreksi (wajib)
+                      <input value={draft.reason} onChange={(e) => setDraft({ ...draft, reason: e.target.value })} className='w-56 rounded border border-border px-1 py-0.5' />
+                    </label>
+                    <button onClick={() => saveCorrection(editing)} disabled={saving} className='rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground disabled:opacity-50'>
+                      {saving ? 'Menyimpan…' : 'Simpan Koreksi'}
+                    </button>
+                    <span className='text-muted-foreground'>Qty/tipe/lokasi tidak bisa diubah — pakai Stock Adjustment.</span>
+                  </div>
+                  {error && <p className='mt-1 text-[11px] text-destructive'>{error}</p>}
+                </td>
+              </tr>
+            )}
             {sorted.length === 0 && (
-              <tr><td colSpan={11} className='px-2 py-3 text-center text-muted-foreground'>Belum ada transaksi stok. Ledger akan terisi otomatis saat receiving/issue/transfer/waste.</td></tr>
+              <tr><td colSpan={12} className='px-2 py-3 text-center text-muted-foreground'>Belum ada transaksi stok. Ledger akan terisi otomatis saat receiving/issue/transfer/waste.</td></tr>
             )}
           </tbody>
         </table>

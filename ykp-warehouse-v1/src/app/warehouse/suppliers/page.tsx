@@ -11,7 +11,7 @@ export default async function SuppliersPage() {
   const session = await getSession();
   if (!session) redirect('/login');
   const suppliers = await readTab<Record<string, string>>(TABS.suppliers);
-  const canWrite = session.role === 'owner' || session.role === 'super_admin' || session.role === 'warehouse_admin' || session.role === 'purchasing';
+  const canWrite = can(session.role as Role, 'create', 'supplier');
   return (
     <div className='space-y-4'>
       <div>
