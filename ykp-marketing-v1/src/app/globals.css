@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --brand: 355 85% 47%;
+  --brand-strong: 354 92% 36%;
+  --ink: 0 0% 6%;
+}
+
+body {
+  background: #f7f7f8;
+  color: #101010;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
