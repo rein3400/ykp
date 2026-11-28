@@ -17,11 +17,13 @@ export function OpeningClient({
   outlets,
   shifts,
   rows: serverRows,
+  picName,
 }: {
   templates: Record<string, string>[];
   outlets: Record<string, string>[];
   shifts: Record<string, string>[];
   rows: Record<string, string>[];
+  picName?: string;
 }) {
   const router = useRouter();
   const [rows, setRows] = useState(serverRows);
@@ -97,6 +99,7 @@ export function OpeningClient({
 
   const doneCount = items.filter((i) => i.status === 'DONE').length;
   const criticalNotDone = items.filter((i) => i.critical_flag === 'true' && i.status !== 'DONE').length;
+  const legacyCount = rows.filter((r) => !r.department).length;
 
   async function submitAll() {
     setLoading(true);
@@ -150,22 +153,23 @@ export function OpeningClient({
         <p className='text-xs font-semibold uppercase tracking-widest text-slate-500'>Persiapan pembukaan</p>
         <div className='mt-3 flex flex-wrap items-center justify-between gap-3'>
           <p className='text-sm font-medium text-slate-700'>{`${doneCount} dari ${items.length}`} item selesai</p>
-          <span className='text-sm font-semibold tabular-nums text-emerald-700'>{items.length ? Math.round(doneCount / items.length * 100) : 0}%</span>
+          <span className='text-sm font-semibold tabular-nums text-[#E01020]'>{items.length ? Math.round(doneCount / items.length * 100) : 0}%</span>
         </div>
         <div role='progressbar' aria-label='Progres opening' aria-valuemin={0} aria-valuemax={items.length || 1} aria-valuenow={doneCount} className='mt-3 h-2 overflow-hidden rounded-full bg-slate-100'>
-          <div className='h-full rounded-full bg-emerald-600 transition-[width] motion-reduce:transition-none' style={{ width: `${items.length ? doneCount / items.length * 100 : 0}%` }} />
+          <div className='h-full rounded-full bg-[#E01020] transition-[width] motion-reduce:transition-none' style={{ width: `${items.length ? doneCount / items.length * 100 : 0}%` }} />
         </div>
         <p className='mt-4 text-xs leading-5 text-slate-500'>{grouped.length} kategori SOP. Lengkapi tugas, catatan, dan bukti yang diperlukan sebelum membuka outlet.</p>
+        <p className='mt-1 text-xs text-slate-500'>PIC checklist: {picName || '—'}</p>
       </div>
 
       <div className='grid min-w-0 gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 sm:p-6'>
         <label className='text-sm'>Outlet
-          <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:opacity-50' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
+          <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:opacity-50' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
             {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
           </select>
         </label>
         <label className='text-sm'>Shift
-          <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:opacity-50' value={shiftId} onChange={(e) => setShiftId(e.target.value)}>
+          <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:opacity-50' value={shiftId} onChange={(e) => setShiftId(e.target.value)}>
             {shifts.map((s) => <option key={s.shift_id} value={s.shift_id}>{s.shift_name}</option>)}
           </select>
         </label>
@@ -193,7 +197,7 @@ export function OpeningClient({
         <div className='space-y-4'>
           {grouped.map(({ dept, list }) => (
             <div key={dept} className='overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6'>
-              <h3 className='mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-4 text-sm font-semibold text-slate-800'><span className='min-w-0 break-words'>{dept}</span><span className='shrink-0 text-xs font-normal tabular-nums text-slate-500'>{list.filter((item) => item.status === 'DONE').length}/{list.length}</span></h3>
+              <h3 className='mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-4 text-sm font-semibold text-slate-800'><span className='min-w-0 break-words'>{dept} <span className='text-xs font-normal text-slate-400'>· Sebelum buka</span></span><span className='shrink-0 text-xs font-normal tabular-nums text-slate-500'>{list.filter((item) => item.status === 'DONE').length}/{list.length}</span></h3>
               <div className='space-y-3'>
                 {list.map(({ idx, ...it }) => {
                   const tpl = selectedTemplates[idx];
@@ -204,7 +208,7 @@ export function OpeningClient({
                           type='checkbox'
                           checked={it.status === 'DONE'}
                           onChange={() => toggleStatus(idx)}
-                          disabled={loading} className='mt-0.5 h-5 w-5 shrink-0 accent-emerald-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-600'
+                          disabled={loading} className='mt-0.5 h-5 w-5 shrink-0 accent-[#E01020] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E01020]'
                         />
                         <div className='min-w-0 flex-1'>
                           <div className='flex flex-wrap items-center gap-2 text-sm'>
@@ -217,10 +221,10 @@ export function OpeningClient({
                         </div>
                       </label>
                       <details className='ml-8 mt-3'>
-                        <summary className='w-fit cursor-pointer rounded text-xs font-medium text-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600'>Catatan &amp; bukti{it.notes || it.photo_url ? ' · terisi' : ''}</summary>
+                        <summary className='w-fit cursor-pointer rounded text-xs font-medium text-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E01020]'>Catatan &amp; bukti{it.notes || it.photo_url ? ' · terisi' : ''}</summary>
                         <div className='mt-3 grid gap-3 sm:grid-cols-2'>
-                          <label className='text-xs font-medium text-slate-500'>Catatan<textarea disabled={loading} rows={2} aria-label={`Catatan ${it.checklist_item}`} placeholder='Kendala atau informasi tambahan' value={it.notes} onChange={(e) => setItemField(idx, 'notes', e.target.value)} className='mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20' /></label>
-                          <label className='text-xs font-medium text-slate-500'>Link foto {tpl?.required_photo === 'true' ? '(wajib)' : '(opsional)'}<input disabled={loading} type='url' aria-label={`Foto ${it.checklist_item}`} placeholder='https://' value={it.photo_url} onChange={(e) => setItemField(idx, 'photo_url', e.target.value)} className='mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20' /></label>
+                          <label className='text-xs font-medium text-slate-500'>Catatan<textarea disabled={loading} rows={2} aria-label={`Catatan ${it.checklist_item}`} placeholder='Kendala atau informasi tambahan' value={it.notes} onChange={(e) => setItemField(idx, 'notes', e.target.value)} className='mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20' /></label>
+                          <label className='text-xs font-medium text-slate-500'>Link foto {tpl?.required_photo === 'true' ? '(wajib)' : '(opsional)'}<input disabled={loading} type='url' aria-label={`Foto ${it.checklist_item}`} placeholder='https://' value={it.photo_url} onChange={(e) => setItemField(idx, 'photo_url', e.target.value)} className='mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20' /></label>
                         </div>
                       </details>
                     </div>
@@ -237,13 +241,13 @@ export function OpeningClient({
 
       <div className='sticky bottom-3 z-10 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg sm:flex-row sm:items-center sm:justify-between sm:p-5'>
         <div><p className='text-sm font-medium text-slate-700'>{outlets.find((o) => o.outlet_id === outletId)?.outlet_name || 'Pilih outlet'} · {shifts.find((s) => s.shift_id === shiftId)?.shift_name || 'Pilih shift'}</p><p className='mt-1 text-xs leading-5 text-slate-500'>Pastikan tugas kritikal dan bukti telah diperiksa sebelum membuka outlet.</p></div>
-        <button onClick={submitAll} disabled={loading || selectedTemplates.length === 0} className='shrink-0 whitespace-nowrap rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500'>
+        <button onClick={submitAll} disabled={loading || selectedTemplates.length === 0} className='shrink-0 whitespace-nowrap rounded-xl bg-[#E01020] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#9c0b16] active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E01020] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500'>
           {loading ? 'Menyimpan…' : `Simpan Opening (${doneCount}/${items.length})`}
         </button>
       </div>
 
       <div className='rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6'>
-        <h2 className='mb-4 text-lg font-semibold tracking-tight text-slate-900'>Riwayat Opening</h2>
+        <h2 className='mb-4 text-lg font-semibold tracking-tight text-slate-900'>Riwayat Opening{legacyCount > 0 ? <span className='text-xs font-normal text-slate-400'> · Riwayat lama tanpa divisi ({legacyCount})</span> : null}</h2>
         {rows.length === 0 ? (
           <p className='text-sm text-slate-500'>Belum ada riwayat opening.</p>
         ) : (
@@ -310,7 +314,7 @@ function QuickAddTemplate({ outletId, onAdded }: { outletId: string; onAdded: ()
         <label className='flex items-center gap-1 text-xs'>
           <input type='checkbox' checked={critical} onChange={(e) => setCritical(e.target.checked)} /> Kritikal
         </label>
-        <button onClick={add} disabled={busy} className='rounded bg-slate-900 px-3 py-1 text-xs text-white disabled:opacity-50'>
+        <button onClick={add} disabled={busy} className='rounded bg-[#E01020] px-3 py-1 text-xs text-white disabled:opacity-50'>
           {busy ? '…' : '+ Tambah'}
         </button>
       </div>

@@ -1,5 +1,6 @@
 import { readTab, TABS } from '@/db/sheets';
 import { ClosingClient } from './closing-client';
+import { DraftSopBanner } from '@/components/draft-sop-banner';
 import { todayWib } from '@/lib/format';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
@@ -22,8 +23,9 @@ export default async function ClosingPage() {
         <p className='mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500'>Operasional / Penutupan outlet</p>
         <h1 className='text-3xl font-semibold tracking-tight text-slate-900'>Closing Checklist</h1>
         <p className='mt-2 max-w-xl text-sm leading-6 text-slate-500'>Tutup hari dengan tertib. Periksa setiap tugas sesuai SOP, lengkapi catatan, lalu simpan laporan penutupan.</p>
+        <DraftSopBanner />
       </div>
-      <ClosingClient rows={rows} outlets={outlets} templates={templates} shifts={shifts} date={todayWib()} />
+      <ClosingClient rows={rows} outlets={outlets} templates={templates} shifts={shifts} date={todayWib()} picName={session.username} />
     </div>
   );
 }

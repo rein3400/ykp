@@ -31,7 +31,10 @@ export function Sidebar({ role, userName }: { role: string; userName?: string })
   const visible = [...ITEMS.filter((i) => i.roles.includes(role)), { label: 'Panduan Pengguna', href: '/ops/panduan', roles: [role] }];
   return (
     <div className='flex h-full flex-col p-4'>
-      <div className='mb-6 font-bold'>YKP Ops V1</div>
+      <div className='mb-6 flex items-center gap-2 font-bold'>
+        <span className='inline-block h-2.5 w-2.5 rounded-full bg-[#E01020]' aria-hidden='true' />
+        YKP Ops V1
+      </div>
       <nav className='flex-1 space-y-1'>
         {visible.map((item) => (
           <Link

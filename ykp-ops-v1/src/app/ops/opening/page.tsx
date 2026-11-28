@@ -1,5 +1,6 @@
 import { readTab, TABS } from '@/db/sheets';
 import { OpeningClient } from './opening-client';
+import { DraftSopBanner } from '@/components/draft-sop-banner';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 
@@ -21,8 +22,9 @@ export default async function OpeningPage() {
         <p className='mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500'>Operasional / Pembukaan outlet</p>
         <h1 className='text-3xl font-semibold tracking-tight text-slate-900'>Opening Checklist</h1>
         <p className='mt-2 max-w-xl text-sm leading-6 text-slate-500'>Mulai hari dengan siap. Periksa setiap tugas sesuai SOP, lengkapi bukti, lalu simpan laporan pembukaan.</p>
+        <DraftSopBanner />
       </div>
-      <OpeningClient templates={templates} outlets={outlets} shifts={shifts} rows={rows} />
+      <OpeningClient templates={templates} outlets={outlets} shifts={shifts} rows={rows} picName={session.username} />
     </div>
   );
 }

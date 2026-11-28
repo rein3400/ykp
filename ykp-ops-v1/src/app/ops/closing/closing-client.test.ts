@@ -27,4 +27,10 @@ describe('Closing presentation', () => {
     expect(html).toContain('Template belum tersedia');
     expect(html).toContain('Belum ada riwayat closing');
   });
+  it('shows brand accent, PIC and "Sebelum tutup" framing', () => {
+    const html = renderToStaticMarkup(React.createElement(ClosingClient, { ...props, picName: 'Sari' }));
+    expect(html).toContain('#E01020');
+    expect(html).toContain('PIC checklist: Sari');
+    expect(html).toContain('Sebelum tutup');
+  });
 });

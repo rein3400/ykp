@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { selectChecklistTemplates } from '@/lib/checklist';
 
-const control = 'mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:bg-slate-50 disabled:text-slate-400';
+const control = 'mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:bg-slate-50 disabled:text-slate-400';
 
-export function ClosingClient({ rows, outlets, templates, shifts, date }: {
+export function ClosingClient({ rows, outlets, templates, shifts, date, picName }: {
   rows: Record<string, string>[]; outlets: Record<string, string>[];
-  templates: Record<string, string>[]; shifts: Record<string, string>[]; date: string;
+  templates: Record<string, string>[]; shifts: Record<string, string>[]; date: string; picName?: string;
 }) {
   const router = useRouter();
   const [outletId, setOutletId] = useState(outlets[0]?.outlet_id ?? '');
@@ -41,7 +41,7 @@ export function ClosingClient({ rows, outlets, templates, shifts, date }: {
   return <div className='min-w-0 space-y-8 pb-6'>
     <section aria-label='Konteks closing' className='rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6'>
       <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5'>
-        <div><p className='text-xs font-semibold uppercase tracking-widest text-slate-500'>Sesi penutupan</p><p className='mt-1 text-sm text-slate-600'>{date} <span className='text-slate-400'>· WIB</span></p></div>
+        <div><p className='text-xs font-semibold uppercase tracking-widest text-slate-500'>Sesi penutupan</p><p className='mt-1 text-sm text-slate-600'>{date} <span className='text-slate-400'>· WIB</span></p><p className='mt-1 text-xs text-slate-500'>PIC checklist: {picName || '—'}</p></div>
         <span className='rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600'>{busy ? 'Menyimpan' : done === selected.length && selected.length > 0 ? 'Checklist lengkap' : 'Dalam pengisian'}</span>
       </div>
       <div className='mt-5 grid min-w-0 gap-4 sm:grid-cols-2'>
@@ -55,8 +55,8 @@ export function ClosingClient({ rows, outlets, templates, shifts, date }: {
         </select></label>
       </div>
       <div className='mt-6'>
-        <div className='mb-2 flex items-center justify-between text-sm'><span className='font-medium text-slate-700'>{`${done} dari ${selected.length}`} item selesai</span><span className='font-semibold tabular-nums text-emerald-700'>{percent}%</span></div>
-        <div role='progressbar' aria-label='Progres closing' aria-valuemin={0} aria-valuemax={selected.length || 1} aria-valuenow={done} className='h-2 overflow-hidden rounded-full bg-slate-100'><div className='h-full rounded-full bg-emerald-600 transition-[width] motion-reduce:transition-none' style={{ width: `${percent}%` }} /></div>
+        <div className='mb-2 flex items-center justify-between text-sm'><span className='font-medium text-slate-700'>{`${done} dari ${selected.length}`} item selesai</span><span className='font-semibold tabular-nums text-[#E01020]'>{percent}%</span></div>
+        <div role='progressbar' aria-label='Progres closing' aria-valuemin={0} aria-valuemax={selected.length || 1} aria-valuenow={done} className='h-2 overflow-hidden rounded-full bg-slate-100'><div className='h-full rounded-full bg-[#E01020] transition-[width] motion-reduce:transition-none' style={{ width: `${percent}%` }} /></div>
       </div>
     </section>
 
@@ -66,7 +66,7 @@ export function ClosingClient({ rows, outlets, templates, shifts, date }: {
       const complete = items.filter((template) => values[template.checklist_template_id]?.status === 'DONE').length;
       return <section key={department} className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm'>
         <header className='flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-6'>
-          <div className='flex min-w-0 items-center gap-3'><span className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500'>{String(groupIndex + 1).padStart(2, '0')}</span><h2 className='min-w-0 break-words text-sm font-semibold text-slate-800'>{department}</h2></div>
+          <div className='flex min-w-0 items-center gap-3'><span className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500'>{String(groupIndex + 1).padStart(2, '0')}</span><h2 className='min-w-0 break-words text-sm font-semibold text-slate-800'>{department} <span className='text-xs font-normal text-slate-400'>· Sebelum tutup</span></h2></div>
           <span className='shrink-0 text-xs tabular-nums text-slate-500'>{complete}/{items.length}</span>
         </header>
         <div className='divide-y divide-slate-100'>
@@ -75,14 +75,14 @@ export function ClosingClient({ rows, outlets, templates, shifts, date }: {
             const checked = values[key]?.status === 'DONE';
             return <div key={key} className={`px-4 py-5 sm:px-6 ${checked ? 'bg-emerald-50/40' : ''}`}>
               <label className='flex cursor-pointer items-start gap-3'>
-                <input type='checkbox' disabled={busy} className='mt-0.5 h-5 w-5 shrink-0 accent-emerald-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-600' checked={checked} onChange={(event) => setValue(key, 'status', event.target.checked ? 'DONE' : 'NOT_DONE')} />
+                <input type='checkbox' disabled={busy} className='mt-0.5 h-5 w-5 shrink-0 accent-[#E01020] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E01020]' checked={checked} onChange={(event) => setValue(key, 'status', event.target.checked ? 'DONE' : 'NOT_DONE')} />
                 <span className={`min-w-0 break-words text-sm leading-6 ${checked ? 'text-emerald-900' : 'text-slate-700'}`}>{template.checklist_item}
                   {template.critical_flag === 'true' && <span className='ml-2 inline-block rounded bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800'>Kritikal</span>}
                   {template.required_photo === 'true' && <span className='ml-2 inline-block text-xs font-medium text-slate-500'>Bukti foto wajib</span>}
                 </span>
               </label>
               <details className='ml-8 mt-3'>
-                <summary className='w-fit cursor-pointer rounded text-xs font-medium text-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600'>Catatan &amp; bukti{values[key]?.notes || values[key]?.photo_url ? ' · terisi' : ''}</summary>
+                <summary className='w-fit cursor-pointer rounded text-xs font-medium text-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E01020]'>Catatan &amp; bukti{values[key]?.notes || values[key]?.photo_url ? ' · terisi' : ''}</summary>
                 <div className='mt-3 grid gap-3 sm:grid-cols-2'>
                   <label className='text-xs font-medium text-slate-500'>Catatan<textarea rows={2} disabled={busy} aria-label={`Catatan ${template.checklist_item}`} className={control} placeholder='Kendala atau informasi tambahan' value={values[key]?.notes ?? ''} onChange={(event) => setValue(key, 'notes', event.target.value)} /></label>
                   <label className='text-xs font-medium text-slate-500'>Link foto {template.required_photo === 'true' ? '(wajib untuk DONE)' : '(opsional)'}<input disabled={busy} type='url' aria-label={`Foto ${template.checklist_item}`} className={control} placeholder='https://' value={values[key]?.photo_url ?? ''} onChange={(event) => setValue(key, 'photo_url', event.target.value)} /></label>
@@ -99,7 +99,7 @@ export function ClosingClient({ rows, outlets, templates, shifts, date }: {
       {success && <p role='status' className='mb-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800'>{success}</p>}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div><p className='text-sm font-medium text-slate-700'>{outlet?.outlet_name || 'Pilih outlet'} · {shifts.find((shift) => shift.shift_id === shiftId)?.shift_name || 'Pilih shift'}</p><p className='mt-1 text-xs leading-5 text-slate-500'>Item belum selesai tetap tercatat untuk ditinjau. Pendapatan melalui Moka/Finance.</p></div>
-        <button disabled={busy || !selected.length || !outletId || !shiftId} onClick={submit} className='shrink-0 whitespace-nowrap rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500'>{busy ? 'Menyimpan…' : 'Simpan Closing'}</button>
+        <button disabled={busy || !selected.length || !outletId || !shiftId} onClick={submit} className='shrink-0 whitespace-nowrap rounded-xl bg-[#E01020] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#9c0b16] active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E01020] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500'>{busy ? 'Menyimpan…' : 'Simpan Closing'}</button>
       </div>
     </div>
 
