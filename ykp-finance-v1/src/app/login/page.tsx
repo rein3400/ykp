@@ -63,7 +63,7 @@ export default function LoginPage() {
           <button
             type='submit'
             disabled={loading}
-            className='w-full rounded bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50'
+            className='w-full rounded bg-[#E01020] px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50'
           >
             {loading ? 'Memproses…' : 'Login'}
           </button>

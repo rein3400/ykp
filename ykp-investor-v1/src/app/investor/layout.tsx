@@ -43,13 +43,13 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
           {NAV.map((n) => (
             <Link key={n.href} href={n.href}
               className={`block rounded px-2 py-1.5 text-xs font-medium ${
-                pathname === n.href ? 'bg-primary text-primary-foreground' : 'text-slate-600 hover:bg-muted'
+                pathname === n.href ? 'bg-[#E01020] text-primary-foreground' : 'text-slate-600 hover:bg-muted'
               }`}>{n.label}</Link>
           ))}
           {user.role === 'owner' && (
             <Link href='/investor/admin'
               className={`block rounded px-2 py-1.5 text-xs font-medium ${
-                pathname === '/investor/admin' ? 'bg-primary text-primary-foreground' : 'text-slate-600 hover:bg-muted'
+                pathname === '/investor/admin' ? 'bg-[#E01020] text-primary-foreground' : 'text-slate-600 hover:bg-muted'
               }`}>Admin</Link>
           )}
         </nav>

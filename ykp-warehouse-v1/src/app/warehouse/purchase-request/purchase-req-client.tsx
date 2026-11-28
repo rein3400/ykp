@@ -108,7 +108,7 @@ export default function PurchaseReqClient({
         type="button"
         onClick={createFromRecs}
         disabled={!canCreate || busy || newRecs.length === 0}
-        className="rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+        className="rounded bg-[#E01020] px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
       >
         {busy ? 'Memproses…' : `Buat PR dari ${newRecs.length} CRITICAL/HIGH Rec`}
       </button>

@@ -140,7 +140,7 @@ export default function LedgerClient({
                       Alasan koreksi (wajib)
                       <input value={draft.reason} onChange={(e) => setDraft({ ...draft, reason: e.target.value })} className='w-56 rounded border border-border px-1 py-0.5' />
                     </label>
-                    <button onClick={() => saveCorrection(editing)} disabled={saving} className='rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground disabled:opacity-50'>
+                    <button onClick={() => saveCorrection(editing)} disabled={saving} className='rounded bg-[#E01020] px-2 py-1 text-[11px] font-medium text-primary-foreground disabled:opacity-50'>
                       {saving ? 'Menyimpan…' : 'Simpan Koreksi'}
                     </button>
                     <span className='text-muted-foreground'>Qty/tipe/lokasi tidak bisa diubah — pakai Stock Adjustment.</span>

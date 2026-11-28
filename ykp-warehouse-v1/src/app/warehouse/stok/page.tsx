@@ -31,7 +31,7 @@ export default async function StokPage({ searchParams }: { searchParams: Promise
           <option value=''>Semua Item</option>
           {items.map((i) => <option key={i.item_id} value={i.item_id}>{i.item_name}</option>)}
         </select>
-        <button type='submit' className='rounded bg-primary px-3 py-1 font-medium text-primary-foreground'>Filter</button>
+        <button type='submit' className='rounded bg-[#E01020] px-3 py-1 font-medium text-primary-foreground'>Filter</button>
       </form>
       <div className='overflow-x-auto rounded border border-border'>
         <table className='w-full text-xs'>

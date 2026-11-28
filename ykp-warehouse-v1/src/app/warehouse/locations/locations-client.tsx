@@ -32,7 +32,7 @@ export default function LocationsClient({
   return (
     <div className='space-y-3'>
       {canWrite && (
-        <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
+        <button onClick={() => setShowForm(!showForm)} className='rounded bg-[#E01020] px-3 py-1.5 text-xs font-medium text-primary-foreground'>
           {showForm ? 'Tutup' : '+ Tambah Lokasi'}
         </button>
       )}
@@ -56,7 +56,7 @@ export default function LocationsClient({
             <input placeholder='Alamat' value={form.address} onChange={(e) => update('address', e.target.value)} className='rounded border border-border px-2 py-1 text-xs' />
           </div>
           {err && <p className='text-xs text-destructive'>{err}</p>}
-          <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>
+          <button onClick={create} className='rounded bg-[#E01020] px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>
         </div>
       )}
       <div className='overflow-x-auto rounded border border-border'>

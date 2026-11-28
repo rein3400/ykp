@@ -126,7 +126,7 @@ export function Btn({ children, onClick, variant, disabled, type }: {
       ? 'bg-destructive text-destructive-foreground'
       : variant === 'ghost'
         ? 'text-muted-foreground hover:bg-muted'
-        : 'bg-primary text-primary-foreground';
+        : 'bg-[#E01020] text-primary-foreground';
   return (
     <button
       type={type ?? 'button'}
@@ -245,7 +245,7 @@ export function Bars({ data, format }: {
           <span className='w-20 truncate text-muted-foreground' title={d.title ?? d.label}>{d.label}</span>
           <div className='flex-1 h-3 rounded bg-muted overflow-hidden'>
             <div
-              className={`h-full ${d.value < 0 ? 'bg-red-400' : 'bg-primary/70'}`}
+              className={`h-full ${d.value < 0 ? 'bg-red-400' : 'bg-[#E01020]/70'}`}
               style={{ width: `${Math.min(100, (Math.abs(d.value) / max) * 100)}%` }}
             />
           </div>

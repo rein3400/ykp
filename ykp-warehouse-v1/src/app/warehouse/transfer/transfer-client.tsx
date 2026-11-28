@@ -48,7 +48,7 @@ export default function TransferClient({
   return (
     <div className='space-y-3'>
       {canCreate && (
-        <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
+        <button onClick={() => setShowForm(!showForm)} className='rounded bg-[#E01020] px-3 py-1.5 text-xs font-medium text-primary-foreground'>
           {showForm ? 'Tutup' : '+ Transfer Baru'}
         </button>
       )}
@@ -86,7 +86,7 @@ export default function TransferClient({
             onChange={setEvidence}
             label="Bukti Foto/Video Transfer"
           />
-          <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Request Transfer</button>
+          <button onClick={create} className='rounded bg-[#E01020] px-3 py-1 text-xs font-medium text-primary-foreground'>Request Transfer</button>
         </div>
       )}
       <div className='overflow-x-auto rounded border border-border'>

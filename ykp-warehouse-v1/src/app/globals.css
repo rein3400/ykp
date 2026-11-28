@@ -8,3 +8,5 @@
     font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
 }
+/* YKP brand identity (red/black) — UI redesign M4 */
+:root { --brand: 355 85% 47%; --brand-strong: 354 92% 36%; --ink: 0 0% 6%; }

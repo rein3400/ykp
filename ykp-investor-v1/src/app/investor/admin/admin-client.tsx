@@ -134,7 +134,7 @@ export default function AdminClient({
 
   return (
     <div className='space-y-4'>
-      <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
+      <button onClick={() => setShowForm(!showForm)} className='rounded bg-[#E01020] px-3 py-1.5 text-xs font-medium text-primary-foreground'>
         {showForm ? 'Tutup' : '+ Investor Baru'}
       </button>
 
@@ -174,7 +174,7 @@ export default function AdminClient({
           </div>
           <PhotoUpload entityType='mou' onUploaded={setMouId} label='MOU (foto/PDF)' allowPdf />
           {err && <p className='text-xs text-destructive'>{err}</p>}
-          <button onClick={create} disabled={busy} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50'>
+          <button onClick={create} disabled={busy} className='rounded bg-[#E01020] px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50'>
             {busy ? 'Menyimpan…' : 'Simpan Investor'}
           </button>
         </div>
@@ -258,7 +258,7 @@ export default function AdminClient({
         <p className='mb-2 text-xs font-bold'>Proposal dividen otomatis (profit brand × % bagi hasil)</p>
         <div className='flex flex-wrap items-center gap-2'>
           <input type='month' value={period} onChange={(e) => setPeriod(e.target.value)} className={inputCls + ' w-40'} />
-          <button onClick={propose} disabled={busy} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50'>
+          <button onClick={propose} disabled={busy} className='rounded bg-[#E01020] px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50'>
             {busy ? 'Memproses…' : 'Buat Proposal'}
           </button>
           {proposeMsg && <span className='text-[11px]'>{proposeMsg}</span>}

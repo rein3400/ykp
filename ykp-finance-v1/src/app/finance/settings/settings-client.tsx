@@ -52,7 +52,7 @@ export default function SettingsClient(props: {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`rounded px-3 py-1.5 text-xs font-medium ${tab === t.key ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground hover:bg-muted'}`}
+            className={`rounded px-3 py-1.5 text-xs font-medium ${tab === t.key ? 'bg-[#E01020] text-primary-foreground' : 'border border-border text-muted-foreground hover:bg-muted'}`}
           >
             {t.label}
           </button>

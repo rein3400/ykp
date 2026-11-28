@@ -86,7 +86,7 @@ export default function FinanceLayout({ children }: { children: React.ReactNode 
                     href={n.href}
                     className={`block rounded px-2 py-1.5 text-xs font-medium ${
                       pathname === n.href || (n.href !== '/finance' && pathname.startsWith(n.href))
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-[#E01020] text-primary-foreground'
                         : 'text-muted-foreground hover:bg-muted'
                     }`}
                   >

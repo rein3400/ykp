@@ -45,7 +45,7 @@ export function TelegramLinkClient() {
         <button
           onClick={getCode}
           disabled={busy}
-          className='mt-4 w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50'
+          className='mt-4 w-full rounded-lg bg-[#E01020] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#9c0b16] disabled:opacity-50'
         >
           {busy ? 'Membuat kode…' : code ? 'Buat kode baru' : 'Dapatkan Kode'}
         </button>

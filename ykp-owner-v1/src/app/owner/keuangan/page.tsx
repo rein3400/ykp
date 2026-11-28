@@ -89,7 +89,7 @@ export default async function KeuanganPage() {
                       <div key={key} className='flex items-center gap-2 text-xs'>
                         <span className='w-32 shrink-0 text-muted-foreground'>{label}</span>
                         <div className='h-2.5 flex-1 overflow-hidden rounded bg-muted'>
-                          <div className='h-full bg-primary/70' style={{ width: `${pct}%` }} />
+                          <div className='h-full bg-[#E01020]/70' style={{ width: `${pct}%` }} />
                         </div>
                         <span className='w-36 shrink-0 text-right font-medium'>{idr(v)}</span>
                       </div>

@@ -23,7 +23,7 @@ export default function SummaryClient({ summaries }: { summaries: Record<string,
 
   return (
     <div className='space-y-3'>
-      <button onClick={regenerate} disabled={loading} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50'>
+      <button onClick={regenerate} disabled={loading} className='rounded bg-[#E01020] px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50'>
         {loading ? 'Memproses…' : 'Regenerate Hari Ini'}
       </button>
       {err && <p className='text-xs text-destructive'>{err}</p>}

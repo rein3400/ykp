@@ -37,7 +37,7 @@ export default function UnitConversionClient({
   return (
     <div className='space-y-3'>
       {canWrite && (
-        <button onClick={() => setShowForm(!showForm)} className='rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground'>
+        <button onClick={() => setShowForm(!showForm)} className='rounded bg-[#E01020] px-3 py-1.5 text-xs font-medium text-primary-foreground'>
           {showForm ? 'Tutup' : '+ Tambah Konversi'}
         </button>
       )}
@@ -54,7 +54,7 @@ export default function UnitConversionClient({
           </div>
           <p className='text-xs text-muted-foreground'>{fixedFactor !== null ? 'Faktor satuan baku terisi otomatis (1 kg = 1.000 gram; 1 liter = 1.000 ml).' : 'Isi faktor kemasan manual per item. Konversi kg ke ml bergantung pada bahan, bukan konversi baku.'}</p>
           {err && <p className='text-xs text-destructive'>{err}</p>}
-          <button onClick={create} className='rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>
+          <button onClick={create} className='rounded bg-[#E01020] px-3 py-1 text-xs font-medium text-primary-foreground'>Simpan</button>
         </div>
       )}
       <div className='overflow-x-auto rounded border border-border'>

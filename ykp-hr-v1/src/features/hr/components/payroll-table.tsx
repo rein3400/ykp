@@ -310,7 +310,7 @@ export function PayrollTable({
                           type="button"
                           onClick={() => validatePayment(row.payroll_id)}
                           disabled={busyId !== null}
-                          className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                          className="rounded-md bg-[#E01020] px-3 py-1 text-xs font-medium text-white hover:bg-[#9c0b16] disabled:opacity-50"
                           title="Validasi terima bukti transfer + kirim slip gaji via email (bisa pada baris terkunci — stamp pembayaran, bukan edit angka)"
                         >
                           Validasi Pembayaran
@@ -321,7 +321,7 @@ export function PayrollTable({
                           type="button"
                           onClick={() => toggleMarkPaid(row.payroll_id)}
                           disabled={busyId !== null}
-                          className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                          className="rounded-md bg-[#E01020] px-3 py-1 text-xs font-medium text-white hover:bg-[#9c0b16] disabled:opacity-50"
                         >
                           Tandai Dibayar
                         </button>
@@ -359,7 +359,7 @@ export function PayrollTable({
                             type="button"
                             onClick={() => markPaid(row.payroll_id)}
                             disabled={busyId !== null}
-                            className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                            className="rounded-md bg-[#E01020] px-3 py-1 text-xs font-medium text-white hover:bg-[#9c0b16] disabled:opacity-50"
                           >
                             {busyId === row.payroll_id ? "…" : "Konfirmasi"}
                           </button>
