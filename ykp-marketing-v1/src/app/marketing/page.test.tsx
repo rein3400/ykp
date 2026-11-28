@@ -25,5 +25,6 @@ describe('Marketing page', () => {
   it('keeps the local preview label and brands', () => {
     expect(html).toContain('PREVIEW LOKAL');
     expect(html).toContain('Funkydak');
+    expect(html).toContain('Content Planner');
   });
 });

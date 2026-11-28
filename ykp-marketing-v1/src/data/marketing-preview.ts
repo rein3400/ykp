@@ -94,3 +94,35 @@ export const DISCLAIMERS = {
   reference:
     'Tautan asli ditemukan, tetapi tren terkini belum bisa diverifikasi. Tidak ada klaim akses ke seluruh FYP. Angka snapshot lama hanya ditampilkan di detail.'
 } as const;
+
+export type PlanStatus = 'Ide' | 'Draft' | 'Terjadwal' | 'Terbit';
+
+export interface ContentPlan {
+  id: string;
+  title: string;
+  brand: BrandName;
+  channel: string;
+  date: string;
+  status: PlanStatus;
+}
+
+export const PLAN_STATUSES: PlanStatus[] = ['Ide', 'Draft', 'Terjadwal', 'Terbit'];
+
+export const INITIAL_PLANS: ContentPlan[] = [
+  {
+    id: 'PLAN-1',
+    title: 'Reels proses pizza',
+    brand: 'Sekar Pizza',
+    channel: 'Instagram Reels',
+    date: '2026-12-05',
+    status: 'Terjadwal'
+  },
+  {
+    id: 'PLAN-2',
+    title: 'Teaser smash burger',
+    brand: 'Suburbuns',
+    channel: 'TikTok',
+    date: '2026-12-08',
+    status: 'Draft'
+  }
+];

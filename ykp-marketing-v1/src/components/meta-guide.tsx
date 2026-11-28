@@ -1,6 +1,15 @@
-import { META_GUIDE_ITEMS, DISCLAIMERS } from '@/data/marketing-preview';
+'use client';
+import { DISCLAIMERS, type MetaGuideItem } from '@/data/marketing-preview';
+import { countDone } from '@/lib/marketing-state';
 
-export function MetaGuide() {
+export function MetaGuide({
+  items,
+  onToggle
+}: {
+  items: MetaGuideItem[];
+  onToggle: (id: string) => void;
+}) {
+  const done = countDone(items);
   return (
     <section
       aria-labelledby="panduan-meta"
@@ -13,6 +22,9 @@ export function MetaGuide() {
           </h2>
           <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
             Ada perubahan
+          </span>
+          <span className="text-[11px] text-slate-400">
+            {done}/{items.length} ditinjau
           </span>
         </div>
         <button
@@ -29,13 +41,13 @@ export function MetaGuide() {
       <p className="mt-1 text-xs text-amber-700">{DISCLAIMERS.meta}</p>
 
       <ul className="mt-4 space-y-3">
-        {META_GUIDE_ITEMS.map((item) => (
+        {items.map((item) => (
           <li key={item.id} className="rounded-xl border border-slate-100 p-3">
-            <label className="flex items-start gap-3">
+            <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
-                defaultChecked={item.done}
-                readOnly
+                checked={item.done}
+                onChange={() => onToggle(item.id)}
                 className="mt-0.5 h-4 w-4 accent-[#E01020]"
               />
               <span>

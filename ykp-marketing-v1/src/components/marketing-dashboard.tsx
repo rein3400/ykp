@@ -1,10 +1,61 @@
+'use client';
+import { useEffect, useMemo, useState } from 'react';
 import { Sidebar } from './sidebar';
 import { BrandSwitcher } from './brand-switcher';
 import { MetaGuide } from './meta-guide';
 import { ContentReferenceCard } from './content-reference';
-import { CONTENT_REFERENCES, DISCLAIMERS } from '@/data/marketing-preview';
+import { ContentPlanner } from './content-planner';
+import { CONTENT_REFERENCES, DISCLAIMERS, META_GUIDE_ITEMS } from '@/data/marketing-preview';
+import {
+  ALL_BRANDS,
+  STORAGE_KEYS,
+  filterReferences,
+  toggleDone
+} from '@/lib/marketing-state';
 
 export function MarketingDashboard() {
+  const [brand, setBrand] = useState<string>(ALL_BRANDS);
+  const [guide, setGuide] = useState(META_GUIDE_ITEMS);
+
+  useEffect(() => {
+    try {
+      const savedBrand = localStorage.getItem(STORAGE_KEYS.brand);
+      if (savedBrand) setBrand(savedBrand);
+      const savedGuide = localStorage.getItem(STORAGE_KEYS.guide);
+      if (savedGuide) {
+        const done = JSON.parse(savedGuide) as Record<string, boolean>;
+        setGuide((prev) => prev.map((item) => ({ ...item, done: done[item.id] ?? item.done })));
+      }
+    } catch {
+      // ignore unavailable storage
+    }
+  }, []);
+
+  function selectBrand(next: string) {
+    setBrand(next);
+    try {
+      localStorage.setItem(STORAGE_KEYS.brand, next);
+    } catch {
+      // ignore
+    }
+  }
+
+  function toggleGuideItem(id: string) {
+    setGuide((prev) => {
+      const next = toggleDone(prev, id);
+      try {
+        const done: Record<string, boolean> = {};
+        for (const item of next) done[item.id] = item.done;
+        localStorage.setItem(STORAGE_KEYS.guide, JSON.stringify(done));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }
+
+  const references = useMemo(() => filterReferences(CONTENT_REFERENCES, brand), [brand]);
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -30,10 +81,10 @@ export function MarketingDashboard() {
               </p>
               <h1 className="text-2xl font-bold text-ink">Ruang Kerja Tim Marketing</h1>
             </div>
-            <BrandSwitcher />
+            <BrandSwitcher selected={brand} onSelect={selectBrand} />
           </div>
 
-          <MetaGuide />
+          <MetaGuide items={guide} onToggle={toggleGuideItem} />
 
           <section id="arahan-konten" aria-labelledby="arahan-konten-title" className="space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -47,11 +98,18 @@ export function MarketingDashboard() {
               <p className="mt-1 text-xs text-amber-700">{DISCLAIMERS.reference}</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              {CONTENT_REFERENCES.map((item) => (
+              {references.map((item) => (
                 <ContentReferenceCard key={item.id} item={item} />
               ))}
             </div>
+            {references.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
+                Belum ada arahan konten untuk brand ini.
+              </p>
+            )}
           </section>
+
+          <ContentPlanner brand={brand} />
         </main>
       </div>
     </div>

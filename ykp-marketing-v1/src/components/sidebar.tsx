@@ -2,7 +2,7 @@ const MENU: Array<{ label: string; href: string; soon?: boolean }> = [
   { label: 'Dashboard Marketing', href: '/marketing' },
   { label: 'Ngobrol Konten', href: '#', soon: true },
   { label: 'Arahan Konten', href: '/marketing#arahan-konten' },
-  { label: 'Content Planner', href: '#', soon: true },
+  { label: 'Content Planner', href: '#content-planner' },
   { label: 'Tugas Konten', href: '#', soon: true },
   { label: 'Publikasi', href: '#', soon: true },
   { label: 'Performa & Hasil', href: '#', soon: true },

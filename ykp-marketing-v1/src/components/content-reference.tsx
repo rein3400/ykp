@@ -1,6 +1,9 @@
+'use client';
+import { useState } from 'react';
 import type { ContentReference } from '@/data/marketing-preview';
 
 export function ContentReferenceCard({ item }: { item: ContentReference }) {
+  const [open, setOpen] = useState(false);
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
@@ -32,12 +35,29 @@ export function ContentReferenceCard({ item }: { item: ContentReference }) {
           <dd>{item.metadataCheckedAt}</dd>
         </div>
       </dl>
-      <a
-        href="#"
-        className="mt-3 inline-block rounded-lg bg-[#E01020] px-3 py-1.5 text-xs font-semibold text-white"
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="mt-3 inline-block rounded-lg bg-[#E01020] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#9c0b16]"
       >
-        Lihat arahan &amp; bedah
-      </a>
+        {open ? 'Tutup detail' : 'Lihat arahan & bedah'}
+      </button>
+      {open && (
+        <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+          <p>
+            <span className="font-semibold text-slate-800">Bedah Referensi:</span> {item.summary}
+          </p>
+          <p className="mt-1">
+            <span className="font-semibold text-slate-800">Usulan shot:</span> rekam proses{' '}
+            {item.category.toLowerCase()} dari persiapan sampai hasil.
+          </p>
+          <p className="mt-1">
+            <span className="font-semibold text-slate-800">Tautan asli:</span> {item.sourceName} ·{' '}
+            {item.originalPostDate}
+          </p>
+        </div>
+      )}
     </article>
   );
 }
