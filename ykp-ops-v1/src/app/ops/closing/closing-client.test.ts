@@ -33,4 +33,16 @@ describe('Closing presentation', () => {
     expect(html).toContain('PIC checklist: Sari');
     expect(html).toContain('Sebelum tutup');
   });
+  it('shows brand/outlet/tanggal context and per-division start', () => {
+    const html = renderToStaticMarkup(React.createElement(ClosingClient, {
+      ...props,
+      outlets: [{ outlet_id: 'OL1', outlet_name: 'Garuda', brand_id: 'BR1' }],
+      brands: [{ brand_id: 'BR1', brand_name: 'Funkydak' }],
+      date: '2026-12-11',
+      templates: [{ checklist_template_id: 'T9', brand_id: 'BR1', outlet_id: 'OL1', checklist_type: 'CLOSING', department: 'Kasir', checklist_item: 'Rekonsiliasi kas', active_status: 'active' }]
+    }));
+    expect(html).toContain('Draf untuk Funkydak - Garuda');
+    expect(html).toContain('Belum dimulai');
+    expect(html).toContain('Mulai checklist Kasir');
+  });
 });

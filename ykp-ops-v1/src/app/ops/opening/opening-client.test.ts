@@ -30,4 +30,19 @@ describe('Opening presentation', () => {
     expect(html).toContain('Sebelum buka');
     expect(html).toContain('Riwayat lama tanpa divisi');
   });
+  it('shows brand/outlet/tanggal context and per-division start', () => {
+    const html = renderToStaticMarkup(React.createElement(OpeningClient, {
+      outlets: [{ outlet_id: 'OL1', outlet_name: 'Garuda', brand_id: 'BR1' }],
+      brands: [{ brand_id: 'BR1', brand_name: 'Funkydak' }],
+      shifts: [{ shift_id: 'S1', shift_name: 'Pagi' }],
+      date: '2026-12-11',
+      rows: [],
+      templates: [{ checklist_template_id: 'T1', outlet_id: 'OL1', brand_id: 'BR1', checklist_type: 'OPENING', active_status: 'active', department: 'Kasir', checklist_item: 'Cek saldo kas awal' }],
+      picName: 'Owner contoh'
+    }));
+    expect(html).toContain('Draf untuk Funkydak - Garuda');
+    expect(html).toContain('Belum dimulai');
+    expect(html).toContain('Mulai checklist Kasir');
+    expect(html).toContain('Tanggal');
+  });
 });

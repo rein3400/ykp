@@ -3,20 +3,26 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { selectChecklistTemplates } from '@/lib/checklist';
 
+const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
 const control = 'mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:bg-slate-50 disabled:text-slate-400';
 
-export function ClosingClient({ rows, outlets, templates, shifts, date, picName }: {
+export function ClosingClient({ rows, outlets, templates, shifts, date, picName, brands }: {
   rows: Record<string, string>[]; outlets: Record<string, string>[];
-  templates: Record<string, string>[]; shifts: Record<string, string>[]; date: string; picName?: string;
+  templates: Record<string, string>[]; shifts: Record<string, string>[]; date: string; picName?: string; brands?: Record<string, string>[];
 }) {
   const router = useRouter();
   const [outletId, setOutletId] = useState(outlets[0]?.outlet_id ?? '');
   const [shiftId, setShiftId] = useState(shifts[0]?.shift_id ?? '');
+  const [brandId, setBrandId] = useState('');
   const [values, setValues] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const outlet = outlets.find((row) => row.outlet_id === outletId);
+  const brandName = (brands ?? []).find((b) => b.brand_id === (outlet?.brand_id ?? ''))?.brand_name ?? '';
+  const outletName = outlet?.outlet_name ?? '';
+  const visibleOutlets = brandId ? outlets.filter((o) => o.brand_id === brandId) : outlets;
   const selected = selectChecklistTemplates(templates, 'CLOSING', outletId, outlet?.brand_id ?? '');
   const departments = [...new Set(selected.map((template) => template.department || 'Umum'))];
   const done = selected.filter((template) => values[template.checklist_template_id]?.status === 'DONE').length;
@@ -41,13 +47,17 @@ export function ClosingClient({ rows, outlets, templates, shifts, date, picName 
   return <div className='min-w-0 space-y-8 pb-6'>
     <section aria-label='Konteks closing' className='rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6'>
       <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5'>
-        <div><p className='text-xs font-semibold uppercase tracking-widest text-slate-500'>Sesi penutupan</p><p className='mt-1 text-sm text-slate-600'>{date} <span className='text-slate-400'>· WIB</span></p><p className='mt-1 text-xs text-slate-500'>PIC checklist: {picName || '—'}</p></div>
+        <div><p className='text-xs font-semibold uppercase tracking-widest text-slate-500'>Sesi penutupan</p><p className='mt-1 text-sm text-slate-600'>{date} <span className='text-slate-400'>· WIB</span></p>{(brandName || outletName) && (<p className='mt-1 text-sm font-semibold text-[#E01020]'>Draf untuk {brandName} - {outletName}</p>)}<p className='mt-1 text-xs text-slate-500'>PIC checklist: {picName || '—'}</p></div>
         <span className='rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600'>{busy ? 'Menyimpan' : done === selected.length && selected.length > 0 ? 'Checklist lengkap' : 'Dalam pengisian'}</span>
       </div>
-      <div className='mt-5 grid min-w-0 gap-4 sm:grid-cols-2'>
+      <div className='mt-5 grid min-w-0 gap-4 sm:grid-cols-3'>
+        <label className='text-xs font-semibold text-slate-600'>Brand<select className={control} disabled={busy} value={brandId} onChange={(event) => { const b = event.target.value; setBrandId(b); const first = outlets.find((o) => !b || o.brand_id === b); if (first) { setOutletId(first.outlet_id); } setValues({}); setError(''); setSuccess(''); }}>
+          <option value=''>Semua brand</option>
+          {(brands ?? []).map((b) => <option key={b.brand_id} value={b.brand_id}>{b.brand_name}</option>)}
+        </select></label>
         <label className='text-xs font-semibold text-slate-600'>Outlet<select className={control} disabled={busy} value={outletId} onChange={(event) => { setOutletId(event.target.value); setValues({}); setError(''); setSuccess(''); }}>
           {outlets.length === 0 && <option value=''>Tidak ada outlet tersedia</option>}
-          {outlets.map((row) => <option key={row.outlet_id} value={row.outlet_id}>{row.outlet_name} ({row.outlet_id})</option>)}
+          {visibleOutlets.map((row) => <option key={row.outlet_id} value={row.outlet_id}>{row.outlet_name} ({row.outlet_id})</option>)}
         </select></label>
         <label className='text-xs font-semibold text-slate-600'>Shift<select className={control} disabled={busy} value={shiftId} onChange={(event) => { setShiftId(event.target.value); setValues({}); setError(''); setSuccess(''); }}>
           {shifts.length === 0 && <option value=''>Tidak ada shift tersedia</option>}
@@ -64,10 +74,16 @@ export function ClosingClient({ rows, outlets, templates, shifts, date, picName 
     {departments.map((department, groupIndex) => {
       const items = selected.filter((template) => (template.department || 'Umum') === department);
       const complete = items.filter((template) => values[template.checklist_template_id]?.status === 'DONE').length;
-      return <section key={department} className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm'>
-        <header className='flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-6'>
-          <div className='flex min-w-0 items-center gap-3'><span className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500'>{String(groupIndex + 1).padStart(2, '0')}</span><h2 className='min-w-0 break-words text-sm font-semibold text-slate-800'>{department} <span className='text-xs font-normal text-slate-400'>· Sebelum tutup</span></h2></div>
-          <span className='shrink-0 text-xs tabular-nums text-slate-500'>{complete}/{items.length}</span>
+      return <section key={department} id={`dept-${slug(department)}`} className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm'>
+        <header className='border-b border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-6'>
+          <div className='flex items-center justify-between gap-3'>
+            <div className='flex min-w-0 items-center gap-3'><span className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500'>{String(groupIndex + 1).padStart(2, '0')}</span><h2 className='min-w-0 break-words text-sm font-semibold text-slate-800'>{department} <span className='text-xs font-normal text-slate-400'>· Sebelum tutup</span></h2></div>
+            <span className='shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600'>{items.every((t) => values[t.checklist_template_id]?.status === 'DONE') ? 'Selesai' : items.some((t) => values[t.checklist_template_id]?.status === 'DONE') ? 'Dalam proses' : 'Belum dimulai'}</span>
+          </div>
+          <div className='mt-2 flex items-center justify-between gap-3 text-xs text-slate-500'>
+            <a href={`#dept-${slug(department)}`} className='rounded-lg bg-[#E01020] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#9c0b16]'>Mulai checklist {department}</a>
+            <span className='tabular-nums'>{complete}/{items.length}</span>
+          </div>
         </header>
         <div className='divide-y divide-slate-100'>
           {items.map((template) => {

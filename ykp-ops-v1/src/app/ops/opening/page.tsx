@@ -1,6 +1,7 @@
 import { readTab, TABS } from '@/db/sheets';
 import { OpeningClient } from './opening-client';
 import { DraftSopBanner } from '@/components/draft-sop-banner';
+import { todayWib } from '@/lib/format';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 
@@ -15,6 +16,7 @@ export default async function OpeningPage() {
   const brandIds = new Set(outlets.map((row) => row.brand_id));
   const templates = (await readTab(TABS.checklistTemplates)).filter((row) => (!row.outlet_id || outletIds.has(row.outlet_id)) && (!row.brand_id || brandIds.has(row.brand_id)));
   const shifts = await readTab(TABS.shifts);
+  const brands = await readTab(TABS.brands);
   const rows = (await readTab(TABS.opening)).filter(inScope);
   return (
     <div className='mx-auto w-full min-w-0 max-w-5xl space-y-6'>
@@ -24,7 +26,7 @@ export default async function OpeningPage() {
         <p className='mt-2 max-w-xl text-sm leading-6 text-slate-500'>Mulai hari dengan siap. Periksa setiap tugas sesuai SOP, lengkapi bukti, lalu simpan laporan pembukaan.</p>
         <DraftSopBanner />
       </div>
-      <OpeningClient templates={templates} outlets={outlets} shifts={shifts} rows={rows} picName={session.username} />
+      <OpeningClient templates={templates} outlets={outlets} shifts={shifts} rows={rows} picName={session.username} brands={brands} date={todayWib()} />
     </div>
   );
 }

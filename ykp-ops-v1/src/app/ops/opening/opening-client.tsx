@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { selectChecklistTemplates } from '@/lib/checklist';
 
+const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
 type ItemState = {
   checklist_item: string;
   critical_flag: string;
@@ -18,12 +20,16 @@ export function OpeningClient({
   shifts,
   rows: serverRows,
   picName,
+  brands,
+  date,
 }: {
   templates: Record<string, string>[];
   outlets: Record<string, string>[];
   shifts: Record<string, string>[];
   rows: Record<string, string>[];
   picName?: string;
+  brands?: Record<string, string>[];
+  date?: string;
 }) {
   const router = useRouter();
   const [rows, setRows] = useState(serverRows);
@@ -43,6 +49,11 @@ export function OpeningClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [brandId, setBrandId] = useState('');
+  const currentOutlet = outlets.find((row) => row.outlet_id === outletId);
+  const brandName = (brands ?? []).find((b) => b.brand_id === (currentOutlet?.brand_id ?? ''))?.brand_name ?? '';
+  const outletName = currentOutlet?.outlet_name ?? '';
+  const visibleOutlets = brandId ? outlets.filter((o) => o.brand_id === brandId) : outlets;
 
   const selectedTemplates = useMemo(() => {
     const outlet = outlets.find((row) => row.outlet_id === outletId);
@@ -162,17 +173,31 @@ export function OpeningClient({
         <p className='mt-1 text-xs text-slate-500'>PIC checklist: {picName || '—'}</p>
       </div>
 
-      <div className='grid min-w-0 gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 sm:p-6'>
-        <label className='text-sm'>Outlet
-          <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:opacity-50' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
-            {outlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
-          </select>
-        </label>
-        <label className='text-sm'>Shift
-          <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:opacity-50' value={shiftId} onChange={(e) => setShiftId(e.target.value)}>
-            {shifts.map((s) => <option key={s.shift_id} value={s.shift_id}>{s.shift_name}</option>)}
-          </select>
-        </label>
+      <div className='space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6'>
+        {(brandName || outletName) && (
+          <p className='text-sm font-semibold text-[#E01020]'>Draf untuk {brandName} - {outletName}</p>
+        )}
+        <div className='grid min-w-0 gap-4 sm:grid-cols-2'>
+          <label className='text-sm'>Brand
+            <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:opacity-50' value={brandId} onChange={(e) => { const b = e.target.value; setBrandId(b); const first = outlets.find((o) => !b || o.brand_id === b); if (first) setOutletId(first.outlet_id); }}>
+              <option value=''>Semua brand</option>
+              {(brands ?? []).map((b) => <option key={b.brand_id} value={b.brand_id}>{b.brand_name}</option>)}
+            </select>
+          </label>
+          <label className='text-sm'>Outlet
+            <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:opacity-50' value={outletId} onChange={(e) => setOutletId(e.target.value)}>
+              {visibleOutlets.map((o) => <option key={o.outlet_id} value={o.outlet_id}>{o.outlet_name}</option>)}
+            </select>
+          </label>
+          <label className='text-sm'>Shift
+            <select disabled={loading} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-[#E01020] focus:ring-2 focus:ring-[#E01020]/20 disabled:opacity-50' value={shiftId} onChange={(e) => setShiftId(e.target.value)}>
+              {shifts.map((s) => <option key={s.shift_id} value={s.shift_id}>{s.shift_name}</option>)}
+            </select>
+          </label>
+          <label className='text-sm'>Tanggal
+            <input readOnly value={date ?? ''} className='mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 outline-none' />
+          </label>
+        </div>
       </div>
 
       <div className='flex flex-wrap items-center gap-2 text-xs'>
@@ -196,8 +221,17 @@ export function OpeningClient({
       ) : (
         <div className='space-y-4'>
           {grouped.map(({ dept, list }) => (
-            <div key={dept} className='overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6'>
-              <h3 className='mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-4 text-sm font-semibold text-slate-800'><span className='min-w-0 break-words'>{dept} <span className='text-xs font-normal text-slate-400'>· Sebelum buka</span></span><span className='shrink-0 text-xs font-normal tabular-nums text-slate-500'>{list.filter((item) => item.status === 'DONE').length}/{list.length}</span></h3>
+            <div key={dept} id={`dept-${slug(dept)}`} className='overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6'>
+              <div className='mb-4 border-b border-slate-100 pb-4'>
+                <h3 className='flex flex-wrap items-center justify-between gap-3 text-sm font-semibold text-slate-800'>
+                  <span className='min-w-0 break-words'>{dept} <span className='text-xs font-normal text-slate-400'>· Sebelum buka</span></span>
+                  <span className='shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600'>{list.every((i) => i.status === 'DONE') ? 'Selesai' : list.some((i) => i.status === 'DONE') ? 'Dalam proses' : 'Belum dimulai'}</span>
+                </h3>
+                <div className='mt-2 flex items-center justify-between gap-3 text-xs text-slate-500'>
+                  <a href={`#dept-${slug(dept)}`} className='rounded-lg bg-[#E01020] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#9c0b16]'>Mulai checklist {dept}</a>
+                  <span className='tabular-nums'>{list.filter((item) => item.status === 'DONE').length}/{list.length}</span>
+                </div>
+              </div>
               <div className='space-y-3'>
                 {list.map(({ idx, ...it }) => {
                   const tpl = selectedTemplates[idx];

@@ -17,6 +17,7 @@ export default async function ClosingPage() {
   const brandIds = new Set(outlets.map((outlet) => outlet.brand_id));
   const templates = (await readTab(TABS.checklistTemplates)).filter((template) => (!template.outlet_id || outletIds.has(template.outlet_id)) && (!template.brand_id || brandIds.has(template.brand_id)));
   const shifts = await readTab(TABS.shifts);
+  const brands = await readTab(TABS.brands);
   return (
     <div className='mx-auto w-full min-w-0 max-w-5xl space-y-6'>
       <div className='py-2'>
@@ -25,7 +26,7 @@ export default async function ClosingPage() {
         <p className='mt-2 max-w-xl text-sm leading-6 text-slate-500'>Tutup hari dengan tertib. Periksa setiap tugas sesuai SOP, lengkapi catatan, lalu simpan laporan penutupan.</p>
         <DraftSopBanner />
       </div>
-      <ClosingClient rows={rows} outlets={outlets} templates={templates} shifts={shifts} date={todayWib()} picName={session.username} />
+      <ClosingClient rows={rows} outlets={outlets} templates={templates} shifts={shifts} date={todayWib()} picName={session.username} brands={brands} />
     </div>
   );
 }
