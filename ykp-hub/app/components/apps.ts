@@ -22,66 +22,27 @@ export interface AppDef {
   icon: IconComponent;
 }
 
+/** Single brand accent (YKP red/black) shared by every module card. */
+const BRAND_TONE: AppDef["tone"] = {
+  gradient: "from-[#E01020] to-[#9c0b16]",
+  text: "text-[#E01020] dark:text-red-400",
+  ring: "ring-red-200 dark:ring-red-900",
+  soft: "bg-red-50 dark:bg-red-900/30"
+};
+
 /** Icon + tone per module (presentation only — URLs/names live in app/config). */
 const PRESENTATION: Record<AppId, { tone: AppDef["tone"]; icon: IconComponent }> = {
-  owner: {
-    tone: {
-      gradient: "from-indigo-500 to-indigo-700",
-      text: "text-indigo-600 dark:text-indigo-400",
-      ring: "ring-indigo-200 dark:ring-indigo-800",
-      soft: "bg-indigo-50 dark:bg-indigo-900/30"
-    },
-    icon: StarIcon
-  },
-  hr: {
-    tone: {
-      gradient: "from-emerald-500 to-emerald-700",
-      text: "text-emerald-700 dark:text-emerald-400",
-      ring: "ring-emerald-200 dark:ring-emerald-800",
-      soft: "bg-emerald-50 dark:bg-emerald-900/30"
-    },
-    icon: HrIcon
-  },
-  finance: {
-    tone: {
-      gradient: "from-blue-500 to-blue-700",
-      text: "text-blue-600 dark:text-blue-400",
-      ring: "ring-blue-200 dark:ring-blue-800",
-      soft: "bg-blue-50 dark:bg-blue-900/30"
-    },
-    icon: FinanceIcon
-  },
-  warehouse: {
-    tone: {
-      gradient: "from-amber-600 to-amber-800",
-      text: "text-amber-700 dark:text-amber-400",
-      ring: "ring-amber-200 dark:ring-amber-800",
-      soft: "bg-amber-50 dark:bg-amber-900/30"
-    },
-    icon: DatabaseIcon
-  },
-  investor: {
-    tone: {
-      gradient: "from-purple-500 to-purple-700",
-      text: "text-purple-600 dark:text-purple-400",
-      ring: "ring-purple-200 dark:ring-purple-800",
-      soft: "bg-purple-50 dark:bg-purple-900/30"
-    },
-    icon: ActivityIcon
-  },
-  ops: {
-    tone: {
-      gradient: "from-orange-600 to-orange-800",
-      text: "text-orange-700 dark:text-orange-400",
-      ring: "ring-orange-200 dark:ring-orange-800",
-      soft: "bg-orange-50 dark:bg-orange-900/30"
-    },
-    icon: SheetsIcon
-  }
+  owner: { tone: BRAND_TONE, icon: StarIcon },
+  hr: { tone: BRAND_TONE, icon: HrIcon },
+  finance: { tone: BRAND_TONE, icon: FinanceIcon },
+  warehouse: { tone: BRAND_TONE, icon: DatabaseIcon },
+  investor: { tone: BRAND_TONE, icon: ActivityIcon },
+  ops: { tone: BRAND_TONE, icon: SheetsIcon },
+  marketing: { tone: BRAND_TONE, icon: StarIcon }
 };
 
 /** The local YKP family, in display order. URLs come from app/config (env-overridable). */
-export const APPS: AppDef[] = HUB_MODULES.map((m) => ({
+export const APPS: AppDef[] = HUB_MODULES.filter((m) => m.url.trim().length > 0).map((m) => ({
   id: m.id,
   name: m.name,
   desc: m.desc,

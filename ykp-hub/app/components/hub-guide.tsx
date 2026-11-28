@@ -7,7 +7,7 @@ export function HubGuide() {
       <header className="flex items-center gap-3">
         <svg
           aria-hidden="true"
-          className="h-6 w-6 shrink-0 text-blue-600"
+          className="h-6 w-6 shrink-0 text-[#E01020]"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -50,7 +50,7 @@ export function HubGuide() {
             langkah lengkap.
           </li>
         </ol>
-        <p className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-900 dark:bg-blue-950 dark:text-blue-100">
+        <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-900 dark:bg-red-950 dark:text-red-100">
           <strong>Hasil yang diharapkan:</strong> Anda masuk ke modul yang
           tepat, bukan membuat transaksi langsung di Hub.
         </p>

@@ -76,6 +76,15 @@ export const HUB_MODULES: readonly HubModuleDef[] = [
     url: requiredUrl(process.env.NEXT_PUBLIC_YKP_OPS_URL, "NEXT_PUBLIC_YKP_OPS_URL"),
     probePath: "/api/ops/summary",
     probeReturnsCount: false
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    desc: "Panduan Meta, arahan konten, content studio",
+    // Optional: hidden when unset so existing builds don't require a new env.
+    url: (process.env.NEXT_PUBLIC_YKP_MARKETING_URL ?? "").trim(),
+    probePath: "/marketing",
+    probeReturnsCount: false
   }
 ];
 

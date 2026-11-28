@@ -37,7 +37,7 @@ export function ThemeToggle({ compact = false }: Props) {
             onClick={() => setTheme(o.v)}
             className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition focus-ring ${
               active
-                ? "bg-blue-600 text-white shadow-sm"
+                ? "bg-[#E01020] text-white shadow-sm"
                 : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
             }`}
             aria-label={o.label}

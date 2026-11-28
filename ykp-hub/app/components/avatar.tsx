@@ -2,13 +2,13 @@
 import { useMemo } from "react";
 
 const PALETTES = [
-  "from-blue-600 to-indigo-700",
-  "from-emerald-700 to-teal-700",
-  "from-purple-600 to-pink-700",
-  "from-orange-700 to-rose-700",
-  "from-amber-700 to-orange-700",
-  "from-sky-700 to-cyan-700",
-  "from-fuchsia-700 to-purple-700",
+  "from-[#E01020] to-[#9c0b16]",
+  "from-red-600 to-red-800",
+  "from-rose-600 to-red-700",
+  "from-red-700 to-rose-800",
+  "from-rose-700 to-red-800",
+  "from-[#c01018] to-[#7d0812]",
+  "from-red-800 to-stone-800",
   "from-rose-700 to-red-700"
 ];
 

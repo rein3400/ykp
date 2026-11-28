@@ -10,6 +10,7 @@ import { StatusBanner } from "./status-banner";
 import { StatusList } from "./status-list";
 import { ModuleCard } from "./module-card";
 import { HubGuide } from "./hub-guide";
+import { visibleApps } from "./role-modules";
 
 interface Props {
   apps: AppDef[];
@@ -49,6 +50,8 @@ export function Dashboard(props: Props) {
     onLogout,
   } = props;
 
+  const apps = visibleApps(props.apps, session.role);
+
   // greeting
   const greeting = useMemo(() => {
     const h = new Date().getHours();
@@ -73,7 +76,7 @@ export function Dashboard(props: Props) {
       <header className="sticky top-0 z-30 glass border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shrink-0">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl gradient-brand text-white shadow-md shrink-0">
               <HubLogo className="h-5 w-5" />
             </span>
             <div className="min-w-0 hidden sm:block">
@@ -149,7 +152,7 @@ export function Dashboard(props: Props) {
         <StatusBanner health={health} loading={loading} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {props.apps.map((app) => {
+          {apps.map((app) => {
             const r = health?.results.find(
               (x: HealthResult) => x.id === app.id,
             );
@@ -170,7 +173,7 @@ export function Dashboard(props: Props) {
         <HubGuide />
 
         <StatusList
-          apps={props.apps}
+          apps={apps}
           results={health?.results ?? []}
           history={history}
           onOpen={onPreview}
@@ -178,7 +181,7 @@ export function Dashboard(props: Props) {
           loading={loading}
         />
 
-        <Footer apps={props.apps} role={session.role} />
+        <Footer apps={apps} role={session.role} />
       </main>
     </div>
   );
@@ -225,7 +228,7 @@ function Footer({ apps, role }: { apps: AppDef[]; role: string }) {
             v0.1.0 · {buildDate}
             <br />
             <a
-              className="hover:text-blue-600 dark:hover:text-blue-400"
+              className="hover:text-[#E01020] dark:hover:text-red-400"
               href="https://github.com/rein3400/ykp"
               target="_blank"
               rel="noreferrer"

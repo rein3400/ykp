@@ -36,7 +36,7 @@ async function probe(url: string, expectCount: boolean): Promise<ProbeResult> {
 }
 
 export async function GET() {
-  const results = await Promise.all(HUB_MODULES.map(async (module) => {
+  const results = await Promise.all(HUB_MODULES.filter((module) => module.url.trim().length > 0).map(async (module) => {
     const ping = await probe(moduleServerProbeUrl(module), module.probeReturnsCount);
     return {
       id: module.id,

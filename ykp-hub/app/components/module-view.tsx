@@ -136,7 +136,7 @@ export function ModuleView({ app, session, result, onBack, onLogout }: Props) {
               <div className="mt-4 flex items-center justify-center gap-2">
                 <button
                   onClick={() => setReloadKey((k) => k + 1)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 focus-ring"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#E01020] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#9c0b16] focus-ring"
                 >
                   <ReloadIcon className="h-3.5 w-3.5" />
                   Coba lagi

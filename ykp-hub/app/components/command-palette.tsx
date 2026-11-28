@@ -98,7 +98,7 @@ export function CommandPalette({ open, onClose, apps, results, onSelect }: Props
                   }}
                   disabled={r && !r.reachable}
                   className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition focus-ring ${
-                    active ? "bg-blue-50 dark:bg-slate-700/60 ring-1 ring-blue-200 dark:ring-slate-600" : "ring-1 ring-transparent"
+                    active ? "bg-red-50 dark:bg-slate-700/60 ring-1 ring-red-200 dark:ring-slate-600" : "ring-1 ring-transparent"
                   } disabled:opacity-50`}
                 >
                   <span className={`inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br ${app.tone.gradient} text-white shrink-0`}>
